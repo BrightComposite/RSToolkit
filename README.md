@@ -1,6 +1,6 @@
 # Rapture State Toolkit
 Rapture State Toolkit is the multi-functional modular set of static C++ libraries.
-The main purpose of this project is to make development more productive and enjoyable.
+The main purpose of this project is to make development more effective and clear.
 
 RS-Toolkit does not only extensively use almost every feature of C++ 11 and 14 standards,
 it also embodies some useful concepts, such as SFINAE, reference-based memory management,

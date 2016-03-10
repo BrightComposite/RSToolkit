@@ -71,6 +71,8 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 		set(TEMPLATE_FILE ${RAPTURE_ROOT}/templates/template${SRC_EXT})
 		set(TEMPLATE_FILE2 ${RAPTURE_ROOT}/templates/template.${filename}${SRC_EXT})
 		
+		message(STATUS "Create new source file ${SRC_FULLPATH}...")
+		
 		if(EXISTS ${TEMPLATE_FILE})
 			configure_file(${TEMPLATE_FILE} ${SRC_FULLPATH})
 		elseif(EXISTS ${TEMPLATE_FILE2})
@@ -233,6 +235,8 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 		if(NOT ";${GUARD_BLOCKS};" MATCHES ";${PROJECT_NAME}_GUARD;")
 			set(GUARD_BLOCKS ${GUARD_BLOCKS};${PROJECT_NAME}_GUARD CACHE INTERNAL "Guard blocks" FORCE)
 		endif()
+		
+		message(STATUS "Configure module ${PROJECT_NAME}...")
 	endfunction()
 	
 #	require_module function.
@@ -272,6 +276,19 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 	function(target_setup_third_party TARGET LIBRARY_PATH)
 		set(THIRD_PARTY_DIR ${THIRD_PARTY}/${LIBRARY_PATH})
 	
+		if(NOT EXISTS ${THIRD_PARTY_DIR})
+			if(NOT EXISTS "${THIRD_PARTY_DIR}.tar.gz")
+				message(FATAL_ERROR "Can't find the archive with third-party library '${LIBRARY_PATH}'!")
+			endif()
+			
+			message(STATUS "Extract third-party library '${LIBRARY_PATH}' from ${THIRD_PARTY_DIR}.tar.gz")
+			execute_process(COMMAND ${CMAKE_COMMAND} -E tar xfz "${LIBRARY_PATH}.tar.gz" WORKING_DIRECTORY "${THIRD_PARTY}")
+			
+			if(NOT EXISTS ${THIRD_PARTY_DIR})
+				message(FATAL_ERROR "Can't extract the archive with third-party library '${LIBRARY_PATH}'!")
+			endif()
+		endif()
+		
 		if("${ARGV2}" STREQUAL "COMPONENT" AND NOT "${ARGV3}" STREQUAL "")
 			set(PATH_SUFFIX ${ARGV3}/${PROJECT_ARCHITECTURE})
 		else()
@@ -319,6 +336,19 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 	function(target_load_third_party TARGET LIBRARY_PATH)
 		set(THIRD_PARTY_DIR ${THIRD_PARTY}/${LIBRARY_PATH})
 	
+		if(NOT EXISTS ${THIRD_PARTY_DIR})
+			if(NOT EXISTS "${THIRD_PARTY_DIR}.tar.gz")
+				message(FATAL_ERROR "Can't find the archive with third-party library '${LIBRARY_PATH}'!")
+			endif()
+			
+			message(STATUS "Extract third-party library '${LIBRARY_PATH}' from ${THIRD_PARTY_DIR}.tar.gz")
+			execute_process(COMMAND ${CMAKE_COMMAND} -E tar xfz "${LIBRARY_PATH}.tar.gz" WORKING_DIRECTORY "${THIRD_PARTY}")
+			
+			if(NOT EXISTS ${THIRD_PARTY_DIR})
+				message(FATAL_ERROR "Can't extract the archive with third-party library '${LIBRARY_PATH}'!")
+			endif()
+		endif()
+		
 		if("${ARGV2}" STREQUAL "COMPONENT" AND NOT "${ARGV3}" STREQUAL "")
 			set(PATH_SUFFIX ${ARGV3}/${PROJECT_ARCHITECTURE})
 		else()

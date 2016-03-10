@@ -4,4 +4,4 @@
 **/build-x64/
 **/bin/
 **/lib/
-third-party/
+third-party/*/**

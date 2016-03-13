@@ -212,8 +212,8 @@ namespace Rapture
 		{
 			Shaders::initialize();
 
-			auto & p2 = Vil::get("p2");
-			auto & p2t = Vil::get("p2 t");
+			auto & p2 = VertexLayout::get("p2");
+			auto & p2t = VertexLayout::get("p2 t");
 
 			D3DModel::quad.init(this, p2, VertexData::quad);
 			D3DModel::texquad.init(this, p2t, VertexData::texquad);
@@ -420,7 +420,21 @@ namespace Rapture
 				context->IASetPrimitiveTopology(vbuffer->topology);
 			}
 
-			context->Draw(model->verticesCount, model->location);
+			if(model notinstanceof (D3DIndexedModel))
+			{
+				context->Draw(vbuffer->size - model->verticesLocation, model->verticesLocation);
+				return;
+			}
+
+			auto * m = static_cast<const D3DIndexedModel *>(model);
+
+			if(m->indices != ibuffer)
+			{
+				ibuffer = m->indices;
+				context->IASetIndexBuffer(ibuffer->handle, DXGI_FORMAT_R16_UINT, 0);
+			}
+
+			context->DrawIndexed(ibuffer->size - m->indicesLocation, m->indicesLocation, model->verticesLocation);
 		}
 
 		void Graphics3D::draw(const Image * image, int x, int y)
@@ -497,9 +511,9 @@ namespace Rapture
 			draw(image, IntRect{x, y, x + width, y + height});
 		}
 
-		FxTechnique::FxTechnique(const Handle<Vil> & vil) : ctx(Graphics3D::instance()), vil(vil) {}
+		FxTechnique::FxTechnique(const Handle<VertexLayout> & vil) : ctx(Graphics3D::instance()), vil(vil) {}
 
-		VertexBuffer::VertexBuffer(const Handle<Vil> & vil, const VertexData & vd, D3D_PRIMITIVE_TOPOLOGY topology) : ctx(Graphics3D::instance()), topology(topology), vil(vil), verticesCount(static_cast<uint>(vd.size / vil->stride))
+		VertexBuffer::VertexBuffer(const Handle<VertexLayout> & vil, const VertexData & vd, D3D_PRIMITIVE_TOPOLOGY topology) : ctx(Graphics3D::instance()), topology(topology), vil(vil), size(static_cast<uint>(vd.size / vil->stride))
 		{
 			if(vd.size % vil->stride != 0)
 				throw Exception("Size of vertex buffer doesn't matches its vertex input layout: \"", vil->key, "\"");
@@ -519,12 +533,26 @@ namespace Rapture
 				ctx->device->CreateBuffer(&bd, &sdata, &handle),
 				"Can't create vertex buffer!"
 				);
+		}
 
-			uint stride = vil->stride;
-			uint offset = 0;
+		IndexBuffer::IndexBuffer(const VertexIndices & indices) : ctx(Graphics3D::instance()), size(static_cast<uint>(indices.size()))
+		{
+			D3D11_BUFFER_DESC bd;
+			ZeroMemory(&bd, sizeof(bd));
 
-			ctx->context->IASetVertexBuffers(0, 1, &handle, &stride, &offset);
-			ctx->context->IASetPrimitiveTopology(topology);
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = static_cast<uint>(size) * 2;
+			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+
+			D3D11_SUBRESOURCE_DATA sdata;
+			ZeroMemory(&sdata, sizeof(sdata));
+			sdata.pSysMem = indices.data();
+
+			com_assert(
+				ctx->device->CreateBuffer(&bd, &sdata, &handle),
+				"Can't create index buffer!"
+				);
 		}
 
 		CommonShader::Shader() : ctx(Graphics3D::instance()) {}
@@ -794,7 +822,7 @@ namespace Rapture
 			points.push_back(p[p.size() - 1]);
 			points.push_back(p[0]);
 
-			model = handle<D3DModel>(graphics, Vil::get("p2"), points);
+			model = handle<D3DModel>(graphics, VertexLayout::get("p2"), points);
 		}
 
 	#define USE_3D
@@ -1048,14 +1076,14 @@ namespace Rapture
 		void TextureSurface::apply() const
 		{}
 
-		Vie            Vie::pos2("p2", "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, sizeof(float[2]));
-		Vie            Vie::pos3("p3", "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float[3]));
-		Vie          Vie::color3("c3", "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float[3]));
-		Vie          Vie::color4("c4", "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, sizeof(float[4]));
-		Vie             Vie::tex("t", "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, sizeof(float[2]));
-		Vie          Vie::normal("n", "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float[3]));
-		Vie Vie::secondaryColor3("s3", "COLOR", 1, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float[3]));
-		Vie Vie::secondaryColor4("s4", "COLOR", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, sizeof(float[4]));
+		VertexElement            VertexElement::pos2("p2", "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, sizeof(float[2]));
+		VertexElement            VertexElement::pos3("p3", "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float[3]));
+		VertexElement          VertexElement::color3("c3", "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float[3]));
+		VertexElement          VertexElement::color4("c4", "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, sizeof(float[4]));
+		VertexElement             VertexElement::tex("t", "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, sizeof(float[2]));
+		VertexElement          VertexElement::normal("n", "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float[3]));
+		VertexElement VertexElement::secondaryColor3("s3", "COLOR", 1, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float[3]));
+		VertexElement VertexElement::secondaryColor4("s4", "COLOR", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, sizeof(float[4]));
 
 		D3DSurface::D3DSurface(const IntSize & size) : Rapture::Surface(size), ctx(Graphics3D::instance()) {}
 

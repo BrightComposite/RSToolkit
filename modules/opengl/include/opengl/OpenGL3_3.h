@@ -81,70 +81,59 @@ namespace Rapture
 
 		typedef GLImage GLTexture;
 
-		class VertexInputLayout;
-		class VertexInputElement;
-
-		typedef VertexInputLayout Vil;
-		typedef VertexInputElement Vie;
-
 		//---------------------------------------------------------------------------
 
-		class VertexInputElement : public Shareable<VertexInputElement>, public Precached<string, Vie>
+		class VertexElement : public Shareable<VertexElement>, public Precached<string, VertexElement>
 		{
-			friend class VertexInputLayout;
+			friend class VertexLayout;
 
 		public:
 			string id;
+			byte location;
 			uint size;
 
-			static Vie pos2;
-			static Vie pos3;
-			static Vie color3;
-			static Vie color4;
-			static Vie secondaryColor3;
-			static Vie secondaryColor4;
-			static Vie tex;
-			static Vie normal;
+			static VertexElement pos2;
+			static VertexElement pos3;
+			static VertexElement color3;
+			static VertexElement color4;
+			static VertexElement secondaryColor3;
+			static VertexElement secondaryColor4;
+			static VertexElement tex;
+			static VertexElement normal;
 
 		protected:
-			VertexInputElement(const string & id, const char * semantic, uint index, DXGI_FORMAT format, uint size) : Precached<string, Vie>(id),
-				id(id), semantic(semantic), index(index), format(format), size(size) {}
-
-			const char * semantic;
-			uint index;
-			DXGI_FORMAT format;
+			VertexElement(const string & id, byte location, uint size) : Precached<string, VertexElement>(id),
+				id(id), location(location), size(size) {}
 		};
 
 		//---------------------------------------------------------------------------
 
-		class VertexInputLayout : public Shareable<VertexInputLayout>, public Cached<string, Vil, ProtectedCache>
+		class VertexLayout : public Shareable<VertexLayout>, public Cached<string, VertexLayout, ProtectedCache>
 		{
-			typedef Cached<string, Vil, ProtectedCache> Cache;
+			typedef Cached<string, VertexLayout, ProtectedCache> Cache;
 
 		public:
 			string key;
-			Array<Vie> elements;
+			Array<VertexElement> elements;
 			uint stride;
-			vector<D3D11_INPUT_ELEMENT_DESC> layout;
 
 		protected:
 			public_for_cache(Cache);
 
-			VertexInputLayout(const String & key) : key(key)
+			VertexLayout(const String & key) : key(key)
 			{
-				stride = decodeData(key, elements, layout);
+				stride = decodeData(key, elements);
 			}
 
-			static uint decodeData(const String & data, Array<Vie> & elements, vector<D3D11_INPUT_ELEMENT_DESC> & layout)
+			static uint decodeData(const String & data, Array<VertexElement> & elements)
 			{
 				uint stride = 0;
 				auto list = split(data);
 
 				for(const auto & str : *list)
 				{
-					auto & vie = Vie::get(str);
+					auto & vie = VertexElement::get(str);
 					elements.push_back(vie);
-					layout.push_back({vie->semantic, vie->index, vie->format, 0, stride, D3D11_INPUT_PER_VERTEX_DATA, 0});
 					stride += vie->size;
 				}
 
@@ -152,18 +141,20 @@ namespace Rapture
 			}
 		};
 
+		// TODO: save current layout in Graphics and apply it with the glVertexAttribPointer and the glEnableVertexAttribArray functions
+
 		//---------------------------------------------------------------------------
 
 		class VertexBuffer : public Shareable<VertexBuffer>
 		{
 		public:
-			VertexBuffer(const Handle<Vil> & vil, const VertexData & vd, D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			VertexBuffer(const Handle<VertexLayout> & vil, const VertexData & vd, uint topology = GL_TRIANGLES);
 
 			GraphicContext * ctx;
-			D3D_PRIMITIVE_TOPOLOGY topology;
-			Handle<Vil> vil;
-			ComHandle<ID3D11Buffer> handle;
-			uint verticesCount;
+			Handle<VertexLayout> vil;
+			uint handle;
+			uint topology;
+			uint size;
 		};
 
 		//---------------------------------------------------------------------------
@@ -225,16 +216,16 @@ namespace Rapture
 
 			virtual void apply(uint pass = 0) const = 0;
 			
-			const Handle<Vil> & layout() const
+			const Handle<VertexLayout> & layout() const
 			{
 				return vil;
 			}
 
 		protected:
-			FxTechnique(const Handle<Vil> & vil);
+			FxTechnique(const Handle<VertexLayout> & vil);
 
 			GraphicContext * ctx;
-			Handle<Vil> vil;
+			Handle<VertexLayout> vil;
 			uint passes;
 		};
 
@@ -284,8 +275,7 @@ namespace Rapture
 
 			virtual void apply() const override;
 
-			ComHandle<ID3D11VertexShader> id;
-			ComHandle<ID3D11InputLayout> layout;
+			uint id;
 		};
 
 		template<>
@@ -299,7 +289,7 @@ namespace Rapture
 
 			virtual void apply() const override;
 
-			ComHandle<ID3D11PixelShader> id;
+			uint id;
 		};
 
 		//---------------------------------------------------------------------------
@@ -394,9 +384,6 @@ namespace Rapture
 			mutable Map<UniformId, UniformData> uniformData;
 
 			Array<Texture> textures;
-
-			D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_NULL;
-			D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
 		};
 
 		inline Handle<Graphics3D, Graphics3D> & Graphics3D::findInstance(const thread::id & id)
@@ -512,7 +499,7 @@ namespace Rapture
 		class GLModel : public Model
 		{
 		public:
-			GLModel(const Graphics3D * graphics, const Handle<Vil> & vil, const VertexData & vertexData)
+			GLModel(const Graphics3D * graphics, const Handle<VertexLayout> & vil, const VertexData & vertexData)
 				: Model(graphics, vertexData, vil->stride), buffer(vil, vertexData)
 			{
 				setclass(GLModel);
@@ -612,6 +599,7 @@ namespace Rapture
 
 		protected:
 			ShaderProgram() {}
+			uint id;
 		};
 
 		class VPShaderProgram : public ShaderProgram
@@ -637,14 +625,14 @@ namespace Rapture
 		class SimpleTechnique : public FxTechnique
 		{
 		public:
-			SimpleTechnique(const Handle<Vil> & vil)
+			SimpleTechnique(const Handle<VertexLayout> & vil)
 				: FxTechnique(vil), program() {}
 
-			SimpleTechnique(const Handle<Vil> & vil, const Handle<ShaderProgram> & program)
+			SimpleTechnique(const Handle<VertexLayout> & vil, const Handle<ShaderProgram> & program)
 				: FxTechnique(vil), program(program) {}
 
 			template<class ShaderProgramType, class ... A, require(can_construct(ShaderProgramType, Handle<FxTechnique>, A...))>
-			SimpleTechnique(const Handle<Vil> & vil, const Type<ShaderProgramType> &, A &&... args)
+			SimpleTechnique(const Handle<VertexLayout> & vil, const Type<ShaderProgramType> &, A &&... args)
 				: FxTechnique(vil), program(handle<ShaderProgramType>(this, forward<A>(args)...)) {}
 
 			virtual ~SimpleTechnique() {}

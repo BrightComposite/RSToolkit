@@ -26,7 +26,7 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 			ScreenCoord.h
 			Shaders.h
 			Uniforms.h
-			VertexInputLayout.h
+			VertexLayout.h
 		
 			START_SECTION image
 				Image.h

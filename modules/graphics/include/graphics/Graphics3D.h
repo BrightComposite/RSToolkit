@@ -6,7 +6,7 @@
 //---------------------------------------------------------------------------
 
 #include "Graphics.h"
-#include "VertexInputLayout.h"
+#include "VertexLayout.h"
 #include "Shaders.h"
 #include "Uniforms.h"
 
@@ -16,7 +16,7 @@ namespace Rapture
 {
 	class Graphics3D;
 
-	typedef Image Texture;
+	using Texture = Image;
 
 	class VertexData : public RawData<const void>
 	{
@@ -29,18 +29,20 @@ namespace Rapture
 		uint start = 0;
 	};
 
+	using VertexIndices = vector<uint16_t>;
+
 	link_class(Model, MetaClass<Object>);
 
 	class Model : public Object
 	{
 	public:
-		Model(const Graphics3D * graphics, const VertexData & vertexData, uint stride) : graphics(graphics), stride(stride), location(vertexData.start), verticesCount(static_cast<uint>(vertexData.size) / stride)
+		Model(const Graphics3D * graphics, const VertexData & vertexData, uint stride) : graphics(graphics), stride(stride), verticesLocation(vertexData.start)
 		{
 			setclass(Model);
 		}
 
 		const Graphics3D * graphics;
-		uint stride, location, verticesCount;
+		uint stride, verticesLocation;
 	};
 
 	link_class(Graphics3D, MetaClass<Graphics>);

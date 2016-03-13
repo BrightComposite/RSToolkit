@@ -43,15 +43,15 @@ namespace Rapture
 		ShaderMap Shaders::shaders;
 
 		template<class ShaderType>
-		static Handle<SimpleTechnique> setShadersCode(const string & id, const Handle<Vil> & vil, ShaderType type, const initializer_list<ShaderCode> & set)
+		static Handle<SimpleTechnique> setShadersCode(const string & id, const Handle<VertexLayout> & vil, ShaderType type, const initializer_list<ShaderCode> & set)
 		{
 			return handle<SimpleTechnique>(vil, type, Shaders::setCode(id, set));
 		}
 
 		void Shaders::initialize()
 		{
-			auto & p2 = Vil::get("p2");
-			auto & p2t = Vil::get("p2 t");
+			auto & p2 = VertexLayout::get("p2");
+			auto & p2t = VertexLayout::get("p2 t");
 			auto vptype = gettype(VPShaderProgram);
 
 			SimpleTechnique::rectangle = setShadersCode("2d/rect", p2, vptype, {shader_code_2d_rect_vs,	shader_code_2d_rect_ps});

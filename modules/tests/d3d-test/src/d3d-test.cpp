@@ -186,20 +186,6 @@ static void loadWindow()
 		root = root.parent_path().parent_path().parent_path();
 	}
 
-	auto image_path = root / "data/images/witcher3";
-	Handle<Image> image1, image2, image3;
-
-	try
-	{
-		image1 = Image::load(graphics, image_path + ".png");
-		image2 = Image::load(graphics, image_path + "a.png");
-		image3 = Image::load(graphics, image_path + "b.png");
-	}
-	catch(...)
-	{
-		return;
-	}
-
 	auto panelDrawer = [](const Widget * widget, const IntRect & region)
 	{
 		IntRect inner(widget->absRegion());
@@ -237,24 +223,6 @@ static void loadWindow()
 		g->rectangle(inner);
 	};
 
-	auto logoDrawer = [image1, image2, image3](const Widget * widget, const IntRect & region)
-	{
-		if(widget->isPressed())
-			widget->graphics()->draw(image2, widget->absRegion());
-		else if(widget->isPointed())
-			widget->graphics()->draw(image3, widget->absRegion());
-		else
-			widget->graphics()->draw(image1,  widget->absRegion());
-	};
-
-	auto data = handle<ImageData>();
-	image1->requestData(data);
-
-	ImageIO::save(image_path + ".bmp", data);
-	ImageIO::save(image_path + ".jpg", data);
-	ImageIO::save(image_path + ".ico", data);
-	ImageIO::save(image_path + ".tga", data);
-
 	std::vector<IntRect> rects = {
 		{10, 10, 30, 30},
 		{40, 10, 60, 30},
@@ -276,7 +244,7 @@ static void loadWindow()
 		for(int ix = 0; ix < 4; ++ix)
 		{
 			int x = (dx + w) * (ix + 1);
-			int y = (dy + h) * (iy + 1);
+			int y = (dy + h) * (iy + 1) + 100;
 
 			auto panel = back->append<Panel>(IntRect {x - w, y - h, x, y});
 			panel->name = "panel("_s << ix << ',' << iy << ')';
@@ -293,13 +261,6 @@ static void loadWindow()
 			}
 		}
 	}
-
-	Handle<Panel> logo(back);
-
-	logo->name = "Logo";
-	logo->setPlacement(ModelMask::RightTop, {0, 40}, {128, 128});
-
-	logo << logoDrawer;
 
 	try
 	{

@@ -20,24 +20,14 @@ namespace Rapture
 	 *  @brief
 	 *  Basic class for all messages
 	 */
-	class Message : public Shareable<Message>
+	class Message : public Shared
 	{
 	public:
-		int result;
+		const Subject * source;
+		int result = 0;
 
-		Message() : result(0) {}
-        virtual ~Message() {}
-
-		bool operator == (const Message &) const
-		{
-			return true;
-		}
-
-		template <class Msg>
-		bool operator != (const Msg & msg) const
-		{
-			return !msg.operator == (static_cast<const Msg &>(*this));
-		}
+		Message(const Subject * source) : source(source) {}
+		Message(const Message &) = delete;
 	};
 
 	/**
@@ -46,29 +36,29 @@ namespace Rapture
 	 *	specified message
 	 */
 	template<class Dst, typename Msg>
-	using msg_callback = function<void(Handle<Msg> &, Dst &, const Subject *)>;
+	using msg_callback = function<void(Handle<Msg> &, Dst &)>;
 
 	/**
 	 *  @brief
 	 *  Wrapper for message callback
 	 */
 	template<class Dst, typename Msg>
-	class MessageCallback : public AutoIdentifier, public Shareable<MessageCallback<Dst, Msg>>
+	class Receiver : public AutoIdentifier, public Shared
 	{
 		typedef msg_callback<Dst, Msg> Callback;
 
 	public:
-		MessageCallback(const Callback & callback, size_t id, size_t additional = 0) : callback(callback), id(id), additional(additional) {}
-		MessageCallback(const Callback & callback, const void * data, size_t additional = 0) : MessageCallback(callback, reinterpret_cast<size_t>(data), additional) {}
-		MessageCallback(void callback(Handle<Msg> &, Dst &, const Subject *)) : MessageCallback(callback, static_cast<void *>(callback)) {}
-		MessageCallback(const Callback & callback) : MessageCallback(callback, static_cast<const void *>(callback.target<void(*)(Handle<Msg> &, Dst &, const Subject *)>())) {}
+		Receiver(const Callback & callback, size_t id, size_t additional = 0) : callback(callback), id(id), additional(additional) {}
+		Receiver(const Callback & callback, const void * data, size_t additional = 0) : Receiver(callback, reinterpret_cast<size_t>(data), additional) {}
+		Receiver(void callback(Handle<Msg> &, Dst &)) : Receiver(callback, static_cast<void *>(callback)) {}
+		Receiver(const Callback & callback) : Receiver(callback, static_cast<const void *>(callback.target<void(*)(Handle<Msg> &, Dst &)>())) {}
 		template<class Rcvr>
-		MessageCallback(Handle<Rcvr> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &, const Subject *), size_t additional = 0) : MessageCallback(wrap_method(receiver, callback), static_cast<void *>(static_cast<Rcvr *>(receiver)), additional) {}
+		Receiver(Handle<Rcvr> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t additional = 0) : Receiver(wrap_method(receiver, callback), static_cast<void *>(static_cast<Rcvr *>(receiver)), additional) {}
 		template<class Rcvr>
-		MessageCallback(const Handle<Rcvr> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &, const Subject *) const, size_t additional = 0) : MessageCallback(wrap_method(receiver, callback), static_cast<const void *>(static_cast<const Rcvr *>(receiver)), additional) {}
-		MessageCallback(const MessageCallback & mc) : callback(mc.callback), id(mc.id), additional(mc.additional) {}
+		Receiver(const Handle<Rcvr> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t additional = 0) : Receiver(wrap_method(receiver, callback), static_cast<const void *>(static_cast<const Rcvr *>(receiver)), additional) {}
+		Receiver(const Receiver & mc) : callback(mc.callback), id(mc.id), additional(mc.additional) {}
 
-		MessageCallback & operator = (const MessageCallback & mc)
+		Receiver & operator = (const Receiver & mc)
 		{
 			callback = mc.callback;
 			id = mc.id;
@@ -76,7 +66,7 @@ namespace Rapture
 			return *this;
 		}
 
-		bool operator == (const MessageCallback & mc) const
+		bool operator == (const Receiver & mc) const
 		{
 			return id == mc.id && additional == mc.additional;
 		}
@@ -86,17 +76,14 @@ namespace Rapture
 		size_t additional = 0;
 	};
 
-	/**
-	 *  @brief
-	 *  Helping struct for getting of a set of message receivers.
-	 *	All specializations are defined automatically by message_class macro
-	 */
 	template<class Dst, typename Msg>
-	class MessageDispatcher
+	struct DestGetter
 	{
-	public:
-		static const bool hasDestination = false;
+		typedef Empty type;
 	};
+
+	template<class Dst, typename Msg>
+	using message_dst_t = typename DestGetter<Dst, Msg>::type;
 }
 
 //---------------------------------------------------------------------------

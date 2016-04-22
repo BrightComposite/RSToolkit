@@ -69,11 +69,11 @@ namespace Rapture
 		StaticMap(const StaticMap & map) : HeadType(map.get<KH>()), Base(map) {}
 		StaticMap(StaticMap && map) : HeadType(move(map.get<KH>())), Base(forward<Base>(map)) {}
 
-		template <typename ... KL, typename ... KR, require(same_type(Tuple<KL..., KR...>, Types))>
+		template <typename ... KL, typename ... KR, useif(same_type(Tuple<KL..., KR...>, Types))>
 		StaticMap(const StaticMap<Tuple<KH, KL ...>, V> & left, const StaticMap<Tuple<KR ...>, V> & right) : HeadType(left.get<KH>), Base(left, right) {}
 		StaticMap(const StaticMap<Tuple<KH>, V> & left, const Base & right) : HeadType(left), Base(right) {}
 
-		template <typename ... KL, typename ... KR, require(same_type(Tuple<KL..., KR...>, Types))>
+		template <typename ... KL, typename ... KR, useif(same_type(Tuple<KL..., KR...>, Types))>
 		StaticMap(StaticMap<Tuple<KH, KL ...>, V> && left, StaticMap<Tuple<KR ...>, V> && right) : HeadType(move(left.get<KH>)), Base(forward<StaticMap<Tuple<KL ...>, V>>(left), forward<StaticMap<Tuple<KR ...>, V>>(right)) {}
 		StaticMap(StaticMap<Tuple<KH>, V> && left, Base && right) : HeadType(forward<V>(left.get<KH>)), Base(forward<Base>(right)) {}
 

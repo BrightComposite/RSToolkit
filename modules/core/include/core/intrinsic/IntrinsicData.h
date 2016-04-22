@@ -149,13 +149,13 @@ namespace Rapture
 			return *reinterpret_cast<const unit *>(&v[index]);
 		}
 
-		template<int I, require(I < N)>
+		template<int I, useif(I < N)>
 		static inline T __vectorcall get(const IntrinData & in)
 		{
 			return in.data[I];
 		}
 
-		template<int I, require(I < N)>
+		template<int I, useif(I < N)>
 		static inline void __vectorcall set(type & out, T value)
 		{
 			reinterpret_cast<IntrinData *>(out)->data[I] = value;
@@ -204,13 +204,13 @@ namespace Rapture
 			return data;
 		}
 
-		template<int I, require(I < 2)>
+		template<int I, useif(I < 2)>
 		static inline T __vectorcall get(const IntrinData & in)
 		{
 			return in.data[I];
 		}
 
-		template<int I, require(I < 2)>
+		template<int I, useif(I < 2)>
 		static inline void __vectorcall set(type & out, T value)
 		{
 			reinterpret_cast<IntrinData *>(out)->data[I] = value;
@@ -285,13 +285,13 @@ namespace Rapture
 			return *reinterpret_cast<const unit *>(&v[index]);
 		}
 
-		template<int I, require(I < 4)>
+		template<int I, useif(I < 4)>
 		static inline T __vectorcall get(const IntrinData & in)
 		{
 			return in.data[I];
 		}
 
-		template<int I, require(I < 4)>
+		template<int I, useif(I < 4)>
 		static inline void __vectorcall set(type & out, T value)
 		{
 			reinterpret_cast<IntrinData *>(out)->data[I] = value;
@@ -340,13 +340,13 @@ namespace Rapture
 			return data;
 		}
 
-		template<int I, require(I < 4)>
+		template<int I, useif(I < 4)>
 		static inline T __vectorcall get(const IntrinData & in)
 		{
 			return in.data[I];
 		}
 
-		template<int I, require(I < 4)>
+		template<int I, useif(I < 4)>
 		static inline void __vectorcall set(type & out, T value)
 		{
 			reinterpret_cast<IntrinData *>(out)->data[I] = value;

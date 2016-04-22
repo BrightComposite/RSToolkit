@@ -18,7 +18,7 @@
 namespace Rapture
 {
 #if 0
-	class VertexElement : public Shareable<VertexElement>
+	class VertexElement : public Shared
 	{
 		friend VertexLayout;
 
@@ -58,7 +58,7 @@ namespace Rapture
 		static Map<string, VertexElement> pool;
 	};
 
-	class VertexLayout : public Shareable<VertexLayout>
+	class VertexLayout : public Shared
 	{
 	public:
 		static inline VertexLayout & get(const String & id)

@@ -7,7 +7,7 @@
 
 namespace Rapture
 {
-	msg_implement_reader(Panel, WidgetChangedStateMessage)
+	implement_reader(Panel, WidgetChangedStateMessage)
 	{
 		_adapter->invalidate(this);
 	}

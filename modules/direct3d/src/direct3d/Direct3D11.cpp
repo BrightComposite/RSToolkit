@@ -1027,7 +1027,7 @@ namespace Rapture
 		#endif
 		}
 
-		void WindowSurface::onWindowResize(Handle<WindowResizeMessage> & msg, WindowAdapter & adapter, const Subject * src)
+		void WindowSurface::onWindowResize(Handle<WindowResizeMessage> & msg, WindowAdapter & adapter)
 		{
 			if(msg->width == 0 || msg->height == 0)
 				return;
@@ -1046,12 +1046,12 @@ namespace Rapture
 			adapter.invalidate();
 		}
 
-		void WindowSurface::onWindowFullscreen(Handle<WindowFullscreenMessage> & msg, WindowAdapter & adapter, const Subject * src)
+		void WindowSurface::onWindowFullscreen(Handle<WindowFullscreenMessage> & msg, WindowAdapter & adapter)
 		{
 			createSwapChain(msg->fullscreen);
 		}
 
-		void WindowSurface::onWindowClose(Handle<WindowCloseMessage> & msg, WindowAdapter & adapter, const Subject * src)
+		void WindowSurface::onWindowClose(Handle<WindowCloseMessage> & msg, WindowAdapter & adapter)
 		{
 			swapChain->SetFullscreenState(FALSE, nullptr);
 		}
@@ -1133,7 +1133,7 @@ namespace Rapture
 				);
 		}
 
-		UniformBase::UniformBase(ShaderType shader, uint index, uint size) : ctx(Graphics3D::instance()), index(index)
+		Uniform::Uniform(ShaderType shader, uint index, uint size) : ctx(Graphics3D::instance()), index(index)
 		{
 			D3D11_BUFFER_DESC bd;
 			ZeroMemory(&bd, sizeof(bd));
@@ -1159,7 +1159,7 @@ namespace Rapture
 			}
 		}
 
-		void UniformBase::update(const void * data)
+		void Uniform::update(const void * data)
 		{
 			ctx->context->UpdateSubresource(buffer, 0, NULL, data, 0, 0);
 		}

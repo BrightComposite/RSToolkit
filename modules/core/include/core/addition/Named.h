@@ -13,16 +13,16 @@ namespace Rapture {
 
 	class NamedClass;
 
-	link_class(Named, MetaBase);
+	link_class(Named, MetaClass);
 
     class Named
     {
 	public:
-		Named() : name("unnamed") {}
-		Named(const String & name) : name(name) {}
-		Named(String && name) : name(forward<String>(name)) {}
-		Named(const Named & obj) : name(obj.name) {}
-		Named(Named && obj) : name(move(obj.name)) {}
+		Named() : _name("unnamed") {}
+		Named(const String & name) : _name(name) {}
+		Named(String && name) : _name(forward<String>(name)) {}
+		Named(const Named & obj) : _name(obj._name) {}
+		Named(Named && obj) : _name(move(obj._name)) {}
 
 		virtual ~Named() {}
 
@@ -31,19 +31,30 @@ namespace Rapture {
             return *this;
         }
 
-		String name;
+		const String & name() const
+		{
+			return _name;
+		}
+
+		virtual void setName(const String & name)
+		{
+			_name = name;
+		}
+
+	protected:
+		String _name;
     };
 
-	class NamedClass : public MetaClass<>
+	class NamedClass : public Class<>
 	{
 	public:
-		NamedClass(const char * name) : MetaClass<>(name) {}
-		NamedClass(const NamedClass & meta) : MetaClass<>(meta) {}
+		NamedClass(const char * name) : Class<>(name) {}
+		NamedClass(const NamedClass & meta) : Class<>(meta) {}
 
 	protected:
 		virtual void addInfo(String & target, const Object & obj) const override
 		{
-			target << '\"' << dynamic_cast<const Named &>(obj).name << '\"' << ' ';
+			target << '\"' << dynamic_cast<const Named &>(obj).name() << '\"' << ' ';
 		}
 	};
 }

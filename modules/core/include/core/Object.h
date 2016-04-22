@@ -6,83 +6,44 @@
 //---------------------------------------------------------------------------
 
 #include <core/Handle.h>
-#include <core/MetaClass.h>
+#include <core/Class.h>
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-#define setclass(...) this->_metaClass = getclass(__VA_ARGS__)
+#define setclass(...) this->_class = getclass(__VA_ARGS__)
 
-	link_class(Object, MetaBase)
+	link_class(Object, MetaClass)
 
-	class Object : public Shareable<Object>
+	class Object : public Shared
     {
     public:
-		Object() : _metaClass(getclass(Object)) {}
-		Object(const Object & obj) : _metaClass(getclass(Object)) {}
-
+		Object() : _class(getclass(Object)) {}
 		virtual ~Object() {}
-
-        Object & operator = (const Object & obj)
-        {
-            return *this;
-        }
-
-        virtual int compare(const Object * obj) const;
-
-        bool equals(const Object * obj) const
-        {
-            return compare(obj) == 0;
-        }
-
-		bool operator == (const Object & obj) const
-		{
-			return this == &obj;
-		}
-
-		bool operator > (const Object & obj) const
-		{
-			return compare(&obj) > 0;
-		}
-
-		bool operator < (const Object & obj) const
-		{
-			return compare(&obj) < 0;
-		}
-
-		bool operator >= (const Object & obj) const
-		{
-			return compare(&obj) >= 0;
-		}
-
-		bool operator <= (const Object & obj) const
-		{
-			return compare(&obj) <= 0;
-		}
 
         const char * className() const
         {
-            return _metaClass->name();
+            return _class->name();
         }
 
-		const MetaBase * getClass() const
+		const MetaClass * getClass() const
 		{
-			return _metaClass;
+			return _class;
 		}
 
-        bool kindOf(const MetaBase * metaClass) const
+        bool kindOf(const MetaClass * metaClass) const
         {
-            return _metaClass->kindOf(metaClass);
+            return _class->kindOf(metaClass);
         }
 
-        bool instanceOf(const MetaBase * metaClass) const
+        bool instanceOf(const MetaClass * metaClass) const
         {
-            return _metaClass->instanceOf(metaClass);
+            return _class->instanceOf(metaClass);
         }
 
 	protected:
-		const MetaBase * _metaClass;
+		const MetaClass * _class;
     };
 }
 

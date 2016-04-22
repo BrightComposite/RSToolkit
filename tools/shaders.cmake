@@ -60,8 +60,9 @@ cmake_minimum_required(VERSION 3.0)
 				
 				add_custom_command(
 					OUTPUT ${OutputFile}
-					COMMAND call "${RAPTURE_TOOLS}\\compile-shader" "${InputFile}" "${OutputFile}" "${ShaderType}" "${ShaderId}"
+					COMMAND call ${CMAKE_COMMAND} -D Input=${InputFile} -D Output=${OutputFile} -D ShaderType=${ShaderType} -D ShaderId=${ShaderId} -P "${RAPTURE_TOOLS}/compile-shader.cmake"
 					MAIN_DEPENDENCY ${InputFile}
+					COMMENT ""
 					WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 					VERBATIM
 					)

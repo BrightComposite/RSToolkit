@@ -27,7 +27,7 @@ namespace Rapture
 		None
 	};
 
-	link_class(Window, MetaClass<WindowAdapter>);
+	link_class(Window, Class<WindowAdapter>);
 
 	class Window : public WindowAdapter
 	{

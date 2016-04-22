@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
-#ifndef FLAG_H
-#define FLAG_H
+#ifndef META_FLAG_H
+#define META_FLAG_H
 
 //---------------------------------------------------------------------------
 
@@ -11,9 +11,6 @@
 
 namespace Rapture
 {
-	using std::enable_if;
-	using std::is_same;
-
 	template<class F, class S>
 	inline auto check_flag(F flag, S set) -> decltype((flag & set) == flag)
 	{
@@ -44,60 +41,71 @@ namespace Rapture
 		return (flags & set) != 0;
 	}
 
-#define adapt_enum_flags(Enum)								\
-	inline int operator & (Enum a, Enum b)					\
-	{														\
-		return static_cast<int>(a) & static_cast<int>(b);	\
-	}														\
-															\
-	inline int operator & (int a, Enum b)					\
-	{														\
-		return a & static_cast<int>(b);						\
-	}														\
-															\
-	inline int operator & (Enum a, int b)					\
-	{														\
-		return static_cast<int>(a) & b;						\
-	}														\
-															\
-	inline int operator | (Enum a, Enum b)					\
-	{														\
-		return static_cast<int>(a) | static_cast<int>(b);	\
-	}														\
-															\
-	inline int operator | (int a, Enum b)					\
-	{														\
-		return a | static_cast<int>(b);						\
-	}														\
-															\
-	inline int operator | (Enum a, int b)					\
-	{														\
-		return static_cast<int>(a) | b;						\
-	}														\
-															\
-	inline bool operator == (Enum a, int b)					\
-	{														\
-		return static_cast<int>(a) == b;					\
-	}														\
-															\
-	inline bool operator == (int a, Enum b)					\
-	{														\
-		return a == static_cast<int>(b);					\
-	}														\
-															\
-	inline bool operator != (Enum a, int b)					\
-	{														\
-		return static_cast<int>(a) != b;					\
-	}														\
-															\
-	inline bool operator != (int a, Enum b)					\
-	{														\
-		return a != static_cast<int>(b);					\
-	}														\
-															\
-	inline int operator ~ (Enum value)						\
-	{														\
-		return ~static_cast<int>(value);					\
+#ifndef _MSC_VER
+	namespace std
+	{
+		template<class T>
+		using underlying_type_t = typename underlying_type<T>::type;
+	}
+#endif // _MSC_VER
+
+	using std::underlying_type;
+	using std::underlying_type_t;
+
+#define adapt_enum_flags(Enum)																		\
+	inline underlying_type_t<Enum> operator & (Enum a, Enum b)										\
+	{																								\
+		return static_cast<underlying_type_t<Enum>>(a) & static_cast<underlying_type_t<Enum>>(b);	\
+	}																								\
+																									\
+	inline underlying_type_t<Enum> operator & (underlying_type_t<Enum> a, Enum b)					\
+	{																								\
+		return a & static_cast<underlying_type_t<Enum>>(b);											\
+	}																								\
+																									\
+	inline underlying_type_t<Enum> operator & (Enum a, underlying_type_t<Enum> b)					\
+	{																								\
+		return static_cast<underlying_type_t<Enum>>(a) & b;											\
+	}																								\
+																									\
+	inline underlying_type_t<Enum> operator | (Enum a, Enum b)										\
+	{																								\
+		return static_cast<underlying_type_t<Enum>>(a) | static_cast<underlying_type_t<Enum>>(b);	\
+	}																								\
+																									\
+	inline underlying_type_t<Enum> operator | (underlying_type_t<Enum> a, Enum b)					\
+	{																								\
+		return a | static_cast<underlying_type_t<Enum>>(b);											\
+	}																								\
+																									\
+	inline underlying_type_t<Enum> operator | (Enum a, underlying_type_t<Enum> b)					\
+	{																								\
+		return static_cast<underlying_type_t<Enum>>(a) | b;											\
+	}																								\
+																									\
+	inline bool operator == (Enum a, underlying_type_t<Enum> b)										\
+	{																								\
+		return static_cast<underlying_type_t<Enum>>(a) == b;										\
+	}																								\
+																									\
+	inline bool operator == (int a, Enum b)															\
+	{																								\
+		return a == static_cast<underlying_type_t<Enum>>(b);										\
+	}																								\
+																									\
+	inline bool operator != (Enum a, underlying_type_t<Enum> b)										\
+	{																								\
+		return static_cast<underlying_type_t<Enum>>(a) != b;										\
+	}																								\
+																									\
+	inline bool operator != (underlying_type_t<Enum> a, Enum b)										\
+	{																								\
+		return a != static_cast<underlying_type_t<Enum>>(b);										\
+	}																								\
+																									\
+	inline underlying_type_t<Enum> operator ~ (Enum value)											\
+	{																								\
+		return ~static_cast<underlying_type_t<Enum>>(value);										\
 	}														
 }
 

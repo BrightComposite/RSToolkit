@@ -1,44 +1,47 @@
 //---------------------------------------------------------------------------
 
-#ifndef DEFINE_PREPROCESSOR_H
-#define DEFINE_PREPROCESSOR_H
+#ifndef META_PREPROCESSOR_H
+#define META_PREPROCESSOR_H
 
 //---------------------------------------------------------------------------
 
 #include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/preprocessor/tuple/enum.hpp>
 #include <boost/preprocessor/tuple/remove.hpp>
+#include <boost/preprocessor/tuple/to_seq.hpp>
 
+#include <boost/preprocessor/seq/size.hpp>
 #include <boost/preprocessor/seq/elem.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/preprocessor/seq/fold_left.hpp>
 #include <boost/preprocessor/seq/transform.hpp>
 #include <boost/preprocessor/seq/for_each.hpp>
+#include <boost/preprocessor/seq/to_tuple.hpp>
+
 #include <boost/preprocessor/stringize.hpp>
 
 #include <boost/preprocessor/repetition/enum.hpp>
 
-// Now it helps only when parsing a lambda. But it helps :)
-
-#define __extract(i, x)  __ ## i x
-#define __0(_x, ...) _x
-#define __1(_1, _x, ...) _x
-#define __2(_1, _2, _x, ...) _x
-
-#define __expand(...) __VA_ARGS__
-
 // BOOST_PP names are too long
 
+#define pp_if					BOOST_PP_IF
+#define pp_empty				BOOST_PP_EMPTY
+
+#define pp_is_empty				BOOST_PP_IS_EMPTY
+
+#define pp_seq_size				BOOST_PP_SEQ_SIZE
 #define pp_seq_elem				BOOST_PP_SEQ_ELEM
 #define pp_seq_enum				BOOST_PP_SEQ_ENUM
 #define pp_seq_fold(op, seq)	BOOST_PP_SEQ_FOLD_LEFT(op, , seq)
 #define pp_seq_transform		BOOST_PP_SEQ_TRANSFORM
 #define pp_seq_foreach			BOOST_PP_SEQ_FOR_EACH
+#define pp_seq_to_tuple			BOOST_PP_SEQ_TO_TUPLE
 
 #define pp_tuple_size			BOOST_PP_TUPLE_SIZE
 #define pp_tuple_elem			BOOST_PP_TUPLE_ELEM
 #define pp_tuple_enum			BOOST_PP_TUPLE_ENUM
 #define pp_tuple_remove			BOOST_PP_TUPLE_REMOVE
+#define pp_tuple_to_seq(tuple)	BOOST_PP_TUPLE_TO_SEQ(pp_tuple_size(tuple), tuple)
 
 #define pp_tuple_extract(index, tuple)	pp_tuple_elem(pp_tuple_size(tuple), index, tuple)
 #define pp_tuple_head(tuple)	pp_tuple_extract(0, tuple)
@@ -47,6 +50,8 @@
 #define pp_cat					BOOST_PP_CAT
 #define pp_string				BOOST_PP_STRINGIZE
 #define pp_enum					BOOST_PP_ENUM
+
+#define pp_expand(...)			__VA_ARGS__
 
 #define pp_enum_prepend(z, n, text) text n
 

@@ -28,9 +28,8 @@ namespace Rapture
 		class ThreadingModel = CommonThreadingModel,
 		template<class> class Initializer = DefaultInitializer
 	>
-	class Singleton
+	struct Singleton
 	{
-	public:
 		static T & instance()
 		{
 			static T instance = Initializer<T>::initialize();
@@ -42,9 +41,8 @@ namespace Rapture
 		class T,
 		template<class> class Initializer
 	>
-	class Singleton<T, ThreadLocalModel, Initializer>
+	struct Singleton<T, ThreadLocalModel, Initializer>
 	{
-	public:
 		static T & instance()
 		{
 			static thread_local T instance = Initializer<T>::initialize();
@@ -53,9 +51,8 @@ namespace Rapture
 	};
 
 	template<class T>
-	class Singleton<T, CommonThreadingModel, DefaultInitializer>
+	struct Singleton<T, CommonThreadingModel, DefaultInitializer>
 	{
-	public:
 		static T & instance()
 		{
 			static T instance;
@@ -64,9 +61,8 @@ namespace Rapture
 	};
 
 	template<class T>
-	class Singleton<T, ThreadLocalModel, DefaultInitializer>
+	struct Singleton<T, ThreadLocalModel, DefaultInitializer>
 	{
-	public:
 		static T & instance()
 		{
 			static thread_local T instance;

@@ -8,6 +8,7 @@
 #include <core/Subject.h>
 #include <core/container/Array.h>
 #include <core/container/Set.h>
+#include <core/container/TypedMap.h>
 
 #include <graphics/Graphics.h>
 #include "WidgetMessages.h"
@@ -176,9 +177,11 @@ namespace Rapture
 		void changePlacement(int left, int top, int right, int bottom, ModelMask mask);
 		void updateAnchors();
 
-		msg_create_link(WidgetRegion, WidgetMoveMessage) {}
-		msg_create_link(WidgetRegion, AfterWidgetMoveMessage) {}
-		msg_create_link(WidgetRegion, WidgetResizeMessage) {}
+		create_readers(
+			WidgetMoveMessage,
+			AfterWidgetMoveMessage,
+			WidgetResizeMessage
+		);
 
 		Widget * _parent;
 
@@ -239,9 +242,17 @@ namespace Rapture
 		friend class Widget;
 
 	public:
-		virtual void draw(const Widget * w, const IntRect & clipRegion) const = 0;
-		virtual void attach(Widget * widget) {}
-		virtual void detach(Widget * widget) {}
+		Layer(Widget * widget, int order = 0);
+		virtual ~Layer();
+
+		virtual void draw(const IntRect & clipRegion) const = 0;
+
+		int order() const
+		{
+			return _order;
+		}
+
+		void setOrder(int order);
 
 		bool operator > (const Layer & layer) const
 		{
@@ -255,31 +266,45 @@ namespace Rapture
 
 	protected:
 		int _order = 0;
+		Widget * _widget;
 	};
 
 	typedef std::function<void(const Widget *, const IntRect &)> WidgetDrawer;
 
+	template<int ID>
 	class CustomLayer : public Layer
 	{
 	public:
-		CustomLayer(const WidgetDrawer & drawer) : drawer(drawer) {}
+		CustomLayer(Widget * widget, int order = 0) : Layer(widget, order), drawer(nullptr) {}
+		CustomLayer(Widget * widget, const WidgetDrawer & drawer, int order = 0) : Layer(widget, order), drawer(drawer) {}
 
-		virtual void draw(const Widget * w, const IntRect & clipRegion) const override
+		void set(const WidgetDrawer & drawer)
 		{
-			drawer(w, clipRegion);
+			this->drawer = drawer;
+		}
+
+		virtual void draw(const IntRect & clipRegion) const override
+		{
+			if(drawer)
+				drawer(_widget, clipRegion);
 		}
 
 	protected:
 		WidgetDrawer drawer;
 	};
 
-#define is_widget_drawer(T) (std::is_function<T>::value || Rapture::is_functor<T, const Widget *, const IntRect &>::value)
+	using DefaultLayer = CustomLayer<0>;
 
-	template<> struct std::hash<Rapture::Widget>;
+#define is_widget(T) based_on(T, Widget)
+#define is_layer(T)  based_on(T, Layer)
+#define is_drawer(T) (std::is_function<T>::value || Rapture::is_functor<T, const Widget *, const IntRect &>::value)
+
+	attach_hash(Widget);
 
 	class Widget : public WidgetRegion
 	{
 		friend class WindowAdapter;
+		friend class Layer;
 
 	public:
 		Widget(Widget * parent);
@@ -294,42 +319,30 @@ namespace Rapture
 		virtual inline Handle<Widget> clone() const;
 		virtual inline Handle<Widget> clone(Widget * parent) const;
 
-		Handle<Widget> attach(Handle<Widget> child);
+		Handle<Widget> attach(const Handle<Widget> & child);
 		Handle<Widget> detach();
 
 		Widget * findWidget(const IntPoint & pt);
 
-		template<class WidgetClass, typename ... A,
-			require_i(1,
-				based_on(WidgetClass, Widget) &&
-				can_construct(WidgetClass, Widget *, A...)
-				)>
+		template<class WidgetClass, typename ... A, selectif(0, is_widget(WidgetClass) && can_construct(WidgetClass, Widget *, A...))>
 		inline Handle<WidgetClass> append(A && ... args);
 
-		template<class LayerClass, typename ... A,
-			require_i(2,
-				based_on(LayerClass, Layer) &&
-				can_construct(LayerClass, A...)
-				)>
+		template<class LayerClass,  typename ... A, selectif(1, is_layer(LayerClass)   && can_construct(LayerClass,  Widget *, A...))>
 		inline Handle<LayerClass> append(A && ... args);
 
-		inline void attach(Handle<Layer> layer, int order = 0);
+		template<class LayerClass, useif(is_layer(LayerClass))>
+		inline Handle<LayerClass> layer();
 
-		template<class Drawer,
-			require(
-				is_widget_drawer(Drawer)
-				)>
-		inline void attach(const Drawer & drawer, int order = 0);
+		template<class Drawer, useif(is_drawer(Drawer))>
+		inline Handle<DefaultLayer> attach(const Drawer & drawer, int order = 0);
 
-		inline Widget & operator += (Handle<Widget> child);
+		template<int Id, class Drawer, useif(is_drawer(Drawer))>
+		inline Handle<CustomLayer<Id>> attach(const Drawer & drawer, int order = 0);
+
+		inline Widget & operator += (const Handle<Widget> & child);
 		inline Widget & operator -= (Handle<Widget> & child);
 
-		inline Widget & operator << (Handle<Layer> layer);
-
-		template<class Drawer,
-			require(
-				is_widget_drawer(Drawer)
-				)>
+		template<class Drawer, useif(is_drawer(Drawer))>
 		inline Widget & operator << (const Drawer & drawer);
 
 		virtual bool isDisplayable() const
@@ -407,7 +420,8 @@ namespace Rapture
 
 		WindowAdapter * _adapter;
 
-		Array<Layer> _layers;
+		list<Layer *> _layers;
+		TypedMap<Layer> _layerMap;
 		Set<Widget> _children;
 		list<Widget *> _displayList;
 
@@ -417,27 +431,17 @@ namespace Rapture
 		int _focusOrder = 0;
 		int _displayOrder = 0;
 
-		msg_create_link(Widget, KeyDownMessage);
-		msg_create_link(Widget, CharMessage);
-		msg_create_link(Widget, KeyUpMessage);
+		bind_messages(Widget,
+			WidgetMessages
+		);
 
-		msg_create_link(Widget, MouseDownMessage) {}
-		msg_create_link(Widget, MouseMoveMessage) {}
-		msg_create_link(Widget, MouseUpMessage) {}
-		msg_create_link(Widget, MouseClickMessage) {}
-		msg_create_link(Widget, MouseDblClickMessage) {}
-		msg_create_link(Widget, MouseWheelMessage) {}
+		create_readers(
+			KeyDownMessage, KeyUpMessage, CharMessage
+		);
 
-		msg_create_link(Widget, WidgetPressMessage) {}
-		msg_create_link(Widget, WidgetStopPressMessage) {}
-		msg_create_link(Widget, WidgetChangedStateMessage) {}
-
-		msg_create_link(Widget, ChangeFocusOrderMessage) {}
-		msg_create_link(Widget, AfterChangeFocusOrderMessage) {}
-		msg_create_link(Widget, ChangeDisplayOrderMessage) {}
-		msg_create_link(Widget, AfterChangeDisplayOrderMessage) {}
-
-		msg_override_reader(Widget, WidgetResizeMessage);
+		override_reader(
+			WidgetResizeMessage
+		);
 	};
 
 	inline void WidgetRegion::setLeft(int value)
@@ -588,39 +592,39 @@ namespace Rapture
 		return Handle<Widget>(*this, parent);
 	}
 
-	template<class WidgetClass, typename ... A, typename, int>
+	template<class WidgetClass, typename ... A, selectif_t<0>>
 	inline Handle<WidgetClass> Widget::append(A && ... args)
 	{
 		return Handle<WidgetClass>(this, forward<A>(args)...);
 	}
 
-	template<class LayerClass, typename ... A, typename, int, int>
+	template<class LayerClass, typename ... A, selectif_t<1>>
 	inline Handle<LayerClass> Widget::append(A && ... args)
 	{
-		Handle<LayerClass> layer(forward<A>(args)...);
-		_layers.push_back(layer);
-
-		return layer;
+		return _layerMap.construct<LayerClass>(this, forward<A>(args)...);
 	}
 
-	inline void Widget::attach(Handle<Layer> layer, int order)
+	template<class Drawer, useif_t>
+	inline Handle<DefaultLayer> Widget::attach(const Drawer & drawer, int order)
 	{
-		layer->attach(this);
-		layer->_order = order;
-
-		_layers.push_back(move(layer));
-		std::sort(_layers.begin(), _layers.end());
+		return append<DefaultLayer>(drawer, order);
 	}
 
-	template<class Drawer, class>
-	inline void Widget::attach(const Drawer & drawer, int order)
+	template<int Id, class Drawer, useif_t>
+	inline Handle<CustomLayer<Id>> Widget::attach(const Drawer & drawer, int order)
 	{
-		attach(handle<CustomLayer>(drawer));
+		return append<CustomLayer<Id>>(drawer, order);
 	}
 
-	inline Widget & Widget::operator += (Handle<Widget> child)
+	template<class LayerClass, useif_t>
+	inline Handle<LayerClass> Widget::layer()
 	{
-		attach(move(child));
+		return _layerMap.request<LayerClass>(this);
+	}
+
+	inline Widget & Widget::operator += (const Handle<Widget> & child)
+	{
+		attach(child);
 		return *this;
 	}
 
@@ -632,13 +636,7 @@ namespace Rapture
 		return *this;
 	}
 
-	inline Widget & Widget::operator << (Handle<Layer> layer)
-	{
-		attach(move(layer));
-		return *this;
-	}
-
-	template<class Drawer, class>
+	template<class Drawer, useif_t>
 	inline Widget & Widget::operator << (const Drawer & drawer)
 	{
 		attach(drawer);
@@ -649,10 +647,7 @@ namespace Rapture
 namespace std
 {
 	template<>
-	struct hash<Rapture::Widget> : unary_function<Rapture::Widget, size_t>
-	{
-		size_t operator() (const Rapture::Widget & val) const;
-	};
+	use_class_hash(Rapture::Widget);
 }
 
 //---------------------------------------------------------------------------

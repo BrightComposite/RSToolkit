@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
-#ifndef DEFINE_TYPES_H
-#define DEFINE_TYPES_H
+#ifndef META_TYPES_H
+#define META_TYPES_H
 
 //---------------------------------------------------------------------------
 
@@ -41,11 +41,15 @@ namespace Rapture
 	using std::is_array;
 	using std::is_lvalue_reference;
 	using std::is_rvalue_reference;
+	using std::is_abstract;
 
 	using std::is_same;
 	using std::is_base_of;
 	using std::true_type;
 	using std::false_type;
+
+	template<bool value>
+	using bool_type = std::bool_constant<value>;
 
 	using std::decay_t;
 	using std::remove_extent_t;

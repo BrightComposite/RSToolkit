@@ -83,16 +83,6 @@ namespace Rapture
 			return {_mm_set_epi32(d, c, b, a)};
 		}
 
-		static inline void __vectorcall load(const __m64 & a, const __m64 & b, type & out)
-		{
-			out = _mm_set_epi64(b, a);
-		}
-
-		static inline inner __vectorcall load(const __m64 & a, const __m64 & b)
-		{
-			return {_mm_set_epi64(b, a)};
-		}
-
 		static inline void __vectorcall load(const int * data, type & out)
 		{
 			out = _mm_set_epi32(data[3], data[2], data[1], data[0]);
@@ -377,19 +367,19 @@ namespace Rapture
 			return {shuffle<3, 2, 1, 0>(a)};
 		}
 
-		template<byte A, byte B, byte C, byte D, require(A < 2 && B < 2 && C < 2 && D < 2)>
+		template<byte A, byte B, byte C, byte D, useif(A < 2 && B < 2 && C < 2 && D < 2)>
 		static inline void __vectorcall blend(const type & a, const type & b, type & out)
 		{
 			out = _mm_blend_epi32(a, b, mk_mask4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D, require(A < 2 && B < 2 && C < 2 && D < 2)>
+		template<byte A, byte B, byte C, byte D, useif(A < 2 && B < 2 && C < 2 && D < 2)>
 		static inline inner __vectorcall blend(const type & a, const type & b)
 		{
 			return {_mm_blend_epi32(a, b, mk_mask4(A, B, C, D))};
 		}
 
-		template<byte A, byte B, byte C, byte D, require(A < 4 && B < 4 && C < 4 && D < 4)>
+		template<byte A, byte B, byte C, byte D, useif(A < 4 && B < 4 && C < 4 && D < 4)>
 		static inline void __vectorcall shuffle2(const type & a, const type & b, type & out)
 		{
 			out = _mm_blend_epi32(
@@ -399,7 +389,7 @@ namespace Rapture
 				);
 		}
 
-		template<byte A, byte B, byte C, byte D, require(A < 4 && B < 4 && C < 4 && D < 4)>
+		template<byte A, byte B, byte C, byte D, useif(A < 4 && B < 4 && C < 4 && D < 4)>
 		static inline inner __vectorcall shuffle2(const type & a, const type & b)
 		{
 			return {_mm_blend_epi32(
@@ -409,13 +399,13 @@ namespace Rapture
 				)};
 		}
 
-		template<byte A, byte B, byte C, byte D, require(A < 4 && B < 4 && C < 4 && D < 4)>
+		template<byte A, byte B, byte C, byte D, useif(A < 4 && B < 4 && C < 4 && D < 4)>
 		static inline void __vectorcall shuffle(const type & a, type & out)
 		{
 			out = _mm_shuffle_epi32(a, mk_shuffle_4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D, require(A < 4 && B < 4 && C < 4 && D < 4)>
+		template<byte A, byte B, byte C, byte D, useif(A < 4 && B < 4 && C < 4 && D < 4)>
 		static inline inner __vectorcall shuffle(const type & a)
 		{
 			return {_mm_shuffle_epi32(a, mk_shuffle_4(A, B, C, D))};
@@ -756,7 +746,7 @@ namespace Rapture
 		}
 
 		template<byte A, byte B, byte C, byte D,
-			require(
+			useif(
 				A < 2 && B < 2 && C < 2 && D < 2
 				)>
 		static inline void __vectorcall blend(const type & a, const type & b, type & out)
@@ -765,7 +755,7 @@ namespace Rapture
 		}
 
 		template<byte A, byte B, byte C, byte D,
-			require(
+			useif(
 				A < 2 && B < 2 && C < 2 && D < 2
 				)>
 		static inline inner __vectorcall blend(const type & a, const type & b)
@@ -773,25 +763,25 @@ namespace Rapture
 			return _mm_blend_ps(a, b, mk_mask4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D, require(A < 4 && B < 4 && C < 4 && D < 4)>
+		template<byte A, byte B, byte C, byte D, useif(A < 4 && B < 4 && C < 4 && D < 4)>
 		static inline void __vectorcall shuffle2(const type & a, const type & b, type & out)
 		{
 			out = _mm_shuffle_ps(a, b, mk_shuffle_4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D, require(A < 4 && B < 4 && C < 4 && D < 4)>
+		template<byte A, byte B, byte C, byte D, useif(A < 4 && B < 4 && C < 4 && D < 4)>
 		static inline inner __vectorcall shuffle2(const type & a, const type & b)
 		{
 			return {_mm_shuffle_ps(a, b, mk_shuffle_4(A, B, C, D))};
 		}
 
-		template<byte A, byte B, byte C, byte D, require(A < 4 && B < 4 && C < 4 && D < 4)>
+		template<byte A, byte B, byte C, byte D, useif(A < 4 && B < 4 && C < 4 && D < 4)>
 		static inline void __vectorcall shuffle(const type & a, type & out)
 		{
 			out = _mm_permute_ps(a, mk_shuffle_4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D, require(A < 4 && B < 4 && C < 4 && D < 4)>
+		template<byte A, byte B, byte C, byte D, useif(A < 4 && B < 4 && C < 4 && D < 4)>
 		static inline inner __vectorcall shuffle(const type & a)
 		{
 			return {_mm_permute_ps(a, mk_shuffle_4(A, B, C, D))};
@@ -1131,7 +1121,7 @@ namespace Rapture
 		}
 
 		template<byte A, byte B, byte C, byte D,
-			require(
+			useif(
 				A < 2 && B < 2 && C < 2 && D < 2
 				)>
 		static inline void __vectorcall blend(const type & a, const type & b, type & out)
@@ -1140,7 +1130,7 @@ namespace Rapture
 		}
 
 		template<byte A, byte B, byte C, byte D,
-			require(
+			useif(
 				A < 2 && B < 2 && C < 2 && D < 2
 				)>
 		static inline inner __vectorcall blend(const type & a, const type & b)
@@ -1149,7 +1139,7 @@ namespace Rapture
 		}
 
 		template<byte A, byte B, byte C, byte D,
-			require(
+			useif(
 				A < 4 && B < 4 && C < 4 && D < 4
 				)>
 		static inline void __vectorcall shuffle2(const type & a, const type & b, type & out)
@@ -1158,7 +1148,7 @@ namespace Rapture
 		}
 
 		template<byte A, byte B, byte C, byte D,
-			require(
+			useif(
 				A < 4 && B < 4 && C < 4 && D < 4
 				)>
 		static inline inner __vectorcall shuffle2(const type & a, const type & b)
@@ -1167,7 +1157,7 @@ namespace Rapture
 		}
 
 		template<byte A, byte B, byte C, byte D,
-			require(
+			useif(
 				A < 4 && B < 4 && C < 4 && D < 4
 				)>
 		static inline void __vectorcall shuffle(const type & a, type & out)
@@ -1176,7 +1166,7 @@ namespace Rapture
 		}
 
 		template<byte A, byte B, byte C, byte D,
-			require(
+			useif(
 				A < 4 && B < 4 && C < 4 && D < 4
 				)>
 		static inline inner __vectorcall shuffle(const type & a)
@@ -1385,7 +1375,7 @@ namespace Rapture
 		}
 
 		template<byte A, byte B, byte C, byte D,
-			require(
+			useif(
 				A < 4 && B < 4 && C < 4 && D < 4
 				)>
 			static inline void __vectorcall shuffle2(const type & a, const type & b, type & out)
@@ -1395,7 +1385,7 @@ namespace Rapture
 		}
 
 		template<byte A, byte B, byte C, byte D,
-			require(
+			useif(
 				A < 4 && B < 4 && C < 4 && D < 4
 				)>
 			static inline inner __vectorcall shuffle2(const type & a, const type & b)
@@ -1407,7 +1397,7 @@ namespace Rapture
 		}
 
 		template<byte A, byte B, byte C, byte D,
-			require(
+			useif(
 				A < 4 && B < 4 && C < 4 && D < 4
 				)>
 			static inline void __vectorcall shuffle(const type & a, type & out)
@@ -1417,7 +1407,7 @@ namespace Rapture
 		}
 
 		template<byte A, byte B, byte C, byte D,
-			require(
+			useif(
 				A < 4 && B < 4 && C < 4 && D < 4
 				)>
 			static inline inner __vectorcall shuffle(const type & a)

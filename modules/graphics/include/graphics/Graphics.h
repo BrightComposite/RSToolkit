@@ -31,7 +31,7 @@
 
 namespace Rapture
 {
-	class Surface : public Shareable<Surface>
+	class Surface : public Shared
 	{
 		friend class Graphics;
 
@@ -63,7 +63,7 @@ namespace Rapture
 		Wireframe
 	};
 
-	class FigureData : public Shareable<FigureData>
+	class FigureData : public Shared
 	{
 	public:
 		FigureData(const vector<FloatPoint> & points) : points(points) {}
@@ -71,7 +71,7 @@ namespace Rapture
 		vector<FloatPoint> points;
 	};
 
-	class Figure : public Shareable<Figure>
+	class Figure : public Shared
 	{
 	public:
 		Figure(const Graphics * graphics, const FigureData & data) : graphics(graphics) {}
@@ -79,7 +79,7 @@ namespace Rapture
 		const Graphics * graphics;
 	};
 
-	link_class(Graphics, MetaClass<Subject>);
+	link_class(Graphics, Class<Subject>);
 
 	class Graphics : public Subject
 	{

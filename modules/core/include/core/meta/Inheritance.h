@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
-#ifndef INHERITANCE_H
-#define INHERITANCE_H
+#ifndef META_INHERITANCE_H
+#define META_INHERITANCE_H
 
 //---------------------------------------------------------------------------
 
@@ -33,9 +33,8 @@ namespace Rapture
 															\
 	public:													\
 		template<class ... A,								\
-			require(										\
-				can_construct(Base, A...)					\
-				)>											\
+			useif(can_construct(Base, A...))				\
+		>													\
 		Name(A &&... args) : Base(forward<A>(args)...) {}	\
 															\
 		inherit_ops(Name, Base)								\
@@ -48,9 +47,8 @@ namespace Rapture
 															\
 	public:													\
 		template<class ... A,								\
-			require(										\
-				can_construct(Base, A...)					\
-				)>											\
+			useif(can_construct(Base, A...))				\
+		>													\
 		Name(A &&... args) : Base(forward<A>(args)...) {}	\
 															\
 		inherit_ops(Name, Base)								\

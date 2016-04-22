@@ -17,7 +17,7 @@ namespace Rapture
 	using std::vector;
 
 	template<class T>
-	class RawData : public Shareable<RawData<T>>
+	class RawData : public Shared
 	{
 	public:
 		RawData() : data(nullptr), size(0) {}
@@ -50,7 +50,7 @@ namespace Rapture
 	};
 
 	template<class T>
-	class RawData<const T> : public Shareable<RawData<const T>>
+	class RawData<const T> : public Shared
 	{
 	public:
 		RawData() : data(nullptr), size(0) {}
@@ -177,7 +177,7 @@ namespace Rapture
 	class OwnedData<const T> {};
 
 	template<>
-	class RawData<void> : public Shareable<RawData<void>>
+	class RawData<void> : public Shared
 	{
 	public:
 		RawData() : data(nullptr), size(0) {}
@@ -213,7 +213,7 @@ namespace Rapture
 	};
 
 	template<>
-	class RawData<const void> : public Shareable<RawData<const void>>
+	class RawData<const void> : public Shared
 	{
 	public:
 		RawData() : data(nullptr), size(0) {}

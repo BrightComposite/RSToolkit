@@ -17,7 +17,7 @@ namespace Rapture
 {
 	class PhysicalObject;
 
-	link_class(PhysicalObject, MetaClass<SceneObject>);
+	link_class(PhysicalObject, Class<SceneObject>);
 
 	class MotionState : public btMotionState
 	{

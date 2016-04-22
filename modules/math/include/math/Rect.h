@@ -37,36 +37,36 @@ namespace Rapture
 		Rect(const Rect & r) :
 			left(r.left), top(r.top), right(r.right), bottom(r.bottom) {}
 
-		template<typename Tl, typename Tt, typename Tr, typename Tb, require(std::is_pod<Tl>::value && std::is_pod<Tt>::value && std::is_pod<Tr>::value && std::is_pod<Tb>::value)>
+		template<typename Tl, typename Tt, typename Tr, typename Tb, useif(std::is_pod<Tl>::value && std::is_pod<Tt>::value && std::is_pod<Tr>::value && std::is_pod<Tb>::value)>
         Rect(Tl left, Tt top, Tr right, Tb bottom) :
 			left(static_cast<T>(left)), top(static_cast<T>(top)), right(static_cast<T>(right)), bottom(static_cast<T>(bottom)) {}
 
-		template<typename Tw, typename Th, require(std::is_pod<Tw>::value && std::is_pod<Th>::value)>
+		template<typename Tw, typename Th, useif(std::is_pod<Tw>::value && std::is_pod<Th>::value)>
 		Rect(Tw w, Th h) :
 			left(static_cast<T>(0)), top(static_cast<T>(0)), right(static_cast<T>(w)), bottom(static_cast<T>(h)) {}
 
-		template<typename T_, require(not_same(T, T_))>
-		explicit Rect(const Rect<T_> & r) :
+		template<typename U, useif(is_not_same(T, U))>
+		explicit Rect(const Rect<U> & r) :
 			left(static_cast<T>(r.left)), top(static_cast<T>(r.top)), right(static_cast<T>(r.right)), bottom(static_cast<T>(r.bottom)) {}
 
-		template<typename T_, typename T__>
-		Rect(const Point<T_> & min, const Point<T__> & max) :
+		template<typename U, typename V>
+		Rect(const Point<U> & min, const Point<V> & max) :
 			left(static_cast<T>(min.x)), top(static_cast<T>(min.y)), right(static_cast<T>(max.x)), bottom(static_cast<T>(max.y)) {}
 
-		template<typename T_, typename T__>
-		Rect(const Range<T_> & h, const Range<T__> & v) :
+		template<typename U, typename V>
+		Rect(const Range<U> & h, const Range<V> & v) :
 			left(static_cast<T>(h.min)), top(static_cast<T>(v.min)), right(static_cast<T>(h.max)), bottom(static_cast<T>(v.max)) {}
 
-		template<typename T_, typename T__>
-		Rect(const Point<T_> & pos, const Size<T__> & sz) :
+		template<typename U, typename V>
+		Rect(const Point<U> & pos, const Size<V> & sz) :
 			left(static_cast<T>(pos.x)), top(static_cast<T>(pos.y)), right(static_cast<T>(pos.x + sz.x)), bottom(static_cast<T>(pos.y + sz.y)) {}
 
-		template<typename T_>
-		Rect(const Size<T_> & sz) :
+		template<typename U>
+		Rect(const Size<U> & sz) :
 			left(static_cast<T>(0)), top(static_cast<T>(0)), right(static_cast<T>(sz.x)), bottom(static_cast<T>(sz.y)) {}
 
-		template<typename T_, typename T__, require(std::is_pod<T_>::value && std::is_pod<T__>::value)>
-		Rect(const initializer_list<T_> & pt, const initializer_list<T__> & sz) :
+		template<typename U, typename V, useif(std::is_pod<U>::value && std::is_pod<V>::value)>
+		Rect(const initializer_list<U> & pt, const initializer_list<V> & sz) :
 			left(static_cast<T>(pt.begin()[0])),
 			top(static_cast<T>(pt.begin()[1])),
 			right(static_cast<T>(pt.begin()[0] + sz.begin()[0])),
@@ -207,8 +207,8 @@ namespace Rapture
 			this->bottom = bottom;
         }
 
-        template<typename T_>
-        void set(const Rect<T_> & r)
+        template<typename U>
+        void set(const Rect<U> & r)
         {
             left   = r.left;
             top    = r.top;
@@ -216,8 +216,8 @@ namespace Rapture
             bottom = r.bottom;
         }
 
-        template<typename T_>
-		void intersect(const Rect<T_> & r)
+        template<typename U>
+		void intersect(const Rect<U> & r)
         {
             if(r.left > left)
                 left = r.left;
@@ -238,8 +238,8 @@ namespace Rapture
                 bottom = top;
         }
 
-        template<typename T_>
-		void include(const Rect<T_> & r)
+        template<typename U>
+		void include(const Rect<U> & r)
         {
             if(r.left < left)
                 left = r.left;
@@ -254,32 +254,32 @@ namespace Rapture
                 bottom = r.bottom;
         }
 
-        template<typename T_>
-        int compare(const Rect<T_> & r) const
+        template<typename U>
+        int compare(const Rect<U> & r) const
         {
             return left == r.left && top == r.top && right == r.right && bottom == r.bottom ? 0 : icomp(center(), r.center());
         }
 
-        template<typename T_>
-        int compare(const Point<T_> & pt) const
+        template<typename U>
+        int compare(const Point<U> & pt) const
         {
             return includes(pt) ? 0 : icomp(center(), pt);
         }
 
-        template<typename T_>
-        bool includes(const Rect<T_> & r) const
+        template<typename U>
+        bool includes(const Rect<U> & r) const
         {
             return includes(r.minPos()) && includes(r.maxPos());
         }
 
-        template<typename T_>
-        bool includes(const Point<T_> & pt) const
+        template<typename U>
+        bool includes(const Point<U> & pt) const
         {
             return between(pt.x, left, right) && between(pt.y, top, bottom);
         }
 
-        template<typename T_>
-        bool isIntersecting(const Rect<T_> & r) const
+        template<typename U>
+        bool isIntersecting(const Rect<U> & r) const
         {
             return (r.right >= left && r.left <= right) && (r.bottom >= top && r.top <= bottom);
         }
@@ -320,8 +320,8 @@ namespace Rapture
 			bottom -= y;
 		}
 
-        template<typename T_>
-		void add(const Point<T_> & pt)
+        template<typename U>
+		void add(const Point<U> & pt)
         {
             left   += pt.x;
             right  += pt.x;
@@ -329,8 +329,8 @@ namespace Rapture
             bottom += pt.y;
         }
 
-		template<typename T_>
-		void subtract(const Point<T_> & pt)
+		template<typename U>
+		void subtract(const Point<U> & pt)
 		{
 			left   -= pt.x;
 			right  -= pt.x;
@@ -344,8 +344,8 @@ namespace Rapture
 			return *this;
 		}
 
-		template<typename T_>
-		Rect & moveTo(const Point<T_> & pt)
+		template<typename U>
+		Rect & moveTo(const Point<U> & pt)
 		{
 			add(pt.x - left, pt.y - top);
 			return *this;
@@ -397,71 +397,71 @@ namespace Rapture
 			return *this;
 		}
 
-		template<typename T_>
-		Rect & setMinimum(const Point<T_> & pt)
+		template<typename U>
+		Rect & setMinimum(const Point<U> & pt)
 		{
 			return setMinimum(pt.x, pt.y);
 		}
 
-		template<typename T_>
-		Rect & setMaximum(const Point<T_> & pt)
+		template<typename U>
+		Rect & setMaximum(const Point<U> & pt)
 		{
 			return setMaximum(pt.x, pt.y);
 		}
 
-        template<typename T_>
-        Rect & operator = (const Rect<T_> & r)
+        template<typename U>
+        Rect & operator = (const Rect<U> & r)
         {
             set(r);
 			return *this;
         }
 
-        template<typename T_>
-        Rect & operator &= (const Rect<T_> & r)
+        template<typename U>
+        Rect & operator &= (const Rect<U> & r)
         {
             intersect(r);
 			return *this;
         }
 
-        template<typename T_>
-        Rect & operator |= (const Rect<T_> & r)
+        template<typename U>
+        Rect & operator |= (const Rect<U> & r)
         {
             include(r);
 			return *this;
         }
 
-        template<typename T_>
-        bool operator == (const Rect<T_> & r) const
+        template<typename U>
+        bool operator == (const Rect<U> & r) const
         {
             return compare(r) == 0;
         }
 
-        template<typename T_>
-        bool operator != (const Rect<T_> & r) const
+        template<typename U>
+        bool operator != (const Rect<U> & r) const
         {
             return compare(r) != 0;
         }
 
-        template<typename T_>
-        bool operator >= (const Rect<T_> & r) const
+        template<typename U>
+        bool operator >= (const Rect<U> & r) const
         {
             return compare(r) >= 0;
         }
 
-        template<typename T_>
-        bool operator <= (const Rect<T_> & r) const
+        template<typename U>
+        bool operator <= (const Rect<U> & r) const
         {
             return compare(r) <= 0;
         }
 
-        template<typename T_>
-        bool operator > (const Rect<T_> & r) const
+        template<typename U>
+        bool operator > (const Rect<U> & r) const
         {
             return compare(r) > 0;
         }
 
-        template<typename T_>
-        bool operator < (const Rect<T_> & r) const
+        template<typename U>
+        bool operator < (const Rect<U> & r) const
         {
             return compare(r) < 0;
         }
@@ -486,41 +486,41 @@ namespace Rapture
             return data;
         }
 
-        template<typename T_>
-        Rect & operator += (const Point<T_> & pt)
+        template<typename U>
+        Rect & operator += (const Point<U> & pt)
         {
             add(pt);
             return *this;
         }
 
-        template<typename T_>
-        Rect & operator -= (const Point<T_> & pt)
+        template<typename U>
+        Rect & operator -= (const Point<U> & pt)
         {
             subtract(pt);
             return *this;
         }
 
-        template<typename T_>
-        Rect operator + (const Point<T_> & pt) const
+        template<typename U>
+        Rect operator + (const Point<U> & pt) const
         {
             return Rect(*this) += pt;
         }
 
-        template<typename T_>
-        Rect operator - (const Point<T_> & pt) const
+        template<typename U>
+        Rect operator - (const Point<U> & pt) const
         {
             return Rect(*this) -= pt;
         }
     };
 
-    template <typename T, typename T_>
-    Rect<T> operator & (const Rect<T> & r1, const Rect<T_> & r2)
+    template <typename T, typename U>
+    Rect<T> operator & (const Rect<T> & r1, const Rect<U> & r2)
     {
         return Rect<T>(r1) &= r2;
     }
 
-    template <typename T, typename T_>
-    Rect<T> operator | (const Rect<T> & r1, const Rect<T_> & r2)
+    template <typename T, typename U>
+    Rect<T> operator | (const Rect<T> & r1, const Rect<U> & r2)
     {
         return Rect<T>(r1) |= r2;
     }

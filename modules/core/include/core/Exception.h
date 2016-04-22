@@ -30,7 +30,7 @@ namespace Rapture
     {
     public:
 		template<class H, class ... T,
-			require(
+			useif(
 				can_string_assemble(H, T...)
 				)>
 		Exception(H && head, T &&... tail) : runtime_error(""), data()

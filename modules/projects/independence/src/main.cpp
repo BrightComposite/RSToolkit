@@ -16,16 +16,6 @@
 
 namespace Rapture
 {
-	static void onWindowKeyDown(Handle<KeyDownMessage> & message, WindowAdapter & dest, const Subject * source)
-	{
-		switch(message->key)
-		{
-		case VK_ESCAPE:
-			dest.close();
-			break;
-		}
-	}
-	
 	static int load()
 	{
 		FreeTypeDecoder::initialize();
@@ -139,15 +129,29 @@ namespace Rapture
 		};
 		
 		Handle<Scene> scene(panel);
-		scene->append<Snake>(color(1.0f, 0.0f, 0.0f));
-		scene->append<Snake>(color(1.0f, 0.5f, 0.0f));
-		scene->append<Snake>(color(1.0f, 1.0f, 0.0f));
-		scene->append<Snake>(color(0.0f, 1.0f, 0.0f));
-		scene->append<Snake>(color(0.0f, 1.0f, 1.0f));
-		scene->append<Snake>(color(0.0f, 0.0f, 1.0f));
-		scene->append<Snake>(color(0.5f, 0.0f, 1.0f));
 
-		connect(*window, onWindowKeyDown);
+		array<color3, 7> colors {
+			color3{1.0f, 0.0f, 0.0f},
+			color3{1.0f, 0.5f, 0.0f},
+			color3{1.0f, 1.0f, 0.0f},
+			color3{0.0f, 1.0f, 0.0f},
+			color3{0.0f, 1.0f, 1.0f},
+			color3{0.0f, 0.0f, 1.0f},
+			color3{0.5f, 0.0f, 1.0f}
+		};
+
+		for(auto & c : colors)
+			scene->append<Snake>(c);
+
+		dest_connect(*window, WindowAdapter, KeyDownMessage)
+		{
+			switch(msg->key)
+			{
+				case VK_ESCAPE:
+					dest.close();
+					break;
+			}
+		};
 
 		window->setBorderStyle(BorderStyle::Static);
 		window->setCaption("Independence");

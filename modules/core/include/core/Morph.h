@@ -12,7 +12,7 @@
 
 namespace Rapture
 {
-	link_class(Morph, MetaClass<Object>);
+	link_class(Morph, Class<Object>);
 
 	class Morph : public Object
 	{
@@ -29,7 +29,7 @@ namespace Rapture
 		template<class T>
 		Handle<T> property(const String & key) const
 		{
-			return properties[key];
+			return Handle<T>::cast(properties[key]);
 		}
 
 		void setProperty(const String & key, const Handle<Object> & value)

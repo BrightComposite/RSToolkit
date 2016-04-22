@@ -18,10 +18,7 @@ namespace Rapture
 		size_t _hashValue;
 
 	public:
-		template<typename ... A,
-			require(
-				can_construct(T, A...)
-				)>
+		template<typename ... A, useif(can_construct(T, A...))>
 		Hashed(A &&... args) : T(forward<A>(args)...), _hashValue(Rapture::hash(static_cast<const T &>(*this))) {}
 
 		Hashed(const Hashed & val) : T(val), _hashValue(val._hashValue) {}
@@ -44,8 +41,8 @@ namespace Rapture
 		}
 
 		template<class A,
-			require(
-				not_based_on(A, Hashed)
+			useif(
+				is_not_based_on(A, Hashed)
 				)>
 		Hashed & operator = (A && val)
 		{
@@ -128,22 +125,17 @@ namespace Rapture
 		}
 	};
 
-	typedef Hashed<void *> PtrId;
+	typedef Hashed<void *> PointerId;
 
 	inline bool equal_to(const char * first, const char * second)
 	{
 		return strcmp(first, second) == 0;
 	}
 
-	inline bool equal_to(const Object & first, const Object & second)
-	{
-		return first.compare(&second) == 0;
-	}
-
 	template<class X, class Y,
-		require(
-			not_based_on(X, Object) &&
-			not_same(X, const char *)
+		useif(
+			is_not_based_on(X, Object) &&
+			is_not_same(X, const char *)
 			)>
 	inline bool equal_to(const X & first, const Y & second)
 	{
@@ -191,11 +183,8 @@ namespace Rapture
 		SharedIdentifier() : EmptyHandle(emptiness) {}
 	};
 
-	template<class T>
-	size_t hash(const T & value,
-		require_p(
-			is_functor<std::hash<T>, const T &>::value
-			))
+	template<class T, useif(is_functor<std::hash<T>, const T &>::value)>
+	size_t hash(const T & value)
 	{
 		return std::hash<T>()(value);
 	}
@@ -204,46 +193,35 @@ namespace Rapture
 	class StaticIdentifier
 	{
 	public:
-		static PtrId & id()
+		static PointerId & id()
 		{
-			static PtrId _id(StaticIdentifier::id);
+			static PointerId _id(StaticIdentifier::id);
 			return _id;
 		}
 	};
 }
 
+#define attach_hash(... /* Class */) template<> struct std::hash<__VA_ARGS__>
+
+#define use_class_hash(... /* Class */)								\
+	struct hash<__VA_ARGS__> : unary_function<__VA_ARGS__, size_t>	\
+	{																\
+		size_t operator()(const __VA_ARGS__ & val) const			\
+		{															\
+			return val.hash();										\
+		}															\
+	};																\
+
 namespace std
 {
 	template<class T>
-	struct hash<Rapture::Hashed<T>> : unary_function<Rapture::Hashed<T>, size_t>
-	{
-		size_t operator()(const Rapture::Hashed<T> & val) const
-		{
-			return val.hash();
-		}
-	};
-
-	template<>
-	struct hash<Rapture::AutoIdentifier> : unary_function<Rapture::AutoIdentifier, size_t>
-	{
-		size_t operator()(const Rapture::AutoIdentifier & val) const
-		{
-			return val.hash();
-		}
-	};
+	use_class_hash(Rapture::Handle<T>);
 
 	template<class T>
-	struct hash<Rapture::Handle<T>> : unary_function<Rapture::Handle<T>, size_t>
-	{
-		template<
-			require(
-				Rapture::is_functor<hash<T>, const T &>::value
-				)>
-		size_t operator()(const Rapture::Handle<T> & val) const
-		{
-			return val == nullptr ? 0 : hash<T>()(*val);
-		}
-	};
+	use_class_hash(Rapture::Hashed<T>);
+
+	template<>
+	use_class_hash(Rapture::AutoIdentifier);
 }
 
 //---------------------------------------------------------------------------

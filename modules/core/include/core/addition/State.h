@@ -13,12 +13,12 @@
 namespace Rapture
 {
 	template<typename T>
-	class State : public Shareable<State<T>>
+	class State : public Shared
 	{
 	public:
 		State() : _state() {}
 		State(const State & state) : _state(state._state) {}
-		template<class ... A, require(can_construct(T, A...))>
+		template<class ... A, useif(can_construct(T, A...))>
 		State(A &&... args) : _state(forward<A>(args)...) {}
 		virtual ~State() {}
 

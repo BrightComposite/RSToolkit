@@ -25,6 +25,11 @@ namespace Rapture
 				Initialize::init(component, c);
 			}
 
+			Component(T && c)
+			{
+				Initialize::init(component, forward<T>(c));
+			}
+
 			Component(const initializer_list<remove_extent_t<T>> & c)
 			{
 				Initialize::init(component, c);
@@ -49,8 +54,17 @@ namespace Rapture
 		class Base<integer_sequence<size_t, I...>, T...> : public UniformFlag, public Component<T, I>...
 		{
 		public:
-			Base(const T & ... args) : Component<T, I>(args)... {}
-			Base(T && ... args) : Component<T, I>(forward<T>(args))... {}
+			template<class ... A,
+				useif(sizeof...(A) == sizeof...(T)),
+				useif(is_true<can_construct(Component<T, I>, A)...>::value)
+			>
+			Base(const A & ... args) : Component<T, I>(static_cast<T>(args))... {}
+
+			template<class ... A,
+				useif(sizeof...(A) == sizeof...(T)),
+				useif(is_true<can_construct(Component<T, I>, A)...>::value)
+			>
+			Base(A && ... args) : Component<T, I>(static_cast<adapt_t<T, A>>(forward<A>(args)))... {}
 		};
 
 #define declare_uniform(name, shader_index, shader_type, components)	\

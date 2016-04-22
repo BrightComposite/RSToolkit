@@ -18,8 +18,7 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Some key was pressed when this widget was in focus
-	message_class(
-		KeyDownMessage,
+	message_class(KeyDownMessage,
 		(int, key)
 		(int, times)
 		(bool, isFirst)
@@ -29,8 +28,7 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Some char-key was pressed when this widget was in focus
-	message_class(
-		CharMessage,
+	message_class(CharMessage,
 		(int, key)
 		(int, times)
 		(bool, isFirst)
@@ -40,8 +38,7 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Some key was released when this Widget was in focus
-	message_class(
-		KeyUpMessage,
+	message_class(KeyUpMessage,
 		(int, key)
 		(int, times)
 		(bool, isFirst)
@@ -51,8 +48,7 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Mouse state is updating over this widget
-	message_class(
-		MouseUpdateMessage,
+	message_class(MouseUpdateMessage,
 		(int, x)
 		(int, y)
 		);
@@ -60,8 +56,7 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Some mouse button was pressed over this widget
-	message_class(
-		MouseDownMessage,
+	message_class(MouseDownMessage,
 		(MouseButton, button)
 		(int, x)
 		(int, y)
@@ -71,8 +66,7 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Mouse is moving over this widget
-	message_class(
-		MouseMoveMessage,
+	message_class(MouseMoveMessage,
 		(int, x)
 		(int, y)
 		(int, flags)
@@ -81,8 +75,7 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Some mouse button was released over this widget
-	message_class(
-		MouseUpMessage,
+	message_class(MouseUpMessage,
 		(MouseButton, button)
 		(int, x)
 		(int, y)
@@ -92,8 +85,7 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Some mouse button was clicked over this widget
-	message_class(
-		MouseClickMessage,
+	message_class(MouseClickMessage,
 		(MouseButton, button)
 		(int, x)
 		(int, y)
@@ -103,8 +95,7 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Some mouse button was double-clicked over this widget
-	message_class(
-		MouseDblClickMessage,
+	message_class(MouseDblClickMessage,
 		(MouseButton, button)
 		(int, x)
 		(int, y)
@@ -114,8 +105,7 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Mouse wheel was moved when this widget was in focus
-	message_class(
-		MouseWheelMessage,
+	message_class(MouseWheelMessage,
 		(int, data)
 		(int, x)
 		(int, y)
@@ -125,45 +115,36 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Mouse has entered to the region of this widget
-	empty_message_class(
-		MouseEnterMessage
-		);
+	message_class(MouseEnterMessage);
 
 //---------------------------------------------------------------------------
 
 	// Mouse has left to the region of this widget
-	empty_message_class(
-		MouseLeaveMessage
-		);
+	message_class(MouseLeaveMessage);
 
 //---------------------------------------------------------------------------
 
 	// After mouse down
-	message_class(
-		WidgetPressMessage,
+	message_class(WidgetPressMessage,
 		(MouseButton, button)
 		);
 
 //---------------------------------------------------------------------------
 
 	// After mouse up or leave
-	message_class(
-		WidgetStopPressMessage,
+	message_class(WidgetStopPressMessage,
 		(MouseButton, button)
 		);
 
 //---------------------------------------------------------------------------
 
 	// After mouse up
-	empty_message_class(
-		WidgetReleaseMessage
-		);
+	message_class(WidgetReleaseMessage);
 
 //---------------------------------------------------------------------------
 
 	// Widget has changed one of its states
-	message_class(
-		WidgetChangedStateMessage,
+	message_class(WidgetChangedStateMessage,
 		(WidgetState, state)
 		(bool, value)
 		);
@@ -171,8 +152,7 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Widget is preparing to change its focus order
-	message_class(
-		ChangeFocusOrderMessage,
+	message_class(ChangeFocusOrderMessage,
 		(int, newValue)
 		(int, oldValue)
 		);
@@ -180,16 +160,14 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Widget has changed its focus order
-	message_class(
-		AfterChangeFocusOrderMessage,
+	message_class(AfterChangeFocusOrderMessage,
 		(int, newValue)
 		);
 
 //---------------------------------------------------------------------------
 
 	// Widget is preparing to change its display order
-	message_class(
-		ChangeDisplayOrderMessage,
+	message_class(ChangeDisplayOrderMessage,
 		(int, newValue)
 		(int, oldValue)
 		);
@@ -197,16 +175,14 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Widget has changed its display order
-	message_class(
-		AfterChangeDisplayOrderMessage,
+	message_class(AfterChangeDisplayOrderMessage,
 		(int, newValue)
 		);
 
 //---------------------------------------------------------------------------
 
 	// Widget should change its placement
-	message_class(
-		WidgetMoveMessage,
+	message_class(WidgetMoveMessage,
 		(int, left)
 		(int, top)
 		(int, right)
@@ -217,8 +193,7 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Widget has changed its placement
-	message_class(
-		AfterWidgetMoveMessage,
+	message_class(AfterWidgetMoveMessage,
 		(int, left)
 		(int, top)
 		(int, right)
@@ -228,8 +203,7 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Widget has changed its sizes
-	message_class(
-		WidgetResizeMessage,
+	message_class(WidgetResizeMessage,
 		(int, width)
 		(int, height)
 		(ModelMask, mask)
@@ -238,8 +212,7 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Widget must be painted
-	message_class(
-		WidgetDrawMessage,
+	message_class(WidgetDrawMessage,
 		(Handle<IntRect>, DrawRegion)
 		(Handle<IntRect>, ClipRegion)
 		);
@@ -247,31 +220,27 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// Hot-key combination has been pressed while this window was in focus
-	message_class(
-		WindowHotkeyMessage,
+	message_class(WindowHotkeyMessage,
 		(int, id)
 		);
 
 	// Window has changed its size
-	message_class(
-		WindowResizeMessage,
+	message_class(WindowResizeMessage,
 		(int, width)
 		(int, height)
 		);
 
 	// Window has changed its fullscreen state
-	message_class(
-		WindowFullscreenMessage,
+	message_class(WindowFullscreenMessage,
 		(bool, fullscreen)
 		);
 
-	empty_message_class(
-		WindowCloseMessage // Send this message to window-widget to close it (it is usually sent automatically when window is closed by system command)
-		);
+	// Send this message to window-widget to close it (it is usually sent automatically when window is closed by system command)
+	message_class(WindowCloseMessage);
 
 //---------------------------------------------------------------------------
 
-#define WidgetMessages\
+#define WidgetMessages	\
 	KeyDownMessage, CharMessage, KeyUpMessage,\
 	MouseDownMessage, MouseMoveMessage, MouseUpMessage, MouseClickMessage,\
 	MouseDblClickMessage, MouseWheelMessage, MouseEnterMessage,\

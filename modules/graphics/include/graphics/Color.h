@@ -85,8 +85,8 @@ namespace Rapture
 		};
 	};
 
-	template<class T, class T_>
-	inline T color_cast(T_ component)
+	template<class T, class U>
+	inline T color_cast(U component)
 	{
 		return ColorTraits<T>::cast(component);
 	}
@@ -100,7 +100,7 @@ namespace Rapture
 			ColorTraits<T>::init(data);
 		}
 
-		template<class F, class ... A, require(std::is_pod<F>::value)>
+		template<class F, class ... A, useif(std::is_pod<F>::value)>
 		Color(F first, A ... others)
 		{
 			T color[] {color_cast<T>(first), color_cast<T>(others)...};
@@ -193,8 +193,8 @@ namespace Rapture
 		return {components...};
 	}
 
-	template<class T, int N, class T_, int N_, ColorFormat format>
-	inline Color<T, N, format> color_cast(const Color<T_, N_, format> & color)
+	template<class T, int N, class U, int N_, ColorFormat format>
+	inline Color<T, N, format> color_cast(const Color<U, N_, format> & color)
 	{
 		T data[N];
 		ColorTraits<T>::init(data, color.data);
@@ -242,8 +242,8 @@ namespace Rapture
 				target[i] = i >= 3 ? 1.0f : 0.0f;
 		}
 
-		template<int N, class T_, int N_>
-		static inline void init(T(&target)[N], const T_(&color)[N_], require_p(!is_same<T, T_>::value))
+		template<int N, class U, int N_, useif(is_not_same(T, U))>
+		static inline void init(T(&target)[N], const U(&color)[N_])
 		{
 			register int i = 0;
 
@@ -254,18 +254,20 @@ namespace Rapture
 				target[i] = i >= 3 ? 1.0f : 0.0f;
 		}
 
-		template<class T_,
-			require_i(1, std::is_integral<T_>::value)
+		template<
+			class U,
+			selectif(1, std::is_integral<U>::value)
 		>
-		static inline T cast(T_ val)
+		static inline T cast(U val)
 		{
 			return static_cast<T>(val) / 255.0f;
 		}
 
-		template<class T_,
-			require_i(2, std::is_floating_point<T_>::value)
+		template<
+			class U,
+			selectif(2, std::is_floating_point<U>::value)
 		>
-		static inline T cast(T_ val)
+		static inline T cast(U val)
 		{
 			return static_cast<T>(val);
 		}
@@ -300,8 +302,8 @@ namespace Rapture
 				target[i] = i >= 3 ? 0xFF : 0x00;
 		}
 
-		template<int N, class T_, int N_>
-		static inline void init(T(&target)[N], const T_(&color)[N_], require_p(!is_same<T, T_>::value))
+		template<int N, class U, int N_, useif(is_not_same(T, U))>
+		static inline void init(T(&target)[N], const U(&color)[N_])
 		{
 			register int i = 0;
 
@@ -312,18 +314,20 @@ namespace Rapture
 				target[i] = i >= 3 ? 0xFF: 0x00;
 		}
 
-		template<class T_,
-			require_i(1, std::is_integral<T_>::value)
+		template<
+			class U,
+			selectif(1, std::is_integral<U>::value)
 		>
-		static inline T cast(T_ val)
+		static inline T cast(U val)
 		{
 			return val;
 		}
 
-		template<class T_,
-			require_i(2, std::is_floating_point<T_>::value)
+		template<
+			class U,
+			selectif(2, std::is_floating_point<U>::value)
 		>
-		static inline T cast(T_ val)
+		static inline T cast(U val)
 		{
 			return static_cast<T>(std::round(val * 0xFF));
 		}

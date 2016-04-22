@@ -33,7 +33,7 @@ namespace Rapture
 			case WM_CLOSE:
 			{
 				window->_isClosed = true;
-				send(handle<WindowCloseMessage>(), *window);
+				send<WindowCloseMessage>(*window);
 				DestroyWindow(hWnd);
 				break;
 			}
@@ -69,89 +69,89 @@ namespace Rapture
 					}
 				}
 
-				window->send(handle<KeyDownMessage>((int)wParam, (int)(lParam & 0xFFFF), (get_bit<30>(lParam) == 0), (get_bit<24>(lParam) != 0)), *window);
+				send<KeyDownMessage>(*window, (int)wParam, (int)(lParam & 0xFFFF), (get_bit<30>(lParam) == 0), (get_bit<24>(lParam) != 0));
 				break;
 			}
 
 			case WM_CHAR:
 			{
-				window->send(handle<CharMessage>((int)wParam, (int)(lParam & 0xFFFF), (get_bit<30>(lParam) == 0), (get_bit<24>(lParam) != 0)), *window);
+				send<CharMessage>(*window, (int)wParam, (int)(lParam & 0xFFFF), (get_bit<30>(lParam) == 0), (get_bit<24>(lParam) != 0));
 				break;
 			}
 
 			case WM_HOTKEY:
 			{
-				window->send(handle<WindowHotkeyMessage>((int)wParam), *window);
+				send<WindowHotkeyMessage>(*window, (int)wParam);
 				break;
 			}
 
 			case WM_KEYUP:
 			case WM_SYSKEYUP:
 			{
-				window->send(handle<KeyUpMessage>((int)wParam, (int)(lParam & 0xFFFF), (get_bit<30>(lParam) == 0), (get_bit<24>(lParam) != 0)), *window);
+				send<KeyUpMessage>(*window, (int)wParam, (int)(lParam & 0xFFFF), (get_bit<30>(lParam) == 0), (get_bit<24>(lParam) != 0));
 				break;
 			}
 
 			case WM_LBUTTONDOWN:
 			{
-				window->send(handle<MouseDownMessage>(MouseButton::Left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam), *window);
+				send<MouseDownMessage>(*window, MouseButton::Left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
 			case WM_MBUTTONDOWN:
 			{
-				window->send(handle<MouseDownMessage>(MouseButton::Middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam), *window);
+				send<MouseDownMessage>(*window, MouseButton::Middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
 			case WM_RBUTTONDOWN:
 			{
-				window->send(handle<MouseDownMessage>(MouseButton::Right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam), *window);
+				send<MouseDownMessage>(*window, MouseButton::Right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
 			case WM_LBUTTONUP:
 			{
 				window->_mouseState.unpress(MouseButton::Left);
-				window->send(handle<MouseUpMessage>(MouseButton::Left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam), *window);
+				send<MouseUpMessage>(*window, MouseButton::Left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
 			case WM_MBUTTONUP:
 			{
 				window->_mouseState.unpress(MouseButton::Middle);
-				window->send(handle<MouseUpMessage>(MouseButton::Middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam), *window);
+				send<MouseUpMessage>(*window, MouseButton::Middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
 			case WM_RBUTTONUP:
 			{
 				window->_mouseState.unpress(MouseButton::Right);
-				window->send(handle<MouseUpMessage>(MouseButton::Right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam), *window);
+				send<MouseUpMessage>(*window, MouseButton::Right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
 			case WM_LBUTTONDBLCLK:
 			{
-				window->send(handle<MouseDblClickMessage>(MouseButton::Left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam), root);
+				send<MouseDblClickMessage>(root, MouseButton::Left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
 			case WM_MBUTTONDBLCLK:
 			{
-				window->send(handle<MouseDblClickMessage>(MouseButton::Middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam), root);
+				send<MouseDblClickMessage>(root, MouseButton::Middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
 			case WM_RBUTTONDBLCLK:
 			{
-				window->send(handle<MouseDblClickMessage>(MouseButton::Right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam), root);
+				send<MouseDblClickMessage>(root, MouseButton::Right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
 			case WM_MOUSEWHEEL:
 			{
-				window->send(handle<MouseWheelMessage>(GET_WHEEL_DELTA_WPARAM(wParam), (int)LOWORD(lParam), (int)HIWORD(lParam), (int)LOWORD(wParam)), root);
+				send<MouseWheelMessage>(root, GET_WHEEL_DELTA_WPARAM(wParam), (int)LOWORD(lParam), (int)HIWORD(lParam), (int)LOWORD(wParam));
 				break;
 			}
 
@@ -161,7 +161,7 @@ namespace Rapture
 				GetCursorPos(&pt);
 				ScreenToClient(hWnd, &pt);
 
-				window->send(handle<MouseUpdateMessage>(pt.x, pt.y), *window);
+				send<MouseUpdateMessage>(*window, pt.x, pt.y);
 				break;
 			}
 
@@ -184,7 +184,7 @@ namespace Rapture
 					window->_width = a.width();
 					window->_height = a.height();
 
-					window->send(handle<WindowResizeMessage>(window->_width, window->_height), *window);
+					send<WindowResizeMessage>(*window, window->_width, window->_height);
 				}
 
 				if(check_flag(SWP_HIDEWINDOW, pos.flags))
@@ -254,8 +254,8 @@ namespace Rapture
 		getMonitorSize(_width, _height);
 		_outerRegion.set(0, 0, _width, _height);
 
-		send(handle<WindowResizeMessage>(_width, _height), *this);
-		send(handle<WindowFullscreenMessage>(true), *this);
+		send<WindowResizeMessage>(*this, _width, _height);
+		send<WindowFullscreenMessage>(*this, true);
 
 		SetWindowLongW(_handle, GWL_STYLE, WS_CAPTION);
 		SetWindowLongW(_handle, GWL_STYLE, WS_POPUP | WS_MINIMIZEBOX);
@@ -267,7 +267,7 @@ namespace Rapture
 
 	void Window::restoreSize()
 	{
-		send(handle<WindowFullscreenMessage>(false), *this);
+		send<WindowFullscreenMessage>(*this, false);
 
 		SetWindowLongW(_handle, GWL_STYLE, WS_CAPTION);
 		SetWindowLongW(_handle, GWL_STYLE, _normalStyle);
@@ -305,9 +305,9 @@ namespace Rapture
 
 		registerHotkey(HOTKEY_FULLSCREEN, VK_RETURN, MOD_ALT);
 
-		connect<WindowAdapter, WindowHotkeyMessage>(*this, [](Handle<WindowHotkeyMessage> & msg, WindowAdapter & dst, const Subject * src)
+		dest_connect(*this, WindowAdapter, WindowHotkeyMessage)
 		{
-			auto window = static_cast<Window *>(&dst);
+			auto window = static_cast<Window *>(&dest);
 
 			switch(msg->id)
 			{
@@ -315,7 +315,7 @@ namespace Rapture
 				window->toggleFullscreen();
 				break;
 			}
-		});
+		};
 	}
 
 	Window::~Window() {}
@@ -392,7 +392,7 @@ namespace Rapture
 		wstring s(text, length);
 		Memory<wchar_t>::free(text);
 
-		return move(s);
+		return s;
 	}
 
 	void Window::setState(WindowState value)

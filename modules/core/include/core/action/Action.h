@@ -6,7 +6,7 @@
 //---------------------------------------------------------------------------
 
 #include <functional>
-#include <core/meta/Require.h>
+#include <core/meta/UseIf.h>
 #include <core/meta/Types.h>
 
 //---------------------------------------------------------------------------
@@ -21,13 +21,13 @@ namespace Rapture
 	{
 	public:
 		template<class F,
-			require(
+			useif(
 				is_same<void, decltype(std::invoke(declval<F>()))>::value
 				)>
 		ImmediateAction(F f) : Action(f) { operator()(); }
 
 		template<class F, class ... A,
-			require(
+			useif(
 				is_same<void, std::result_of<F(A &&...)>::type>::value &&
 				sizeof ... (A) > 0
 				)>
@@ -39,13 +39,13 @@ namespace Rapture
 	{
 	public:
 		template<class F,
-			require(
+			useif(
 				is_same<void, decltype(std::invoke(declval<F>()))>::value
 				)>
 		FinalAction(F f) : Action(f) {}
 
 		template<class F, class ... A,
-			require(
+			useif(
 				is_same<void, std::result_of<F(A &&...)>::type>::value &&
 				sizeof ... (A) > 0
 				)>
@@ -182,7 +182,7 @@ namespace Rapture
 	};
 
 	template<class T, class M,
-		require(
+		useif(
 			!std::is_pointer<T>::value &&
 			is_method<T, M>::value
 			)>
@@ -192,7 +192,7 @@ namespace Rapture
 	}
 
 	template<class T, class M,
-		require(
+		useif(
 			is_method<T *, M>::value
 			)>
 	method_wrapper<T *, M> wrap_method(T * object, M method)

@@ -122,7 +122,7 @@ static void loadWindow()
 	Handle<Window> window(graphics, 0, 0, 1280, 480);
 
 	Handle<WindowBackground> back(window);
-	back->name = "Background";
+	back->setName("Background");
 
 	graphics->setClearColor({1.0f, 1.0f, 1.0f});
 
@@ -147,7 +147,7 @@ static void loadWindow()
 		switch(msg->button)
 		{
 		case MouseButton::Left:
-			cout << "Widget " << dest.name << " has been pressed!" << endl;
+			cout << "Widget " << dest.name() << " has been pressed!" << endl;
 			break;
 		}
 	};
@@ -158,17 +158,6 @@ static void loadWindow()
 
 		switch(msg->key)
 		{
-		case VK_RETURN:
-			if(IsKeyPressed(VK_MENU))
-				break;
-
-			if(window->state() == WindowState::Maximized)
-				window->restore();
-			else
-				window->maximize();
-
-			break;
-
 		case VK_ESCAPE:
 			window->close();
 			break;
@@ -247,17 +236,17 @@ static void loadWindow()
 			int y = (dy + h) * (iy + 1) + 100;
 
 			auto panel = back->append<Panel>(IntRect {x - w, y - h, x, y});
-			panel->name = "panel("_s << ix << ',' << iy << ')';
 
-			panel << panelDrawer;
+			panel->setName("panel("_s << ix << ',' << iy << ')');
+			panel->attach(panelDrawer);
 
 			for(int ir = 0; ir < 4; ++ir)
 			{
 				auto child = panel->append<ChildWidget>(rects[ir]);
-				child->name = "child("_s << ix << ',' << iy << ',' << ir << ')';
-				child->setVisibility(isVisible());
 
-				child << childDrawer;
+				child->setName("child("_s << ix << ',' << iy << ',' << ir << ')');
+				child->setVisibility(isVisible());
+				child->attach(childDrawer);
 			}
 		}
 	}
@@ -307,10 +296,10 @@ static void loadWindow()
 		graphics->bind(pristina_font);
 		graphics->setFontSize(fontSize);
 
-		label->name = "Engine Label";
+		label->setName("Engine Label");
 		label->setPlacement(ModelMask::RightTop, {-10, 10}, graphics->getTextSize(*engine_text));
 
-		english_label->name = "Text Label";
+		english_label->setName("Text Label");
 		english_label->setPlacement({10, 10}, graphics->getTextSize(*english_text));
 
 		label << [engine_text, pristina_font, fontSize](const Widget * widget, const IntRect & region)
@@ -345,7 +334,7 @@ static void loadWindow()
 		graphics->bind(arial_italic);
 		graphics->setFontSize(fontSize);
 
-		russian_label->name = "Russian Text Label";
+		russian_label->setName("Russian Text Label");
 		russian_label->setPlacement({10, 50}, graphics->getTextSize(*russian_text));
 
 		russian_label << [russian_text, arial_italic, fontSize](const Widget * widget, const IntRect & region)

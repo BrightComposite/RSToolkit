@@ -11,9 +11,8 @@
 
 namespace Rapture
 {
-	class DefaultAllocator
+	struct DefaultAllocator
 	{
-	public:
 		static inline void * operator new(size_t size)
 		{
 			return _new(size);

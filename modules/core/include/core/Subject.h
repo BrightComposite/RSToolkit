@@ -5,7 +5,8 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/Morph.h>
+#include <core/Exception.h>
+
 #include <core/addition/Named.h>
 #include <core/message/Channel.h>
 
@@ -18,10 +19,10 @@ namespace Rapture
 	 *	Receiver must be initialized after this message
 	 */
 	message_class(InitializeMessage,
-				  (int, type)
-				  );
+		(int, type)
+		);
 
-	link_class(Subject, MetaClass<Object, Named>);
+	link_class(Subject, Class<Object, Named>);
 
 	class Subject : public Object, public Named, public AutoIdentifier
 	{
@@ -67,48 +68,77 @@ namespace Rapture
 		{
 			return _enabled;
 		}
-		
-		template<class Dst, class Msg>
-		void send(Handle<Msg> & message, Dst & dest) const
-		{
-			if(!dest.isEnabled())
-				return;
 
-			Channel<Dst, Msg>::transmit(message, dest, this);
+		bool isDisabled() const
+		{
+			return !_enabled;
+		}
+
+		template<class Msg, class Dst, class ... F, useif(can_construct(Msg, Subject *, F...))>
+		Handle<Msg> send(Dst & dest, F &&... fields) const
+		{
+			auto msg = handle<Msg>(this, forward<F>(fields)...);
+			channel_t<Dst, Msg>::transmit(msg, dest);
+
+			return msg;
+		}
+
+		template<class Msg, class Dst, class ... F, useif(can_construct(Msg, Subject *, F...))>
+		Handle<Msg> send(Dst * dest, F &&... fields) const
+		{
+			if(dest == nullptr)
+				throw Exception("Destination should be not null!");
+
+			auto msg = handle<Msg>(this, forward<F>(fields)...);
+			channel_t<Dst, Msg>::transmit(msg, *dest);
+
+			return msg;
 		}
 
 		template<class Dst, class Msg>
-		void send(Handle<Msg> & message, Dst * dest) const
+		void resend(Handle<Msg> & message, Dst & dest) const
+		{
+			auto * src = message->source;
+			message->source = this;
+			channel_t<Dst, Msg>::transmit(message, dest);
+			message->source = src;
+		}
+
+		template<class Dst, class Msg>
+		void resend(Handle<Msg> & message, Dst * dest) const
 		{
 			if(dest == nullptr)
-				throw Exception("Destination of message must not be null!");
+				throw Exception("Destination should be not null!");
 
-			send(message, *dest);
+			auto * src = message->source;
+			message->source = this;
+			channel_t<Dst, Msg>::transmit(message, *dest);
+			message->source = src;
 		}
 
 	protected:
 		bool _enabled = true;
+
+	private:
+		declare_receivers();
 	};
 
-	template<class Dst, class Msg,
-		require(
-			based_on(Dst, Subject)
-			)>
-	void send(Handle<Msg> & message, Dst & dest)
+	template<class Msg, class Dst, class ... F, useif(can_construct(Msg, Subject *, F...))>
+	Handle<Msg> send(Dst & dest, F &&... fields)
 	{
-		dest.send(message, dest);
+		auto msg = handle<Msg>(nullptr, forward<F>(fields)...);
+		channel_t<Dst, Msg>::transmit(msg, dest);
+
+		return msg;
 	}
 
-	template<class Dst, class Msg,
-		require(
-			based_on(Dst, Subject)
-			)>
-	void send(Handle<Msg> & message, Dst * dest)
+	template<class Dst, class Msg>
+	void resend(Handle<Msg> & message, Dst & dest)
 	{
-		if(dest == nullptr)
-			throw Exception("Destination of message must not be null!");
-
-		dest->send(message, *dest);
+		auto * src = message->source;
+		message->source = nullptr;
+		channel_t<Dst, Msg>::transmit(message, dest);
+		message->source = src;
 	}
 }
 

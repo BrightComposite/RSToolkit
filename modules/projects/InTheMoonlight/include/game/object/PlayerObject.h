@@ -79,7 +79,7 @@ namespace Rapture
 		deque<Contact> _contacts;
 	};
 
-	link_class(PlayerObject, MetaClass<PhysicalObject, Drawable>);
+	link_class(PlayerObject, Class<PhysicalObject, Drawable>);
 
 	class PlayerObject : public PhysicalObject, public Drawable
 	{
@@ -210,17 +210,17 @@ namespace Rapture
 	class PlayerController : public Object
 	{
 	protected:
-		class Receiver : public Shareable<Receiver>
+		class Receiver : public Shared
 		{
 		public:
 			Receiver(PlayerObject * object) : object(object) {}
 
-			void onKeyDown(Handle<KeyDownMessage> & message, WindowAdapter & dest, const Subject * source)
+			void onKeyDown(Handle<KeyDownMessage> & message, WindowAdapter & dest)
 			{
 				object->_keyMap.press(message->key);
 			}
 
-			void onKeyUp(Handle<KeyUpMessage> & message, WindowAdapter & dest, const Subject * source)
+			void onKeyUp(Handle<KeyUpMessage> & message, WindowAdapter & dest)
 			{
 				object->_keyMap.unpress(message->key);
 			}

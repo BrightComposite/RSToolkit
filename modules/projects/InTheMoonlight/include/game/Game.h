@@ -29,7 +29,7 @@
 
 namespace Rapture
 {
-	link_class(SimpleGroundObject, MetaClass<PlaneObject, Drawable>);
+	link_class(SimpleGroundObject, Class<PlaneObject, Drawable>);
 
 	class SimpleGroundObject : public PlaneObject, public Drawable
 	{
@@ -167,7 +167,7 @@ namespace Rapture
 			ImageIO::save(initial_path() / "screenshot.bmp", graphics->surfaceData());
 		}
 
-		static void onWindowKeyDown(Handle<KeyDownMessage> & message, WindowAdapter & dest, const Subject * source)
+		static void onWindowKeyDown(Handle<KeyDownMessage> & message, WindowAdapter & dest)
 		{
 			switch(message->key)
 			{
@@ -177,7 +177,7 @@ namespace Rapture
 			}
 		}
 
-		static void onWindowKeyUp(Handle<KeyUpMessage> & message, WindowAdapter & dest, const Subject * source)
+		static void onWindowKeyUp(Handle<KeyUpMessage> & message, WindowAdapter & dest)
 		{
 			switch(message->key)
 			{

@@ -31,7 +31,7 @@ namespace Rapture
 
 	using VertexIndices = vector<uint16_t>;
 
-	link_class(Model, MetaClass<Object>);
+	link_class(Model, Class<Object>);
 
 	class Model : public Object
 	{
@@ -45,7 +45,7 @@ namespace Rapture
 		uint stride, verticesLocation;
 	};
 
-	link_class(Graphics3D, MetaClass<Graphics>);
+	link_class(Graphics3D, Class<Graphics>);
 
 	class Graphics3D : public Graphics
 	{

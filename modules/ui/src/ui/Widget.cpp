@@ -33,6 +33,27 @@ namespace Rapture
 		out.bottom = (int)(anchors.bottom * parent.height()) + offsets.bottom;
 	}
 
+	implement_reader(WidgetRegion, WidgetMoveMessage) {}
+	implement_reader(WidgetRegion, AfterWidgetMoveMessage) {}
+	implement_reader(WidgetRegion, WidgetResizeMessage) {}
+
+	Layer::Layer(Widget * widget, int order) : _widget(widget), _order(order)
+	{
+		_widget->_layers.push_back(this);
+		_widget->_layers.sort();
+	}
+
+	Layer::~Layer()
+	{
+		_widget->_layers.remove(this);
+	}
+
+	void Layer::setOrder(int order)
+	{
+		_order = order;
+		_widget->_layers.sort();
+	}
+
 	Widget::Widget(Widget * parent) : Widget(parent, *parent) {}
 	Widget::Widget(WindowAdapter * adapter) : Widget(adapter, adapter->region()) {}
 	Widget::Widget(Widget * parent, const IntRect & area) : Widget(parent->_adapter, parent, area) {}
@@ -68,7 +89,7 @@ namespace Rapture
 
 			if(isPointed())
 			{
-				send(handle<MouseLeaveMessage>(), *this);
+				send<MouseLeaveMessage>(*this);
 				_adapter->_pointed = nullptr;
 			}
 
@@ -87,7 +108,7 @@ namespace Rapture
 					}
 				}
 
-				send(handle<WidgetStopPressMessage>(_mouseState.buttons()), *this);
+				send<WidgetStopPressMessage>(*this, _mouseState.buttons());
 				_mouseState.unpress();
 			}
 
@@ -107,13 +128,13 @@ namespace Rapture
 		graphics->clip(r);
 
 		for(auto & layer : _layers)
-			layer->draw(this, r);
+			layer->draw(r);
 
 		for(auto & ch : _displayList)
 			ch->draw(graphics, r);
 	}
 
-	Handle<Widget> Widget::attach(Handle<Widget> child)
+	Handle<Widget> Widget::attach(const Handle<Widget> & child)
 	{
 		if(child->_parent != nullptr || child->_adapter != _adapter)
 			return child->clone(this);
@@ -139,7 +160,7 @@ namespace Rapture
 			_parent = nullptr;
 		}
 
-		return move(w);
+		return w;
 	}
 
 	void Widget::forgetParent()
@@ -218,8 +239,7 @@ namespace Rapture
 			return;
 
 		setVisibility(true);
-		auto premsg = handle<ChangeDisplayOrderMessage>(order, _displayOrder);
-		send(premsg, *this);
+		auto premsg = send<ChangeDisplayOrderMessage>(*this, order, _displayOrder);
 
 		if(premsg->newValue == _displayOrder)
 			return;
@@ -230,7 +250,7 @@ namespace Rapture
 			return;
 
 		sort(_parent->_displayList, &Widget::_displayOrder);
-		send(handle<AfterChangeDisplayOrderMessage>(_displayOrder), *this);
+		send<AfterChangeDisplayOrderMessage>(*this, _displayOrder);
 	}
 
 	void Widget::bringToFront()
@@ -273,16 +293,15 @@ namespace Rapture
 	void Widget::setFocusOrder(int order)
 	{
 		setFocusability(true);
-		auto premsg = handle<ChangeFocusOrderMessage>(order, _focusOrder);
-		send(premsg, *this);
-
+		auto premsg = send<ChangeFocusOrderMessage>(*this, order, _focusOrder);
+		
 		if(premsg->newValue == _focusOrder)
 			return;
 
 		_focusOrder = premsg->newValue;
 		sort(_adapter->_focusList, &Widget::_focusOrder);
 
-		send(handle<AfterChangeFocusOrderMessage>(_focusOrder), *this);
+		send<AfterChangeFocusOrderMessage>(*this, _focusOrder);
 	}
 
 	bool Widget::isPointed() const
@@ -338,12 +357,12 @@ namespace Rapture
 
 	void Widget::removeFocus()
 	{
-		send(handle<WidgetChangedStateMessage>(WidgetState::Focused, false), *this);
+		send<WidgetChangedStateMessage>(*this, WidgetState::Focused, false);
 	}
 
 	void Widget::receiveFocus()
 	{
-		send(handle<WidgetChangedStateMessage>(WidgetState::Focused, true), *this);
+		send<WidgetChangedStateMessage>(*this, WidgetState::Focused, true);
 	}
 
 	WindowAdapter * Widget::adapter() const
@@ -412,9 +431,8 @@ namespace Rapture
 
 	void WidgetRegion::changePlacement(int left, int top, int right, int bottom, ModelMask mask)
 	{
-		auto msg = handle<WidgetMoveMessage>(left, top, right, bottom, mask);
-		send(msg, *this);
-
+		auto msg = send<WidgetMoveMessage>(*this, left, top, right, bottom, mask);
+		
 		ModelMask resizeMask = ModelMask(0);
 		IntSize size = _size;
 
@@ -439,7 +457,7 @@ namespace Rapture
 			_offsets.bottom = msg->bottom - (int)(_anchors.bottom * _parent->height());
 
 			if(resizeMask != 0)
-				send(handle<WidgetResizeMessage>(width(), height(), resizeMask), *this);
+				send<WidgetResizeMessage>(*this, width(), height(), resizeMask);
 		}
 		else
 		{
@@ -455,10 +473,10 @@ namespace Rapture
 				set_flag(ModelMask::Vertical, resizeMask);
 
 			if(resizeMask != 0)
-				send(handle<WidgetResizeMessage>(width(), height(), resizeMask), *this);
+				send<WidgetResizeMessage>(*this, width(), height(), resizeMask);
 		}
 
-		send(handle<AfterWidgetMoveMessage>(_relPos.x, _relPos.y, _relPos.x + _size.x, _relPos.y + _size.y), *this);
+		send<AfterWidgetMoveMessage>(*this, _relPos.x, _relPos.y, _relPos.x + _size.x, _relPos.y + _size.y);
 	}
 
 	void WidgetRegion::updateAnchors()
@@ -501,34 +519,29 @@ namespace Rapture
 		return this;
 	}
 
-	msg_implement_reader(Widget, KeyDownMessage)
+	implement_reader(Widget, KeyDownMessage)
 	{
 		if(_parent != nullptr)
-			send(msg, *_parent);
+			resend(msg, *_parent);
 	}
 
-	msg_implement_reader(Widget, CharMessage)
+	implement_reader(Widget, CharMessage)
 	{
 		if(_parent != nullptr)
-			send(msg, *_parent);
+			resend(msg, *_parent);
 	}
 
-	msg_implement_reader(Widget, KeyUpMessage)
+	implement_reader(Widget, KeyUpMessage)
 	{
 		if(_parent != nullptr)
-			send(msg, *_parent);
+			resend(msg, *_parent);
 	}
 
-	msg_implement_reader(Widget, WidgetResizeMessage)
+	implement_reader(Widget, WidgetResizeMessage)
 	{
 		for(auto _child : _children)
 			_child->updateAnchors();
 	}
-}
-
-size_t std::hash<Rapture::Widget>::operator()(const Rapture::Widget & val) const
-{
-	return val.hash();
 }
 
 //---------------------------------------------------------------------------

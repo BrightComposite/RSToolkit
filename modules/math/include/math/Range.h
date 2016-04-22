@@ -22,8 +22,8 @@ namespace Rapture
 
 		Range() : min(0), max(0) {}
 		Range(T min, T max) : min(min), max(max) {}
-        template<typename T_>
-		Range(const Range<T_> & range) : min(range.min), max(range.max) {}
+        template<typename U>
+		Range(const Range<U> & range) : min(range.min), max(range.max) {}
 
         bool isEmpty() const
         {
@@ -46,8 +46,8 @@ namespace Rapture
 			this->max = max;
         }
 
-        template<typename T_>
-        void set(const Range<T_> & range)
+        template<typename U>
+        void set(const Range<U> & range)
         {
 			min = range.min;
 			max = range.max;
@@ -58,8 +58,8 @@ namespace Rapture
             max = min + value;
         }
 
-        template<typename T_>
-		void intersect(const Range<T_> & range)
+        template<typename U>
+		void intersect(const Range<U> & range)
         {
             if(range.min > min)
                 min  = range.min;
@@ -71,8 +71,8 @@ namespace Rapture
                 max = min;
         }
 
-        template<typename T_>
-		void include(const Range<T_> & range)
+        template<typename U>
+		void include(const Range<U> & range)
         {
             if(range.min < min)
 				min = range.min;
@@ -81,8 +81,8 @@ namespace Rapture
 				max = range.max;
         }
 
-        template<typename T_>
-        int compare(const Range<T_> & range) const
+        template<typename U>
+        int compare(const Range<U> & range) const
         {
             return (min == range.min && max == range.max) ? 0 : icomp(length(), range.length());
         }
@@ -92,8 +92,8 @@ namespace Rapture
             return (value > max) ? 1 : (value < min) ? -1 : 0;
         }
 
-        template<typename T_>
-        bool includes(const Range<T_> & range) const
+        template<typename U>
+        bool includes(const Range<U> & range) const
         {
             return (compare(range.min) & compare(range.max)) == 0;
         }
@@ -103,77 +103,77 @@ namespace Rapture
             return between(value, min, max);
         }
 
-        template<typename T_>
-        bool isIntersecting(const Range<T_> & range) const
+        template<typename U>
+        bool isIntersecting(const Range<U> & range) const
         {
 			return range.max >= min && range.min <= max;
         }
 
-        template<typename T_>
-		Range & operator = (const Range<T_> & range)
+        template<typename U>
+		Range & operator = (const Range<U> & range)
         {
             set(range);
             return *this;
         }
 
-        template<typename T_>
-		Range & operator &= (const Range<T_> & range)
+        template<typename U>
+		Range & operator &= (const Range<U> & range)
         {
 			intersect(range);
 			return *this;
         }
 
-        template<typename T_>
-		Range & operator |= (const Range<T_> & range)
+        template<typename U>
+		Range & operator |= (const Range<U> & range)
         {
             include(range);
 			return *this;
         }
 
-        template<typename T_>
-        bool operator == (const Range<T_> & range)
+        template<typename U>
+        bool operator == (const Range<U> & range)
         {
             return compare(range) == 0;
         }
 
-        template<typename T_>
-        bool operator != (const Range<T_> & range)
+        template<typename U>
+        bool operator != (const Range<U> & range)
         {
             return compare(range) != 0;
         }
 
-        template<typename T_>
-        bool operator >= (const Range<T_> & range)
+        template<typename U>
+        bool operator >= (const Range<U> & range)
         {
             return compare(range) >= 0;
         }
 
-        template<typename T_>
-        bool operator <= (const Range<T_> & range)
+        template<typename U>
+        bool operator <= (const Range<U> & range)
         {
             return compare(range) <= 0;
         }
 
-        template<typename T_>
-        bool operator > (const Range<T_> & range)
+        template<typename U>
+        bool operator > (const Range<U> & range)
         {
             return compare(range) > 0;
         }
 
-        template<typename T_>
-        bool operator < (const Range<T_> & range)
+        template<typename U>
+        bool operator < (const Range<U> & range)
         {
             return compare(range) < 0;
         }
 
-		template<typename T_>
-		Range operator & (const Range<T_> & range)
+		template<typename U>
+		Range operator & (const Range<U> & range)
 		{
 			return Range(*this) &= range;
 		}
 
-		template<typename T_>
-		Range operator | (const Range<T_> & range)
+		template<typename U>
+		Range operator | (const Range<U> & range)
 		{
 			return Range(*this) |= range;
 		}

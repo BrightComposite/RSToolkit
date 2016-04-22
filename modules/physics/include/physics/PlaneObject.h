@@ -11,7 +11,7 @@
 
 namespace Rapture
 {
-	link_class(PlaneObject, MetaClass<PhysicalObject>);
+	link_class(PlaneObject, Class<PhysicalObject>);
 
 	class PlaneObject : public PhysicalObject
 	{

@@ -36,7 +36,7 @@ namespace Rapture
 
 	protected:
 		Cached() {}
-		virtual ~Cached() {}
+		~Cached() {}
 	};
 
 	template<class K, class T>
@@ -63,7 +63,7 @@ namespace Rapture
 
 	protected:
 		Cached() {}
-		virtual ~Cached() {}
+		~Cached() {}
 	};
 
 	template<class K, class T, class ... Attr>
@@ -101,7 +101,7 @@ namespace Rapture
 			_cache.insert_or_assign(key, static_cast<T *>(this));
 		}
 
-		virtual ~Precached() {}
+		~Precached() {}
 
 		static auto & cache()
 		{
@@ -147,7 +147,7 @@ namespace Rapture
 			_cache.insert_or_assign(key, static_cast<T *>(this));
 		}
 
-		virtual ~Precached() {}
+		~Precached() {}
 
 		static auto & cache()
 		{

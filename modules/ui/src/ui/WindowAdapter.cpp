@@ -222,35 +222,35 @@ namespace Rapture
 		SendMessageW(_handle, WM_CLOSE, 0, 0);
 	}
 
-	msg_implement_reader(WindowAdapter, KeyDownMessage)
+	implement_reader(WindowAdapter, KeyDownMessage)
 	{
 		Widget * f = focused();
 
 		if(f != nullptr)
-			send(msg, *f);
+			resend(msg, *f);
 	}
 
-	msg_implement_reader(WindowAdapter, CharMessage)
+	implement_reader(WindowAdapter, CharMessage)
 	{
 		Widget * f = focused();
 
 		if(f != nullptr)
-			send(msg, *f);
+			resend(msg, *f);
 	}
 
-	msg_implement_reader(WindowAdapter, KeyUpMessage)
+	implement_reader(WindowAdapter, KeyUpMessage)
 	{
 		Widget * f = focused();
 
 		if(f != nullptr)
-			send(msg, *f);
+			resend(msg, *f);
 	}
 
 
-	msg_implement_reader(WindowAdapter, MouseDownMessage)
+	implement_reader(WindowAdapter, MouseDownMessage)
 	{
 		_mouseState.press(msg->button);
-		send(handle<MouseUpdateMessage>(msg->x, msg->y), *this);
+		send<MouseUpdateMessage>(*this, msg->x, msg->y);
 
 		if(_pointed != nullptr)
 		{
@@ -263,9 +263,9 @@ namespace Rapture
 			msg->x -= _pointed->absLeft();
 			msg->y -= _pointed->absTop();
 
-			send(msg, *_pointed);
-			send(handle<WidgetPressMessage>(_mouseState.buttons()), *_pointed);
-			send(handle<WidgetChangedStateMessage>(WidgetState::Pressed, true), *_pointed);
+			resend(msg, *_pointed);
+			send<WidgetPressMessage>(*_pointed, _mouseState.buttons());
+			send<WidgetChangedStateMessage>(*_pointed, WidgetState::Pressed, true);
 
 			if(msg->button == MouseButton::Left)
 				_pointed->focus();
@@ -275,7 +275,7 @@ namespace Rapture
 		}
 	}
 
-	msg_implement_reader(WindowAdapter, MouseUpdateMessage)
+	implement_reader(WindowAdapter, MouseUpdateMessage)
 	{
 		MouseButton buttons = MouseButton::None;
 
@@ -296,8 +296,8 @@ namespace Rapture
 		{
 			if(_pointed != nullptr)
 			{
-				send(handle<MouseLeaveMessage>(), *_pointed);
-				send(handle<WidgetChangedStateMessage>(WidgetState::Pointed, false), *_pointed);
+				send<MouseLeaveMessage>(*_pointed);
+				send<WidgetChangedStateMessage>(*_pointed, WidgetState::Pointed, false);
 
 				if(_mouseState.isPressed())
 				{
@@ -306,16 +306,16 @@ namespace Rapture
 					if(buttons != MouseButton::None)
 					{
 						_pointed->_mouseState.unpress(buttons);
-						send(handle<WidgetStopPressMessage>(buttons), *_pointed);
-						send(handle<WidgetChangedStateMessage>(WidgetState::Pressed, false), *_pointed);
+						send<WidgetStopPressMessage>(*_pointed, buttons);
+						send<WidgetChangedStateMessage>(*_pointed, WidgetState::Pressed, false);
 					}
 				}
 			}
 
 			if(w != nullptr)
 			{
-				send(handle<MouseEnterMessage>(), *w);
-				send(handle<WidgetChangedStateMessage>(WidgetState::Pointed, true), *w);
+				send<MouseEnterMessage>(*w);
+				send<WidgetChangedStateMessage>(*w, WidgetState::Pointed, true);
 
 				MouseButton buttons = MouseButton::None;
 
@@ -328,8 +328,8 @@ namespace Rapture
 				if(buttons != MouseButton::None)
 				{
 					w->_mouseState.press(buttons);
-					send(handle<WidgetPressMessage>(buttons), *w);
-					send(handle<WidgetChangedStateMessage>(WidgetState::Pressed, true), *w);
+					send<WidgetPressMessage>(*w, buttons);
+					send<WidgetChangedStateMessage>(*w, WidgetState::Pressed, true);
 				}
 			}
 		}
@@ -344,36 +344,21 @@ namespace Rapture
 			msg->x -= _pointed->absLeft();
 			msg->y -= _pointed->absTop();
 
-			send(msg, _pointed);
+			resend(msg, *_pointed);
 
 			msg->x = x;
 			msg->y = y;
 		}
 	}
 
-	msg_implement_reader(WindowAdapter, MouseUpMessage)
+	implement_reader(WindowAdapter, MouseUpMessage)
 	{
-		send(handle<MouseUpdateMessage>(msg->x, msg->y), *this);
+		send<MouseUpdateMessage>(*this, msg->x, msg->y);
 	}
 
-	msg_implement_reader(WindowAdapter, WindowHotkeyMessage)
-	{
-
-	}
-
-	msg_implement_reader(WindowAdapter, WindowResizeMessage)
+	implement_reader(WindowAdapter, WindowResizeMessage)
 	{
 		_root->changeSize(_width, _height, ModelMask::FullSize);
-	}
-
-	msg_implement_reader(WindowAdapter, WindowFullscreenMessage)
-	{
-		//invalidate();
-	}
-
-	msg_implement_reader(WindowAdapter, WindowCloseMessage)
-	{
-
 	}
 
 	void WindowAdapter::unpress(MouseButton buttons, int x, int y, int flags)
@@ -388,12 +373,12 @@ namespace Rapture
 			Widget * w = i->second;
 			w->_mouseState.unpress(i->first);
 
-			send(handle<MouseUpMessage>(i->first, x - w->absLeft(), y - w->absTop(), flags), *w);
+			send<MouseUpMessage>(*w, i->first, x - w->absLeft(), y - w->absTop(), flags);
 
 			if(w == _pointed)
 			{
-				send(handle<WidgetStopPressMessage>(i->first), *w);
-				send(handle<WidgetChangedStateMessage>(WidgetState::Pressed, false), *w);
+				send<WidgetStopPressMessage>(*w, i->first);
+				send<WidgetChangedStateMessage>(*w, WidgetState::Pressed, false);
 			}
 
 			i = _pressedList.erase(i);

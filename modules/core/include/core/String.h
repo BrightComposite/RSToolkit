@@ -103,8 +103,8 @@ namespace Rapture
 #define can_string_assemble(...) is_string_assembleable<__VA_ARGS__>::value
 #define can_wstring_assemble(...) is_wstring_assembleable<__VA_ARGS__>::value
 
-	link_class(String, MetaClass<Object>);
-	link_class(WideString, MetaClass<Object>);
+	link_class(String, Class<Object>);
+	link_class(WideString, Class<Object>);
 
 	class String : public string, public Object
 	{
@@ -283,8 +283,8 @@ namespace Rapture
 			Memory<char>::free(buf);
 		}
 
-		template<class T>
-		String(const T & obj, require_p(is_str_printable<T>::value)) : String()
+		template<class T, useif(is_str_printable<T>::value)>
+		String(const T & obj) : String()
 		{
 			print(*this, obj);
 		}
@@ -412,19 +412,13 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class T,
-			require(
-				can_construct(String, T)
-			)>
+		template<class T, useif(can_construct(String, T))>
 		String & operator += (const T & value)
 		{
 			return operator += (String(value));
 		}
 
-		template<class T,
-			require(
-				can_construct(String, T)
-				)>
+		template<class T, useif(can_construct(String, T))>
 		String & operator << (const T & value)
 		{
 			return operator += (value);
@@ -538,16 +532,16 @@ namespace Rapture
 		String & flood(size_t start, size_t count, char sym, char limiter = '\0');
 
 		template<class ... T,
-			require(
+			useif(
 				can_string_assemble(T...)
 				)>
 		static inline String assemble(T &&... args)
 		{
-			return move(String().add(forward<T>(args)...));
+			return String().add(forward<T>(args)...);
 		}
 
 		template<class H, class ... T,
-			require(
+			useif(
 				can_string_assemble(H, T...)
 				)>
 		String & add(H && head, T &&... tail)
@@ -889,8 +883,8 @@ namespace Rapture
 			Memory<wchar_t>::free(buf);
 		}
 
-		template<class T>
-		WideString(const T & obj, require_p(is_str_printable<T>::value)) : WideString()
+		template<class T, useif(is_str_printable<T>::value)>
+		WideString(const T & obj) : WideString()
 		{
 			print(*this, obj);
 		}
@@ -1016,19 +1010,13 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class T,
-			require(
-				can_construct(WideString, T)
-				)>
+		template<class T, useif(can_construct(WideString, T))>
 		WideString & operator += (const T & value)
 		{
 			return operator += (WideString(value));
 		}
 
-		template<class T,
-			require(
-				can_construct(WideString, T)
-				)>
+		template<class T, useif(can_construct(WideString, T))>
 		WideString & operator << (const T & value)
 		{
 			return operator += (value);
@@ -1142,16 +1130,16 @@ namespace Rapture
 		WideString & flood(size_t start, size_t count, wchar_t sym, wchar_t limiter = '\0');
 
 		template<class ... T,
-			require(
+			useif(
 				can_string_assemble(T...)
 				)>
 		static inline WideString assemble(T &&... args)
 		{
-			return move(WideString().add(forward<T>(args)...));
+			return WideString().add(forward<T>(args)...);
 		}
 
 		template<class H, class ... T,
-			require(
+			useif(
 				can_string_assemble(H, T...)
 				)>
 		WideString & add(H && head, T &&... tail)
@@ -1314,7 +1302,7 @@ namespace Rapture
 			return *end == '\0';
 		}
 
-		static MetaClass<Object> meta;
+		static Class<Object> meta;
 	};
 
 	inline String & String::operator += (const WideString & value)
@@ -1326,7 +1314,7 @@ namespace Rapture
 	void print(String & target, const Object & obj);
 
 	template<class T,
-		require(
+		useif(
 			is_str_printable<T>::value
 			)>
 	inline void print(String & target, const Handle<T> & object)
@@ -1335,7 +1323,7 @@ namespace Rapture
 	}
 
 	template<class T,
-		require(
+		useif(
 			is_str_printable<T>::value
 			)>
 	inline String print(const T & object)
@@ -1343,11 +1331,11 @@ namespace Rapture
 		String target;
 		print(target, object);
 
-		return move(target);
+		return target;
 	}
 
 	template<class T,
-		require(
+		useif(
 			is_str_printable<T>::value
 			)>
 	inline std::basic_ostream<char, std::char_traits<char>> &
@@ -1362,7 +1350,7 @@ namespace Rapture
 	void print(WideString & target, const Object & obj);
 
 	template<class T,
-		require_i(1,
+		selectif(1,
 			is_wstr_printable<T>::value
 			)>
 	inline void print(WideString & target, const Handle<T> & object)
@@ -1371,7 +1359,7 @@ namespace Rapture
 	}
 
 	template<class T,
-		require_i(1,
+		selectif(1,
 			is_wstr_printable<T>::value
 			)>
 	inline WideString print(const T & object)
@@ -1379,11 +1367,11 @@ namespace Rapture
 		WideString target;
 		print(target, object);
 
-		return move(target);
+		return target;
 	}
 
 	template<class T,
-		require_i(1,
+		selectif(1,
 			is_wstr_printable<T>::value
 			)>
 	inline std::basic_ostream<wchar_t, std::char_traits<wchar_t>> &
@@ -1396,7 +1384,7 @@ namespace Rapture
 	}
 
 	template<class T,
-		require_i(2,
+		selectif(2,
 			is_str_printable<T>::value
 			)>
 	inline void print(WideString & target, const Handle<T> & object)
@@ -1405,7 +1393,7 @@ namespace Rapture
 	}
 
 	template<class T,
-		require_i(2,
+		selectif(2,
 			is_str_printable<T>::value
 			)>
 	inline WideString print(const T & object)
@@ -1417,7 +1405,7 @@ namespace Rapture
 	}
 
 	template<class T,
-		require_i(2,
+		selectif(2,
 			is_str_printable<T>::value
 			)>
 	inline std::basic_ostream<wchar_t, std::char_traits<wchar_t>> &

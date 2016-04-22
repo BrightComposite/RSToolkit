@@ -234,7 +234,7 @@ namespace lookup3
 			case 3: a += k[0] & 0xffffff; break;
 			case 2: a += k[0] & 0xffff; break;
 			case 1: a += k[0] & 0xff; break;
-			case 0: return c;              /* zero length strings require no mixing */
+			case 0: return c;              /* zero length strings useif no mixing */
 			}
 
 #else /* make valgrind happy */
@@ -420,7 +420,7 @@ namespace lookup3
 			case 3: a += k[0] & 0xffffff; break;
 			case 2: a += k[0] & 0xffff; break;
 			case 1: a += k[0] & 0xff; break;
-			case 0: *pc = c; *pb = b; return;  /* zero length strings require no mixing */
+			case 0: *pc = c; *pb = b; return;  /* zero length strings useif no mixing */
 			}
 
 #else /* make valgrind happy */
@@ -440,7 +440,7 @@ namespace lookup3
 			case 3 : a+=((uint32_t)k8[2])<<16;   /* fall through */
 			case 2 : a+=((uint32_t)k8[1])<<8;    /* fall through */
 			case 1 : a+=k8[0]; break;
-			case 0 : *pc=c; *pb=b; return;  /* zero length strings require no mixing */
+			case 0 : *pc=c; *pb=b; return;  /* zero length strings useif no mixing */
 			}
 
 #endif /* !valgrind */
@@ -489,7 +489,7 @@ namespace lookup3
 				break;
 			case 1: a += k8[0];
 				break;
-			case 0: *pc = c; *pb = b; return;  /* zero length strings require no mixing */
+			case 0: *pc = c; *pb = b; return;  /* zero length strings useif no mixing */
 			}
 
 		}
@@ -532,7 +532,7 @@ namespace lookup3
 			case 2: a += ((uint32_t)k[1]) << 8;
 			case 1: a += k[0];
 				break;
-			case 0: *pc = c; *pb = b; return;  /* zero length strings require no mixing */
+			case 0: *pc = c; *pb = b; return;  /* zero length strings useif no mixing */
 			}
 		}
 

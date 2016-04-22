@@ -53,7 +53,7 @@ namespace Rapture
 		}
 
 		template<class Decoder,
-			require(
+			useif(
 				based_on(Decoder, Singleton<Decoder>) &&
 				based_on(Decoder, FontDecoder)
 				)>

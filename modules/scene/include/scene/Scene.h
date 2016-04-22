@@ -21,10 +21,10 @@ namespace Rapture
 
 	using ticks_t = long long;
 
-	link_class(SceneObject, MetaClass<Object>);
-	link_class(Drawable, MetaBase);
-	link_class(DrawableObject, MetaClass<SceneObject, Drawable>);
-	link_class(Scene, MetaClass<Object>);
+	link_class(SceneObject, Class<Object>);
+	link_class(Drawable, MetaClass);
+	link_class(DrawableObject, Class<SceneObject, Drawable>);
+	link_class(Scene, Class<Object>);
 
 	class SceneObject : public Object
 	{
@@ -83,16 +83,17 @@ namespace Rapture
 	{
 		friend class Drawable;
 		friend class SceneObject;
+		friend class Widget;
 
 	protected:
 		class SceneLayer : public Layer
 		{
 		public:
-			SceneLayer(Scene * scene) : _scene(scene) {}
+			SceneLayer(Widget * widget, Scene * scene, int order = 0) : Layer(widget, order), _scene(scene) {}
 
-			virtual void draw(const Widget * widget, const IntRect & clipRegion) const
+			virtual void draw(const IntRect & clipRegion) const override
 			{
-				_scene->draw(static_cast<Graphics3D *>(widget->graphics()), scaleToSquare(widget->absRegion()));
+				_scene->draw(static_cast<Graphics3D *>(_widget->graphics()), scaleToSquare(_widget->absRegion()));
 			}
 
 		protected:
@@ -109,7 +110,7 @@ namespace Rapture
 				throw Exception("Widget for the scene must support 3D graphics!");
 
 			_widget = widget;
-			widget->attach(handle<SceneLayer>(this), INT_MAX);
+			widget->append<SceneLayer>(this, INT_MAX);
 
 			_firstTick = _lastTick = clock::now();
 			_ticks = 0;
@@ -132,7 +133,7 @@ namespace Rapture
 		}
 
 		template<class T, typename ... A,
-			require_i(1,
+			useif(
 				based_on(T, SceneObject) &&
 				can_construct(T, Scene *, A...)
 				)>

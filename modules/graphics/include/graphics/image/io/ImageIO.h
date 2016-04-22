@@ -87,7 +87,7 @@ namespace Rapture
 		}
 
 		template<class Decoder,
-			require(
+			useif(
 				based_on(Decoder, Singleton<Decoder>) &&
 				based_on(Decoder, ImageDecoder)
 				)>
@@ -97,7 +97,7 @@ namespace Rapture
 		}
 
 		template<class Encoder,
-			require(
+			useif(
 				based_on(Encoder, Singleton<Encoder>) &&
 				based_on(Encoder, ImageEncoder)
 				)>
@@ -107,7 +107,7 @@ namespace Rapture
 		}
 
 		template<class Converter,
-			require(
+			useif(
 				based_on(Converter, Singleton<Converter>) &&
 				based_on(Converter, ImageDecoder) &&
 				based_on(Converter, ImageEncoder)

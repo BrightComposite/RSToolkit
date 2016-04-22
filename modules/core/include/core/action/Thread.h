@@ -14,13 +14,10 @@ namespace Rapture
 {
 	using std::thread;
 
-	class Thread : public Shareable<Thread>
+	class Thread : public Shared
 	{
 	public:
-		template<class ... A,
-			require(
-				can_construct(thread, A...)
-				)>
+		template<class ... A, useif(can_construct(thread, A...))>
 		Thread(A &&... args) : instance(forward<A>(args)...) {}
 		Thread(Thread && th) : instance(move(th.instance)) {}
 		~Thread() { if(instance.joinable()) instance.join(); }

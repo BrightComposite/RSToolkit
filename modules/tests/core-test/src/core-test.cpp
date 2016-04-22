@@ -15,17 +15,17 @@
 
 //---------------------------------------------------------------------------
 
-using std::cout;
-using std::endl;
-
-using std::chrono::high_resolution_clock;
-using std::chrono::time_point;
-using std::chrono::duration;
-using std::chrono::duration_cast;
-using std::chrono::nanoseconds;
-
 namespace Rapture
 {
+	using std::cout;
+	using std::endl;
+
+	using std::chrono::high_resolution_clock;
+	using std::chrono::time_point;
+	using std::chrono::duration;
+	using std::chrono::duration_cast;
+	using std::chrono::nanoseconds;
+
 	typedef high_resolution_clock hrc;
 
 //---------------------------------------------------------------------------
@@ -75,19 +75,18 @@ namespace Rapture
 	class DummySubject : public Subject
 	{
 	public:
-		msg_set_dest(DummySubject, DummyMessage)
 	};
 
 	class DummyReceiver : public MessageReceiver
 	{
 	public:
-		void receive(Handle<DummyMessage> & msg, DummySubject & dest, const Subject * subj) const
+		void receive(Handle<DummyMessage> & msg, DummySubject & dest) const
 		{
 
 		}
 	};
 
-	static void receiver(Handle<DummyMessage> & msg, DummySubject & dst, const Subject * subj)
+	static void receiver(Handle<DummyMessage> & msg, DummySubject & dst)
 	{
 
 	}
@@ -157,17 +156,16 @@ namespace Rapture
 	{
 		Subject subj;
 		DummySubject dummy;
-		auto message = handle<DummyMessage>(0);
 		auto rcvr = handle<DummyReceiver>();
 
-		send(message, dummy);
+		auto message = send<DummyMessage>(dummy, 0);
 
 		const int times = 16;
 
 		start = hrc::now();
 
 		for(register int i = 0; i < times; ++i)
-			subj.send(message, dummy);
+			subj.resend(message, dummy);
 
 		elapsed = hrc::now() - start;
 		cout << "Message delivery time (" << times << " times): " << elapsed.count() << " ns" << endl;
@@ -178,7 +176,7 @@ namespace Rapture
 		cout << "Message plain callback connection: " << elapsed.count() << " ns" << endl;
 
 		start = hrc::now();
-		connect(dummy, lambda([](Handle<DummyMessage> & msg, DummySubject & dst, const Subject * subj)
+		connect(dummy, lambda([](Handle<DummyMessage> & msg, DummySubject & dst)
 		{
 		
 		}));
@@ -193,7 +191,7 @@ namespace Rapture
 		start = hrc::now();
 
 		for(register int i = 0; i < times; ++i)
-			subj.send(message, dummy);
+			subj.resend(message, dummy);
 
 		elapsed = hrc::now() - start;
 		cout << "Message delivery time with 3 connections (" << times << " times): " << elapsed.count() << " ns" << endl;
@@ -220,7 +218,7 @@ namespace Rapture
 		for(int i = 0; i < size; ++i)
 			buf += static_cast<char>((rand() % ('z' - '0')) + '0');
 
-		return move(buf);
+		return buf;
 	}
 
 	template<class MapClass, class V, class ... A>

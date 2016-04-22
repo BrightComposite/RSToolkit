@@ -11,7 +11,7 @@
 
 namespace Rapture
 {
-	link_class(BigEyeObject, MetaClass<SceneObject, Drawable>);
+	link_class(BigEyeObject, Class<SceneObject, Drawable>);
 
 	class BigEyeObject : public SceneObject, public Drawable
 	{

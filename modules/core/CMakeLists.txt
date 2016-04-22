@@ -17,7 +17,7 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 		START_SECTION core
 			Exception.h
 			Handle.h
-			MetaClass.h
+			Class.h
 			Morph.h
 			Object.h
 			String.h
@@ -51,6 +51,7 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 				Set.h
 				Stack.h
 				StaticMap.h
+				TypedMap.h
 			END_SECTION
 				
 			START_SECTION intrinsic
@@ -84,15 +85,14 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 				Macro.h
 				Meta.h
 				Preprocessor.h
-				Require.h
 				Types.h
+				UseIf.h
 			END_SECTION
 		END_SECTION
 		
 	SRC_GROUP src Sources
 		START_SECTION core
 			Exception.cpp
-			Object.cpp
 			String.cpp
 				
 			START_SECTION algorithm

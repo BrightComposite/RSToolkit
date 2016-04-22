@@ -22,6 +22,7 @@
 
 #include <core/Subject.h>
 #include <core/addition/Cached.h>
+#include <core/container/TypedMap.h>
 #include <core/addition/HandleSingleton.h>
 #include <core/container/Array.h>
 
@@ -44,15 +45,13 @@ namespace Rapture
 		class D3DIndexedModel;
 	}
 
-	link_class(Direct3D11::GraphicContext, MetaClass<Graphics3D>);
-	link_class(Direct3D11::Graphics3D, MetaClass<Direct3D11::GraphicContext>);
-	link_class(Direct3D11::D3DModel, MetaClass<Model>);
-	link_class(Direct3D11::D3DIndexedModel, MetaClass<Direct3D11::D3DModel>);
+	link_class(Direct3D11::GraphicContext, Class<Graphics3D>);
+	link_class(Direct3D11::Graphics3D, Class<Direct3D11::GraphicContext>);
+	link_class(Direct3D11::D3DModel, Class<Model>);
+	link_class(Direct3D11::D3DIndexedModel, Class<Direct3D11::D3DModel>);
 
 	namespace Direct3D11
 	{
-		//---------------------------------------------------------------------------
-
 		struct GraphicsDebug
 		{
 			~GraphicsDebug()
@@ -64,7 +63,7 @@ namespace Rapture
 			ComHandle<ID3D11Debug> instance;
 		};
 
-		//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
 		class GraphicContext : public Rapture::Graphics3D
 		{
@@ -89,7 +88,7 @@ namespace Rapture
 			GraphicsDebug debug;
 		};
 
-		//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
 		class D3DImage : public Image
 		{
@@ -109,9 +108,9 @@ namespace Rapture
 
 		typedef D3DImage D3DTexture;
 
-		//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
-		class VertexElement : public Shareable<VertexElement>, public Precached<string, VertexElement>
+		class VertexElement : public Shared, public Precached<string, VertexElement>
 		{
 			friend class VertexLayout;
 
@@ -137,9 +136,9 @@ namespace Rapture
 			DXGI_FORMAT format;
 		};
 
-		//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
-		class VertexLayout : public Shareable<VertexLayout>, public Cached<string, VertexLayout, ProtectedCache>
+		class VertexLayout : public Shared, public Cached<string, VertexLayout, ProtectedCache>
 		{
 			typedef Cached<string, VertexLayout, ProtectedCache> Cache;
 
@@ -174,9 +173,9 @@ namespace Rapture
 			}
 		};
 
-		//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
-		class VertexBuffer : public Shareable<VertexBuffer>
+		class VertexBuffer : public Shared
 		{
 		public:
 			VertexBuffer(const Handle<VertexLayout> & vil, const VertexData & vd, D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -188,7 +187,7 @@ namespace Rapture
 			uint size;
 		};
 
-		class IndexBuffer : public Shareable<IndexBuffer>
+		class IndexBuffer : public Shared
 		{
 		public:
 			IndexBuffer(const VertexIndices & indices);
@@ -198,53 +197,41 @@ namespace Rapture
 			uint size;
 		};
 
-		//---------------------------------------------------------------------------
-
-		class UniformBase : public Shareable<UniformBase>
+//---------------------------------------------------------------------------
+		
+		class Uniform : public Shared
 		{
 			friend class Graphics3D;
 
 		public:
-			UniformBase(ShaderType shader, uint index, uint size);
-
-			void update(const void * data);
+			Uniform(ShaderType shader, uint index, uint size);
 
 		protected:
+			void update(const void * data);
+
 			ComHandle<ID3D11Buffer> buffer;
 			uint index;
 			GraphicContext * ctx;
 		};
 
+		template<class T, bool isValid = is_uniform<T>::value>
+		class GenericUniform {};
+
 		template<class T>
-		class Uniform : public UniformBase, public StaticIdentifier<Uniform<T>>, public HandleSingleton<Uniform<T>>
+		class GenericUniform<T, true> : public Uniform, public StaticIdentifier<GenericUniform<T>>, public Singleton<GenericUniform<T>, ThreadLocalModel>
 		{
 		public:
-			Uniform() : UniformBase(T::shader, T::index, static_cast<uint>(sizeof(T))) {}
-		};
+			GenericUniform() : Uniform(T::shader, T::index, static_cast<uint>(sizeof(T))) {}
 
-		using UniformId = PtrId;
-
-		class UniformData
-		{
-		public:
-			UniformData(UniformBase * uniform) : uniform(uniform) {}
-
-			template<class T,
-				require(
-					is_uniform<T>::value
-					)>
 			void set(const T & data)
 			{
-				uniform->update(&data);
+				update(&data);
 			}
-
-		protected:
-			UniformBase * uniform;
 		};
 
-		//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
-		class FxTechnique : public Shareable<FxTechnique>
+		class FxTechnique : public Shared
 		{
 			friend class Graphics3D;
 			friend class VertexBuffer;
@@ -293,7 +280,7 @@ namespace Rapture
 		};
 
 		template<>
-		class Shader<ShaderType::Common> : public Shareable<Shader<ShaderType::Common>>
+		class Shader<ShaderType::Common> : public Shared
 		{
 		public:
 			Shader();
@@ -376,12 +363,18 @@ namespace Rapture
 			virtual Handle<Image> createImage(const ImageData & data) const override;
 			virtual Handle<Figure> createFigure(const FigureData & data) const override;
 
-			template<class T, require(is_uniform<T>::value)>
+			template<class T,
+				useif(is_uniform<T>::value)
+			>
 			void updateUniform(const T & uniform) const;
-			template<class T, typename ... A, require(is_uniform<T>::value && can_construct(T, A...))>
+
+			template<class T, typename ... A,
+				useif(is_uniform<T>::value),
+				useif(can_construct(T, A...) && are_not_same((T), (A...)))
+			>
 			void updateUniform(A && ... args) const;
 
-			static MetaClass<Subject> meta;
+			static Class<Subject> meta;
 
 			static Map<thread::id, Graphics3D, Graphics3D> pool;
 
@@ -394,12 +387,6 @@ namespace Rapture
 
 			virtual Handle<Surface> createWindowSurface(WindowAdapter * adapter) const override;
 			virtual void updateBrushState() override;
-
-			template<class T, typename ... Components, typename ... A>
-			void setUniform(Type<Uniforms::Base<Components...>> type, Handle<UniformData> & data, A && ... args) const
-			{
-				data->set(T {static_cast<adapt_t<Components, A>>(forward<A>(args))...});
-			}
 
 			void draw(const D3DModel * model);
 
@@ -414,7 +401,7 @@ namespace Rapture
 			
 			mutable Handle<VertexBuffer> vbuffer = nullptr;
 			mutable Handle<IndexBuffer> ibuffer = nullptr;
-			mutable Map<UniformId, UniformData> uniformData;
+			mutable TypedMap<Uniform> uniformData;
 
 			Array<Texture> textures;
 
@@ -469,26 +456,16 @@ namespace Rapture
 			pool[std::this_thread::get_id()] = instance();
 		}
 
-		template<class T, class>
+		template<class T, useif_t>
 		void Graphics3D::updateUniform(const T & uniform) const
 		{
-			Handle<UniformData> & ud = uniformData[Uniform<T>::id()];
-
-			if(ud == nullptr)
-				ud.init(Uniform<T>::instance());
-
-			ud->set(uniform);
+			uniformData.request<GenericUniform<T>>()->set(uniform);
 		}
 
-		template<class T, typename ... A, class>
+		template<class T, typename ... A, useif_t, useif_t>
 		void Graphics3D::updateUniform(A && ... args) const
 		{
-			Handle<UniformData> & ud = uniformData[Uniform<T>::id()];
-
-			if(ud == nullptr)
-				ud.init(Uniform<T>::instance());
-
-			setUniform<T>(gettype(typename T::Base), ud, forward<A>(args)...);
+			uniformData.request<GenericUniform<T>>()->set(T(forward<A>(args)...));
 		}
 
 		//---------------------------------------------------------------------------
@@ -502,12 +479,12 @@ namespace Rapture
 			{
 				auto & codeSet = shaders[id];
 
-				if(codeSet.isNull())
+				if(codeSet == nullptr)
 					throw new Exception("Can't find embedded shader set with id \"", id, "\"");
 
 				auto & code = (*codeSet)[type];
 
-				if(code.isNull())
+				if(code == nullptr)
 					throw new Exception("Embedded shader set with id \"", id, "\" doesn't contain shader of type \"", type, "\"");
 
 				return *code;
@@ -617,9 +594,9 @@ namespace Rapture
 
 			static void findPreferredMode(const ComHandle<IDXGIOutput> & output, DXGI_MODE_DESC & mode);
 
-			void onWindowResize(Handle<WindowResizeMessage> & msg, WindowAdapter & adapter, const Subject * src);
-			void onWindowFullscreen(Handle<WindowFullscreenMessage> & msg, WindowAdapter & adapter, const Subject * src);
-			void onWindowClose(Handle<WindowCloseMessage> & msg, WindowAdapter & adapter, const Subject * src);
+			void onWindowResize(Handle<WindowResizeMessage> & msg, WindowAdapter & adapter);
+			void onWindowFullscreen(Handle<WindowFullscreenMessage> & msg, WindowAdapter & adapter);
+			void onWindowClose(Handle<WindowCloseMessage> & msg, WindowAdapter & adapter);
 
 			ComHandle<IDXGISwapChain1> swapChain;
 			ComHandle<ID3D11RenderTargetView> renderTargetView;
@@ -639,7 +616,7 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
-		class ShaderProgram : public Shareable<ShaderProgram>
+		class ShaderProgram : public Shared
 		{
 		public:
 			virtual ~ShaderProgram() {}
@@ -648,6 +625,9 @@ namespace Rapture
 		protected:
 			ShaderProgram() {}
 		};
+
+		template<class T>
+		using is_shader_program = is_base_of<ShaderProgram, T>;
 
 		class VPShaderProgram : public ShaderProgram
 		{
@@ -678,9 +658,15 @@ namespace Rapture
 			SimpleTechnique(const Handle<VertexLayout> & vil, const Handle<ShaderProgram> & program)
 				: FxTechnique(vil), program(program) {}
 
-			template<class ShaderProgramType, class ... A, require(can_construct(ShaderProgramType, Handle<FxTechnique>, A...))>
-			SimpleTechnique(const Handle<VertexLayout> & vil, const Type<ShaderProgramType> &, A &&... args)
-				: FxTechnique(vil), program(handle<ShaderProgramType>(this, forward<A>(args)...)) {}
+			template<
+				class Program, class ... A,
+					useif(
+						is_shader_program<Program>::value &&
+						can_construct(Program, Handle<FxTechnique>, A...)
+						)
+			>
+			SimpleTechnique(const Handle<VertexLayout> & vil, const Type<Program> &, A &&... args)
+				: FxTechnique(vil), program(handle<Program>(this, forward<A>(args)...)) {}
 
 			virtual ~SimpleTechnique() {}
 

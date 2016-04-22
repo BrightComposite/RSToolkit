@@ -68,8 +68,8 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class T_, class ... A>
-		inline ComHandle & operator = (const ComHandle<T_, A...> & com)
+		template<class U, class ... A>
+		inline ComHandle & operator = (const ComHandle<U, A...> & com)
 		{
 			release();
 			com.queryInterface(*this);
@@ -96,8 +96,8 @@ namespace Rapture
 			com._object = nullptr;
 		}
 
-		template<class T_, class ... A>
-		inline ComHandle(const ComHandle<T_, A...> & com) : _object(nullptr)
+		template<class U, class ... A>
+		inline ComHandle(const ComHandle<U, A...> & com) : _object(nullptr)
 		{
 			com.queryInterface(*this);
 		}
@@ -132,8 +132,8 @@ namespace Rapture
 			return _object != nullptr;
 		}
 
-		template<class T_>
-		bool operator != (const T_ & x) const
+		template<class U>
+		bool operator != (const U & x) const
 		{
 			return !operator == (x);
 		}
@@ -158,11 +158,11 @@ namespace Rapture
 			return reinterpret_cast<void **>(&_object);
 		}
 
-		template<class T_, class ... A>
-		void queryInterface(ComHandle<T_, A...> & com) const
+		template<class U, class ... A>
+		void queryInterface(ComHandle<U, A...> & com) const
 		{
 			com_assert(
-				_object->QueryInterface(__uuidof (T_), com.pointer())
+				_object->QueryInterface(__uuidof (U), com.pointer())
 				);
 		}
 	};
@@ -178,8 +178,8 @@ namespace Rapture
 		inline ComHandle() : Base() {}
 		inline ComHandle(const ComHandle & com) : Base(com) {}
 		inline ComHandle(ComHandle && com) : Base(forward<ComHandle>(com)) {}
-		template<class T_, class ... A>
-		inline ComHandle(const ComHandle<T_, A...> & com) : Base(com) {}
+		template<class U, class ... A>
+		inline ComHandle(const ComHandle<U, A...> & com) : Base(com) {}
 
 		virtual ~ComHandle() {}
 
@@ -195,8 +195,8 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class T_, class ... A>
-		inline ComHandle & operator = (const ComHandle<T_, A...> & com)
+		template<class U, class ... A>
+		inline ComHandle & operator = (const ComHandle<U, A...> & com)
 		{
 			Base::operator = (com);
 			return *this;

@@ -384,7 +384,7 @@ namespace Rapture
 		target.add(addr(&obj), ' ');
 
 		obj.getClass()->forEachClass(
-			[&target, &obj](const MetaClass<> * cl) {
+			[&target, &obj](const Class<> * cl) {
 				cl->addInfo(target, obj);
 			}
 		);
@@ -397,7 +397,7 @@ namespace Rapture
 		auto list = handle<StringList>();
 
 		if(text.empty())
-			return move(list);
+			return list;
 
 		char * temp = Memory<char>::copy(text.c_str(), text.length() + 1);
 		char * next = nullptr;
@@ -411,7 +411,7 @@ namespace Rapture
 
 		Memory<char>::free(temp);
 
-		return move(list);
+		return list;
 	}
 
 	Handle<StringList> splitOnLines(const string & text, uint lineLength, bool separateWords)
@@ -419,7 +419,7 @@ namespace Rapture
 		auto list = handle<StringList>();
 
 		if(text.empty())
-			return move(list);
+			return list;
 
 		const char * start = text.c_str();
 		const char * end = start + text.size();
@@ -449,7 +449,7 @@ namespace Rapture
 			pos += length;
 		}
 
-		return move(list);
+		return list;
 	}
 
 	Handle<WideStringList> split(const wstring & text, const wchar_t * sep)
@@ -457,7 +457,7 @@ namespace Rapture
 		auto list = handle<WideStringList>();
 
 		if(text.empty())
-			return move(list);
+			return list;
 
 		wchar_t * temp = Memory<wchar_t>::copy(text.c_str(), text.length() + 1);
 		wchar_t * next = nullptr;
@@ -471,7 +471,7 @@ namespace Rapture
 
 		Memory<wchar_t>::free(temp);
 
-		return move(list);
+		return list;
 	}
 
 	Handle<WideStringList> splitOnLines(const wstring & text, uint lineLength, bool separateWords)
@@ -479,7 +479,7 @@ namespace Rapture
 		auto list = handle<WideStringList>();
 
 		if(text.empty())
-			return move(list);
+			return list;
 
 		const wchar_t * start = text.c_str();
 		const wchar_t * end = start + text.size();
@@ -509,7 +509,7 @@ namespace Rapture
 			pos += length;
 		}
 
-		return move(list);
+		return list;
 	}
 
 	byte toByte(const char * s)

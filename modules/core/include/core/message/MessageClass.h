@@ -9,95 +9,60 @@
 
 //---------------------------------------------------------------------------
 
-#define pp_msg_elem_n(...) pp_cat(n, pp_tuple_elem_n(__VA_ARGS__))
+#define pp_msg_ctor_param_op(z, data, ...) const pp_tuple_elem_t(__VA_ARGS__) & pp_tuple_elem_n(__VA_ARGS__)
+#define pp_msg_move_param_op(z, data, ...) pp_tuple_elem_t(__VA_ARGS__) && pp_tuple_elem_n(__VA_ARGS__)
+#define pp_msg_cp_init_param_op(z, data, ...) pp_tuple_elem_n(__VA_ARGS__)(pp_tuple_elem_n(__VA_ARGS__))
+#define pp_msg_mv_init_param_op(z, data, ...) pp_tuple_elem_n(__VA_ARGS__)(forward<pp_tuple_elem_t(__VA_ARGS__)>(pp_tuple_elem_n(__VA_ARGS__)))
 
-#define pp_msg_copy(z, data, ...) const pp_tuple_elem_t(__VA_ARGS__) & pp_msg_elem_n(__VA_ARGS__)
-#define pp_msg_move(z, data, ...) pp_tuple_elem_t(__VA_ARGS__) && pp_msg_elem_n(__VA_ARGS__)
+#define pp_msg_ctor_params(...) pp_seq_expand(pp_msg_ctor_param_op, __VA_ARGS__)
+#define pp_msg_move_params(...) pp_seq_expand(pp_msg_move_param_op, __VA_ARGS__)
+#define pp_msg_cp_init_params(...) pp_seq_expand(pp_msg_cp_init_param_op, __VA_ARGS__)
+#define pp_msg_mv_init_params(...) pp_seq_expand(pp_msg_mv_init_param_op, __VA_ARGS__)
 
-#define pp_msg_copy_init(z, data, ...) pp_tuple_elem_n(__VA_ARGS__)(pp_msg_elem_n(__VA_ARGS__))
-#define pp_msg_move_init(z, data, ...) pp_tuple_elem_n(__VA_ARGS__)(forward<pp_tuple_elem_t(__VA_ARGS__)>(pp_msg_elem_n(__VA_ARGS__)))
-#define pp_msg_copy_init_s(z, data, ...) pp_tuple_elem_n(__VA_ARGS__)(msg.pp_tuple_elem_n(__VA_ARGS__))
-#define pp_msg_move_init_s(z, data, ...) pp_tuple_elem_n(__VA_ARGS__)(move(msg.pp_tuple_elem_n(__VA_ARGS__)))
-
-#define op_msg_compare(s, state, ...) state pp_tuple_elem_n(__VA_ARGS__) == msg.pp_tuple_elem_n(__VA_ARGS__) &&
-#define op_msg_assign(s, state, ...) state pp_tuple_elem_n(__VA_ARGS__) = msg.pp_tuple_elem_n(__VA_ARGS__);
-#define op_msg_move(s, state, ...) state pp_tuple_elem_n(__VA_ARGS__) = move(msg.pp_tuple_elem_n(__VA_ARGS__));
 #define op_msg_declare(s, state, ...) state pp_tuple_elem_d(__VA_ARGS__);
 
-#define _message_class(Class, fields)																							\
-	class Class : public Message																								\
-	{																															\
-	public:																														\
-		Class(pp_seq_expand(pp_msg_copy, fields)) : Message(), pp_seq_expand(pp_msg_copy_init, fields) {}						\
-		Class(pp_seq_expand(pp_msg_move, fields)) : Message(), pp_seq_expand(pp_msg_move_init, fields) {}						\
-		Class(const Class & msg) : Message(), pp_seq_expand(pp_msg_copy_init_s, fields) {}										\
-		Class(Class && msg) : Message(), pp_seq_expand(pp_msg_move_init_s, fields) {}											\
-		~Class() {}																												\
-																																\
-		Class & operator = (const Class & msg)																					\
-		{																														\
-			pp_seq_fold(op_msg_assign, fields)																					\
-			return *this;																										\
-		}																														\
-																																\
-		Class & operator = (Class && msg)																						\
-		{																														\
-			pp_seq_fold(op_msg_move, fields)																					\
-			return *this;																										\
-		}																														\
-																																\
-		bool operator == (const Class & msg) const																				\
-		{																														\
-			return pp_seq_fold(op_msg_compare, fields) 1;																		\
-		}																														\
-																																\
-		pp_seq_fold(op_msg_declare, fields)																						\
-	};																															\
+#define message_nonempty0(Class, fields)								\
+	pp_seq_fold(op_msg_declare, fields)									\
+																		\
+	Class(const Subject * source, pp_msg_ctor_params(fields)) :			\
+		Message(source), pp_msg_cp_init_params(fields) {}				\
+	Class(const Subject * source, pp_msg_move_params(fields)) :			\
+		Message(source), pp_msg_mv_init_params(fields) {}				\
 
-#define message_receivers_getter(Msg)																							\
-	template<class Dst>																											\
-	class MessageDispatcher<Dst, Msg>																							\
-	{																															\
-		template<class, typename, bool>																							\
-		friend class MessageBroadcaster;																						\
-																																\
-		template<class, typename, bool>																							\
-		friend class MessageConnector;																							\
-																																\
-		member_checker(has_receivers, receiversOf##Msg);																		\
-																																\
-		template<class RealDst,																									\
-			require(																											\
-				based_on(RealDst, Dst)																							\
-				)>																												\
-		static inline auto & receivers(RealDst & dest)																			\
-		{																														\
-			if(dest.receiversOf##Msg == nullptr)																				\
-				dest.receiversOf##Msg.init();																					\
-																																\
-			return *dest.receiversOf##Msg;																						\
-		}																														\
-																																\
-	public:																														\
-		static const bool hasDestination = has_receivers<Dst>::value;															\
-	};																															\
-																																\
+#define message_nonempty(Class, ...)									\
+	message_nonempty0(Class, tuples_sequence(__VA_ARGS__))				\
+
+#define message_empty(Class, ...)										\
+	Class(const Subject * source) : Message(source) {}					\
+
+#define message_contents(Class, ...)									\
+	pp_if(pp_is_empty(__VA_ARGS__), message_empty, message_nonempty)	\
+		(Class, __VA_ARGS__)											\
+
+#define message_class0(Class, ...)										\
+	class Class : public Message										\
+	{																	\
+	public:																\
+		message_contents(Class, __VA_ARGS__)							\
+		Class(const Class &) = delete;									\
+	};																	\
+
+#define dest_getter(Msg)												\
+	template<class _Ty>													\
+	struct DestGetter<_Ty, Msg>											\
+		_GET_TYPE_OR_DEFAULT(DestOf##Msg, _Ty);							\
 
 /**
  *	@brief
- *  Standart message-class creator. Accepts type of new class and
+ *  The standart message-class creator. Accepts type of a new class and a
  *  sequence of parameters which are represented by pairs (type)(name).
  *  Example:
- *	message_class(
- *		NewMessage,
+ *	message_class(NewMessage,
  *		(int,	 id)
  *		(String, type)
- *	);
+ *		);
  */
-#define message_class(name, fields) _message_class(name, tuples_sequence(fields)) message_receivers_getter(name)
-#define empty_message_class(name) class name : public Message {}; message_receivers_getter(name)
-
-#define mkmsg(Msg, ...) Handle<Msg>(__VA_ARGS__)
+#define message_class(Class, .../*fields*/) message_class0(Class, __VA_ARGS__) dest_getter(Class)
 
 //---------------------------------------------------------------------------
 #endif

@@ -11,7 +11,7 @@
 
 namespace Rapture
 {
-	link_class(WindowAdapter, MetaClass<Subject>);
+	link_class(WindowAdapter, Class<Subject>);
 
 	class WindowAdapter : public Subject
 	{
@@ -88,18 +88,28 @@ namespace Rapture
 		virtual void unregisterHotkey(int id) {}
 
 	protected:
-		msg_create_link(WindowAdapter, KeyDownMessage);
-		msg_create_link(WindowAdapter, CharMessage);
-		msg_create_link(WindowAdapter, KeyUpMessage);
+		bind_messages(WindowAdapter,
+			KeyDownMessage,
+			CharMessage,
+			KeyUpMessage,
+			MouseDownMessage,
+			MouseUpdateMessage,
+			MouseUpMessage,
+			WindowHotkeyMessage,
+			WindowResizeMessage,
+			WindowFullscreenMessage,
+			WindowCloseMessage
+		);
 
-		msg_create_link(WindowAdapter, MouseDownMessage);
-		msg_create_link(WindowAdapter, MouseUpdateMessage);
-		msg_create_link(WindowAdapter, MouseUpMessage);
-
-		msg_create_link(WindowAdapter, WindowHotkeyMessage);
-		msg_create_link(WindowAdapter, WindowResizeMessage);
-		msg_create_link(WindowAdapter, WindowFullscreenMessage);
-		msg_create_link(WindowAdapter, WindowCloseMessage);
+		create_readers(
+			KeyDownMessage,
+			CharMessage,
+			KeyUpMessage,
+			MouseDownMessage,
+			MouseUpdateMessage,
+			MouseUpMessage,
+			WindowResizeMessage
+		);
 
 		Widget * focused() const;
 

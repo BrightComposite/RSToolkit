@@ -37,9 +37,9 @@ namespace Rapture
 		class GLModel;
 	}
 
-	link_class(OpenGL3_3::GraphicContext, MetaClass<Graphics3D>);
-	link_class(OpenGL3_3::Graphics3D, MetaClass<OpenGL3_3::GraphicContext>);
-	link_class(OpenGL3_3::GLModel, MetaClass<Model>);
+	link_class(OpenGL3_3::GraphicContext, Class<Graphics3D>);
+	link_class(OpenGL3_3::Graphics3D, Class<OpenGL3_3::GraphicContext>);
+	link_class(OpenGL3_3::GLModel, Class<Model>);
 
 	namespace OpenGL3_3
 	{
@@ -83,7 +83,7 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
-		class VertexElement : public Shareable<VertexElement>, public Precached<string, VertexElement>
+		class VertexElement : public Shared
 		{
 			friend class VertexLayout;
 
@@ -108,7 +108,7 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
-		class VertexLayout : public Shareable<VertexLayout>, public Cached<string, VertexLayout, ProtectedCache>
+		class VertexLayout : public Shared
 		{
 			typedef Cached<string, VertexLayout, ProtectedCache> Cache;
 
@@ -145,7 +145,7 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
-		class VertexBuffer : public Shareable<VertexBuffer>
+		class VertexBuffer : public Shared
 		{
 		public:
 			VertexBuffer(const Handle<VertexLayout> & vil, const VertexData & vd, uint topology = GL_TRIANGLES);
@@ -159,7 +159,7 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
-		class UniformBase : public Shareable<UniformBase>
+		class UniformBase : public Shared
 		{
 			friend class Graphics3D;
 
@@ -180,7 +180,7 @@ namespace Rapture
 			Uniform() : UniformBase(T::shader, T::index, static_cast<uint>(sizeof(T))) {}
 		};
 
-		using UniformId = PtrId;
+		using UniformId = PointerId;
 
 		class UniformData
 		{
@@ -188,7 +188,7 @@ namespace Rapture
 			UniformData(UniformBase * uniform) : uniform(uniform) {}
 
 			template<class T,
-				require(
+				useif(
 					is_uniform<T>::value
 					)>
 			void set(const T & data)
@@ -202,7 +202,7 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
-		class FxTechnique : public Shareable<FxTechnique>
+		class FxTechnique : public Shared
 		{
 			friend class Graphics3D;
 			friend class VertexBuffer;
@@ -251,7 +251,7 @@ namespace Rapture
 		};
 
 		template<>
-		class Shader<ShaderType::Common> : public Shareable<Shader<ShaderType::Common>>
+		class Shader<ShaderType::Common> : public Shared
 		{
 		public:
 			Shader();
@@ -344,12 +344,12 @@ namespace Rapture
 			virtual Handle<Image> createImage(const ImageData & data) const override;
 			virtual Handle<Figure> createFigure(const FigureData & data) const override;
 
-			template<class T, require(is_uniform<T>::value)>
+			template<class T, useif(is_uniform<T>::value)>
 			void updateUniform(const T & uniform) const;
-			template<class T, typename ... A, require(is_uniform<T>::value && can_construct(T, A...))>
+			template<class T, typename ... A, useif(is_uniform<T>::value && can_construct(T, A...))>
 			void updateUniform(A && ... args) const;
 
-			static MetaClass<Subject> meta;
+			static Class<Subject> meta;
 
 			static Map<thread::id, Graphics3D, Graphics3D> pool;
 
@@ -433,7 +433,7 @@ namespace Rapture
 			pool[std::this_thread::get_id()] = instance();
 		}
 
-		template<class T, class>
+		template<class T, selectif_t<0>>
 		void Graphics3D::updateUniform(const T & uniform) const
 		{
 			Handle<UniformData> & ud = uniformData[Uniform<T>::id()];
@@ -444,7 +444,7 @@ namespace Rapture
 			ud->set(uniform);
 		}
 
-		template<class T, typename ... A, class>
+		template<class T, typename ... A, selectif_t<1>>
 		void Graphics3D::updateUniform(A && ... args) const
 		{
 			Handle<UniformData> & ud = uniformData[Uniform<T>::id()];
@@ -591,7 +591,7 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
-		class ShaderProgram : public Shareable<ShaderProgram>
+		class ShaderProgram : public Shared
 		{
 		public:
 			virtual ~ShaderProgram() {}
@@ -631,7 +631,7 @@ namespace Rapture
 			SimpleTechnique(const Handle<VertexLayout> & vil, const Handle<ShaderProgram> & program)
 				: FxTechnique(vil), program(program) {}
 
-			template<class ShaderProgramType, class ... A, require(can_construct(ShaderProgramType, Handle<FxTechnique>, A...))>
+			template<class ShaderProgramType, class ... A, useif(can_construct(ShaderProgramType, Handle<FxTechnique>, A...))>
 			SimpleTechnique(const Handle<VertexLayout> & vil, const Type<ShaderProgramType> &, A &&... args)
 				: FxTechnique(vil), program(handle<ShaderProgramType>(this, forward<A>(args)...)) {}
 

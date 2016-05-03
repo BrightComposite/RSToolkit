@@ -5,5 +5,4 @@
 **/bin/
 **/lib/
 third-party/**
-**/*.timestamp
 *.timestamp

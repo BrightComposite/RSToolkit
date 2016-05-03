@@ -20,7 +20,7 @@ namespace Rapture
 
 		virtual ~PlayerEntity()
 		{
-			s->detach(_object);
+			scene()->detach(_object);
 		}
 
 		SceneObject * object()

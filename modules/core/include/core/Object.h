@@ -20,7 +20,6 @@ namespace Rapture
     {
     public:
 		Object() : _class(getclass(Object)) {}
-		virtual ~Object() {}
 
         const char * className() const
         {

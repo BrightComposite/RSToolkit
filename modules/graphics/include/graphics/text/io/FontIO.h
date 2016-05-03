@@ -52,11 +52,11 @@ namespace Rapture
 			return decoders[type];
 		}
 
-		template<class Decoder,
-			useif(
-				based_on(Decoder, Singleton<Decoder>) &&
-				based_on(Decoder, FontDecoder)
-				)>
+		template<class Decoder, useif <
+			based_on<Decoder, Singleton<Decoder>>::value,
+			based_on<Decoder, FontDecoder>::value
+			> endif
+		>
 		static void setDecoder(const string & type, Type<Decoder> = nullptr)
 		{
 			decoders[type] = &Decoder::instance();

@@ -1,32 +1,23 @@
 //---------------------------------------------------------------------------
 
-#ifndef LIST_H
-#define LIST_H
+#ifndef CONTAINER_H
+#define CONTAINER_H
 
 //---------------------------------------------------------------------------
 
-#include <core/Handle.h>
-#include <list>
+#include <meta/Meta.h>
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	using std::list;
+	type_checker(is_iterable, iterator);
 
-	template<typename T, class ... OwnerAttr>
-	class List : public list<Handle<T, OwnerAttr...>>
+	template<typename T, useif <is_iterable<T>::value> endif>
+	typename T::iterator erase(T & container, int pos)
 	{
-	public:
-		using list<Handle<T, OwnerAttr...>>::list;
-	};
-
-	template<typename T>
-	class PointerList : public list<T *>
-	{
-	public:
-		using list<T *>::list;
-	};
+		return container.erase(container.begin() + pos);
+	}
 }
 
 //---------------------------------------------------------------------------

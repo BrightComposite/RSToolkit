@@ -392,9 +392,16 @@ namespace Rapture
 		target.add('(', obj.className(), ')');
 	}
 
-	Handle<StringList> split(const string & text, const char * sep)
+	void print(WideString & target, const Object & obj)
 	{
-		auto list = handle<StringList>();
+		String s;
+		print(s, obj);
+		target = widen(s);
+	}
+
+	StringList split(const string & text, const char * sep)
+	{
+		StringList list;
 
 		if(text.empty())
 			return list;
@@ -405,7 +412,7 @@ namespace Rapture
 
 		while(token != nullptr)
 		{
-			list->emplace_back(token, strlen(token));
+			list.emplace_back(token, strlen(token));
 			token = strtok_s(nullptr, sep, &next);
 		}
 
@@ -414,47 +421,47 @@ namespace Rapture
 		return list;
 	}
 
-	Handle<StringList> splitOnLines(const string & text, uint lineLength, bool separateWords)
+	StringList splitOnLines(const string & text, uint lineLength, bool separateWords)
 	{
-		auto list = handle<StringList>();
+		StringList list;
 
 		if(text.empty())
 			return list;
 
 		const char * start = text.c_str();
 		const char * end = start + text.size();
-		const char * pos = start;
+		const char * ptr = start;
 
 		while(true)
 		{
-			if(pos >= end)
+			if(ptr >= end)
 				break;
 
-			uint length = std::min(lineLength, static_cast<uint>(end - pos));
+			uint length = std::min(lineLength, static_cast<uint>(end - ptr));
 
 			if(!separateWords)
 			{
-				const char * ptr = pos + length - 1;
+				const char * chptr = ptr + length - 1;
 
-				while((isalnum(*ptr) || *ptr == '_') && ptr > pos)
-					ptr--;
+				while((isalnum(*chptr) || *chptr == '_') && chptr > ptr)
+					chptr--;
 
-				if(ptr == pos)
-					ptr = pos + length - 1;
+				if(chptr == ptr)
+					chptr = ptr + length - 1;
 
-				length = static_cast<uint>(ptr - pos + 1);
+				length = static_cast<uint>(chptr - ptr + 1);
 			}
 
-			list->emplace_back(pos, length);
-			pos += length;
+			list.emplace_back(ptr, length);
+			ptr += length;
 		}
 
 		return list;
 	}
 
-	Handle<WideStringList> split(const wstring & text, const wchar_t * sep)
+	WideStringList split(const wstring & text, const wchar_t * sep)
 	{
-		auto list = handle<WideStringList>();
+		WideStringList list;
 
 		if(text.empty())
 			return list;
@@ -465,7 +472,7 @@ namespace Rapture
 
 		while(token != nullptr)
 		{
-			list->emplace_back(token, wcslen(token));
+			list.emplace_back(token, wcslen(token));
 			token = wcstok_s(nullptr, sep, &next);
 		}
 
@@ -474,39 +481,39 @@ namespace Rapture
 		return list;
 	}
 
-	Handle<WideStringList> splitOnLines(const wstring & text, uint lineLength, bool separateWords)
+	WideStringList splitOnLines(const wstring & text, uint lineLength, bool separateWords)
 	{
-		auto list = handle<WideStringList>();
+		WideStringList list;
 
 		if(text.empty())
 			return list;
 
 		const wchar_t * start = text.c_str();
 		const wchar_t * end = start + text.size();
-		const wchar_t * pos = start;
+		const wchar_t * ptr = start;
 
 		while(true)
 		{
-			if(pos >= end)
+			if(ptr >= end)
 				break;
 
-			uint length = std::min(lineLength, static_cast<uint>(end - pos));
+			uint length = std::min(lineLength, static_cast<uint>(end - ptr));
 
 			if(!separateWords)
 			{
-				const wchar_t * ptr = pos + length - 1;
+				const wchar_t * chptr = ptr + length - 1;
 
-				while((iswalnum(*ptr) || *ptr == '_') && ptr > pos)
-					ptr--;
+				while((iswalnum(*chptr) || *chptr == '_') && chptr > ptr)
+					chptr--;
 
-				if(ptr == pos)
-					ptr = pos + length - 1;
+				if(chptr == ptr)
+					chptr = ptr + length - 1;
 
-				length = static_cast<uint>(ptr - pos + 1);
+				length = static_cast<uint>(chptr - ptr + 1);
 			}
 
-			list->emplace_back(pos, length);
-			pos += length;
+			list.emplace_back(ptr, length);
+			ptr += length;
 		}
 
 		return list;

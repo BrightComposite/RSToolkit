@@ -44,19 +44,6 @@ namespace Rapture {
 	protected:
 		String _name;
     };
-
-	class NamedClass : public Class<>
-	{
-	public:
-		NamedClass(const char * name) : Class<>(name) {}
-		NamedClass(const NamedClass & meta) : Class<>(meta) {}
-
-	protected:
-		virtual void addInfo(String & target, const Object & obj) const override
-		{
-			target << '\"' << dynamic_cast<const Named &>(obj).name() << '\"' << ' ';
-		}
-	};
 }
 
 //---------------------------------------------------------------------------

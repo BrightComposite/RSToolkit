@@ -4,7 +4,7 @@
 #include <core/Subject.h>
 #include <core/container/Array.h>
 #include <core/container/Map.h>
-#include <core/meta/Inheritance.h>
+#include <meta/Inheritance.h>
 #include <application/Application.h>
 #include <iostream>
 #include <chrono>

@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/meta/Meta.h>
+#include <meta/Meta.h>
 #include <core/String.h>
 
 //---------------------------------------------------------------------------
@@ -18,7 +18,7 @@ namespace Rapture
 		size_t _hashValue;
 
 	public:
-		template<typename ... A, useif(can_construct(T, A...))>
+		template<typename ... A, useif <can_construct<T, A...>::value> endif>
 		Hashed(A &&... args) : T(forward<A>(args)...), _hashValue(Rapture::hash(static_cast<const T &>(*this))) {}
 
 		Hashed(const Hashed & val) : T(val), _hashValue(val._hashValue) {}
@@ -40,10 +40,7 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class A,
-			useif(
-				is_not_based_on(A, Hashed)
-				)>
+		template<class A, skipif<based_on<A, Hashed>()>::value>
 		Hashed & operator = (A && val)
 		{
 			T::operator = (forward<A>(val));
@@ -127,21 +124,6 @@ namespace Rapture
 
 	typedef Hashed<void *> PointerId;
 
-	inline bool equal_to(const char * first, const char * second)
-	{
-		return strcmp(first, second) == 0;
-	}
-
-	template<class X, class Y,
-		useif(
-			is_not_based_on(X, Object) &&
-			is_not_same(X, const char *)
-			)>
-	inline bool equal_to(const X & first, const Y & second)
-	{
-		return first == second;
-	}
-
 	template<class X, class Y>
 	inline size_t mixhash(const X & first, const Y & second)
 	{
@@ -183,7 +165,7 @@ namespace Rapture
 		SharedIdentifier() : EmptyHandle(emptiness) {}
 	};
 
-	template<class T, useif(is_functor<std::hash<T>, const T &>::value)>
+	template<class T, useif <is_functor<std::hash<T>, const T &>::value> endif>
 	size_t hash(const T & value)
 	{
 		return std::hash<T>()(value);
@@ -201,8 +183,6 @@ namespace Rapture
 	};
 }
 
-#define attach_hash(... /* Class */) template<> struct std::hash<__VA_ARGS__>
-
 #define use_class_hash(... /* Class */)								\
 	struct hash<__VA_ARGS__> : unary_function<__VA_ARGS__, size_t>	\
 	{																\
@@ -211,6 +191,8 @@ namespace Rapture
 			return val.hash();										\
 		}															\
 	};																\
+
+#define attach_hash(... /* Class */) struct std::hash<__VA_ARGS__>
 
 namespace std
 {

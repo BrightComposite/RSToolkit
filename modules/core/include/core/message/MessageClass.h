@@ -5,9 +5,12 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/meta/Types.h>
+#include <meta/Types.h>
 
 //---------------------------------------------------------------------------
+
+namespace Rapture
+{
 
 #define pp_msg_ctor_param_op(z, data, ...) const pp_tuple_elem_t(__VA_ARGS__) & pp_tuple_elem_n(__VA_ARGS__)
 #define pp_msg_move_param_op(z, data, ...) pp_tuple_elem_t(__VA_ARGS__) && pp_tuple_elem_n(__VA_ARGS__)
@@ -21,36 +24,37 @@
 
 #define op_msg_declare(s, state, ...) state pp_tuple_elem_d(__VA_ARGS__);
 
-#define message_nonempty0(Class, fields)								\
-	pp_seq_fold(op_msg_declare, fields)									\
-																		\
-	Class(const Subject * source, pp_msg_ctor_params(fields)) :			\
-		Message(source), pp_msg_cp_init_params(fields) {}				\
-	Class(const Subject * source, pp_msg_move_params(fields)) :			\
-		Message(source), pp_msg_mv_init_params(fields) {}				\
+#define message_nonempty0(Msg, fields)								\
+	pp_seq_fold(op_msg_declare, fields)								\
+																	\
+	Msg(const Subject * source, pp_msg_ctor_params(fields)) :		\
+		Message(source), pp_msg_cp_init_params(fields) {}			\
+	Msg(const Subject * source, pp_msg_move_params(fields)) :		\
+		Message(source), pp_msg_mv_init_params(fields) {}			\
 
-#define message_nonempty(Class, ...)									\
-	message_nonempty0(Class, tuples_sequence(__VA_ARGS__))				\
+#define message_nonempty(Msg, ...)									\
+	message_nonempty0(Msg, tuples_sequence(__VA_ARGS__))			\
 
-#define message_empty(Class, ...)										\
-	Class(const Subject * source) : Message(source) {}					\
+#define message_empty(Msg, ...)										\
+	Msg(const Subject * source) : Message(source) {}				\
 
-#define message_contents(Class, ...)									\
-	pp_if(pp_is_empty(__VA_ARGS__), message_empty, message_nonempty)	\
-		(Class, __VA_ARGS__)											\
+#define message_contents(Msg, ...)									\
+	pp_if(pp_is_empty(__VA_ARGS__), message_empty, message_nonempty)\
+		(Msg, __VA_ARGS__)											\
 
-#define message_class0(Class, ...)										\
-	class Class : public Message										\
-	{																	\
-	public:																\
-		message_contents(Class, __VA_ARGS__)							\
-		Class(const Class &) = delete;									\
-	};																	\
+#define set_message_dest(Dst, Msg) using pp_cat(DestOf, Msg) = Dst;
 
-#define dest_getter(Msg)												\
-	template<class _Ty>													\
-	struct DestGetter<_Ty, Msg>											\
-		_GET_TYPE_OR_DEFAULT(DestOf##Msg, _Ty);							\
+	template<class Dst, typename Msg>
+	struct DestGetter
+	{
+		typedef Dst type;
+	};
+
+	template<class Dst, typename Msg>
+	using message_dst_t = typename DestGetter<Dst, Msg>::type;
+
+#define make_dest_getter(Msg)											\
+	type_getter(T, macrowrap(DestGetter<T, Msg>), pp_cat(DestOf, Msg), T)
 
 /**
  *	@brief
@@ -62,7 +66,15 @@
  *		(String, type)
  *		);
  */
-#define message_class(Class, .../*fields*/) message_class0(Class, __VA_ARGS__) dest_getter(Class)
+#define message_class(Msg, .../* fields */)	\
+	class Msg : public Message				\
+	{										\
+	public:									\
+		message_contents(Msg, __VA_ARGS__)	\
+	};										\
+											\
+	make_dest_getter(Msg)
+}
 
 //---------------------------------------------------------------------------
 #endif

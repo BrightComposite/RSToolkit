@@ -17,10 +17,10 @@
 
 namespace Rapture
 {
-	template<typename T, int Mask>
+	template<typename T, size_t Mask>
 	using VectorMaskAxis = IntrinsicMask<T, IntrinMax, Mask>;
 
-	template<typename T, int Mask>
+	template<typename T, size_t Mask>
 	using VectorSignAxis = IntrinsicMask<T, IntrinSignmask, Mask>;
 
 	template<typename T>
@@ -53,13 +53,8 @@ namespace Rapture
 		Vector(Vector && v) : data(move(v.data)) {}
 		Vector(Data && data) : data(forward<Data>(data)) {}
 
-		template<class U, useif(is_not_same(T, U))>
-		Vector(const Vector<U> & v) :
-			x(static_cast<T>(v.x)),
-			y(static_cast<T>(v.y)),
-			z(static_cast<T>(v.z)),
-			w(static_cast<T>(v.w))
-		{}
+		template<class U, useif <!is_same<T, U>::value> endif>
+		Vector(const Vector<U> & v) : data(intrin_cvt<IntrinType>(v.intrinsic)) {}
 
 		Vector(const T * v)
 		{
@@ -310,9 +305,9 @@ namespace Rapture
 			return std::sqrt(distanceToSq(p));
 		}
 
-		inline T distanceToAxis(const Data & p, int axis) const
+		inline T distanceToAxis(const Data & p, int Axis) const
 		{
-			return std::abs(v[axis] - p[axis]);
+			return std::abs(v[Axis] - p[Axis]);
 		}
 
 		inline int getMainAxis() const
@@ -320,16 +315,16 @@ namespace Rapture
 			return x >= y ? 0 : y >= z ? 1 : 2;
 		}
 
-		template<uint X, uint Y, uint Z, uint W, useif(X < 2 && Y < 2 && Z < 2 && W < 2)>
+		template<byte X, byte Y, byte Z, byte W, useif <(X < 2 && Y < 2 && Z < 2 && W < 2)> endif>
 		Vector mask() const // select some components (e.g. if X == 1 then result.x = v.x else result.x = 0)
 		{
 			return Intrin::and(VectorMaskAxis<T, mk_mask4(X, Y, Z, W)>::get(), data);
 		}
 
-		template<uint axis, useif(axis < 4)>
+		template<uint Axis, useif <(Axis < 4)> endif>
 		Vector maskAxis() const // set all components of a vector to zero except of one
 		{
-			return Intrin::and(VectorMaskAxis<T, bitmask<axis>::value>::get(), data);
+			return Intrin::and(VectorMaskAxis<T, bitmask<Axis>::value>::get(), data);
 		}
 
 		Vector maskX() const
@@ -352,10 +347,10 @@ namespace Rapture
 			return maskAxis<3>();
 		}
 
-		template<uint axis, useif(axis < 4)>
+		template<uint Axis, useif <(Axis < 4)> endif>
 		Vector clearAxis() const // set a single component to zero
 		{
-			return Intrin::and(VectorMaskAxis<T, 0xF ^ bitmask<axis>::value>::get(), data);
+			return Intrin::and(VectorMaskAxis<T, 0xF ^ bitmask<Axis>::value>::get(), data);
 		}
 
 		Vector clearX() const
@@ -378,16 +373,16 @@ namespace Rapture
 			return clearAxis<3>();
 		}
 
-		template<uint X, uint Y, uint Z, uint W, useif(X < 2 && Y < 2 && Z < 2 && W < 2)>
+		template<byte X, byte Y, byte Z, byte W, useif <(X < 2 && Y < 2 && Z < 2 && W < 2)> endif>
 		Vector negate() const // negate some components (e.g. if X == 1 then result.x = -v.x else result.x = v.x)
 		{
 			return Intrin::xor(VectorSignAxis<T, mk_mask4(X, Y, Z, W)>::get(), data);
 		}
 
-		template<uint axis, useif(axis < 4)>
+		template<uint Axis, useif <(Axis < 4)> endif>
 		Vector negateAxis() const // negate one component
 		{
-			return Intrin::xor(VectorSignAxis<T, bitmask<axis>::value>::get(), data);
+			return Intrin::xor(VectorSignAxis<T, bitmask<Axis>::value>::get(), data);
 		}
 
 		Vector negateX() const
@@ -410,7 +405,7 @@ namespace Rapture
 			return negateAxis<3>();
 		}
 
-		template<uint Axis, useif(Axis < 4)>
+		template<uint Axis, useif <(Axis < 4)> endif>
 		Vector spreadAxis() const // get a vector filled with a single component of a src vector
 		{
 			return shuffle<Axis, Axis, Axis, Axis>();
@@ -436,41 +431,41 @@ namespace Rapture
 			return spreadAxis<3>();
 		}
 
-		template<uint Axis, useif(Axis < 4)>
+		template<uint Axis, useif <(Axis < 4)> endif>
 		Vector & addAxis(const Vector & vec)
 		{
 			v += vec.maskAxis<Axis>();
 			return *this;
 		}
 
-		template<uint Axis, useif(Axis < 4)>
+		template<uint Axis, useif <(Axis < 4)> endif>
 		Vector & subtractAxis(const Vector & vec)
 		{
 			v -= vec.maskAxis<Axis>();
 			return *this;
 		}
 
-		Vector & addAxis(const Vector & vec, int axis)
+		Vector & addAxis(const Vector & vec, int Axis)
 		{
-			v[axis] += vec[axis];
+			v[Axis] += vec[Axis];
 			return *this;
 		}
 
-		Vector & subtractAxis(const Vector & vec, int axis)
+		Vector & subtractAxis(const Vector & vec, int Axis)
 		{
-			v[axis] -= vec[axis];
+			v[Axis] -= vec[Axis];
 			return *this;
 		}
 
-		Vector & addAxis(T val, int axis)
+		Vector & addAxis(T val, int Axis)
 		{
-			v[axis] += val;
+			v[Axis] += val;
 			return *this;
 		}
 
-		Vector & subtractAxis(T val, int axis)
+		Vector & subtractAxis(T val, int Axis)
 		{
-			v[axis] -= val;
+			v[Axis] -= val;
 			return *this;
 		}
 
@@ -513,28 +508,19 @@ namespace Rapture
 			return intrinsic;
 		}
 
-		template<uint A, uint B, uint C, uint D,
-			useif(
-				A < 4 && B < 4 && C < 4 && D < 4
-			)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)> endif>
 		inline Vector shuffle() const
 		{
 			return Intrin::shuffle<A, B, C, D>(data);
 		}
 
-		template<uint A, uint B, uint C, uint D,
-			useif(
-				A < 4 && B < 4 && C < 4 && D < 4
-				)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)> endif>
 		inline Vector shuffle(const Data & v) const
 		{
 			return Intrin::shuffle2<A, B, C, D>(data, v);
 		}
 
-		template<uint A, uint B, uint C, uint D,
-			useif(
-				A < 2 && B < 2 && C < 2 && D < 2
-				)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 2 && B < 2 && C < 2 && D < 2)> endif>
 		inline Vector blend(const Data & v) const
 		{
 			return Intrin::blend<A, B, C, D>(data, v);
@@ -861,37 +847,37 @@ namespace Rapture
 		return Intrinsic<T, 4>::div(v1, v2.data);
 	}
 
-	template<typename T, typename U, useif(std::is_pod<U>::value)>
+	template<typename T, typename U, useif <std::is_pod<U> endif> endif>
 	inline Vector<T> operator + (const Vector<T> & vec, U a)
 	{
 		return Intrinsic<T, 4>::add(vec.data, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 	}
 
-	template<typename T, typename U, useif(std::is_pod<U>::value)>
+	template<typename T, typename U, useif <std::is_pod<U> endif> endif>
 	inline Vector<T> operator - (const Vector<T> & vec, U a)
 	{
 		return Intrinsic<T, 4>::sub(vec.data, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 	}
 
-	template<typename T, typename U, useif(std::is_pod<U>::value)>
+	template<typename T, typename U, useif <std::is_pod<U> endif> endif>
 	inline Vector<T> operator * (const Vector<T> & vec, U a)
 	{
 		return Intrinsic<T, 4>::mul(vec.data, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 	}
 
-	template<typename T, typename U, useif(std::is_pod<U>::value)>
+	template<typename T, typename U, useif <std::is_pod<U>::value> endif>
 	inline Vector<T> operator / (const Vector<T> & vec, U a)
 	{
 		return Intrinsic<T, 4>::div(vec.data, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 	}
 
-	template<typename T, typename U, useif(std::is_pod<U>::value)>
+	template<typename T, typename U, useif <std::is_pod<U>::value> endif>
 	inline Vector<T> operator * (const U & a, const Vector<T> & vec)
 	{
 		return Intrinsic<T, 4>::mul(Intrinsic<T, 4>::fill(a), vec.data);
 	}
 
-	template<typename T, typename U, useif(std::is_pod<U>::value)>
+	template<typename T, typename U, useif <std::is_pod<U>::value> endif>
 	inline Vector<T> operator / (const U & a, const Vector<T> & vec)
 	{
 		return Intrinsic<T, 4>::div(Intrinsic<T, 4>::fill(a), vec.data);

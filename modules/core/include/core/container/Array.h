@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/Object.h>
+#include <core/Handle.h>
 
 #include <array>
 #include <vector>
@@ -23,6 +23,7 @@ namespace Rapture
 		typedef vector<T> Base;
 
 	public:
+		using Base::vector;
 		using Base::erase;
 
 		typename Base::iterator erase(int pos)
@@ -31,17 +32,12 @@ namespace Rapture
 		}
 	};
 
-	template<typename T>
-	class ArrayObject : public Object, public CustomArray<T> {};
-
-	template<typename T>
-	using PointerArray = CustomArray<T *>;
-
 	template<typename T, class ... OwnerAttr>
-	using HandleArray = CustomArray<Handle<T, OwnerAttr...>>;
-
-	template<class T, class ... OwnerAttr>
-	using Array = ArrayObject<Handle<T, OwnerAttr...>>;
+	class Array : public CustomArray<Handle<T, OwnerAttr...>>
+	{
+	public:
+		using CustomArray<Handle<T, OwnerAttr...>>::CustomArray;
+	};
 }
 
 //---------------------------------------------------------------------------

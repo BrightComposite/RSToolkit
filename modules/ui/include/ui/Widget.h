@@ -19,6 +19,9 @@ namespace Rapture
 {
 	class Widget;
 
+	template<>
+	attach_hash(Widget);
+
 	class WidgetRegion : public Subject
 	{
 	public:
@@ -295,11 +298,11 @@ namespace Rapture
 
 	using DefaultLayer = CustomLayer<0>;
 
-#define is_widget(T) based_on(T, Widget)
-#define is_layer(T)  based_on(T, Layer)
-#define is_drawer(T) (std::is_function<T>::value || Rapture::is_functor<T, const Widget *, const IntRect &>::value)
+#define is_widget(T) based_on<T, Widget>::value
 
-	attach_hash(Widget);
+#define is_layer(T)  based_on<T, Layer>::value
+
+#define is_drawer(T) (std::is_function<T>::value || Rapture::is_functor<T, const Widget *, const IntRect &>::value)
 
 	class Widget : public WidgetRegion
 	{
@@ -324,25 +327,25 @@ namespace Rapture
 
 		Widget * findWidget(const IntPoint & pt);
 
-		template<class WidgetClass, typename ... A, selectif(0, is_widget(WidgetClass) && can_construct(WidgetClass, Widget *, A...))>
+		template<class WidgetClass, typename ... A, selectif(0) <is_widget(WidgetClass) && can_construct<WidgetClass, Widget *, A...>::value> endif>
 		inline Handle<WidgetClass> append(A && ... args);
 
-		template<class LayerClass,  typename ... A, selectif(1, is_layer(LayerClass)   && can_construct(LayerClass,  Widget *, A...))>
+		template<class LayerClass,  typename ... A, selectif(1) <is_layer(LayerClass)   && can_construct<LayerClass,  Widget *, A...>::value> endif>
 		inline Handle<LayerClass> append(A && ... args);
 
-		template<class LayerClass, useif(is_layer(LayerClass))>
+		template<class LayerClass, useif <is_layer(LayerClass)> endif>
 		inline Handle<LayerClass> layer();
 
-		template<class Drawer, useif(is_drawer(Drawer))>
+		template<class Drawer, useif <is_drawer(Drawer)> endif>
 		inline Handle<DefaultLayer> attach(const Drawer & drawer, int order = 0);
 
-		template<int Id, class Drawer, useif(is_drawer(Drawer))>
+		template<int Id, class Drawer, useif <is_drawer(Drawer)> endif>
 		inline Handle<CustomLayer<Id>> attach(const Drawer & drawer, int order = 0);
 
 		inline Widget & operator += (const Handle<Widget> & child);
 		inline Widget & operator -= (Handle<Widget> & child);
 
-		template<class Drawer, useif(is_drawer(Drawer))>
+		template<class Drawer, useif <is_drawer(Drawer)> endif>
 		inline Widget & operator << (const Drawer & drawer);
 
 		virtual bool isDisplayable() const
@@ -420,9 +423,10 @@ namespace Rapture
 
 		WindowAdapter * _adapter;
 
-		list<Layer *> _layers;
-		TypedMap<Layer> _layerMap;
+		TypedMap<Layer> _layers;
 		Set<Widget> _children;
+
+		list<Layer *> _layerList;
 		list<Widget *> _displayList;
 
 		int _flags = 0;
@@ -601,7 +605,7 @@ namespace Rapture
 	template<class LayerClass, typename ... A, selectif_t<1>>
 	inline Handle<LayerClass> Widget::append(A && ... args)
 	{
-		return _layerMap.construct<LayerClass>(this, forward<A>(args)...);
+		return _layers.construct<LayerClass>(this, forward<A>(args)...);
 	}
 
 	template<class Drawer, useif_t>
@@ -619,7 +623,7 @@ namespace Rapture
 	template<class LayerClass, useif_t>
 	inline Handle<LayerClass> Widget::layer()
 	{
-		return _layerMap.request<LayerClass>(this);
+		return _layers.request<LayerClass>(this);
 	}
 
 	inline Widget & Widget::operator += (const Handle<Widget> & child)

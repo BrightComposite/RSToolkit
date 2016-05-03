@@ -44,7 +44,7 @@ namespace Rapture
 
 		Quaternion(const Data & data) : data {data} {}
 
-		template<class U, useif(is_not_same(T, U))>
+		template<class U, useif <not_same_type<T, U>::value> endif>
 		Quaternion(const Quaternion<U> & q) : v(q.v) {}
 
 		Quaternion(const Vector<T> & axis, T angle) : Quaternion(VectorMath<T>::trigon(angle * 0.5f).shuffle<0, 0, 0, 1>() * axis.blend<0, 0, 0, 1>(Vector<T>::positiveW)) {}

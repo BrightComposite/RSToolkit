@@ -56,8 +56,8 @@ namespace Rapture
 		{
 			~GraphicsDebug()
 			{
-				//if(instance != nullptr)
-				//	instance->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+				if(instance != nullptr)
+					instance->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
 			}
 
 			ComHandle<ID3D11Debug> instance;
@@ -79,10 +79,16 @@ namespace Rapture
 			ComHandle<IDXGIFactory2, GraphicContext> dxgiFactory;
 
 		protected:
-			inline void setDeviceAndContext(const ComHandle<ID3D11Device1> & device, const ComHandle<ID3D11DeviceContext2> & context)
+			inline void setContext(const ComHandle<ID3D11Device1> & device, const ComHandle<ID3D11DeviceContext2> & context)
 			{
 				this->device = device;
 				this->context = context;
+			}
+
+			inline void freeContext()
+			{
+				this->device = nullptr;
+				this->context = nullptr;
 			}
 
 			GraphicsDebug debug;
@@ -96,13 +102,14 @@ namespace Rapture
 
 		public:
 			D3DImage(const GraphicContext * ctx, const ImageData & data);
+			virtual ~D3DImage() {}
 
 			virtual void apply() const override;
 			virtual void requestData(ImageData * output) const override;
 
 		protected:
-			ComHandle<ID3D11ShaderResourceView> _handle;
 			ComHandle<ID3D11SamplerState> _state;
+			ComHandle<ID3D11ShaderResourceView> _handle;
 			const GraphicContext * _ctx;
 		};
 
@@ -159,9 +166,8 @@ namespace Rapture
 			static uint decodeData(const String & data, Array<VertexElement> & elements, vector<D3D11_INPUT_ELEMENT_DESC> & layout)
 			{
 				uint stride = 0;
-				auto list = split(data);
 
-				for(const auto & str : *list)
+				for(const auto & str : split(data))
 				{
 					auto & vie = VertexElement::get(str);
 					elements.push_back(vie);
@@ -363,23 +369,19 @@ namespace Rapture
 			virtual Handle<Image> createImage(const ImageData & data) const override;
 			virtual Handle<Figure> createFigure(const FigureData & data) const override;
 
-			template<class T,
-				useif(is_uniform<T>::value)
-			>
-			void updateUniform(const T & uniform) const;
-
-			template<class T, typename ... A,
-				useif(is_uniform<T>::value),
-				useif(can_construct(T, A...) && are_not_same((T), (A...)))
-			>
-			void updateUniform(A && ... args) const;
+			template<class T, useif <is_uniform<T>::value> endif>
+			void updateUniform(const T & uniform) const
+			{
+				uniformData.request<GenericUniform<T>>()->set(uniform);
+			}
 
 			static Class<Subject> meta;
 
 			static Map<thread::id, Graphics3D, Graphics3D> pool;
 
 		protected:
-			public_for_handle(Graphics3D, Graphics3D);
+			public_for_handle(Graphics3D, Graphics3D)
+
 			friend class D3DModel;
 
 			Graphics3D();
@@ -447,6 +449,7 @@ namespace Rapture
 				return;
 
 			graphics->freeFacilities();
+			graphics->freeContext();
 			graphics = nullptr;
 			updatePool();
 		}
@@ -454,18 +457,6 @@ namespace Rapture
 		inline void Graphics3D::updatePool()
 		{
 			pool[std::this_thread::get_id()] = instance();
-		}
-
-		template<class T, useif_t>
-		void Graphics3D::updateUniform(const T & uniform) const
-		{
-			uniformData.request<GenericUniform<T>>()->set(uniform);
-		}
-
-		template<class T, typename ... A, useif_t, useif_t>
-		void Graphics3D::updateUniform(A && ... args) const
-		{
-			uniformData.request<GenericUniform<T>>()->set(T(forward<A>(args)...));
 		}
 
 		//---------------------------------------------------------------------------
@@ -480,12 +471,12 @@ namespace Rapture
 				auto & codeSet = shaders[id];
 
 				if(codeSet == nullptr)
-					throw new Exception("Can't find embedded shader set with id \"", id, "\"");
+					throw Exception("Can't find embedded shader set with id \"", id, "\"");
 
 				auto & code = (*codeSet)[type];
 
 				if(code == nullptr)
-					throw new Exception("Embedded shader set with id \"", id, "\" doesn't contain shader of type \"", type, "\"");
+					throw Exception("Embedded shader set with id \"", id, "\" doesn't contain shader of type \"", type, "\"");
 
 				return *code;
 			}
@@ -658,12 +649,10 @@ namespace Rapture
 			SimpleTechnique(const Handle<VertexLayout> & vil, const Handle<ShaderProgram> & program)
 				: FxTechnique(vil), program(program) {}
 
-			template<
-				class Program, class ... A,
-					useif(
-						is_shader_program<Program>::value &&
-						can_construct(Program, Handle<FxTechnique>, A...)
-						)
+			template<class Program, class ... A, useif <
+				is_shader_program<Program>::value,
+				can_construct<Program, Handle<FxTechnique>, A...>::value
+				> endif
 			>
 			SimpleTechnique(const Handle<VertexLayout> & vil, const Type<Program> &, A &&... args)
 				: FxTechnique(vil), program(handle<Program>(this, forward<A>(args)...)) {}

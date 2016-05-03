@@ -8,7 +8,7 @@
 #include <core/memory/BlockPool.h>
 #include <core/memory/allocator/DefaultAllocator.h>
 #include <core/memory/allocator/PoolAllocator.h>
-#include <core/meta/Meta.h>
+#include <meta/Meta.h>
 #include <core/addition/Wrapper.h>
 
 //---------------------------------------------------------------------------
@@ -23,7 +23,7 @@ namespace Rapture
 
 	//---------------------------------------------------------------------------
 
-#define public_for_handle(...)									\
+#define public_for_handle(...)								\
 	template<class...>        friend class Handle;				\
 	template<class...>        friend class UniqueHandle;		\
 	template<class, class>    friend class std::unique_ptr;		\
@@ -77,14 +77,14 @@ namespace Rapture
 	public:
 		using Base::unique_ptr;
 
-		UniquePtr & operator = (nullptr_t) _NOEXCEPT
+		UniquePtr & operator = (nullptr_t)
 		{	
 			Base::operator = (nullptr);
 			return (*this);
 		}
 
 		template<class U>
-		UniquePtr & operator = (U && right) _NOEXCEPT
+		UniquePtr & operator = (U && right)
 		{
 			Base::operator = (forward<U>(right));
 			return (*this);
@@ -241,17 +241,33 @@ namespace Rapture
 
 		Handle(SharedType * shared) : Base(shared) {}
 
-		template<class U, class ... A, useif(based_on(U, T) && !is_const<U>::value)>
+		template<class U, class ... A, useif <
+			based_on<U, T>::value && !is_const<U>::value
+			> endif
+		>
 		Handle(const Handle<U, A...> & h) : Base(h) {}
-		template<class U, class ... A, useif(based_on(U, T) && !is_const<U>::value)>
+
+		template<class U, class ... A, useif <
+			based_on<U, T>::value && !is_const<U>::value
+			> endif
+		>
 		Handle(Handle<U, A...> && h) : Base(forward<Handle<U, A...>>(h)) {}
 
-		template<useif(can_construct(T))>
+		template<useif <can_construct<T>::value> endif>
 		Handle(Empty emptiness) : Base(emptiness) {}
 
-		template<class ... A, selectif(0, can_construct(T, A...) && sizeof...(A) > 0)>
+		template<class ... A, selectif(0)
+			<
+			can_construct<T, A...>::value && (sizeof...(A) > 0)
+			> endif
+		>
 		explicit Handle(A &&... args) : Base(forward<A>(args)...) {}
-		template<class ... A, selectif(1, is_abstract<T>::value && !is_handle_init<T, A...>::value)>
+
+		template<class ... A, selectif(1)
+			<
+			is_abstract<T>::value && !is_handle_init<T, A...>::value
+			> endif
+		>
 		explicit Handle(A &&... args) { static_assert(false, "Can't construct abstract class"); }
 
 		Handle & operator = (const Handle & h)
@@ -266,14 +282,20 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class U, class ... A, useif(based_on(U, T) && !is_const<U>::value)>
+		template<class U, class ... A, useif <
+			based_on<U, T>::value && !is_const<U>::value
+			> endif
+		>
 		Handle & operator = (const Handle<U, A...> & h)
 		{
 			Base::operator = (h);
 			return *this;
 		}
 
-		template<class U, class ... A, useif(based_on(U, T) && !is_const<U>::value)>
+		template<class U, class ... A, useif <
+			based_on<U, T>::value && !is_const<U>::value
+			> endif
+		>
 		Handle & operator = (Handle<U, A...> && h)
 		{
 			Base::operator = (forward<Handle<U, A...>>(h));
@@ -286,20 +308,32 @@ namespace Rapture
 			return *this;
 		}
 
-		template<typename ... A, selectif(0, can_construct(T, A...))>
+		template<typename ... A, selectif(0)
+			<
+			can_construct<T, A...>::value
+			> endif
+		>
 		Handle & init(A &&... args)
 		{
 			Base::init(forward<A>(args)...);
 			return *this;
 		}
 
-		template<typename ... A, selectif(0, can_construct(T, A...))>
+		template<typename ... A, selectif(0)
+			<
+			can_construct<T, A...>::value
+			> endif
+		>
 		Handle & reinit(A &&... args)
 		{
 			return init(forward<A>(args)...);
 		}
 
-		template<typename ... A, selectif(0, can_construct(T, A...))>
+		template<typename ... A, selectif(0)
+			<
+			can_construct<T, A...>::value
+			> endif
+		>
 		static Handle create(A &&... args)
 		{
 			SharedType * sh = new SharedType(forward<A>(args)...);
@@ -308,19 +342,34 @@ namespace Rapture
 			return sh;
 		}
 
-		template<typename ... A, selectif(1, cant_construct(T, A...) && is_abstract<T>::value)>
+		template<typename ... A, selectif(1)
+			<
+			cant_construct<T, A...>::value,
+			is_abstract<T>::value
+			> endif
+		>
 		Handle & init(A &&... args)
 		{
 			static_assert(false, "Can't construct an abstract class");
 		}
 
-		template<typename ... A, selectif(1, cant_construct(T, A...) && is_abstract<T>::value)>
+		template<typename ... A, selectif(1)
+			<
+			cant_construct<T, A...>::value,
+			is_abstract<T>::value
+			> endif
+		>
 		Handle & reinit(A &&... args)
 		{
 			static_assert(false, "Can't construct an abstract class");
 		}
 
-		template<typename ... A, selectif(1, cant_construct(T, A...) && is_abstract<T>::value)>
+		template<typename ... A, selectif(1)
+			<
+			cant_construct<T, A...>::value,
+			is_abstract<T>::value
+			> endif
+		>
 		static Handle create(A &&... args)
 		{
 			static_assert(false, "Can't construct an abstract class");
@@ -404,7 +453,10 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class U, class ... A, useif(are_not_same((T, Owner), (U, A...)) && based_on(U, T) && !is_const<U>::value)>
+		template<class U, class ... A, useif <
+			not_same_types<tuple<T, Owner>, tuple<U, A...>>::value && based_on<U, T>::value && !is_const<U>::value
+			> endif
+		>
 		Handle & operator = (const Handle<U, A...> & h) 
 		{
 			if(void_ptr(this) == void_ptr(&h))
@@ -417,7 +469,10 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class U, class ... A, useif(are_not_same((T, Owner), (U, A...)) && based_on(U, T) && !is_const<U>::value)>
+		template<class U, class ... A, useif <
+			not_same_types<tuple<T, Owner>, tuple<U, A...>>::value && based_on<U, T>::value && !is_const<U>::value
+			> endif
+		>
 		Handle & operator = (Handle<U, A...> && h)
 		{
 			if(void_ptr(this) == void_ptr(&h))
@@ -439,7 +494,10 @@ namespace Rapture
 			return *this;
 		}
 
-		template<typename ... A, selectif(0, can_construct(T, A...))>
+		template<typename ... A, selectif(0) <
+			can_construct<T, A...>::value
+			> endif
+		>
 		Handle & init(A &&... args)
 		{
 			release();
@@ -448,19 +506,29 @@ namespace Rapture
 			return *this;
 		}
 
-		template<typename ... A, selectif(0, can_construct(T, A...))>
+		template<typename ... A, selectif(0)
+			<
+			can_construct<T, A...>::value
+			> endif
+		>
 		Handle & reinit(A &&... args)
 		{
 			return init(forward<A>(args)...);
 		}
 
-		template<typename ... A, selectif(1, cant_construct(T, A...) && is_abstract<T>::value)>
+		template<typename ... A, selectif(1) <
+			cant_construct<T, A...>::value && is_abstract<T>::value
+			> endif
+		>
 		Handle & init(A &&... args)
 		{
 			static_assert(false, "Can't construct an abstract class");
 		}
 
-		template<typename ... A, selectif(1, cant_construct(T, A...) && is_abstract<T>::value)>
+		template<typename ... A, selectif(1) <
+			cant_construct<T, A...>::value && is_abstract<T>::value
+			> endif
+		>
 		Handle & reinit(A &&... args)
 		{
 			static_assert(false, "Can't construct an abstract class");
@@ -473,17 +541,18 @@ namespace Rapture
 
 		Handle(SharedType * shared) : _shared(shared) { keep(); }
 
-		template<useif(can_construct(T))>
+		template<useif <can_construct<T>::value> endif>
 		Handle(Empty) : _shared(new SharedType()) {}
 
-		template<class U, class ... A, useif(based_on(U, T) && !is_const<U>::value)>
+		template<class U, class ... A, useif <based_on<U, T>::value && !is_const<U>::value> endif>
 		Handle(const Handle<U, A...> & h) : _shared(CastType::cast(h._shared)) { keep(); }
-		template<class U, class ... A, useif(based_on(U, T) && !is_const<U>::value)>
+		template<class U, class ... A, useif <based_on<U, T>::value && !is_const<U>::value> endif>
 		Handle(Handle<U, A...> && h) : _shared(CastType::cast(h._shared)) { h._shared = nullptr; }
 
-		template<class ... A, selectif(0, can_construct(T, A...) && sizeof...(A) > 0)>
+		template<class ... A, selectif(0) <can_construct<T, A...>::value && (sizeof...(A) > 0)> endif>
 		explicit Handle(A &&... args) : _shared(new SharedType(forward<A>(args)...)) {}
-		template<class ... A, selectif(1, is_abstract<T>::value && !is_handle_init<T, A...>::value)>
+
+		template<class ... A, selectif(1) <is_abstract<T>::value && !is_handle_init<T, A...>::value> endif>
 		explicit Handle(A &&... args) { static_assert(false, "Can't construct abstract class"); }
 
         ~Handle() { release(); }
@@ -499,7 +568,11 @@ namespace Rapture
 			return _shared == h._shared;
 		}
 
-		template<class U, selectif(1, !std::is_empty<decltype(declval<T>() > declval<U>())>::value)>
+		template<class U, selectif(1)
+			<
+			!std::is_empty<decltype(declval<T>() > declval<U>())>::value
+			> endif
+		>
 		bool operator > (const Handle<U> & h) const
 		{
 			auto a = inptr_();
@@ -508,7 +581,11 @@ namespace Rapture
 			return a != nullptr && (b == nullptr || *a > *b);
 		}
 
-		template<class U, selectif(1, !std::is_empty<decltype(declval<T>() < declval<U>())>::value)>
+		template<class U, selectif(1)
+			<
+			!std::is_empty<decltype(declval<T>() < declval<U>())>::value
+			> endif
+		>
 		bool operator < (const Handle<U> & h) const
 		{
 			auto a = inptr_();
@@ -517,13 +594,21 @@ namespace Rapture
 			return a == nullptr || (b != nullptr && *a < *b);
 		}
 
-		template<class U, selectif(2, std::is_empty<decltype(declval<T>() > declval<U>())>::value)>
+		template<class U, selectif(2)
+			<
+			std::is_empty<decltype(declval<T>() > declval<U>())>::value
+			> endif
+		>
 		bool operator > (const Handle<U> & h) const
 		{
 			return _shared > h._shared;
 		}
 
-		template<class U, selectif(2, std::is_empty<decltype(declval<T>() < declval<U>())>::value)>
+		template<class U, selectif(2)
+			<
+			std::is_empty<decltype(declval<T>() < declval<U>())>::value
+			> endif
+		>
 		bool operator < (const Handle<U> & h) const
 		{
 			return _shared < h._shared;
@@ -586,19 +671,19 @@ namespace Rapture
 			return _shared->_refs;
 		}
 
-		template<useif(is_functor<std::hash<T>, const T &>::value)>
+		template<useif <is_functor<std::hash<T>, const T &>::value> endif>
 		size_t hash() const
 		{
 			return inptr_() == nullptr ? 0 : std::hash<T>()(*inptr_());
 		}
 
-		template<skipif(is_functor<std::hash<T>, const T &>::value)>
+		template<skipif <is_functor<std::hash<T>, const T &>::value> endif>
 		size_t hash() const
 		{
 			return reinterpret_cast<size_t>(inptr_());
 		}
 
-		template<typename ... A, selectif(0, can_construct(T, A...))>
+		template<typename ... A, selectif(0) <can_construct<T, A...>::value> endif>
 		static Handle create(A &&... args)
 		{
 			SharedType * sh = new SharedType(forward<A>(args)...);
@@ -607,7 +692,7 @@ namespace Rapture
 			return sh;
 		}
 
-		template<typename ... A, selectif(1, cant_construct(T, A...) && is_abstract<T>::value)>
+		template<typename ... A, selectif(1) <cant_construct<T, A...>::value && is_abstract<T>::value> endif>
 		static Handle create(A &&... args)
 		{
 			static_assert(false, "Can't construct an abstract class");
@@ -639,17 +724,17 @@ namespace Rapture
 		Handle(SharedType * shared) : Base(shared) {}
 		Handle(nullptr_t) : Base(nullptr) {}
 
-		template<class U, class ... A, useif(based_on(U, T))>
+		template<class U, class ... A, useif <based_on<U, T>::value> endif>
 		Handle(const Handle<U, A...> & h) : Base(h) {}
-		template<class U, class ... A, useif(based_on(U, T))>
+		template<class U, class ... A, useif <based_on<U, T>::value> endif>
 		Handle(Handle<U, A...> && h) : Base(forward<Handle<U, A...>>(h)) {}
 
-		template<useif(can_construct(T))>
+		template<useif <can_construct<T>::value> endif>
 		Handle(Empty emptiness) : Base(emptiness) {}
 
-		template<class ... A, selectif(0, can_construct(T, A...) && sizeof...(A) > 0)>
+		template<class ... A, selectif(0) <can_construct<T, A...>::value && (sizeof...(A) > 0)> endif>
 		explicit Handle(A &&... args) : Base(forward<A>(args)...) {}
-		template<class ... A, selectif(1, is_abstract<T>::value && !is_handle_init<T, A...>::value)>
+		template<class ... A, selectif(1) <is_abstract<T>::value && !is_handle_init<T, A...>::value> endif>
 		explicit Handle(A &&... args) { static_assert(false, "Can't construct abstract class"); }
 
 		Handle & operator = (const Handle & h)
@@ -682,20 +767,20 @@ namespace Rapture
 			return *this;
 		}
 
-		template <typename ... A, selectif(0, can_construct(T, A...))>
+		template <typename ... A, selectif(0) <can_construct<T, A...>::value> endif>
 		Handle & init(A &&... args)
 		{
 			Base::init(forward<A>(args)...);
 			return *this;
 		}
 
-		template<typename ... A, selectif(0, can_construct(T, A...))>
+		template<typename ... A, selectif(0) <can_construct<T, A...>::value> endif>
 		Handle & reinit(A &&... args)
 		{
 			return init(forward<A>(args)...);
 		}
 
-		template<typename ... A, selectif(0, can_construct(T, A...))>
+		template<typename ... A, selectif(0) <can_construct<T, A...>::value> endif>
 		static Handle create(A &&... args)
 		{
 			auto sh = new RealSharedType(forward<A>(args)...);
@@ -704,19 +789,19 @@ namespace Rapture
 			return sh;
 		}
 
-		template<typename ... A, selectif(1, cant_construct(T, A...) && is_abstract<T>::value)>
+		template<typename ... A, selectif(1) <cant_construct<T, A...>::value && is_abstract<T>::value> endif>
 		Handle & init(A &&... args)
 		{
 			static_assert(false, "Can't construct an abstract class");
 		}
 
-		template<typename ... A, selectif(1, cant_construct(T, A...) && is_abstract<T>::value)>
+		template<typename ... A, selectif(1) <cant_construct<T, A...>::value && is_abstract<T>::value> endif>
 		Handle & reinit(A &&... args)
 		{
 			static_assert(false, "Can't construct an abstract class");
 		}
 
-		template<typename ... A, selectif(1, cant_construct(T, A...) && is_abstract<T>::value)>
+		template<typename ... A, selectif(1) <cant_construct<T, A...>::value && is_abstract<T>::value> endif>
 		static Handle create(A &&... args)
 		{
 			static_assert(false, "Can't construct an abstract class");
@@ -838,7 +923,7 @@ namespace Rapture
 			return *this;
 		}
 
-		template<typename ... A, selectif(0, can_construct(T, A...))>
+		template<typename ... A, selectif(0) <can_construct<T, A...>::value> endif>
 		Handle & init(A &&... args)
 		{
 			release();
@@ -847,19 +932,19 @@ namespace Rapture
 			return *this;
 		}
 
-		template<typename ... A, selectif(0, can_construct(T, A...))>
+		template<typename ... A, selectif(0) <can_construct<T, A...>::value> endif>
 		Handle & reinit(A &&... args)
 		{
 			return init(forward<A>(args)...);
 		}
 
-		template<typename ... A, selectif(1, cant_construct(T, A...) && is_abstract<T>::value)>
+		template<typename ... A, selectif(1) <cant_construct<T, A...>::value, is_abstract<T>::value> endif>
 		Handle & init(A &&... args)
 		{
 			static_assert(false, "Can't construct an abstract class");
 		}
 
-		template<typename ... A, selectif(1, cant_construct(T, A...) && is_abstract<T>::value)>
+		template<typename ... A, selectif(1) <cant_construct<T, A...>::value, is_abstract<T>::value> endif>
 		Handle & reinit(A &&... args)
 		{
 			static_assert(false, "Can't construct an abstract class");
@@ -885,24 +970,24 @@ namespace Rapture
 
 		Handle(nullptr_t) : _shared(nullptr) {}
 
-		template<class U, class ... A, useif(based_on(U, T))>
+		template<class U, class ... A, useif <based_on<U, T>::value> endif>
 		Handle(const Handle<U, A...> & h) : _shared(CastType::cast(h._shared))
 		{
 			keep();
 		}
 
-		template<class U, class ... A, useif(based_on(U, T))>
+		template<class U, class ... A, useif <based_on<U, T>::value> endif>
 		Handle(Handle<U, A...> && h) : _shared(CastType::cast(h._shared))
 		{
 			h._shared = nullptr;
 		}
 
-		template<useif(can_construct(T))>
+		template<useif <can_construct<T>::value> endif>
 		Handle(Empty) : _shared(new SharedType()) {}
 
-		template<class ... A, selectif(0, can_construct(T, A...) && sizeof...(A) > 0)>
+		template<class ... A, selectif(0) <can_construct<T, A...>::value && (sizeof...(A) > 0)> endif>
 		explicit Handle(A && ... args) : _shared(new SharedType(forward<A>(args)...)) {}
-		template<class ... A, selectif(1, is_abstract<T>::value && !is_handle_init<T, A...>::value)>
+		template<class ... A, selectif(1) <is_abstract<T>::value && !is_handle_init<T, A...>::value> endif>
 		explicit Handle(A &&... args) { static_assert(false, "Can't construct abstract class"); }
 
 		~Handle()
@@ -966,19 +1051,19 @@ namespace Rapture
 			return _shared->_refs;
 		}
 
-		template<useif(is_functor<std::hash<T>, const T &>::value)>
+		template<useif <is_functor<std::hash<T>, const T &>::value> endif>
 		size_t hash() const
 		{
 			return inptr_() == nullptr ? 0 : std::hash<T>()(*inptr_());
 		}
 
-		template<skipif(is_functor<std::hash<T>, const T &>::value)>
+		template<skipif <is_functor<std::hash<T>, const T &>::value> endif>
 		size_t hash() const
 		{
 			return reinterpret_cast<size_t>(inptr_());
 		}
 
-		template<class ... A, selectif(0, can_construct(T, A...))>
+		template<class ... A, selectif(0) <can_construct<T, A...>::value> endif>
 		static Handle create(A &&... args)
 		{
 			SharedType * sh = new RealSharedType(forward<A>(args)...);
@@ -987,7 +1072,7 @@ namespace Rapture
 			return sh;
 		}
 
-		template<typename ... A, selectif(1, cant_construct(T, A...) && is_abstract<T>::value)>
+		template<typename ... A, selectif(1) <cant_construct<T, A...>::value && is_abstract<T>::value> endif>
 		static Handle create(A &&... args)
 		{
 			static_assert(false, "Can't construct an abstract class");
@@ -1002,19 +1087,19 @@ namespace Rapture
 
 	typedef Handle<SharedEmpty> EmptyHandle;
 
-	template<class T, class ... A, selectif(0, can_construct(T, A...))>
+	template<class T, class ... A, selectif(0) <can_construct<T, A...>::value> endif>
 	Handle<T> handle(A &&... args)
 	{
 		return Handle<T>::create(forward<A>(args)...);
 	}
 
-	template<class T, class ... A, selectif(1, cant_construct(T, A...) && is_abstract<T>::value)>
+	template<class T, class ... A, selectif(1) <cant_construct<T, A...>::value, is_abstract<T>::value> endif>
 	Handle<T> handle(A &&... args)
 	{
 		static_assert(false, "Can't construct an abstract class");
 	}
 
-	template<class T, useif(is_shareable<T>::value)>
+	template<class T, useif <is_shareable<T>::value> endif>
 	Handle<T> share(T * x)
 	{
 		return x;
@@ -1046,16 +1131,16 @@ namespace Rapture
 	public:
 		UniqueHandle() : Base() {}
 
-		template<useif(can_construct(T))>
+		template<useif <can_construct<T>::value> endif>
 		UniqueHandle(Empty emptiness) : Base(emptiness) {}
 
-		template<class ... A, useif(can_construct(T, A...))>
+		template<class ... A, useif <can_construct<T, A...>::value> endif>
 		UniqueHandle(tuple<A ...> & args) : Base(args) {}
 
-		template<class ... A, useif(can_construct(T, A...))>
+		template<class ... A, useif <can_construct<T, A...>::value> endif>
 		UniqueHandle(tuple<A ...> && args) : Base(move(args)) {}
 
-		template<class H, class ... A, useif(can_construct(T, H, A...))>
+		template<class H, class ... A, useif <can_construct<T, H, A...>::value> endif>
 		explicit UniqueHandle(H && head, A && ... tail) : Base(forward<H>(head), forward<A>(tail)...) {}
 
 		UniqueHandle(const UniqueHandle & h) = delete;
@@ -1065,7 +1150,8 @@ namespace Rapture
 
 		template<
 			class U, class ... A,
-				useif(based_on(U, T) && !is_const<U>::value)
+				useif <based_on<U, T>::value && !is_const<U>::value> endif
+
 		>
 		UniqueHandle(UniqueHandle<U, A...> && h) : Base(forward<UniqueHandle<U, A...>>(h)) {}
 
@@ -1081,7 +1167,8 @@ namespace Rapture
 
 		template<
 			class U,
-				useif(based_on(U, T) && !is_const<U>::value)
+				useif <based_on<U, T>::value && !is_const<U>::value> endif
+
 		>
 		UniqueHandle & operator = (const UniqueHandle<U> & h)
 		{
@@ -1091,7 +1178,8 @@ namespace Rapture
 
 		template<
 			class U,
-				useif(based_on(U, T) && !is_const<U>::value)
+				useif <based_on<U, T>::value && !is_const<U>::value> endif
+
 		>
 		UniqueHandle & operator = (UniqueHandle<U> && h)
 		{
@@ -1105,20 +1193,20 @@ namespace Rapture
 			return *this;
 		}
 
-		template<typename ... A, useif(can_construct(T, A...))>
+		template<typename ... A, useif <can_construct<T, A...>::value> endif>
 		UniqueHandle & init(A &&... args)
 		{
 			Base::init(forward<A>(args)...);
 			return *this;
 		}
 
-		template<typename ... A, useif(can_construct(T, A...))>
+		template<typename ... A, useif <can_construct<T, A...>::value> endif>
 		UniqueHandle & reinit(A &&... args)
 		{
 			return init(forward<A>(args)...);
 		}
 
-		template<class ... A, useif(can_construct(T, A...))>
+		template<class ... A, useif <can_construct<T, A...>::value> endif>
 		static UniqueHandle create(A &&... args)
 		{
 			return new T(forward<A>(args)...);
@@ -1168,7 +1256,8 @@ namespace Rapture
 
 		template<
 			class U,
-				useif(based_on(U, T) && !is_const<U>::value)
+				useif <based_on<U, T>::value && !is_const<U>::value> endif
+
 		>
 		UniqueHandle & operator = (UniqueHandle<U> && h)
 		{
@@ -1197,7 +1286,7 @@ namespace Rapture
 			return *this;
 		}
 
-		template<typename ... A, useif(can_construct(T, A...))>
+		template<typename ... A, useif <can_construct<T, A...>::value> endif>
 		UniqueHandle & init(A &&... args)
 		{
 			if(_inner)
@@ -1208,7 +1297,7 @@ namespace Rapture
 			return *this;
 		}
 
-		template<typename ... A, useif(can_construct(T, A...))>
+		template<typename ... A, useif <can_construct<T, A...>::value> endif>
 		UniqueHandle & reinit(A &&... args)
 		{
 			return init(forward<A>(args)...);
@@ -1225,16 +1314,16 @@ namespace Rapture
 	public:
 		UniqueHandle() : _inner(nullptr) {}
 
-		template<useif(can_construct(T))>
+		template<useif <can_construct<T>::value> endif>
 		UniqueHandle(Empty) : _inner(new T()) {}
 
-		template<class ... A, useif(can_construct(T, A...))>
+		template<class ... A, useif <can_construct<T, A...>::value> endif>
 		UniqueHandle(tuple<A ...> & args) : UniqueHandle(args, make_integer_sequence<size_t, sizeof...(A)>()) {}
 
-		template<class ... A, useif(can_construct(T, A...))>
+		template<class ... A, useif <can_construct<T, A...>::value> endif>
 		UniqueHandle(tuple<A ...> && args) : UniqueHandle(move(args), make_integer_sequence<size_t, sizeof...(A)>()) {}
 
-		template<class H, class ... A, useif(can_construct(T, H, A...))>
+		template<class H, class ... A, useif <can_construct<T, H, A...>::value> endif>
 		UniqueHandle(H && head, A && ... tail) : _inner(new T(forward<H>(head), forward<A>(tail)...)) {}
 
 		UniqueHandle(const UniqueHandle & h) = delete;
@@ -1248,7 +1337,8 @@ namespace Rapture
 
 		template<
 			class U, class ... A,
-				useif(based_on(U, T) && !is_const<U>::value)
+				useif <based_on<U, T>::value && !is_const<U>::value> endif
+
 		>
 		UniqueHandle(UniqueHandle<U, A...> && h) : _inner(h._inner)
 		{
@@ -1276,7 +1366,7 @@ namespace Rapture
 			return _inner == h._inner;
 		}
 
-		template<class U, skipif(std::is_empty<decltype(declval<T>() > declval<U>())>::value)>
+		template<class U, skipif<std::is_empty<decltype(declval<T>() > declval<U>())>::value>::value>
 		bool operator > (const UniqueHandle<U> & h) const
 		{
 			auto a = _inner;
@@ -1285,7 +1375,7 @@ namespace Rapture
 			return a != nullptr && (b == nullptr || *a > *b);
 		}
 
-		template<class U, skipif(std::is_empty<decltype(declval<T>() < declval<U>())>::value)>
+		template<class U, skipif<std::is_empty<decltype(declval<T>() < declval<U>())>::value>::value>
 		bool operator < (const UniqueHandle<U> & h) const
 		{
 			auto a = _inner;
@@ -1294,13 +1384,13 @@ namespace Rapture
 			return a == nullptr || (b != nullptr && *a < *b);
 		}
 
-		template<class U, useif(std::is_empty<decltype(declval<T>() > declval<U>())>::value)>
+		template<class U, useif <std::is_empty<decltype(declval<T> endif > declval<U>::value)>::value>::value>
 		bool operator > (const UniqueHandle<U> & h) const
 		{
 			return _inner > h._inner;
 		}
 
-		template<class U, useif(std::is_empty<decltype(declval<T>() < declval<U>())>::value)>
+		template<class U, useif <std::is_empty<decltype(declval<T> endif < declval<U>::value)>::value>::value>
 		bool operator < (const UniqueHandle<U> & h) const
 		{
 			return _inner < h._inner;
@@ -1363,20 +1453,20 @@ namespace Rapture
 			return _inner;
 		}
 
-		template<class ... A, useif(can_construct(T, A...))>
+		template<class ... A, useif <can_construct<T, A...>::value> endif>
 		static UniqueHandle create(A &&... args)
 		{
 			return new T(forward<A>(args)...);
 		}
 	};
 
-	template<class T, class ... A, useif(can_construct(T, A...))>
+	template<class T, class ... A, useif <can_construct<T, A...>::value> endif>
 	UniqueHandle<T> unique_handle(A &&... args)
 	{
 		return UniqueHandle<T>::create(forward<A>(args)...);
 	}
 
-	template<class T, class ... A, skipif(!is_abstract<T>::value)>
+	template<class T, class ... A, skipif<!is_abstract<T>::value>::value>
 	UniqueHandle<T> unique_handle(A &&... args)
 	{
 		static_assert(false, "Can't construct an abstract class");
@@ -1520,9 +1610,9 @@ namespace Rapture
 			sizeof...(A) == 1 &&
 			(
 				is_same_handle<T, FirstType>::value ||
-				based_on(FirstType, typename SharedCast<T>::SharedType) ||
-				same_type(FirstType, nullptr_t) ||
-				same_type(FirstType, Empty)
+				based_on<FirstType, typename SharedCast<T>::SharedType>::value ||
+				same_type<FirstType, nullptr_t>::value ||
+				same_type<FirstType, Empty>::value
 				);
 	};
 }

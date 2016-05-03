@@ -25,10 +25,10 @@ namespace Rapture
 	const float  IntrinNofrac<float>	::value = 8388608.0f; // float(0x80'0000)
 	const double IntrinNofrac<double>	::value = 36028797018963968.0; // double(0x80'0000'0000'0000)
 
-	const Intrinsic<int, 4>   ::inner Intrinsic<int, 4>   ::maximum  = IntrinsicMask<int,    IntrinMax,      0xF>::get();
-	const Intrinsic<int, 4>   ::inner Intrinsic<int, 4>   ::signmask = IntrinsicMask<int,    IntrinSignmask, 0xF>::get();
-	const Intrinsic<float, 4> ::inner Intrinsic<float, 4> ::signmask = IntrinsicMask<float,  IntrinSignmask, 0xF>::get();
-	const Intrinsic<float, 4> ::inner Intrinsic<float, 4> ::nofrac   = IntrinsicMask<float,  IntrinNofrac,   0xF>::get();
-	const Intrinsic<double, 4>::inner Intrinsic<double, 4>::signmask = IntrinsicMask<double, IntrinSignmask, 0xF>::get();
-	const Intrinsic<double, 4>::inner Intrinsic<double, 4>::nofrac   = IntrinsicMask<double, IntrinNofrac,   0xF>::get();
+	const Intrinsic<int, 4>   ::inner Intrinsic<int, 4>   ::maximum  = IntrinsicMask<int,    IntrinMax,      mk_mask4(1, 1, 1, 1)>::get();
+	const Intrinsic<int, 4>   ::inner Intrinsic<int, 4>   ::signmask = IntrinsicMask<int,    IntrinSignmask, mk_mask4(1, 1, 1, 1)>::get();
+	const Intrinsic<float, 4> ::inner Intrinsic<float, 4> ::signmask = IntrinsicMask<float,  IntrinSignmask, mk_mask4(1, 1, 1, 1)>::get();
+	const Intrinsic<float, 4> ::inner Intrinsic<float, 4> ::nofrac   = IntrinsicMask<float,  IntrinNofrac,   mk_mask4(1, 1, 1, 1)>::get();
+	const Intrinsic<double, 4>::inner Intrinsic<double, 4>::signmask = IntrinsicMask<double, IntrinSignmask, mk_mask4(1, 1, 1, 1)>::get();
+	const Intrinsic<double, 4>::inner Intrinsic<double, 4>::nofrac   = IntrinsicMask<double, IntrinNofrac,   mk_mask4(1, 1, 1, 1)>::get();
 }

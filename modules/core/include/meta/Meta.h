@@ -8,14 +8,10 @@
 #include "Types.h"
 #include "UseIf.h"
 
-#include <tuple>
-
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	using std::tuple;
-
 	template<typename T>
 	struct Type
 	{
@@ -96,7 +92,6 @@ namespace Rapture
 
 		template<int R, typename T, typename H>
 		struct find_t0<R, T, H> : std::integral_constant<int, -1> {};
-
 	}
 
 	template<typename T, typename H, typename ... S>
@@ -106,11 +101,11 @@ namespace Rapture
 	struct find_t<T, tuple<H, S...>> : Internals::find_t0<0, T, H, S...> {};
 
 	/**
-		*	@brief
-		*  Seeks for the type T in <A...> .
-		*  Returns true_type if it was found and false_type otherwise.
-		*	T - target type, A... - set of keys, H - first element of set.
-		*/
+	 *	@brief
+	 *  Seeks for the type T in <A...> .
+	 *  Returns true_type if it was found and false_type otherwise.
+	 *	T - target type, A... - set of keys, H - first element of set.
+	 */
 
 	template<typename T, typename ... A>
 	struct has_type {};
@@ -125,34 +120,58 @@ namespace Rapture
 	struct has_type<T> : false_type {};
 
 	/**
-		*	@brief
-		*  Iterates through the tuple types with the Functor.
-		*/
+	 *	@brief
+	 *  Iterates through the tuple types with the Functor.
+	 */
 
-	template<class Type>
+	template<class ... A>
 	struct foreach_t {};
 
-	template<class TH, class ... TT>
-	struct foreach_t<tuple<TH, TT ...>>
+	template<class ... A>
+	struct foreach_t<tuple<A...>> : foreach_t<A...> {};
+
+	template<class H, class ... T>
+	struct foreach_t<H, T ...>
 	{
-		template<typename Functor, class ... A>
+		template<typename Functor, bool IterateWhile, class ... A, useif <
+			is_same<decltype(Functor::iterate<H>(declval<A>()...)), bool>::value
+			> endif
+		>
+		static inline bool iterate(A &&... args)
+		{
+			if(Functor::iterate<H>(forward<A>(args)...) == !IterateWhile)
+				return !IterateWhile;
+
+			return foreach_t<T...>::iterate<Functor, IterateWhile>(forward<A>(args)...);
+		}
+
+		template<typename Functor, class ... A, useif <
+			!is_empty<decltype(Functor::iterate<H>(declval<A>()...))>::value
+			> endif
+		>
 		static inline void iterate(A &&... args)
 		{
-			Functor::iterate<TH>(forward<A>(args)...);
-			foreach_t<tuple<TT ...>>::iterate(forward<A>(args)...);
+			Functor::iterate<H>(forward<A>(args)...);
+			foreach_t<T...>::iterate<Functor>(forward<A>(args)...);
 		}
 	};
 
 	template <>
-	struct foreach_t<tuple<>>
+	struct foreach_t<>
 	{
+		template<typename Functor, bool IterateWhile, class ... A>
+		static inline bool iterate(A &&...)
+		{
+			return IterateWhile;
+		}
+
 		template <typename Functor, class ... A>
 		static inline void iterate(A &&...) {}
 	};
 
 	/**
-		*	Used instead of std::is_constructible to allow "friendship"
-		*/
+	 *	Used instead of std::is_constructible to allow "friendship"
+	 */
 	template <class T, class ... A>
 	struct IsConstructible
 	{
@@ -234,13 +253,13 @@ namespace Rapture
 
 	struct Initialize
 	{
-		template<typename T, skipif(is_array<T>::value)>
+		template<typename T, skipif <is_array<T>::value> endif>
 		static inline void init(T & target, const T & value)
 		{
 			target = value;
 		}
 
-		template<typename T, skipif(is_array<T>::value)>
+		template<typename T, skipif <is_array<T>::value> endif>
 		static inline void init(T & target, T && value)
 		{
 			target = forward<T>(value);
@@ -258,7 +277,7 @@ namespace Rapture
 			ArrayInitialize<N>::init(target, forward<array_t<T, N>>(value));
 		}
 
-		template<typename T, size_t N, size_t N_, useif(N != N_)>
+		template<typename T, size_t N, size_t N_, useif <N != N_> endif>
 		static void init(T(&target)[N], const T(&value)[N_], T def = 0)
 		{
 			register size_t i = 0;
@@ -270,7 +289,7 @@ namespace Rapture
 				target[i] = def;
 		}
 
-		template<typename T, size_t N, size_t N_, useif(N != N_)>
+		template<typename T, size_t N, size_t N_, useif <N != N_> endif>
 		static void init(T(&target)[N], T(&&value)[N_], T def = 0)
 		{
 			register size_t i = 0;
@@ -339,52 +358,78 @@ namespace Rapture
 	template<>
 	struct is_false<> : false_type {};
 
-	template<typename T, typename U>
-	struct are_same : is_same<T, U> {};
-
-	template<typename ... T, typename ... U>
-	struct are_same<tuple<T...>, tuple<U...>> : is_same<tuple<decay_t<T>...>, tuple<decay_t<U>...>> {};
+	template<class T, class ... A>
+	declare_bool_struct(can_construct, Rapture::IsConstructible<T, A...>::value || std::is_constructible<T, A...>::value)
+		template<class T, class ... A>
+	declare_bool_struct(cant_construct, !(Rapture::IsConstructible<T, A...>::value || std::is_constructible<T, A...>::value))
 
 //---------------------------------------------------------------------------
 
-#define sfinae_checker(name, args, expression)						 \
-	template<pp_expand args>											 \
-	struct name														 \
-	{																 \
-		template<class U, typename = decltype(pp_expand expression)> \
-		static auto fn(int) -> true_type;							 \
-																	 \
-		template<class U>											 \
-		static auto fn(...) -> false_type;							 \
-																	 \
-		typedef decltype(fn<Empty>(0)) type;						 \
-		static const bool value = type::value;						 \
-	};
+#define sfinae_checker(name, args, ...)			\
+	template<pp_expand args>					\
+	struct name									\
+	{											\
+		template<class = __VA_ARGS__>			\
+		static auto test(int) -> true_type;		\
+		static auto test(...) -> false_type;	\
+												\
+		static const bool value =				\
+			decltype(test(0))::value;			\
+	};											\
+
+#define type_checker(name, type)				\
+	sfinae_checker(								\
+		name,									\
+		(class T),								\
+		typename T::type						\
+	)											\
 
 #define function_checker(name, func)			\
 	sfinae_checker(								\
 		name,									\
 		(class ... A),							\
-		(func(declval<A>()...))					\
+		decltype(func(declval<A>()...))			\
 	)											\
 
 #define method_checker(name, method)			\
 	sfinae_checker(								\
 		name,									\
 		(class T, class ... A),					\
-		(declval<T>().method(declval<A>()...))	\
+		decltype(								\
+			declval<T>().						\
+			method(declval<A>()...)				\
+		)										\
 	)
 
 #define member_checker(name, member)			\
 	sfinae_checker(								\
 		name,									\
 		(class T),								\
-		(T::member)								\
+		decltype(T::member)						\
 	)											\
 
-//---------------------------------------------------------------------------
-
 	method_checker(is_functor, operator())
+
+//---------------------------------------------------------------------------
+	
+#define type_getter(param, name, target, def)	\
+	template<class param>						\
+	struct name									\
+	{											\
+	private:									\
+		template<class U>						\
+		static auto _(int) ->					\
+			identity<typename U::target>;		\
+												\
+		template<class U>						\
+		static auto _(...) ->					\
+			identity<def>;						\
+												\
+		typedef decltype(_<param>(0)) Decltype;	\
+												\
+	public:										\
+		typedef typename Decltype::type type;	\
+	};
 }
 
 //---------------------------------------------------------------------------

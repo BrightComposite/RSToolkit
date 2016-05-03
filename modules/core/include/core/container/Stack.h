@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/Object.h>
+#include <core/Handle.h>
 
 #include <stack>
 
@@ -15,14 +15,12 @@ namespace Rapture
 {
 	using std::stack;
 
-	template<typename T>
-	class StackObject : public Object, public stack<T> {};
-
 	template<typename T, class ... OwnerAttr>
-	using HandleStack = stack<Handle<T, OwnerAttr...>>;
-
-	template<class T, class ... OwnerAttr>
-	using Stack = StackObject<Handle<T, OwnerAttr...>>;
+	class Stack : public stack<Handle<T, OwnerAttr...>>
+	{
+	public:
+		using stack<Handle<T, OwnerAttr...>>::stack;
+	};
 }
 
 //---------------------------------------------------------------------------

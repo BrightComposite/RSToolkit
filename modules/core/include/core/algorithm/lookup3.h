@@ -19,7 +19,7 @@
   * Read lookup3.cpp for more information about the functions.
   */
 
-#include <core/meta/Types.h>
+#include <meta/Types.h>
 
 //---------------------------------------------------------------------------
 

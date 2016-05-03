@@ -13,42 +13,37 @@
 namespace Rapture
 {
 	template<typename T, size_t N>
-	struct Intrinsic {};
+	struct Intrinsic
+	{
+		static const bool implemented = false;
+	};
 
 #define _mm_permute_ps(a, imm8) _mm_shuffle_ps(a, a, imm8)
-
-#define mk_shuffle_2(a, b) (((b) << 1) | (a))
-#define mk_shuffle_4(a, b, c, d) (((d) << 6) | ((c) << 4) | ((b) << 2) | (a))
-#define mk_mask4(a, b, c, d) (((d) << 3) | ((c) << 2) | ((b) << 1) | (a))
-#define reverse_shuffle_2 mk_shuffle_2(1, 0)
-#define reverse_shuffle_4 mk_shuffle_4(3, 2, 1, 0)
 
 #define _mm_reverse_ps(a) _mm_permute_ps(a, reverse_shuffle_4)
 #define _mm_reverse_pd(a) _mm_permute_pd(a, reverse_shuffle_2)
 #define _mm256_reverse_pd(a) _mm256_permute4x64_pd(a, reverse_shuffle_4)
 
-	template<class T, template<class T> class Constant, size_t Mask, size_t N = 4>
-	struct IntrinsicMask {};
+	namespace Internals
+	{
+		template<class T, template<class T> class Constant, class S>
+		struct intrinsic_mask0 {};
+	}
+
+	template<class T, template<class T> class Constant, size_t Mask, int N = 4>
+	struct IntrinsicMask
+	{
+		template<useif <Intrinsic<T, N>::implemented> endif>
+		static inline const auto & get()
+		{
+			return Internals::intrinsic_mask0<T, Constant, unfold_mask<Mask, N>>::get();
+		}
+	};
 
 	template_constant(IntrinZero);
 	template_constant(IntrinMax);
 	template_constant(IntrinSignmask);
 	template_constant(IntrinNofrac);
-
-	template<class T, template<class T> class Constant, size_t Mask>
-	struct IntrinsicMask<T, Constant, Mask, 4>
-	{
-		typedef IntrinData<T, 4> inner;
-
-		template<int bit>
-		using cond = conditional_t<has_bit<Mask, bit>::value, Constant<T>, IntrinZero<T>>;
-
-		static inline const inner & get()
-		{
-			static const inner v = Intrinsic<T, 4>::load(cond<0>::value, cond<1>::value, cond<2>::value, cond<3>::value);
-			return v;
-		}
-	};
 
 	/**
 	 *	Integer intrinsics
@@ -56,6 +51,8 @@ namespace Rapture
 	template<>
 	struct Intrinsic<int, 4>
 	{
+		static const bool implemented = true;
+
 		using inner = IntrinData<int, 4>;
 		using type = typename inner::type;
 
@@ -367,19 +364,22 @@ namespace Rapture
 			return {shuffle<3, 2, 1, 0>(a)};
 		}
 
-		template<byte A, byte B, byte C, byte D, useif(A < 2 && B < 2 && C < 2 && D < 2)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 2 && B < 2 && C < 2 && D < 2)>
+			endif>
 		static inline void __vectorcall blend(const type & a, const type & b, type & out)
 		{
 			out = _mm_blend_epi32(a, b, mk_mask4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D, useif(A < 2 && B < 2 && C < 2 && D < 2)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 2 && B < 2 && C < 2 && D < 2)>
+			endif>
 		static inline inner __vectorcall blend(const type & a, const type & b)
 		{
 			return {_mm_blend_epi32(a, b, mk_mask4(A, B, C, D))};
 		}
 
-		template<byte A, byte B, byte C, byte D, useif(A < 4 && B < 4 && C < 4 && D < 4)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
+			endif>
 		static inline void __vectorcall shuffle2(const type & a, const type & b, type & out)
 		{
 			out = _mm_blend_epi32(
@@ -389,7 +389,8 @@ namespace Rapture
 				);
 		}
 
-		template<byte A, byte B, byte C, byte D, useif(A < 4 && B < 4 && C < 4 && D < 4)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
+			endif>
 		static inline inner __vectorcall shuffle2(const type & a, const type & b)
 		{
 			return {_mm_blend_epi32(
@@ -399,13 +400,14 @@ namespace Rapture
 				)};
 		}
 
-		template<byte A, byte B, byte C, byte D, useif(A < 4 && B < 4 && C < 4 && D < 4)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
+			endif>
 		static inline void __vectorcall shuffle(const type & a, type & out)
 		{
 			out = _mm_shuffle_epi32(a, mk_shuffle_4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D, useif(A < 4 && B < 4 && C < 4 && D < 4)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)> endif>
 		static inline inner __vectorcall shuffle(const type & a)
 		{
 			return {_mm_shuffle_epi32(a, mk_shuffle_4(A, B, C, D))};
@@ -418,6 +420,8 @@ namespace Rapture
 	template<>
 	struct Intrinsic<float, 4>
 	{
+		static const bool implemented = true;
+
 		using inner = IntrinData<float, 4>;
 		using type = inner::type;
 
@@ -745,43 +749,43 @@ namespace Rapture
 			return {_mm_reverse_ps(a)};
 		}
 
-		template<byte A, byte B, byte C, byte D,
-			useif(
-				A < 2 && B < 2 && C < 2 && D < 2
-				)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 2 && B < 2 && C < 2 && D < 2)>
+			endif>
 		static inline void __vectorcall blend(const type & a, const type & b, type & out)
 		{
 			out = _mm_blend_ps(a, b, mk_mask4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D,
-			useif(
-				A < 2 && B < 2 && C < 2 && D < 2
-				)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 2 && B < 2 && C < 2 && D < 2)>
+			endif>
 		static inline inner __vectorcall blend(const type & a, const type & b)
 		{
 			return _mm_blend_ps(a, b, mk_mask4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D, useif(A < 4 && B < 4 && C < 4 && D < 4)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
+			endif>
 		static inline void __vectorcall shuffle2(const type & a, const type & b, type & out)
 		{
 			out = _mm_shuffle_ps(a, b, mk_shuffle_4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D, useif(A < 4 && B < 4 && C < 4 && D < 4)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
+			endif>
 		static inline inner __vectorcall shuffle2(const type & a, const type & b)
 		{
 			return {_mm_shuffle_ps(a, b, mk_shuffle_4(A, B, C, D))};
 		}
 
-		template<byte A, byte B, byte C, byte D, useif(A < 4 && B < 4 && C < 4 && D < 4)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
+			endif>
 		static inline void __vectorcall shuffle(const type & a, type & out)
 		{
 			out = _mm_permute_ps(a, mk_shuffle_4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D, useif(A < 4 && B < 4 && C < 4 && D < 4)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
+			endif>
 		static inline inner __vectorcall shuffle(const type & a)
 		{
 			return {_mm_permute_ps(a, mk_shuffle_4(A, B, C, D))};
@@ -796,6 +800,8 @@ namespace Rapture
 	template<>
 	struct Intrinsic<double, 4>
 	{
+		static const bool implemented = true;
+
 		using inner = IntrinData<double, 4>;
 		using type = inner::type;
 
@@ -1120,55 +1126,43 @@ namespace Rapture
 			return _mm256_reverse_pd(a);
 		}
 
-		template<byte A, byte B, byte C, byte D,
-			useif(
-				A < 2 && B < 2 && C < 2 && D < 2
-				)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 2 && B < 2 && C < 2 && D < 2)>
+			endif>
 		static inline void __vectorcall blend(const type & a, const type & b, type & out)
 		{
 			out = _mm256_blend_pd(a, b, mk_mask4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D,
-			useif(
-				A < 2 && B < 2 && C < 2 && D < 2
-				)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 2 && B < 2 && C < 2 && D < 2)>
+			endif>
 		static inline inner __vectorcall blend(const type & a, const type & b)
 		{
 			return _mm256_blend_pd(a, b, mk_mask4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D,
-			useif(
-				A < 4 && B < 4 && C < 4 && D < 4
-				)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
+			endif>
 		static inline void __vectorcall shuffle2(const type & a, const type & b, type & out)
 		{
 			out = blend<0, 0, 1, 1>(_mm256_permute4x64_pd(a, mk_shuffle_4(A, B, C, D)), _mm256_permute4x64_pd(b, mk_shuffle_4(A, B, C, D)));
 		}
 
-		template<byte A, byte B, byte C, byte D,
-			useif(
-				A < 4 && B < 4 && C < 4 && D < 4
-				)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
+			endif>
 		static inline inner __vectorcall shuffle2(const type & a, const type & b)
 		{
 			return blend<0, 0, 1, 1>(_mm256_permute4x64_pd(a, mk_shuffle_4(A, B, C, D)), _mm256_permute4x64_pd(b, mk_shuffle_4(A, B, C, D)));
 		}
 
-		template<byte A, byte B, byte C, byte D,
-			useif(
-				A < 4 && B < 4 && C < 4 && D < 4
-				)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
+			endif>
 		static inline void __vectorcall shuffle(const type & a, type & out)
 		{
 			out = _mm256_permute4x64_pd(a, mk_shuffle_4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D,
-			useif(
-				A < 4 && B < 4 && C < 4 && D < 4
-				)>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
+			endif>
 		static inline inner __vectorcall shuffle(const type & a)
 		{
 			return _mm256_permute4x64_pd(a, mk_shuffle_4(A, B, C, D));
@@ -1183,6 +1177,8 @@ namespace Rapture
 	template<>
 	struct Intrinsic<double, 4>
 	{
+		static const bool implemented = true;
+
 		typedef IntrinData<double, 4> inner;
 		typedef inner::type type;
 		static const size_t size = sizeof(inner);
@@ -1374,21 +1370,17 @@ namespace Rapture
 				}};
 		}
 
-		template<byte A, byte B, byte C, byte D,
-			useif(
-				A < 4 && B < 4 && C < 4 && D < 4
-				)>
-			static inline void __vectorcall shuffle2(const type & a, const type & b, type & out)
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
+			endif>
+		static inline void __vectorcall shuffle2(const type & a, const type & b, type & out)
 		{
 			out[0] = _mm_shuffle_pd(a[A / 2], a[B / 2], mk_shuffle_2(A % 2, B % 2));
 			out[1] = _mm_shuffle_pd(b[C / 2], b[D / 2], mk_shuffle_2(C % 2, D % 2));
 		}
 
-		template<byte A, byte B, byte C, byte D,
-			useif(
-				A < 4 && B < 4 && C < 4 && D < 4
-				)>
-			static inline inner __vectorcall shuffle2(const type & a, const type & b)
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
+			endif>
+		static inline inner __vectorcall shuffle2(const type & a, const type & b)
 		{
 			return {{
 					_mm_shuffle_pd(a[A / 2], a[B / 2], mk_shuffle_2(A % 2, B % 2)),
@@ -1396,21 +1388,17 @@ namespace Rapture
 				}};
 		}
 
-		template<byte A, byte B, byte C, byte D,
-			useif(
-				A < 4 && B < 4 && C < 4 && D < 4
-				)>
-			static inline void __vectorcall shuffle(const type & a, type & out)
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
+			endif>
+		static inline void __vectorcall shuffle(const type & a, type & out)
 		{
 			out[0] = _mm_shuffle_pd(a[A / 2], a[B / 2], mk_shuffle_2(A % 2, B % 2));
 			out[1] = _mm_shuffle_pd(a[C / 2], a[D / 2], mk_shuffle_2(C % 2, D % 2));
 		}
 
-		template<byte A, byte B, byte C, byte D,
-			useif(
-				A < 4 && B < 4 && C < 4 && D < 4
-				)>
-			static inline inner __vectorcall shuffle(const type & a)
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
+			endif>
+		static inline inner __vectorcall shuffle(const type & a)
 		{
 			return {{
 					_mm_shuffle_pd(a[A / 2], a[B / 2], mk_shuffle_2(A % 2, B % 2)),
@@ -1419,6 +1407,24 @@ namespace Rapture
 		}
 	};
 #endif
+	namespace Internals
+	{
+		template<class T, template<class T> class Constant, bool ... Values>
+		struct intrinsic_mask0<T, Constant, std::integer_sequence<bool, Values...>>
+		{
+			static const int size = sizeof...(Values);
+			typedef IntrinData<T, size> inner;
+
+			template<byte Val>
+			using cond = conditional_t<Val, Constant<T>, IntrinZero<T>>;
+
+			static inline const inner & get()
+			{
+				static const inner v = Intrinsic<T, size>::load(cond<Values>::value...);
+				return v;
+			}
+		};
+	}
 }
 
 //---------------------------------------------------------------------------

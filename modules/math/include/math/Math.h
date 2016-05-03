@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <float.h>
 
-#include <core/meta/Meta.h>
+#include <meta/Meta.h>
 
 #include <stdlib.h>
 #undef min

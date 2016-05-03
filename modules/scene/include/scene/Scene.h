@@ -132,11 +132,11 @@ namespace Rapture
 			adapter()->invalidate(_widget);
 		}
 
-		template<class T, typename ... A,
-			useif(
-				based_on(T, SceneObject) &&
-				can_construct(T, Scene *, A...)
-				)>
+		template<class T, typename ... A, useif <
+			based_on<T, SceneObject>::value,
+			can_construct<T, Scene *, A...>::value
+			> endif
+		>
 		Handle<T> append(A && ... args)
 		{
 			return handle<T>(this, forward<A>(args)...);
@@ -187,7 +187,7 @@ namespace Rapture
 
 		Widget * _widget;
 		Array<SceneObject> _objects;
-		PointerArray<Drawable> _drawables;
+		vector<Drawable *> _drawables;
 
 		milliseconds _tickLength = 1ms;
 		time_marker _lastTick;

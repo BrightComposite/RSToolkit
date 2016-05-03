@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/algorithm/lookup3.h>
+#include <core/Object.h>
 #include <core/container/List.h>
 
 #include <stdarg.h>
@@ -74,34 +74,17 @@ namespace Rapture
 	wstring widen(const string & narrow);
 	wstring widen(const string & narrow, const locale & loc);
 
-	function_checker(__is_str_printable, print);
+	void print(String & target, const Object & obj);
+	void print(WideString & target, const Object & obj);
 
 	template<class T>
-	struct is_str_printable
-	{
-		static const bool value = __is_str_printable<String &, T>::value && !is_base_of<string, T>::value && !is_base_of<wstring, T>::value;
-	};
-
+	struct can_str_print;
 	template<class T>
-	struct is_wstr_printable
-	{
-		static const bool value = __is_str_printable<WideString &, T>::value && !is_base_of<string, T>::value && !is_base_of<wstring, T>::value;
-	};
-
+	struct can_wstr_print;
 	template<class ... T>
-	struct is_string_assembleable
-	{
-		static const bool value = is_true<can_construct(String, T)...>::value;
-	};
-
+	struct can_string_assemble;
 	template<class ... T>
-	struct is_wstring_assembleable
-	{
-		static const bool value = is_true<can_construct(WideString, T)...>::value;
-	};
-
-#define can_string_assemble(...) is_string_assembleable<__VA_ARGS__>::value
-#define can_wstring_assemble(...) is_wstring_assembleable<__VA_ARGS__>::value
+	struct can_wstring_assemble;
 
 	link_class(String, Class<Object>);
 	link_class(WideString, Class<Object>);
@@ -283,7 +266,7 @@ namespace Rapture
 			Memory<char>::free(buf);
 		}
 
-		template<class T, useif(is_str_printable<T>::value)>
+		template<class T, useif <can_str_print<T>::value> endif>
 		String(const T & obj) : String()
 		{
 			print(*this, obj);
@@ -293,8 +276,6 @@ namespace Rapture
 		{
 			setclass(String);
 		}
-
-		virtual ~String() {}
 
 		String & operator = (const String & value)
 		{
@@ -344,34 +325,10 @@ namespace Rapture
 			return *this;
 		}
 
-		String & operator = (int value)
+		template<class T, useif <can_construct<String, T>::value> endif>
+		String & operator = (T && value)
 		{
-			return operator = (String(value));
-		}
-
-		String & operator = (long value)
-		{
-			return operator = (String(value));
-		}
-
-		String & operator = (ulong value)
-		{
-			return operator = (String(value));
-		}
-
-		String & operator = (size_t value)
-		{
-			return operator = (String(value));
-		}
-
-		String & operator = (float value)
-		{
-			return operator = (String(value));
-		}
-
-		String & operator = (const Object & value)
-		{
-			return operator = (String(value));
+			return operator = (String(forward<T>(value)));
 		}
 
 		String & operator += (const String & value)
@@ -412,16 +369,21 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class T, useif(can_construct(String, T))>
-		String & operator += (const T & value)
+		template<class T, useif <
+			can_construct<String, T>::value,
+			not_same_type<String, T>::value,
+			not_same_type<WideString, T>::value
+			>
+			endif>
+		String & operator += (T && value)
 		{
-			return operator += (String(value));
+			return operator += (String(forward<T>(value)));
 		}
 
-		template<class T, useif(can_construct(String, T))>
-		String & operator << (const T & value)
+		template<class T, useif <can_construct<String, T>::value> endif>
+		String & operator << (T && value)
 		{
-			return operator += (value);
+			return operator += (forward<T>(value));
 		}
 
 		String & operator >> (string & value)
@@ -491,9 +453,9 @@ namespace Rapture
 		}
 
 		template<class T>
-		auto operator + (T value) const
+		auto operator + (T && value) const
 		{
-			return String(*this).operator += (value);
+			return String(*this).operator += (forward<T>(value));
 		}
 
 		operator const char * () const
@@ -531,23 +493,30 @@ namespace Rapture
 
 		String & flood(size_t start, size_t count, char sym, char limiter = '\0');
 
-		template<class ... T,
-			useif(
-				can_string_assemble(T...)
-				)>
-		static inline String assemble(T &&... args)
+		template<class T, class ... A, useif <
+				can_construct<String, T>::value, 
+				can_construct<String, A>::value...
+			>
+			endif>
+		static inline String assemble(T && value, A &&... others)
 		{
-			return String().add(forward<T>(args)...);
+			return String(forward<T>(value)).add(forward<A>(others)...);
 		}
 
-		template<class H, class ... T,
-			useif(
-				can_string_assemble(H, T...)
-				)>
-		String & add(H && head, T &&... tail)
+		template<class T, class ... A, useif <
+			can_construct<String, T>::value, 
+			can_construct<String, A>::value...
+			>
+			endif>
+		String & add(T && value, A &&... others)
 		{
-			operator += (forward<H>(head));
-			return add(forward<T>(tail)...);
+			operator += (forward<T>(value));
+			return add(forward<A>(others)...);
+		}
+
+		String & add()
+		{
+			return *this;
 		}
 
 		struct Cleaner
@@ -697,12 +666,6 @@ namespace Rapture
 			absorb() strtod(ptr, &end);
 
 			return *end == '\0';
-		}
-
-	protected:
-		String & add()
-		{
-			return *this;
 		}
 	};
 
@@ -883,7 +846,10 @@ namespace Rapture
 			Memory<wchar_t>::free(buf);
 		}
 
-		template<class T, useif(is_str_printable<T>::value)>
+		template<class T,
+			useif <can_wstr_print<T>::value> endif
+
+		>
 		WideString(const T & obj) : WideString()
 		{
 			print(*this, obj);
@@ -893,8 +859,6 @@ namespace Rapture
 		{
 			setclass(String);
 		}
-
-		virtual ~WideString() {}
 
 		WideString & operator = (const WideString & value)
 		{
@@ -944,32 +908,8 @@ namespace Rapture
 			return *this;
 		}
 
-		WideString & operator = (int value)
-		{
-			return operator = (WideString(value));
-		}
-
-		WideString & operator = (long value)
-		{
-			return operator = (WideString(value));
-		}
-
-		WideString & operator = (ulong value)
-		{
-			return operator = (WideString(value));
-		}
-
-		WideString & operator = (size_t value)
-		{
-			return operator = (WideString(value));
-		}
-
-		WideString & operator = (float value)
-		{
-			return operator = (WideString(value));
-		}
-
-		WideString & operator = (const Object & value)
+		template<class T, useif <can_construct<WideString, T>::value endif>>
+		WideString & operator = (const T & value)
 		{
 			return operator = (WideString(value));
 		}
@@ -1010,13 +950,13 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class T, useif(can_construct(WideString, T))>
+		template<class T, useif <can_construct<WideString, T>::value> endif>
 		WideString & operator += (const T & value)
 		{
 			return operator += (WideString(value));
 		}
 
-		template<class T, useif(can_construct(WideString, T))>
+		template<class T, useif <can_construct<WideString, T>::value> endif>
 		WideString & operator << (const T & value)
 		{
 			return operator += (value);
@@ -1129,23 +1069,25 @@ namespace Rapture
 
 		WideString & flood(size_t start, size_t count, wchar_t sym, wchar_t limiter = '\0');
 
-		template<class ... T,
-			useif(
-				can_string_assemble(T...)
-				)>
-		static inline WideString assemble(T &&... args)
+		template<class T, class ... A, useif <
+			can_construct<WideString, T>::value, 
+			can_construct<WideString, A>::value...
+			>
+			endif>
+		static inline WideString assemble(T && value, A &&... others)
 		{
-			return WideString().add(forward<T>(args)...);
+			return WideString(forward<T>(value)).add(forward<A>(others)...);
 		}
 
-		template<class H, class ... T,
-			useif(
-				can_string_assemble(H, T...)
-				)>
-		WideString & add(H && head, T &&... tail)
+		template<class T, class ... A, useif <
+			can_construct<WideString, T>::value, 
+			can_construct<WideString, A>::value...
+			>
+			endif>
+		WideString & add(T && value, A &&... others)
 		{
-			operator += (forward<H>(head));
-			return add(forward<T>(tail)...);
+			operator += (forward<T>(value));
+			return add(forward<A>(others)...);
 		}
 
 		WideString & add()
@@ -1311,21 +1253,13 @@ namespace Rapture
 		return *this;
 	}
 
-	void print(String & target, const Object & obj);
-
-	template<class T,
-		useif(
-			is_str_printable<T>::value
-			)>
+	template<class T, useif <can_str_print<T>::value> endif>
 	inline void print(String & target, const Handle<T> & object)
 	{
 		target << *object;
 	}
 
-	template<class T,
-		useif(
-			is_str_printable<T>::value
-			)>
+	template<class T, useif <can_str_print<T>::value> endif>
 	inline String print(const T & object)
 	{
 		String target;
@@ -1334,12 +1268,8 @@ namespace Rapture
 		return target;
 	}
 
-	template<class T,
-		useif(
-			is_str_printable<T>::value
-			)>
-	inline std::basic_ostream<char, std::char_traits<char>> &
-		operator << (std::basic_ostream<char, std::char_traits<char>> & ostr, const T & object)
+	template<class T, useif <can_str_print<T>::value> endif>
+	inline std::ostream & operator << (std::ostream & ostr, const T & object)
 	{
 		String target;
 		print(target, object);
@@ -1347,21 +1277,13 @@ namespace Rapture
 		return ostr << target;
 	}
 
-	void print(WideString & target, const Object & obj);
-
-	template<class T,
-		selectif(1,
-			is_wstr_printable<T>::value
-			)>
+	template<class T, selectif(0) <can_wstr_print<T>::value> endif>
 	inline void print(WideString & target, const Handle<T> & object)
 	{
 		target << *object;
 	}
 
-	template<class T,
-		selectif(1,
-			is_wstr_printable<T>::value
-			)>
+	template<class T, selectif(0) <can_wstr_print<T>::value> endif>
 	inline WideString print(const T & object)
 	{
 		WideString target;
@@ -1370,12 +1292,8 @@ namespace Rapture
 		return target;
 	}
 
-	template<class T,
-		selectif(1,
-			is_wstr_printable<T>::value
-			)>
-	inline std::basic_ostream<wchar_t, std::char_traits<wchar_t>> &
-		operator << (std::basic_ostream<wchar_t, std::char_traits<wchar_t>> & ostr, const T & object)
+	template<class T, selectif(0) <can_wstr_print<T>::value> endif>
+	inline std::wostream & operator << (std::wostream & ostr, const T & object)
 	{
 		WideString target;
 		print(target, object);
@@ -1383,19 +1301,13 @@ namespace Rapture
 		return ostr << target;
 	}
 
-	template<class T,
-		selectif(2,
-			is_str_printable<T>::value
-			)>
+	template<class T, selectif(1) <can_str_print<T>::value> endif>
 	inline void print(WideString & target, const Handle<T> & object)
 	{
 		target << *object;
 	}
 
-	template<class T,
-		selectif(2,
-			is_str_printable<T>::value
-			)>
+	template<class T, selectif(1) <can_str_print<T>::value> endif>
 	inline WideString print(const T & object)
 	{
 		String target;
@@ -1404,27 +1316,24 @@ namespace Rapture
 		return widen(target);
 	}
 
-	template<class T,
-		selectif(2,
-			is_str_printable<T>::value
-			)>
-	inline std::basic_ostream<wchar_t, std::char_traits<wchar_t>> &
-		operator << (std::basic_ostream<wchar_t, std::char_traits<wchar_t>> & ostr, const T & object)
+	
+	template<class T, selectif(1) <can_str_print<T>::value> endif>
+	inline std::wostream & operator << (std::wostream & ostr, const T & object)
 	{
 		String target;
 		print(target, object);
 
 		return ostr << widen(target);
 	}
+	
+	typedef list<string> StringList;
+	typedef list<wstring> WideStringList;
 
-	typedef ListObject<string> StringList;
-	typedef ListObject<wstring> WideStringList;
+	StringList split(const string & text, const char * sep = " \t");
+	StringList splitOnLines(const string & text, size_t lineLength, bool separateWords = true);
 
-	Handle<StringList> split(const string & text, const char * sep = " \t");
-	Handle<StringList> splitOnLines(const string & text, size_t lineLength, bool separateWords = true);
-
-	Handle<WideStringList> split(const wstring & text, const wchar_t * sep = L" \t");
-	Handle<WideStringList> splitOnLines(const wstring & text, size_t lineLength, bool separateWords = true);
+	WideStringList split(const wstring & text, const wchar_t * sep = L" \t");
+	WideStringList splitOnLines(const wstring & text, size_t lineLength, bool separateWords = true);
 
 	inline String operator + (const char * s, const String & string)
 	{
@@ -1435,6 +1344,20 @@ namespace Rapture
 	{
 		return {s, wcslen(s), string.c_str(), string.length()};
 	}
+
+	function_checker(is_str_printable, print);
+
+	template<class T>
+	declare_bool_struct(can_str_print, is_str_printable<String &, T>::value && !based_on<T, string>::value && !based_on<T, wstring>::value)
+
+	template<class T>
+	declare_bool_struct(can_wstr_print, is_str_printable<WideString &, T>::value && !based_on<T, string>::value && !based_on<T, wstring>::value)
+
+	template<class ... T>
+	declare_bool_struct(can_string_assemble, is_true<can_construct<String, T>::value...>::value)
+
+	template<class ... T>
+	declare_bool_struct(can_wstring_assemble, is_true<can_construct<WideString, T>::value...>::value)
 
 	byte	toByte(const char * s);
 	char	toChar(const char * s);
@@ -1455,6 +1378,8 @@ namespace Rapture
 	String operator "" _s(const char * s, size_t unitsCount);
 	WideString operator "" _s(const wchar_t * s, size_t unitsCount);
 }
+
+#include <core/algorithm/lookup3.h>
 
 namespace std
 {

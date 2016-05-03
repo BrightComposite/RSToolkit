@@ -75,15 +75,6 @@ namespace Rapture
 		size_t id;
 		size_t additional = 0;
 	};
-
-	template<class Dst, typename Msg>
-	struct DestGetter
-	{
-		typedef Empty type;
-	};
-
-	template<class Dst, typename Msg>
-	using message_dst_t = typename DestGetter<Dst, Msg>::type;
 }
 
 //---------------------------------------------------------------------------

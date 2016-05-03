@@ -6,8 +6,8 @@
 //---------------------------------------------------------------------------
 
 #include <functional>
-#include <core/meta/UseIf.h>
-#include <core/meta/Types.h>
+#include <meta/UseIf.h>
+#include <meta/Types.h>
 
 //---------------------------------------------------------------------------
 
@@ -20,17 +20,17 @@ namespace Rapture
 	class ImmediateAction : public Action
 	{
 	public:
-		template<class F,
-			useif(
-				is_same<void, decltype(std::invoke(declval<F>()))>::value
-				)>
+		template<class F, useif <
+			is_same<void, decltype(std::invoke(declval<F>()))>::value
+			> endif
+		>
 		ImmediateAction(F f) : Action(f) { operator()(); }
 
-		template<class F, class ... A,
-			useif(
-				is_same<void, std::result_of<F(A &&...)>::type>::value &&
-				sizeof ... (A) > 0
-				)>
+		template<class F, class ... A, useif <
+			is_same<void, decltype(std::invoke(declval<F>(), declval<A>()...))>::value,
+			(sizeof ... (A) > 0)
+			> endif
+		>
 		ImmediateAction(F f, A &&... args) : Action(std::bind(f, forward<A>(args)...)) { operator()(); }
 		~ImmediateAction() {}
 	};
@@ -38,17 +38,17 @@ namespace Rapture
 	class FinalAction : public Action
 	{
 	public:
-		template<class F,
-			useif(
-				is_same<void, decltype(std::invoke(declval<F>()))>::value
-				)>
+		template<class F, useif <
+			is_same<void, decltype(std::invoke(declval<F>()))>::value
+			> endif
+		>
 		FinalAction(F f) : Action(f) {}
 
-		template<class F, class ... A,
-			useif(
-				is_same<void, std::result_of<F(A &&...)>::type>::value &&
-				sizeof ... (A) > 0
-				)>
+		template<class F, class ... A, useif <
+			is_same<void, decltype(std::invoke(declval<F>(), declval<A>()...))>::value,
+			(sizeof ... (A) > 0)
+			> endif
+		>
 		FinalAction(F f, A &&... args) : Action(std::bind(f, forward<A>(args)...)) {}
 
 		~FinalAction() { operator()(); }
@@ -59,6 +59,18 @@ namespace Rapture
 
 	template<typename T, typename M>
 	struct method_wrapper
+	{
+		typedef Empty MethodType;
+	};
+
+	template<typename T, typename R, typename C, typename ... A>
+	struct method_wrapper<const T, R(__thiscall C::*)(A...)>
+	{
+		typedef Empty MethodType;
+	};
+
+	template<typename T, typename R, typename C, typename ... A>
+	struct method_wrapper<const T *, R(__thiscall C::*)(A...)>
 	{
 		typedef Empty MethodType;
 	};
@@ -181,20 +193,20 @@ namespace Rapture
 		static const bool value = !is_same<typename method_wrapper<T, M>::MethodType, Empty>::value;
 	};
 
-	template<class T, class M,
-		useif(
-			!std::is_pointer<T>::value &&
-			is_method<T, M>::value
-			)>
+	template<class T, class M, useif <
+		!std::is_pointer<T>::value,
+		is_method<T, M>::value
+		> endif
+	>
 	method_wrapper<T, M> wrap_method(T & object, M method)
 	{
 		return {object, method};
 	}
 
-	template<class T, class M,
-		useif(
-			is_method<T *, M>::value
-			)>
+	template<class T, class M, useif <
+		is_method<T *, M>::value
+		> endif
+	>
 	method_wrapper<T *, M> wrap_method(T * object, M method)
 	{
 		return {object, method};

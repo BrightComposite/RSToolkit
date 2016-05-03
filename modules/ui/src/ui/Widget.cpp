@@ -39,19 +39,19 @@ namespace Rapture
 
 	Layer::Layer(Widget * widget, int order) : _widget(widget), _order(order)
 	{
-		_widget->_layers.push_back(this);
-		_widget->_layers.sort();
+		_widget->_layerList.push_back(this);
+		_widget->_layerList.sort();
 	}
 
 	Layer::~Layer()
 	{
-		_widget->_layers.remove(this);
+		_widget->_layerList.remove(this);
 	}
 
 	void Layer::setOrder(int order)
 	{
 		_order = order;
-		_widget->_layers.sort();
+		_widget->_layerList.sort();
 	}
 
 	Widget::Widget(Widget * parent) : Widget(parent, *parent) {}
@@ -83,6 +83,9 @@ namespace Rapture
 
 	Widget::~Widget()
 	{
+		_layers.clear();
+		_children.clear();
+
 		if(_parent != nullptr)
 		{
 			forgetParent();
@@ -127,7 +130,7 @@ namespace Rapture
 
 		graphics->clip(r);
 
-		for(auto & layer : _layers)
+		for(auto & layer : _layerList)
 			layer->draw(r);
 
 		for(auto & ch : _displayList)

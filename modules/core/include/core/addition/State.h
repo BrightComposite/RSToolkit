@@ -18,7 +18,7 @@ namespace Rapture
 	public:
 		State() : _state() {}
 		State(const State & state) : _state(state._state) {}
-		template<class ... A, useif(can_construct(T, A...))>
+		template<class ... A, useif <can_construct<T, A...>::value> endif>
 		State(A &&... args) : _state(forward<A>(args)...) {}
 		virtual ~State() {}
 
@@ -55,12 +55,12 @@ namespace Rapture
 			change();
 		}
 
-		void set(T && value)
+		void set(T && newState)
 		{
 			if(_state == newState)
 				return;
 
-			_state = forward<T>(value);
+			_state = forward<T>(newState);
 			change();
 		}
 
@@ -97,6 +97,11 @@ namespace Rapture
 			state->set(newState);
 		}
 
+		StateHolder(State<T> * state, T && newState) : state(state), old(state->get())
+		{
+			state->set(forward<T>(newState));
+		}
+
 		StateHolder(const StateHolder & h) = delete;
 		StateHolder(StateHolder && h) : state(h.state), old(h.old)
 		{
@@ -120,6 +125,12 @@ namespace Rapture
 			return *this;
 		}
 
+		StateHolder & operator = (T && newState)
+		{
+			state->set(forward<T>(newState));
+			return *this;
+		}
+
 		~StateHolder()
 		{
 			if(state != nullptr)
@@ -137,9 +148,21 @@ namespace Rapture
 	}
 
 	template<class T>
-	StateHolder<T> hold(Handle<State<T>> state, const T & newState)
+	StateHolder<T> hold(State<T> * state, T && newState)
+	{
+		return {state, forward<T>(newState)};
+	}
+
+	template<class T>
+	StateHolder<T> hold(const Handle<State<T>> & state, const T & newState)
 	{
 		return {state, newState};
+	}
+
+	template<class T>
+	StateHolder<T> hold(const Handle<State<T>> & state, T && newState)
+	{
+		return {state, forward<T>(newState)};
 	}
 }
 

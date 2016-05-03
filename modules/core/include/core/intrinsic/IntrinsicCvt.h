@@ -6,13 +6,19 @@
 //---------------------------------------------------------------------------
 
 #include <intrin.h>
-#include <core/meta/Types.h>
+#include <meta/Types.h>
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	template<typename T1, typename T2>
+#define mk_shuffle_2(a, b) (((b) << 1) | (a))
+#define mk_shuffle_4(a, b, c, d) (((d) << 6) | ((c) << 4) | ((b) << 2) | (a))
+#define mk_mask4(a, b, c, d) (((d) << 3) | ((c) << 2) | ((b) << 1) | (a))
+#define reverse_shuffle_2 mk_shuffle_2(1, 0)
+#define reverse_shuffle_4 mk_shuffle_4(3, 2, 1, 0)
+
+	template<typename From, typename To>
 	struct IntrinsicCvt {};
 
 	template<>
@@ -22,68 +28,38 @@ namespace Rapture
 		{
 			out = in;
 		}
+	};
 
-		static inline void perform(__m128 && in, __m128 & out)
+	template<>
+	struct IntrinsicCvt<__m128d[2], __m128>
+	{
+		static inline void perform(const __m128d (& in)[2], __m128 & out)
 		{
-			out = forward<__m128>(in);
+			out = _mm_shuffle_ps(_mm_cvtpd_ps(in[0]), _mm_cvtpd_ps(in[1]), mk_shuffle_4(0, 1, 2, 3));
 		}
 	};
 
 	template<>
-	struct IntrinsicCvt<__m128, __m128d>
+	struct IntrinsicCvt<__m128, __m128d[2]>
 	{
-		static inline void perform(const __m128 & in, __m256d & out)
+		static inline void perform(const __m128 & in, __m128d (& out)[2])
 		{
-			out = _mm256_cvtps_pd(in);
-		}
-
-		static inline void perform(__m128 && in, __m256d & out)
-		{
-			out = _mm256_cvtps_pd(forward<__m128>(in));
+			out[0] = _mm_cvtps_pd(in);
+			out[1] = _mm_cvtps_pd(_mm_shuffle_ps(in, in, mk_shuffle_4(2, 3, 0, 1)));
 		}
 	};
 
 	template<>
-	struct IntrinsicCvt<__m256d, __m128>
+	struct IntrinsicCvt<__m128d[2], __m128d[2]>
 	{
-		static inline void perform(const __m256d & in, __m128 & out)
+		static inline void perform(const __m128d (& in)[2], __m128d (& out)[2])
 		{
-			out = _mm256_cvtpd_ps(in);
-		}
-
-		static inline void perform(__m256d && in, __m128 & out)
-		{
-			out = _mm256_cvtpd_ps(forward<__m256d>(in));
+			out[0] = in[0];
+			out[1] = in[1];
 		}
 	};
 
-	template<>
-	struct IntrinsicCvt<__m256d, __m256d>
-	{
-		static inline void perform(const __m256d & in, __m256d & out)
-		{
-			out = in;
-		}
-
-		static inline void perform(__m256d && in, __m256d & out)
-		{
-			out = forward<__m256d>(in);
-		}
-	};
-
-	template<>
-	struct IntrinsicCvt<__m256, __m256>
-	{
-		static inline void perform(const __m256 &in, __m256 & out)
-		{
-			out = in;
-		}
-
-		static inline void perform(__m256 && in, __m256 & out)
-		{
-			out = forward<__m256>(in);
-		}
-	};
+//---------------------------------------------------------------------------
 
 	inline float & _m_hi(__m64 & in)
 	{
@@ -165,6 +141,44 @@ namespace Rapture
 		return *(reinterpret_cast<const __m128d *>(&in));
 	}
 
+//---------------------------------------------------------------------------
+
+	template<>
+	struct IntrinsicCvt<__m128, __m256d>
+	{
+		static inline void perform(const __m128 & in, __m256d & out)
+		{
+			out = _mm256_cvtps_pd(in);
+		}
+	};
+
+	template<>
+	struct IntrinsicCvt<__m256d, __m128>
+	{
+		static inline void perform(const __m256d & in, __m128 & out)
+		{
+			out = _mm256_cvtpd_ps(in);
+		}
+	};
+
+	template<>
+	struct IntrinsicCvt<__m256d, __m256d>
+	{
+		static inline void perform(const __m256d & in, __m256d & out)
+		{
+			out = in;
+		}
+	};
+
+	template<>
+	struct IntrinsicCvt<__m256, __m256>
+	{
+		static inline void perform(const __m256 &in, __m256 & out)
+		{
+			out = in;
+		}
+	};
+
 	template<>
 	struct IntrinsicCvt<__m256, __m256d[2]>
 	{
@@ -182,11 +196,6 @@ namespace Rapture
 		{
 			out = _mm256_set_m128(_mm256_cvtpd_ps(in[0]), _mm256_cvtpd_ps(in[1]));
 		}
-
-		static inline void perform(__m256d (&&in)[2], __m256 & out)
-		{
-			out = _mm256_set_m128(_mm256_cvtpd_ps(move(in[0])), _mm256_cvtpd_ps(move(in[1])));
-		}
 	};
 
 	template<>
@@ -197,18 +206,20 @@ namespace Rapture
 			out[0] = in[0];
 			out[1] = in[1];
 		}
-
-		static inline void perform(__m256d (&&in)[2], __m256d (&out)[2])
-		{
-			out[0] = move(in[0]);
-			out[1] = move(in[1]);
-		}
 	};
 
 	template<typename A, typename B>
-	inline void intin_cvt(A && in, B && out)
+	inline void intrin_cvt(A && in, B & out)
 	{
-		IntrinsicCvt<decay_t<A>, decay_t<B>>::perform(forward<A>(in), forward<B>(out));
+		IntrinsicCvt<remove_cv_ref_t<A>, remove_cv_ref_t<B>>::perform(forward<A>(in), out);
+	}
+
+	template<typename Out, typename In>
+	inline Out intrin_cvt(In && in)
+	{
+		Out out;
+		IntrinsicCvt<remove_cv_ref_t<In>, Out>::perform(forward<In>(in), out);
+		return out;
 	}
 }
 

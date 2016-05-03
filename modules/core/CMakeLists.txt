@@ -43,6 +43,7 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 				
 			START_SECTION container
 				Array.h
+				Container.h
 				Hash.h
 				List.h
 				Map.h
@@ -78,16 +79,16 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 				Message.h
 				MessageClass.h
 			END_SECTION
+		END_SECTION
 			
-			START_SECTION meta
-				Flag.h
-				Inheritance.h
-				Macro.h
-				Meta.h
-				Preprocessor.h
-				Types.h
-				UseIf.h
-			END_SECTION
+		START_SECTION meta
+			Flag.h
+			Inheritance.h
+			Macro.h
+			Meta.h
+			Preprocessor.h
+			Types.h
+			UseIf.h
 		END_SECTION
 		
 	SRC_GROUP src Sources

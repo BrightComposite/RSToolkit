@@ -150,6 +150,11 @@ namespace Rapture
 			return family[style];
 		}
 
+		static void clear()
+		{
+			return instance()._cache.clear();
+		}
+
 	protected:
 		Map<string, Map<FontStyle, Font>> _cache;
 	};

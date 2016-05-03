@@ -8,7 +8,7 @@
 #include <functional>
 #include <array>
 
-#include <core/meta/Meta.h>
+#include <meta/Meta.h>
 
 //---------------------------------------------------------------------------
 
@@ -46,7 +46,7 @@ namespace Rapture
 
 		virtual bool kindOf(const MetaClass * metaClass) const
 		{
-			return instanceOf(metaClass);
+			return this == metaClass;
 		}
 
 		virtual const MetaClass * superClass() const
@@ -70,97 +70,68 @@ namespace Rapture
 		typedef MetaClass Class;
 	};
 
-#define getclass(...)	ClassInstance<__VA_ARGS__>::instance()
-#define classname(...)	getclass(__VA_ARGS__)->name()
+#define getclass(...)	   ClassInstance<__VA_ARGS__>::instance()
+#define classname(...)	   getclass(__VA_ARGS__)->name()
 
-#define instanceof(...) ->instanceOf(getclass(__VA_ARGS__))
-#define kindof(...)     ->kindOf(getclass(__VA_ARGS__))
+#define instanceof(...)  ->instanceOf(getclass(__VA_ARGS__))
+#define kindof(...)		 ->kindOf(getclass(__VA_ARGS__))
 #define notinstanceof(...) instanceof(__VA_ARGS__) == false
 #define notkindof(...)     kindof(__VA_ARGS__) == false
 
-	template<class Parent>
-	class Class<Parent> : public MetaClass
-	{
-	protected:
-		const MetaClass * _parent;
-
-	public:
-		Class(const char * name) : MetaClass(name), _parent(getclass(Parent)) {}
-		virtual ~Class() {}
-
-		virtual const MetaClass * superClass() const override
-		{
-			return _parent;
-		}
-
-		virtual bool kindOf(const MetaClass * metaClass) const override
-		{
-			if(instanceOf(metaClass))
-				return true;
-
-			return _parent != nullptr ? _parent->kindOf(metaClass) : false;
-		}
-
-		virtual void forEachClass(const std::function<void(const MetaClass *)> & func) const override
-		{
-			func(this);
-			_parent->forEachClass(func);
-		}
-	};
-
 	template<class Class>
-	inline const MetaClass * getMetaClass()
+	const MetaClass * getClass()
 	{
 		return ClassInstance<Class>::instance();
 	}
 
-	template<class FirstParent, class SecondParent, class ... OtherParents>
-	class Class<FirstParent, SecondParent, OtherParents...> : public MetaClass
+	struct KindOfClass
 	{
-	public:
-		static const int parentsCount = 2 + sizeof...(OtherParents);
-
-		Class(const char * name) : MetaClass(name), _parents
+		template<class Parent>
+		static bool iterate(const MetaClass * meta)
 		{
-			getMetaClass<FirstParent>(),
-			getMetaClass<SecondParent>(),
-			getMetaClass<OtherParents>()...
-		} {}
+			return getclass(Parent)->kindOf(meta);
+		}
+	};
 
+	struct ForEachMetaClass
+	{
+		template<class Parent>
+		static void iterate(const std::function<void(const MetaClass *)> & func)
+		{
+			getclass(Parent)->forEachClass(func);
+		}
+	};
+
+	template<class FirstParent, class ... OtherParents>
+	class Class<FirstParent, OtherParents...> : public MetaClass
+	{
+		using ParentsLoop = foreach_t<FirstParent, OtherParents...>;
+
+	public:
+		Class(const char * name) : MetaClass(name) {}
 		virtual ~Class() {}
 
 		virtual const MetaClass * superClass() const override
 		{
-			return _parents[0];
+			return getclass(FirstParent);
 		}
 
 		virtual bool kindOf(const MetaClass * metaClass) const override
 		{
-			if(instanceOf(metaClass))
+			if(this == metaClass)
 				return true;
 
-			for(auto & parent : _parents)
-			{
-				if(parent->kindOf(metaClass))
-					return true;
-			}
-
-			return false;
+			return ParentsLoop::iterate<KindOfClass, false>(metaClass);
 		}
 
 		virtual void forEachClass(const std::function<void(const MetaClass *)> & func) const override
 		{
 			func(this);
-
-			for(auto & parent : _parents)
-				parent->forEachClass(func);
+			ParentsLoop::iterate<ForEachMetaClass>(func);
 		}
-
-	protected:
-		array<const MetaClass *, parentsCount> _parents;
 	};
 
-#define link_class(cl, /* metaclass */...)	\
+#define link_class(cl, /* class */...)		\
 	class cl;								\
 											\
 	template<>								\
@@ -173,7 +144,6 @@ namespace Rapture
 			return &meta;					\
 		}									\
 	};
-
 }
 
 //---------------------------------------------------------------------------

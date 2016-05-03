@@ -36,7 +36,7 @@ namespace Rapture
 	{
 	public:
 		template<class T, class ... A,
-			useif(based_on(T, Base) && can_construct(T, A...))
+			useif <based_on<T, Base>::value && can_construct<T, A...>::value> endif
 		>
 		Handle<T> construct(A && ... args)
 		{
@@ -46,7 +46,7 @@ namespace Rapture
 			return h;
 		}
 
-		template<class T, useif(based_on(T, Base))>
+		template<class T, useif <based_on<T, Base>::value> endif>
 		Handle<T> request()
 		{
 			auto & h = place<T>();
@@ -57,11 +57,27 @@ namespace Rapture
 			return Handle<T>::cast(h);
 		}
 
+		template<class T, useif <based_on<T, Base>::value> endif>
+		Handle<T> find() const
+		{
+			return Handle<T>::cast(place<T>());
+		}
+
+		size_t size() const
+		{
+			return map.size();
+		}
+
+		void clear()
+		{
+			return map.clear();
+		}
+
 		template<class T, class Context,
-			useif(based_on(T, Base)),
+			useif <based_on<T, Base>::value> endif,
 			typename = decltype(declval<Context>.template init<T>(handle<Base>()))
 		>
-		static Handle<T> request(Context * ctx)
+		Handle<T> request(Context * ctx)
 		{
 			auto & h = place<T>();
 
@@ -73,12 +89,12 @@ namespace Rapture
 
 	protected:
 		template<class T>
-		Handle<Base> & place()
+		Handle<Base> & place() const
 		{
 			return map[TypeId<T, Base>::get()];
 		}
 
-		OrderedMap<int, Base> map;
+		mutable OrderedMap<int, Base> map;
 	};
 
 #define concurrent_types(...) using Concurrents = tuple<__VA_ARGS__>;

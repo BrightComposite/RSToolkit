@@ -344,9 +344,9 @@ namespace Rapture
 			virtual Handle<Image> createImage(const ImageData & data) const override;
 			virtual Handle<Figure> createFigure(const FigureData & data) const override;
 
-			template<class T, useif(is_uniform<T>::value)>
+			template<class T, useif <is_uniform<T>::value> endif>
 			void updateUniform(const T & uniform) const;
-			template<class T, typename ... A, useif(is_uniform<T>::value && can_construct(T, A...))>
+			template<class T, typename ... A, useif <is_uniform<T>::value && can_construct<T, A...>::value> endif>::value
 			void updateUniform(A && ... args) const;
 
 			static Class<Subject> meta;
@@ -631,7 +631,7 @@ namespace Rapture
 			SimpleTechnique(const Handle<VertexLayout> & vil, const Handle<ShaderProgram> & program)
 				: FxTechnique(vil), program(program) {}
 
-			template<class ShaderProgramType, class ... A, useif(can_construct(ShaderProgramType, Handle<FxTechnique>, A...))>
+			template<class ShaderProgramType, class ... A, useif <can_construct<ShaderProgramType, Handle<FxTechnique>, A...>::value> endif>::value
 			SimpleTechnique(const Handle<VertexLayout> & vil, const Type<ShaderProgramType> &, A &&... args)
 				: FxTechnique(vil), program(handle<ShaderProgramType>(this, forward<A>(args)...)) {}
 

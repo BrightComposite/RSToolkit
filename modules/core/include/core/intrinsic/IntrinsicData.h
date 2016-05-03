@@ -17,7 +17,7 @@
 
 #include <memory.h>
 
-#include <core/meta/Meta.h>
+#include <meta/Meta.h>
 
 #undef min
 #undef max
@@ -53,6 +53,29 @@ namespace Rapture
 		typedef __m128 float_type;
 		typedef __m128d double_type[2];
 	};
+#endif
+
+	template<class T>
+	struct is_intrin : false_type {};
+
+	template<>
+	struct is_intrin<__m64>		 : true_type {};
+	template<>
+	struct is_intrin<__m128>	 : true_type {};
+	template<>
+	struct is_intrin<__m128i>	 : true_type {};
+	template<>
+	struct is_intrin<__m128d>	 : true_type {};
+	template<>
+	struct is_intrin<__m128d[2]> : true_type {};
+
+#ifdef USE_AVX
+	template<>
+	struct is_intrin<__m256>	 : true_type {};
+	template<>
+	struct is_intrin<__m256i>	 : true_type {};
+	template<>
+	struct is_intrin<__m256d>	 : true_type {};
 #endif
 
 	template<class T, size_t N>
@@ -103,6 +126,12 @@ namespace Rapture
 			Initialize::init(this->v, v);
 		}
 
+		template<class T, useif <is_intrin<T>::value> endif>
+		IntrinData(const T & v)
+		{
+			intrin_cvt(v, this->v);
+		}
+
 		IntrinData & operator = (const type & v)
 		{
 			Initialize::init(this->v, v);
@@ -149,13 +178,13 @@ namespace Rapture
 			return *reinterpret_cast<const unit *>(&v[index]);
 		}
 
-		template<int I, useif(I < N)>
+		template<int I, useif <(I < N)> endif>
 		static inline T __vectorcall get(const IntrinData & in)
 		{
 			return in.data[I];
 		}
 
-		template<int I, useif(I < N)>
+		template<int I, useif <(I < N)> endif>
 		static inline void __vectorcall set(type & out, T value)
 		{
 			reinterpret_cast<IntrinData *>(out)->data[I] = value;
@@ -176,7 +205,16 @@ namespace Rapture
 		};
 
 		IntrinData() {}
-		IntrinData(const type & v) : v(v) {}
+		IntrinData(const type & v)
+		{
+			Initialize::init(this->v, v);
+		}
+
+		template<class T, useif <is_intrin<T>::value> endif>
+		IntrinData(const T & v)
+		{
+			intrin_cvt(v, this->v);
+		}
 
 		IntrinData & __vectorcall operator = (const type & v)
 		{
@@ -204,13 +242,13 @@ namespace Rapture
 			return data;
 		}
 
-		template<int I, useif(I < 2)>
+		template<int I, useif <(I < 2)> endif>
 		static inline T __vectorcall get(const IntrinData & in)
 		{
 			return in.data[I];
 		}
 
-		template<int I, useif(I < 2)>
+		template<int I, useif <(I < 2)> endif>
 		static inline void __vectorcall set(type & out, T value)
 		{
 			reinterpret_cast<IntrinData *>(out)->data[I] = value;
@@ -234,9 +272,16 @@ namespace Rapture
 		};
 
 		IntrinData() {}
+
 		IntrinData(const type & v)
 		{
 			Initialize::init(this->v, v);
+		}
+
+		template<class T, useif <is_intrin<T>::value> endif>
+		IntrinData(const T & v)
+		{
+			intrin_cvt(v, this->v);
 		}
 
 		IntrinData & operator = (const type & v)
@@ -285,13 +330,13 @@ namespace Rapture
 			return *reinterpret_cast<const unit *>(&v[index]);
 		}
 
-		template<int I, useif(I < 4)>
+		template<int I, useif <(I < 4)> endif>
 		static inline T __vectorcall get(const IntrinData & in)
 		{
 			return in.data[I];
 		}
 
-		template<int I, useif(I < 4)>
+		template<int I, useif <(I < 4)> endif>
 		static inline void __vectorcall set(type & out, T value)
 		{
 			reinterpret_cast<IntrinData *>(out)->data[I] = value;
@@ -340,13 +385,13 @@ namespace Rapture
 			return data;
 		}
 
-		template<int I, useif(I < 4)>
+		template<int I, useif <(I < 4)> endif>
 		static inline T __vectorcall get(const IntrinData & in)
 		{
 			return in.data[I];
 		}
 
-		template<int I, useif(I < 4)>
+		template<int I, useif <(I < 4)> endif>
 		static inline void __vectorcall set(type & out, T value)
 		{
 			reinterpret_cast<IntrinData *>(out)->data[I] = value;

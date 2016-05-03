@@ -241,7 +241,7 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 #define WidgetMessages	\
-	KeyDownMessage, CharMessage, KeyUpMessage,\
+	KeyDownMessage, CharMessage, KeyUpMessage, MouseUpdateMessage, \
 	MouseDownMessage, MouseMoveMessage, MouseUpMessage, MouseClickMessage,\
 	MouseDblClickMessage, MouseWheelMessage, MouseEnterMessage,\
 	MouseLeaveMessage, WidgetPressMessage, WidgetStopPressMessage,\

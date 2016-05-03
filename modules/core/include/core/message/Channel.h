@@ -33,9 +33,9 @@ namespace Rapture
 	{
 		ReceiversList<Dst, Msg> contents;
 
-		static const bool exist = same_type(decltype(declval<Dst>().receiversMap), ReceiversMap) && !is_same<message_dst_t<Dst, Msg>, Empty>::value;
+		static const bool exist = same_type<decltype(declval<Dst>().receiversMap), ReceiversMap>::value && not_same_type<message_dst_t<Dst, Msg>, Empty>::value;
 
-		template<useif(exist)>
+		template<useif <exist> endif>
 		static ReceiversList<Dst, Msg> & get(Dst & dest)
 		{
 			return dest.receiversMap.request<Receivers<Dst, Msg>>()->contents;
@@ -338,7 +338,7 @@ namespace Rapture
 	}
 
 	template<class Dst, typename Msg, class Functor,
-		useif(std::is_convertible<Functor, msg_callback<Dst, Msg>>::value)
+		useif <std::is_convertible<Functor, msg_callback<Dst, Msg>>::value> endif
 	>
 	size_t connect(Functor receiver)
 	{
@@ -359,10 +359,11 @@ namespace Rapture
 
 //---------------------------------------------------------------------------
 
-#define can_be_receiver(Functor) can_construct(MessageCallbackFunction<Dst, Msg>, Functor)
+#define can_be_receiver(Functor) can_construct<MessageCallbackFunction<Dst, Msg>, Functor>::value
+
 
 	template<class Dst, typename Msg, class RealDst,
-		useif(is_dest<Dst, Msg>::value && based_on(RealDst, Dst))
+		useif <is_dest<Dst, Msg>::value && based_on<RealDst, Dst>::value> endif
 	>
 	size_t connect(RealDst & dest, const Receiver<Dst, Msg> & receiver)
 	{
@@ -370,7 +371,7 @@ namespace Rapture
 	}
 
 	template<class Dst, typename Msg, class RealDst,
-		useif(is_dest<Dst, Msg>::value && based_on(RealDst, Dst))
+		useif <is_dest<Dst, Msg>::value && based_on<RealDst, Dst>::value> endif
 	>
 	size_t connect(RealDst & dest, void receiver(Handle<Msg> &, Dst &))
 	{
@@ -378,7 +379,7 @@ namespace Rapture
 	}
 
 	template<class Dst, typename Msg, class RealDst,
-		useif(is_dest<Dst, Msg>::value && based_on(RealDst, Dst))
+		useif <is_dest<Dst, Msg>::value && based_on<RealDst, Dst>::value> endif
 	>
 	size_t connect(RealDst & dest, const function<void(Handle<Msg> &, Dst &)> & receiver)
 	{
@@ -386,10 +387,10 @@ namespace Rapture
 	}
 
 	template<class Dst, typename Msg, class Functor, class RealDst,
-		useif(
-			is_dest<Dst, Msg>::value && based_on(RealDst, Dst) &&
+		useif <
+			is_dest<Dst, Msg>::value && based_on<RealDst, Dst>::value &&
 			std::is_convertible<Functor, msg_callback<Dst, Msg>>::value
-			)
+		> endif
 	>
 	size_t connect(RealDst & dest, Functor receiver)
 	{
@@ -397,7 +398,7 @@ namespace Rapture
 	}
 
 	template<class Rcvr, class Dst, typename Msg, class RealDst,
-		useif(is_dest<Dst, Msg>::value && based_on(RealDst, Dst))
+		useif <is_dest<Dst, Msg>::value && based_on<RealDst, Dst>::value> endif
 	>
 	size_t connect(RealDst & dest, Handle<Rcvr> & receiver, void (__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t key = 0)
 	{
@@ -405,7 +406,7 @@ namespace Rapture
 	}
 
 	template<class Rcvr, class Dst, typename Msg, class RealDst,
-		useif(is_dest<Dst, Msg>::value && based_on(RealDst, Dst))
+		useif <is_dest<Dst, Msg>::value && based_on<RealDst, Dst>::value> endif
 	>
 	size_t connect(RealDst & dest, const Handle<Rcvr> & receiver, void (__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t key = 0)
 	{
@@ -439,10 +440,10 @@ namespace Rapture
 	}
 
 	template<class Dst, typename Msg, class Functor,
-		useif(
+		useif<
 			std::is_convertible<Functor, msg_callback<Dst, Msg>>::value &&
 			!is_handle<Functor>::value
-			)
+		> endif
 	>
 	void disconnect(Functor receiver)
 	{
@@ -470,7 +471,7 @@ namespace Rapture
 	//---------------------------------------------------------------------------
 
 	template<class Dst, typename Msg, class RealDst,
-		useif(is_dest<Dst, Msg>::value && based_on(RealDst, Dst))
+		useif <is_dest<Dst, Msg>::value && based_on<RealDst, Dst>::value> endif
 	>
 	void disconnect(RealDst & dest, const Receiver<Dst, Msg> & receiver)
 	{
@@ -478,7 +479,7 @@ namespace Rapture
 	}
 
 	template<class Dst, typename Msg, class RealDst,
-		useif(is_dest<Dst, Msg>::value && based_on(RealDst, Dst))
+		useif <is_dest<Dst, Msg>::value && based_on<RealDst, Dst>::value> endif
 	>
 	void disconnect(RealDst & dest, size_t id)
 	{
@@ -486,7 +487,7 @@ namespace Rapture
 	}
 
 	template<class Dst, typename Msg, class RealDst,
-		useif(is_dest<Dst, Msg>::value && based_on(RealDst, Dst))
+		useif <is_dest<Dst, Msg>::value && based_on<RealDst, Dst>::value> endif
 	>
 	void disconnect(RealDst & dest, void receiver(Handle<Msg> &, Dst &))
 	{
@@ -494,7 +495,7 @@ namespace Rapture
 	}
 
 	template<class Dst, typename Msg, class RealDst,
-		useif(is_dest<Dst, Msg>::value && based_on(RealDst, Dst))
+		useif <is_dest<Dst, Msg>::value && based_on<RealDst, Dst>::value> endif
 	>
 	void disconnect(RealDst & dest, const function<void(Handle<Msg> &, Dst &)> & receiver)
 	{
@@ -502,11 +503,11 @@ namespace Rapture
 	}
 
 	template<class Dst, typename Msg, class Functor, class RealDst,
-		useif(
-			is_dest<Dst, Msg>::value && based_on(RealDst, Dst) &&
+		useif<
+			is_dest<Dst, Msg>::value && based_on<RealDst, Dst>::value &&
 			std::is_convertible<Functor, msg_callback<Dst, Msg>>::value &&
 			!is_handle<Functor>::value
-		)
+		> endif
 	>
 	void disconnect(RealDst & dest, Functor receiver)
 	{
@@ -514,7 +515,7 @@ namespace Rapture
 	}
 
 	template<class Rcvr, class Dst, typename Msg, class RealDst,
-		useif(is_dest<Dst, Msg>::value && based_on(RealDst, Dst))
+		useif <is_dest<Dst, Msg>::value && based_on<RealDst, Dst>::value> endif
 	>
 	void disconnect(RealDst & dest, Handle<Rcvr> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t key = 0)
 	{
@@ -522,7 +523,7 @@ namespace Rapture
 	}
 
 	template<class Rcvr, class Dst, typename Msg, class RealDst,
-		useif(is_dest<Dst, Msg>::value && based_on(RealDst, Dst))
+		useif <is_dest<Dst, Msg>::value && based_on<RealDst, Dst>::value> endif
 	>
 	void disconnect(RealDst & dest, const Handle<Rcvr> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t key = 0)
 	{
@@ -530,7 +531,7 @@ namespace Rapture
 	}
 
 	template<class Dst, typename Msg, class Rcvr, class RealDst,
-		useif(is_dest<Dst, Msg>::value && based_on(RealDst, Dst))
+		useif <is_dest<Dst, Msg>::value && based_on<RealDst, Dst>::value> endif
 	>
 	void disconnect(RealDst & dest, const Handle<Rcvr> & receiver)
 	{
@@ -552,14 +553,18 @@ namespace Rapture
 #define bind_message(Dst, Msg)								\
 	template<class, typename>								\
 	friend struct Rapture::Receivers;						\
+	template<class, typename>								\
+	friend struct Rapture::DestGetter;						\
 															\
-	using pp_cat(DestOf, Msg) = Dst;						\
+	set_message_dest(Dst, Msg)								\
 
-#define op_bind_message(s, Dst, Msg) using pp_cat(DestOf, Msg) = Dst;
+#define op_bind_message(s, Dst, Msg) set_message_dest(Dst, Msg)
 
 #define bind_messages(Dst, ... /* Messages */)				\
 	template<class, typename>								\
 	friend struct Rapture::Receivers;						\
+	template<class, typename>								\
+	friend struct Rapture::DestGetter;						\
 															\
 	pp_seq_foreach(op_bind_message, Dst,					\
 		pp_tuple_to_seq((__VA_ARGS__))						\

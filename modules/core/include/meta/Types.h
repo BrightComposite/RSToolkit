@@ -41,6 +41,8 @@ namespace Rapture
 	using std::is_array;
 	using std::is_lvalue_reference;
 	using std::is_rvalue_reference;
+
+	using std::is_empty;
 	using std::is_abstract;
 
 	using std::is_same;
@@ -53,17 +55,22 @@ namespace Rapture
 
 	using std::decay_t;
 	using std::remove_extent_t;
+	using std::remove_cv_t;
+	using std::remove_reference_t;
 
 	using std::enable_if_t;
 	using std::conditional_t;
 
 	using std::result_of_t;
 
-	using std::_Wrap_int;
-	using std::_Identity;
-
 	using std::initializer_list;
+	using std::pair;
 	using std::tuple;
+
+	using std::make_integer_sequence;
+	using std::make_index_sequence;
+	using std::integer_sequence;
+	using std::index_sequence;
 
 	template<typename T, size_t N>
 	using array_t = T[N];
@@ -76,6 +83,9 @@ namespace Rapture
 
 	template<class T>
 	using clear_t = remove_ptr_t<decay_t<T>>;
+
+	template<class T>
+	using remove_cv_ref_t = remove_cv_t<remove_reference_t<T>>;
 
 	template<class T, class Example>
 	using adapt_t = conditional_t<is_rvalue_reference<Example>::value, T &&, const T &>;
@@ -104,19 +114,19 @@ namespace Rapture
 		static const size_t value = 1 << offset;
 
 		template<typename I>
-		static bool state(I s)
+		static constexpr bool state(I s)
 		{
 			return check_flag(value, s);
 		}
 
 		template<typename I>
-		static void setState(I & s)
+		static constexpr void setState(I & s)
 		{
 			set_flag(value, s);
 		}
 
 		template<typename I>
-		static void clearState(I & s)
+		static constexpr void clearState(I & s)
 		{
 			clear_flag(value, s);
 		}
@@ -125,19 +135,19 @@ namespace Rapture
 	struct bits
 	{
 		template<typename I>
-		static bool state(int offset, I s)
+		static constexpr bool state(int offset, I s)
 		{
 			return check_flag(I(1 << offset), s);
 		}
 
 		template<typename I>
-		static void setState(int offset, I & s)
+		static constexpr void setState(int offset, I & s)
 		{
 			set_flag(I(1 << offset), s);
 		}
 
 		template<typename I>
-		static void clearState(int offset, I & s)
+		static constexpr void clearState(int offset, I & s)
 		{
 			clear_flag(I(1 << offset), s);
 		}
@@ -146,11 +156,26 @@ namespace Rapture
 	using lo_bit_mask = bitmask<0>;
 	using hi_bit_mask = bitmask<15>;
 
-	template<size_t V, int offset>
+	template<size_t Mask, int offset>
 	struct has_bit
 	{
-		static const bool value = (V >> offset) & 1;
+		static const bool value = (Mask >> offset) & 1;
 	};
+
+	namespace Internals
+	{
+		template<size_t Mask, class S>
+		struct unfold_mask0 {};
+
+		template<size_t Mask, int ... Values>
+		struct unfold_mask0<Mask, integer_sequence<int, Values...>>
+		{
+			typedef integer_sequence<bool, has_bit<Mask, Values>::value...> type;
+		};
+	}
+
+	template<size_t Mask, int size>
+	using unfold_mask = typename Internals::unfold_mask0<Mask, make_integer_sequence<int, size>>::type;
 
 	/**
 	*  @brief
@@ -160,13 +185,6 @@ namespace Rapture
 	class Empty {};
 
 	static Empty emptiness;
-
-	using std::pair;
-	using std::tuple;
-	using std::make_integer_sequence;
-	using std::make_index_sequence;
-	using std::integer_sequence;
-	using std::index_sequence;
 
 	template<class ... A>
 	inline tuple<A...> wrap(A &&... args)

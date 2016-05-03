@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/meta/Types.h>
+#include <meta/Types.h>
 
 #include <string.h>
 #include <stdlib.h>

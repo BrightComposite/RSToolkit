@@ -74,7 +74,7 @@ namespace Rapture
 			return !_enabled;
 		}
 
-		template<class Msg, class Dst, class ... F, useif(can_construct(Msg, Subject *, F...))>
+		template<class Msg, class Dst, class ... F, useif <can_construct<Msg, Subject *, F...>::value> endif>
 		Handle<Msg> send(Dst & dest, F &&... fields) const
 		{
 			auto msg = handle<Msg>(this, forward<F>(fields)...);
@@ -83,7 +83,7 @@ namespace Rapture
 			return msg;
 		}
 
-		template<class Msg, class Dst, class ... F, useif(can_construct(Msg, Subject *, F...))>
+		template<class Msg, class Dst, class ... F, useif <can_construct<Msg, Subject *, F...>::value> endif>
 		Handle<Msg> send(Dst * dest, F &&... fields) const
 		{
 			if(dest == nullptr)
@@ -123,7 +123,7 @@ namespace Rapture
 		declare_receivers();
 	};
 
-	template<class Msg, class Dst, class ... F, useif(can_construct(Msg, Subject *, F...))>
+	template<class Msg, class Dst, class ... F, useif <can_construct<Msg, Subject *, F...>::value> endif>
 	Handle<Msg> send(Dst & dest, F &&... fields)
 	{
 		auto msg = handle<Msg>(nullptr, forward<F>(fields)...);

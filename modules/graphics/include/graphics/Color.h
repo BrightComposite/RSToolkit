@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/meta/Meta.h>
+#include <meta/Meta.h>
 #include <math/Vector.h>
 
 //---------------------------------------------------------------------------
@@ -100,7 +100,7 @@ namespace Rapture
 			ColorTraits<T>::init(data);
 		}
 
-		template<class F, class ... A, useif(std::is_pod<F>::value)>
+		template<class F, class ... A, useif <std::is_pod<F>::value> endif>
 		Color(F first, A ... others)
 		{
 			T color[] {color_cast<T>(first), color_cast<T>(others)...};
@@ -242,7 +242,7 @@ namespace Rapture
 				target[i] = i >= 3 ? 1.0f : 0.0f;
 		}
 
-		template<int N, class U, int N_, useif(is_not_same(T, U))>
+		template<int N, class U, int N_, useif <not_same_type<T, U>::value> endif>
 		static inline void init(T(&target)[N], const U(&color)[N_])
 		{
 			register int i = 0;
@@ -254,18 +254,16 @@ namespace Rapture
 				target[i] = i >= 3 ? 1.0f : 0.0f;
 		}
 
-		template<
-			class U,
-			selectif(1, std::is_integral<U>::value)
+		template<class U, selectif(0)
+			<std::is_integral<U>::value> endif
 		>
 		static inline T cast(U val)
 		{
 			return static_cast<T>(val) / 255.0f;
 		}
 
-		template<
-			class U,
-			selectif(2, std::is_floating_point<U>::value)
+		template<class U, selectif(1)
+			<std::is_floating_point<U>::value> endif
 		>
 		static inline T cast(U val)
 		{
@@ -302,7 +300,7 @@ namespace Rapture
 				target[i] = i >= 3 ? 0xFF : 0x00;
 		}
 
-		template<int N, class U, int N_, useif(is_not_same(T, U))>
+		template<int N, class U, int N_, useif <not_same_type<T, U>::value> endif>
 		static inline void init(T(&target)[N], const U(&color)[N_])
 		{
 			register int i = 0;
@@ -314,18 +312,16 @@ namespace Rapture
 				target[i] = i >= 3 ? 0xFF: 0x00;
 		}
 
-		template<
-			class U,
-			selectif(1, std::is_integral<U>::value)
+		template<class U, selectif(0)
+			<std::is_integral<U>::value> endif
 		>
 		static inline T cast(U val)
 		{
 			return val;
 		}
 
-		template<
-			class U,
-			selectif(2, std::is_floating_point<U>::value)
+		template<class U, selectif(1)
+			<std::is_floating_point<U>::value> endif
 		>
 		static inline T cast(U val)
 		{

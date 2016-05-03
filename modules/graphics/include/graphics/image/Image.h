@@ -18,6 +18,7 @@ namespace Rapture
 	{
 	public:
 		Image(const Graphics * graphics, const ImageData & data) : _format(data.format), _width(data.width), _height(data.height), _graphics(graphics) {}
+		virtual ~Image() {}
 
 		uint width() const
 		{

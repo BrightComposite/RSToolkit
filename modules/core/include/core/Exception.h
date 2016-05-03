@@ -29,13 +29,15 @@ namespace Rapture
     class Exception : public runtime_error
     {
     public:
-		template<class H, class ... T,
-			useif(
-				can_string_assemble(H, T...)
-				)>
+		template<class H, class ... T, useif <
+				not_based_on<H, exception>::value,
+				can_construct<String, H>::value,
+				can_construct<String, T>::value...
+			>
+			endif>
 		Exception(H && head, T &&... tail) : runtime_error(""), data()
 		{
-			data.add(head, tail...);
+			data.add(forward<H>(head), forward<T>(tail)...);
 			viewException(*this);
 		}
 

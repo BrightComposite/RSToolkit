@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/Object.h>
+#include <core/Handle.h>
 #include <queue>
 
 //---------------------------------------------------------------------------
@@ -15,31 +15,19 @@ namespace Rapture
 	using std::deque;
 	using std::queue;
 
-	template<class T>
-	class DequeObject : public Object, public deque<T>
+	template<class T, class ... OwnerAttr>
+	class Deque : public deque<Handle<T, OwnerAttr...>>
 	{
 	public:
-		using deque<T>::deque;
+		using deque<Handle<T, OwnerAttr...>>::deque;
 	};
 
 	template<class T, class ... OwnerAttr>
-	using HandleDeque = deque<Handle<T, OwnerAttr...>>;
-
-	template<typename T, class ... OwnerAttr>
-	using Deque = DequeObject<Handle<T, OwnerAttr...>>;
-
-	template<class T>
-	class QueueObject : public Object, public queue<T>
+	class Queue : public queue<Handle<T, OwnerAttr...>>
 	{
 	public:
-		using queue<T>::queue;
+		using queue<Handle<T, OwnerAttr...>>::queue;
 	};
-
-	template<class T, class ... OwnerAttr>
-	using HandleQueue = queue<Handle<T, OwnerAttr...>>;
-
-	template<typename T, class ... OwnerAttr>
-	using Queue = QueueObject<Handle<T, OwnerAttr...>>;
 }
 
 //---------------------------------------------------------------------------

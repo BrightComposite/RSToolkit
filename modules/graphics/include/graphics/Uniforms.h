@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/meta/Meta.h>
+#include <meta/Meta.h>
 #include <math/Matrix.h>
 
 #include "Shaders.h"
@@ -54,15 +54,17 @@ namespace Rapture
 		class Base<integer_sequence<size_t, I...>, T...> : public UniformFlag, public Component<T, I>...
 		{
 		public:
-			template<class ... A,
-				useif(sizeof...(A) == sizeof...(T)),
-				useif(is_true<can_construct(Component<T, I>, A)...>::value)
+			template<class ... A, useif <
+				sizeof...(A) == sizeof...(T),
+				is_true<can_construct<Component<T, I>, A>::value...>::value
+				> endif
 			>
 			Base(const A & ... args) : Component<T, I>(static_cast<T>(args))... {}
 
-			template<class ... A,
-				useif(sizeof...(A) == sizeof...(T)),
-				useif(is_true<can_construct(Component<T, I>, A)...>::value)
+			template<class ... A, useif <
+				sizeof...(A) == sizeof...(T),
+				is_true<can_construct<Component<T, I>, A>::value...>::value
+				> endif
 			>
 			Base(A && ... args) : Component<T, I>(static_cast<adapt_t<T, A>>(forward<A>(args)))... {}
 		};

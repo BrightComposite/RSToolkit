@@ -118,174 +118,171 @@ static void loadWindow()
 
 	Graphics3D * graphics = D3DGraphics::initialize();
 	FinalAction finally(D3DGraphics::free);
-
-	Handle<Window> window(graphics, 0, 0, 1280, 480);
-
-	Handle<WindowBackground> back(window);
-	back->setName("Background");
-
-	graphics->setClearColor({1.0f, 1.0f, 1.0f});
-
-#define HOTKEY_FULLSCREEN 0x20
-
-	window->registerHotkey(HOTKEY_FULLSCREEN, VK_RETURN, MOD_ALT);
-
-	dest_connect(*window, WindowAdapter, WindowHotkeyMessage)
+	
 	{
-		auto window = static_cast<Window *>(&dest);
+		Handle<Window> window(graphics, 0, 0, 1280, 480);
 
-		switch(msg->id)
+		Handle<WindowBackground> back(window);
+		back->setName("Background");
+
+		graphics->setClearColor({1.0f, 1.0f, 1.0f});
+
+	#define HOTKEY_FULLSCREEN 0x20
+
+		window->registerHotkey(HOTKEY_FULLSCREEN, VK_RETURN, MOD_ALT);
+
+		dest_connect(*window, WindowAdapter, WindowHotkeyMessage)
 		{
-		case HOTKEY_FULLSCREEN:
-			window->toggleFullscreen();
-			break;
-		}
-	};
+			auto window = static_cast<Window *>(&dest);
 
-	global_connect(Widget, MouseDownMessage)
-	{
-		switch(msg->button)
-		{
-		case MouseButton::Left:
-			cout << "Widget " << dest.name() << " has been pressed!" << endl;
-			break;
-		}
-	};
-
-	dest_connect(*window, WindowAdapter, KeyUpMessage)
-	{
-		auto window = static_cast<Window *>(&dest);
-
-		switch(msg->key)
-		{
-		case VK_ESCAPE:
-			window->close();
-			break;
-		}
-	};
-
-	auto root = initial_path();
-
-	if(root.filename() == "x86" || root.filename() == "x64")
-	{
-		root = root.parent_path().parent_path();
-	}
-	else
-	{
-		root = root.parent_path().parent_path().parent_path();
-	}
-
-	auto panelDrawer = [](const Widget * widget, const IntRect & region)
-	{
-		IntRect inner(widget->absRegion());
-		inner.resize(-2);
-
-		auto g = widget->graphics();
-
-		g->setColor({0.4f, 0.4f, 0.4f, 1.0f});
-		g->rectangle(widget->absRegion());
-		g->setColor({1.0f, 1.0f, 1.0f, 1.0f});
-		g->rectangle(inner);
-	};
-
-	auto childDrawer = [](const Widget * widget, const IntRect & region)
-	{
-		IntRect inner(widget->absRegion());
-		inner.resize(-2);
-
-		auto g = widget->graphics();
-
-		if(widget->isFocused())
-			g->setColor({0.75f, 0.75f, 0.75f, 1.0f});
-		else
-			g->setColor({0.0f, 0.0f, 0.0f, 1.0f});
-		
-		g->rectangle(widget->absRegion());
-
-		if(widget->isPressed())
-			g->setColor({0.0f, 1.0f, 0.0f, 1.0f});
-		else if(widget->isPointed())
-			g->setColor({1.0f, 1.0f, 0.0f, 1.0f});
-		else
-			g->setColor({0.5f, 0.5f, 0.5f, 1.0f});
-
-		g->rectangle(inner);
-	};
-
-	std::vector<IntRect> rects = {
-		{10, 10, 30, 30},
-		{40, 10, 60, 30},
-		{10, 40, 30, 60},
-		{40, 40, 60, 60}
-	};
-
-	const int dx = 10;
-	const int dy = 10;
-	const int w = 70;
-	const int h = 70;
-
-	std::default_random_engine rndm;
-	std::bernoulli_distribution dist;
-	auto isVisible = std::bind(dist, rndm);
-
-	for(int iy = 0; iy < 4; ++iy)
-	{
-		for(int ix = 0; ix < 4; ++ix)
-		{
-			int x = (dx + w) * (ix + 1);
-			int y = (dy + h) * (iy + 1) + 100;
-
-			auto panel = back->append<Panel>(IntRect {x - w, y - h, x, y});
-
-			panel->setName("panel("_s << ix << ',' << iy << ')');
-			panel->attach(panelDrawer);
-
-			for(int ir = 0; ir < 4; ++ir)
+			switch(msg->id)
 			{
-				auto child = panel->append<ChildWidget>(rects[ir]);
+				case HOTKEY_FULLSCREEN:
+					window->toggleFullscreen();
+					break;
+			}
+		};
 
-				child->setName("child("_s << ix << ',' << iy << ',' << ir << ')');
-				child->setVisibility(isVisible());
-				child->attach(childDrawer);
+		global_connect(Widget, MouseDownMessage)
+		{
+			switch(msg->button)
+			{
+				case MouseButton::Left:
+					cout << "Widget " << dest.name() << " has been pressed!" << endl;
+					break;
+			}
+		};
+
+		dest_connect(*window, WindowAdapter, KeyUpMessage)
+		{
+			auto window = static_cast<Window *>(&dest);
+
+			switch(msg->key)
+			{
+				case VK_ESCAPE:
+					window->close();
+					break;
+			}
+		};
+
+		auto root = initial_path();
+
+		if(root.filename() == "x86" || root.filename() == "x64")
+		{
+			root = root.parent_path().parent_path();
+		}
+		else
+		{
+			root = root.parent_path().parent_path().parent_path();
+		}
+
+		auto panelDrawer = [](const Widget * widget, const IntRect & region) {
+			IntRect inner(widget->absRegion());
+			inner.resize(-2);
+
+			auto g = widget->graphics();
+
+			g->setColor({0.4f, 0.4f, 0.4f, 1.0f});
+			g->rectangle(widget->absRegion());
+			g->setColor({1.0f, 1.0f, 1.0f, 1.0f});
+			g->rectangle(inner);
+		};
+
+		auto childDrawer = [](const Widget * widget, const IntRect & region) {
+			IntRect inner(widget->absRegion());
+			inner.resize(-2);
+
+			auto g = widget->graphics();
+
+			if(widget->isFocused())
+				g->setColor({0.75f, 0.75f, 0.75f, 1.0f});
+			else
+				g->setColor({0.0f, 0.0f, 0.0f, 1.0f});
+
+			g->rectangle(widget->absRegion());
+
+			if(widget->isPressed())
+				g->setColor({0.0f, 1.0f, 0.0f, 1.0f});
+			else if(widget->isPointed())
+				g->setColor({1.0f, 1.0f, 0.0f, 1.0f});
+			else
+				g->setColor({0.5f, 0.5f, 0.5f, 1.0f});
+
+			g->rectangle(inner);
+		};
+
+		std::vector<IntRect> rects = {
+			{10, 10, 30, 30},
+			{40, 10, 60, 30},
+			{10, 40, 30, 60},
+			{40, 40, 60, 60}
+		};
+
+		const int dx = 10;
+		const int dy = 10;
+		const int w = 70;
+		const int h = 70;
+
+		std::default_random_engine rndm;
+		std::bernoulli_distribution dist;
+		auto isVisible = std::bind(dist, rndm);
+
+		for(int iy = 0; iy < 4; ++iy)
+		{
+			for(int ix = 0; ix < 4; ++ix)
+			{
+				int x = (dx + w) * (ix + 1);
+				int y = (dy + h) * (iy + 1) + 100;
+
+				auto panel = back->append<Panel>(IntRect {x - w, y - h, x, y});
+
+				panel->setName("panel("_s << ix << ',' << iy << ')');
+				panel->attach(panelDrawer);
+
+				for(int ir = 0; ir < 4; ++ir)
+				{
+					auto child = panel->append<ChildWidget>(rects[ir]);
+
+					child->setName("child("_s << ix << ',' << iy << ',' << ir << ')');
+					child->setVisibility(isVisible());
+					child->attach(childDrawer);
+				}
 			}
 		}
-	}
 
-	try
-	{
-		FontCache::set("Times New Roman",
+		try
 		{
-			{FontStyle::Regular,	Font::load("times.ttf")},
-			{FontStyle::Bold,		Font::load("timesbd.ttf")},
-			{FontStyle::Italic,		Font::load("timesi.ttf")},
-			{FontStyle::BoldItalic, Font::load("timesbi.ttf")}
-		});
+			FontCache::set("Times New Roman",
+			{
+				{FontStyle::Regular,	Font::load("times.ttf")},
+				{FontStyle::Bold,		Font::load("timesbd.ttf")},
+				{FontStyle::Italic,		Font::load("timesi.ttf")},
+				{FontStyle::BoldItalic, Font::load("timesbi.ttf")}
+			});
 
-		FontCache::set("Arial",
-		{
-			{FontStyle::Regular,	Font::load("arial.ttf")},
-			{FontStyle::Bold,		Font::load("arialbd.ttf")},
-			{FontStyle::Italic,		Font::load("ariali.ttf")},
-			{FontStyle::BoldItalic, Font::load("arialbi.ttf")}
-		});
+			FontCache::set("Arial",
+			{
+				{FontStyle::Regular,	Font::load("arial.ttf")},
+				{FontStyle::Bold,		Font::load("arialbd.ttf")},
+				{FontStyle::Italic,		Font::load("ariali.ttf")},
+				{FontStyle::BoldItalic, Font::load("arialbi.ttf")}
+			});
 
-		FontCache::set("Trebuchet",
-		{
-			{FontStyle::Regular,	Font::load("trebuc.ttf")},
-			{FontStyle::Bold,		Font::load("trebucbd.ttf")},
-			{FontStyle::Italic,		Font::load("trebucit.ttf")},
-			{FontStyle::BoldItalic, Font::load("trebucbi.ttf")}
-		});
+			FontCache::set("Trebuchet",
+			{
+				{FontStyle::Regular,	Font::load("trebuc.ttf")},
+				{FontStyle::Bold,		Font::load("trebucbd.ttf")},
+				{FontStyle::Italic,		Font::load("trebucit.ttf")},
+				{FontStyle::BoldItalic, Font::load("trebucbi.ttf")}
+			});
 
-		FontCache::set("Pristina", Font::load("pristina.ttf"));
-	}
-	catch(...) {}
+			FontCache::set("Pristina", Font::load("pristina.ttf"));
+		}
+		catch(...) {}
 
-	auto arial_italic = FontCache::get("Arial", FontStyle::Italic);
-	auto pristina_font = FontCache::get("Pristina", FontStyle::Regular);
+		auto arial_italic = FontCache::get("Arial", FontStyle::Italic);
+		auto pristina_font = FontCache::get("Pristina", FontStyle::Regular);
 
-	if(pristina_font != nullptr)
-	{
 		int fontSize = 24;
 		Handle<Panel> label(back);
 		Handle<Panel> english_label(back);
@@ -302,8 +299,7 @@ static void loadWindow()
 		english_label->setName("Text Label");
 		english_label->setPlacement({10, 10}, graphics->getTextSize(*english_text));
 
-		label << [engine_text, pristina_font, fontSize](const Widget * widget, const IntRect & region)
-		{
+		label << [engine_text, pristina_font, fontSize](const Widget * widget, const IntRect & region) {
 			auto * graphics = widget->graphics();
 
 			graphics->bind(pristina_font);
@@ -313,8 +309,7 @@ static void loadWindow()
 			graphics->draw(*engine_text, widget->absPos());
 		};
 
-		english_label << [english_text, pristina_font, fontSize](const Widget * widget, const IntRect & region)
-		{
+		english_label << [english_text, pristina_font, fontSize](const Widget * widget, const IntRect & region) {
 			auto * graphics = widget->graphics();
 
 			graphics->bind(pristina_font);
@@ -323,11 +318,8 @@ static void loadWindow()
 			graphics->setColor({0.0f, 0.0f, 0.0f});
 			graphics->draw(*english_text, widget->absPos());
 		};
-	}
 
-	if(arial_italic != nullptr)
-	{
-		int fontSize = 16;
+		fontSize = 16;
 		Handle<Panel> russian_label(back);
 		Handle<WideString> russian_text(L"ÀÁÂÃÄÅ¨ÆÇÈÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäå¸æçèêëìíîïðñòóôõö÷øùúûüýþÿ");
 
@@ -337,8 +329,7 @@ static void loadWindow()
 		russian_label->setName("Russian Text Label");
 		russian_label->setPlacement({10, 50}, graphics->getTextSize(*russian_text));
 
-		russian_label << [russian_text, arial_italic, fontSize](const Widget * widget, const IntRect & region)
-		{
+		russian_label << [russian_text, arial_italic, fontSize](const Widget * widget, const IntRect & region) {
 			auto * graphics = widget->graphics();
 
 			graphics->bind(arial_italic);
@@ -347,18 +338,20 @@ static void loadWindow()
 			graphics->setColor({0.0f, 0.0f, 0.0f});
 			graphics->draw(*russian_text, widget->absPos());
 		};
+
+		window->setCaption(L"Rapture::Direct3D test");
+
+		ThreadLoop::add(processWindowMessage);
+		ThreadLoop::add(bind(render, window));
+
+		window->show();
+		window->centralize();
+
+		lastFrame = lastSecond = hrc::now();
+		ThreadLoop::run();
+
+		FontCache::clear();
 	}
-
-	window->setCaption(L"Rapture::Direct3D test");
-
-	ThreadLoop::add(processWindowMessage);
-	ThreadLoop::add(bind(render, window));
-
-	window->show();
-	window->centralize();
-
-	lastFrame = lastSecond = hrc::now();
-	ThreadLoop::run();
 }
 
 static int load()
@@ -867,7 +860,6 @@ static int load()
 		cout << endl;
 		cout << "---------------------------------------" << endl;
 		cout << endl;
-
 	}
 	catch(const Rapture::Exception &)
 	{

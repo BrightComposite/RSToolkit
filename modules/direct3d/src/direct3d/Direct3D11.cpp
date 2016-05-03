@@ -121,7 +121,7 @@ namespace Rapture
 
 			com_assert(hr);
 
-			setDeviceAndContext(ndevice, ncontext);
+			setContext(ndevice, ncontext);
 
 		#ifdef DEBUG_DX
 			debug.instance = device;
@@ -282,7 +282,7 @@ namespace Rapture
 
 		void Graphics3D::updateBrushState()
 		{
-			updateUniform<Uniforms::BrushOptions>(color(), lineSize());
+			updateUniform<Uniforms::BrushOptions>({color(), lineSize()});
 		}
 
 		void Graphics3D::present() const
@@ -309,7 +309,7 @@ namespace Rapture
 			FloatSize s;
 
 			ScreenCoord::toRel(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>(t, s, _depth);
+			updateUniform<Uniforms::Area>({t, s, _depth});
 
 			if(fm.old == FillMode::Solid)
 				SimpleTechnique::rectangle->apply();
@@ -327,7 +327,7 @@ namespace Rapture
 			FloatSize s;
 
 			ScreenCoord::toSq(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>(t, s, _depth);
+			updateUniform<Uniforms::Area>({t, s, _depth});
 
 			if(fm.old == FillMode::Solid)
 				SimpleTechnique::ellipse->apply();
@@ -345,7 +345,7 @@ namespace Rapture
 			FloatSize s;
 
 			ScreenCoord::toRel(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>(t, s, _depth);
+			updateUniform<Uniforms::Area>({t, s, _depth});
 
 			if(fm.old == FillMode::Solid)
 				SimpleTechnique::rectangle->apply();
@@ -360,7 +360,7 @@ namespace Rapture
 			auto fm = hold(_fillMode, FillMode::Solid);
 			auto s = rect.size();
 
-			updateUniform<Uniforms::Area>(rect.pos() + s * 0.5f, s, _depth);
+			updateUniform<Uniforms::Area>({rect.pos() + s * 0.5f, s, _depth});
 
 			if(fm.old == FillMode::Solid)
 				SimpleTechnique::ellipse->apply();
@@ -454,7 +454,7 @@ namespace Rapture
 			FloatSize s;
 
 			ScreenCoord::toRel(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>(t, s, _depth);
+			updateUniform<Uniforms::Area>({t, s, _depth});
 
 			SimpleTechnique::image->apply();
 
@@ -473,7 +473,7 @@ namespace Rapture
 			FloatSize s;
 
 			ScreenCoord::toRel(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>(t, s, _depth);
+			updateUniform<Uniforms::Area>({t, s, _depth});
 
 			SimpleTechnique::image->apply();
 
@@ -499,7 +499,7 @@ namespace Rapture
 			FloatSize s;
 
 			ScreenCoord::toRel(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>(t, s, _depth);
+			updateUniform<Uniforms::Area>({t, s, _depth});
 
 			SimpleTechnique::text->apply();
 

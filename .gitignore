@@ -4,7 +4,6 @@
 **/build-x64/
 **/bin/
 **/lib/
-third-party/*/**
-text/
-/data/images
+third-party/**
+**/*.timestamp
 *.timestamp

@@ -10,7 +10,8 @@
 #include <core/action/Action.h>
 #include <core/action/Thread.h>
 
-#include <direct3d/Direct3D11.h>
+#include <graphics/Config.h>
+#include GRAPHICS_INCLUDE
 
 #include <freeimage/FreeImageConverter.h>
 
@@ -44,13 +45,12 @@ namespace Rapture
 
 	static int load()
 	{
-		Graphics3D * graphics = D3DGraphics::initialize();
-		FinalAction finally(D3DGraphics::free);
+		auto graphics = GraphicsProvider::provide();
 
 		Handle<Window> window(graphics, 0, 0, 1024, 768);
 
-		Handle<WindowBackground> back(window);
-		back->name = "Background";
+		Handle<BackgroundWidget> back(window);
+		back->setName("Background");
 
 		graphics->setClearColor({1.0f, 1.0f, 1.0f});
 
@@ -60,7 +60,7 @@ namespace Rapture
 
 		window->registerHotkey(HOTKEY_FULLSCREEN, VK_RETURN, MOD_ALT);
 
-		dest_connect(*window, WindowAdapter, WindowHotkeyMessage)
+		dest_connect(*window, UISpace, HotkeyMessage)
 		{
 			auto window = static_cast<Window *>(&dest);
 
@@ -72,7 +72,7 @@ namespace Rapture
 			}
 		};
 
-		dest_connect(*window, WindowAdapter, KeyUpMessage)
+		dest_connect(*window, UISpace, KeyUpMessage)
 		{
 			auto window = static_cast<Window *>(&dest);
 

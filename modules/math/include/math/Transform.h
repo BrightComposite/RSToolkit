@@ -15,10 +15,10 @@
 namespace Rapture
 {
 	template <typename T>
-	template_subclass(Translation, Vector, T);
+	subclass(Translation, Vector<T>);
 
 	template <typename T>
-	template_subclass(Scaling, Vector, T);
+	subclass(Scaling, Vector<T>);
 
 	using FloatTranslation = Translation<float>;
 	using DoubleTranslation = Translation<double>;
@@ -38,7 +38,7 @@ namespace Rapture
 
 		Transform(const Vector<T> & p)
 		{
-			matrix.w = p.blend<0, 0, 0, 1>(matrix.w);
+			matrix.w = p.template blend<0, 0, 0, 1>(matrix.w);
 		}
 
 		Transform(const Translation<T> & p) : Transform(static_cast<const Vector<T> &>(p)) {}
@@ -58,7 +58,7 @@ namespace Rapture
 		Transform(const Vector<T> & p, const Quaternion<T> & r)
 		{
 			matrix = r.toMatrix().transpose();
-			matrix.w = p.blend<0, 0, 0, 1>(matrix.w);
+			matrix.w = p.template blend<0, 0, 0, 1>(matrix.w);
 		}
 
 		Transform(const Translation<T> & p, const Quaternion<T> & r) : Transform(static_cast<const Vector<T> &>(p), r) {}
@@ -68,7 +68,7 @@ namespace Rapture
 			matrix.x = s.maskX();
 			matrix.y = s.maskY();
 			matrix.z = s.maskZ();
-			matrix.w = p.blend<0, 0, 0, 1>(matrix.w);
+			matrix.w = p.template blend<0, 0, 0, 1>(matrix.w);
 		}
 
 		Transform(const Translation<T> & p, const Scaling<T> & s) : Transform(static_cast<const Vector<T> &>(p), s) {}
@@ -79,7 +79,7 @@ namespace Rapture
 			matrix.x *= s;
 			matrix.y *= s;
 			matrix.z *= s;
-			matrix.w = p.blend<0, 0, 0, 1>(matrix.w);
+			matrix.w = p.template blend<0, 0, 0, 1>(matrix.w);
 		}
 
 		Transform(const Translation<T> & p, const Quaternion<T> & r, const Scaling<T> & s) : Transform(static_cast<const Vector<T> &>(p), r, static_cast<const Vector<T> &>(s)) {}
@@ -170,14 +170,19 @@ namespace Rapture
 			return *this;
 		}
 
-		operator Matrix<T> & ()
+		operator Matrix<T> & () &
 		{
 			return matrix;
 		}
 
-		operator const Matrix<T> & () const
+		operator const Matrix<T> & () const &
 		{
 			return matrix;
+		}
+
+		operator Matrix<T> && () &&
+		{
+			return move(matrix);
 		}
 
 		Matrix<T> matrix;

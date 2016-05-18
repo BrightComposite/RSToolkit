@@ -43,18 +43,20 @@ namespace Rapture
 				Row x, y, z, w;
 			};
 
-			T m[16];
-			T a[4][4];
+			array<T, 16> m;
+			array<array<T, 4>, 4> a;
 
-			Vector<T> v[4];
-			Row rows[4];
-			Data data[4];
-			Pair pairs[8];
+			array<Vector<T>, 4> v;
+			array<Row, 4>		rows;
+			array<Data, 4>		data;
+			array<Pair, 8>		pairs;
 		};
 
 		Matrix() : x {Vector<T>::positiveX}, y {Vector<T>::positiveY}, z {Vector<T>::positiveZ}, w {Vector<T>::positiveW} {}
 		Matrix(const Matrix & matrix) : x {matrix.x}, y {matrix.y}, z {matrix.z}, w {matrix.w} {}
-		Matrix(const Matrix2x2<T> & m) : x {m.m[0x0], m.m[0x1], 0, 0}, y {m.m[0x2], m.m[0x3], 0, 0}, z {Vector<T>::positiveZ}, w {Vector<T>::positiveW} {}
+		Matrix(Matrix && matrix) : m {move(matrix.m)} {}
+
+		Matrix(const Matrix2x2<T> & m) : x {m.xx, m.xy, 0, 0}, y {m.yx, m.yy, 0, 0}, z {Vector<T>::positiveZ}, w {Vector<T>::positiveW} {}
 		Matrix(const Row (& v)[4]) : x {v[0]}, y {v[1]}, z {v[2]}, w {v[3]} {}
 		Matrix(const Data & x, const Data & y, const Data & z, const Data & w) : x {x}, y {y}, z {z}, w {w} {}
 		Matrix(const Data & x, const Data & y, const Data & z) : x {x}, y {y}, z {z}, w {Vector<T>::positiveW} {}
@@ -82,13 +84,19 @@ namespace Rapture
 
 		Matrix & operator = (const Matrix & matrix)
 		{
-			Memory<T>::move(m, matrix.m, 16);
+			Memory<T>::move(m, matrix.m);
+			return *this;
+		}
+
+		Matrix & operator = (Matrix && matrix)
+		{
+			m.swap(matrix.m);
 			return *this;
 		}
 
 		Matrix & clear()
         {
-			Memory<T>::fill(m, 0, 16);
+			m.assign(0);
 			return *this;
         }
 
@@ -114,7 +122,7 @@ namespace Rapture
 			return *this;
 		}
 
-		Matrix & Matrix::operator += (const Matrix & matrix)
+		Matrix & operator += (const Matrix & matrix)
 		{
 			rows[0] += matrix[0];
 			rows[1] += matrix[1];
@@ -124,7 +132,7 @@ namespace Rapture
 			return *this;
 		}
 
-		Matrix & Matrix::operator -= (const Matrix & matrix)
+		Matrix & operator -= (const Matrix & matrix)
 		{
 			rows[0] -= matrix[0];
 			rows[1] -= matrix[1];
@@ -159,74 +167,99 @@ namespace Rapture
 			return *this;
 		}
 
-		const Row & operator [] (size_t row) const
+		Row & operator [] (int row) &
 		{
 			return rows[row];
 		}
 
-		Row & operator [] (size_t row)
+		const Row & operator [] (int row) const &
 		{
 			return rows[row];
 		}
 
-        T operator () (size_t i) const
+		Row && operator [] (int row) &&
+		{
+			return move(rows[row]);
+		}
+
+		T & operator () (int i)
         {
             return m[i];
         }
 
-        T & operator () (size_t i)
-        {
-            return m[i];
-        }
+		T operator () (int i) const
+		{
+			return m[i];
+		}
 
-		T operator () (size_t row, size_t column) const
+		T & operator () (int row, int column)
 		{
 			return a[row][column];
 		}
 
-		T & operator () (size_t row, size_t column)
+		T operator () (int row, int column) const
 		{
 			return a[row][column];
 		}
 
-		operator array_t<T, 16> & ()
+		operator array<T, 16> & () &
 		{
 			return m;
 		}
 
-		operator const array_t<T, 16> & () const
+		operator const array<T, 16> & () const &
 		{
 			return m;
 		}
 
-		operator array_t<Vector<T>, 4> & ()
+		operator array<T, 16> && () &&
+		{
+			return move(m);
+		}
+
+		operator array<Vector<T>, 4> & () &
 		{
 			return rows;
 		}
 
-		operator const array_t<Vector<T>, 4> & () const
+		operator const array<Vector<T>, 4> & () const &
 		{
 			return rows;
 		}
 
-		operator array_t<array_t<T, 4>, 4> & ()
+		operator array<Vector<T>, 4> && () &&
+		{
+			return move(rows);
+		}
+
+		operator array<array<T, 4>, 4> & () &
 		{
 			return a;
 		}
 
-		operator const array_t<array_t<T, 4>, 4> & () const
+		operator const array<array<T, 4>, 4> & () const &
 		{
 			return a;
 		}
 
-		operator array_t<Data, 4> & ()
+		operator array<array<T, 4>, 4> && () &&
+		{
+			return move(a);
+		}
+
+		operator array<Data, 4> & () &
 		{
 			return data;
 		}
 
-		operator const array_t<Data, 4> & () const
+		operator const array<Data, 4> & () const &
 		{
 			return data;
+		}
+
+		operator array<Data, 4> && () &&
+		{
+			return move(data);
 		}
 
         inline T norm() const;
@@ -343,22 +376,22 @@ namespace Rapture
 	{
 		Matrix tmp1, tmp2;
 
-		tmp1[0] = rows[2].shuffle<1, 0, 0, 0>();
-		tmp1[1] = rows[2].shuffle<2, 2, 1, 1>();
-		tmp1[2] = rows[2].shuffle<3, 3, 3, 2>();
-		tmp1[3] = rows[3].shuffle<1, 0, 0, 0>();
-		tmp2[0] = rows[3].shuffle<2, 2, 1, 1>();
-		tmp2[1] = rows[3].shuffle<3, 3, 3, 2>();
+		tmp1[0] = rows[2].template shuffle<1, 0, 0, 0>();
+		tmp1[1] = rows[2].template shuffle<2, 2, 1, 1>();
+		tmp1[2] = rows[2].template shuffle<3, 3, 3, 2>();
+		tmp1[3] = rows[3].template shuffle<1, 0, 0, 0>();
+		tmp2[0] = rows[3].template shuffle<2, 2, 1, 1>();
+		tmp2[1] = rows[3].template shuffle<3, 3, 3, 2>();
 
 		tmp2[2] = tmp1[1] * tmp2[1] - tmp1[2] * tmp2[0];
 		tmp2[3] = tmp1[0] * tmp2[1] - tmp1[2] * tmp1[3];
 		tmp2[1] = tmp1[0] * tmp2[0] - tmp1[1] * tmp1[3];
 
-		tmp1[0] = rows[1].shuffle<1, 0, 0, 0>();
-		tmp1[1] = rows[1].shuffle<2, 2, 1, 1>();
-		tmp1[2] = rows[1].shuffle<3, 3, 3, 2>();
+		tmp1[0] = rows[1].template shuffle<1, 0, 0, 0>();
+		tmp1[1] = rows[1].template shuffle<2, 2, 1, 1>();
+		tmp1[2] = rows[1].template shuffle<3, 3, 3, 2>();
 
-		return rows[0].negate<0, 1, 0, 1>().dot(tmp1[0] * tmp2[2] - tmp1[1] * tmp2[3] + tmp1[2] * tmp2[1]);
+		return rows[0].template negate<0, 1, 0, 1>().dot(tmp1[0] * tmp2[2] - tmp1[1] * tmp2[3] + tmp1[2] * tmp2[1]);
 	}
 
 	template<class T>
@@ -366,46 +399,46 @@ namespace Rapture
 	{
 		Vector<T> r[4], temp;
 
-		temp = v[0].shuffle<0, 1, 0, 1>(v[1]);
-		r[1] = v[2].shuffle<0, 1, 0, 1>(v[3]);
-		r[0] = temp.shuffle<0, 2, 0, 2>(r[1]);
-		r[1] = r[1].shuffle<1, 3, 1, 3>(temp);
-		temp = v[0].shuffle<2, 3, 2, 3>(v[1]);
-		r[3] = v[2].shuffle<2, 3, 2, 3>(v[3]);
-		r[2] = temp.shuffle<0, 2, 0, 2>(r[3]);
-		r[3] = r[3].shuffle<1, 3, 1, 3>(temp);
+		temp = v[0].template shuffle<0, 1, 0, 1>(v[1]);
+		r[1] = v[2].template shuffle<0, 1, 0, 1>(v[3]);
+		r[0] = temp.template shuffle<0, 2, 0, 2>(r[1]);
+		r[1] = r[1].template shuffle<1, 3, 1, 3>(temp);
+		temp = v[0].template shuffle<2, 3, 2, 3>(v[1]);
+		r[3] = v[2].template shuffle<2, 3, 2, 3>(v[3]);
+		r[2] = temp.template shuffle<0, 2, 0, 2>(r[3]);
+		r[3] = r[3].template shuffle<1, 3, 1, 3>(temp);
 
 		temp = r[2] * r[3];
-		temp = temp.shuffle<1, 0, 3, 2>() - temp.shuffle<3, 2, 1, 0>();
+		temp = temp.template shuffle<1, 0, 3, 2>() - temp.template shuffle<3, 2, 1, 0>();
 		m[0] = -r[1] * temp;
 		m[1] = -r[0] * temp;
-		m[1] = m[1].shuffle<2, 3, 0, 1>();
+		m[1] = m[1].template shuffle<2, 3, 0, 1>();
 
 		temp = r[1] * r[2];
-		temp = temp.shuffle<1, 0, 3, 2>() - temp.shuffle<3, 2, 1, 0>();
+		temp = temp.template shuffle<1, 0, 3, 2>() - temp.template shuffle<3, 2, 1, 0>();
 		m[0] += r[3] * temp;
 		m[3] = r[0] * temp;
-		m[3] = m[3].shuffle<2, 3, 0, 1>();
+		m[3] = m[3].template shuffle<2, 3, 0, 1>();
 
-		temp = r[1].shuffle<2, 3, 0, 1>() * r[3];
-		temp = temp.shuffle<1, 0, 3, 2>() - temp.shuffle<3, 2, 1, 0>();
-		r[2] = r[2].shuffle<2, 3, 0, 1>();
+		temp = r[1].template shuffle<2, 3, 0, 1>() * r[3];
+		temp = temp.template shuffle<1, 0, 3, 2>() - temp.template shuffle<3, 2, 1, 0>();
+		r[2] = r[2].template shuffle<2, 3, 0, 1>();
 		m[0] += r[2] * temp;
 		m[2] = r[0] * temp;
-		m[2] = m[2].shuffle<2, 3, 0, 1>();
+		m[2] = m[2].template shuffle<2, 3, 0, 1>();
 
 		temp = r[0] * r[1];
-		temp = temp.shuffle<1, 0, 3, 2>() - temp.shuffle<3, 2, 1, 0>();
+		temp = temp.template shuffle<1, 0, 3, 2>() - temp.template shuffle<3, 2, 1, 0>();
 		m[2] -= r[3] * temp;
 		m[3] += r[2] * temp;
 
 		temp = r[0] * r[3];
-		temp = temp.shuffle<1, 0, 3, 2>() - temp.shuffle<3, 2, 1, 0>();
+		temp = temp.template shuffle<1, 0, 3, 2>() - temp.template shuffle<3, 2, 1, 0>();
 		m[1] -= r[2] * temp;
 		m[2] += r[1] * temp;
 
 		temp = r[0] * r[2];
-		temp = temp.shuffle<1, 0, 3, 2>() - temp.shuffle<3, 2, 1, 0>();
+		temp = temp.template shuffle<1, 0, 3, 2>() - temp.template shuffle<3, 2, 1, 0>();
 		m[1] += r[3] * temp;
 		m[3] -= r[1] * temp;
 
@@ -417,16 +450,16 @@ namespace Rapture
 	inline void Matrix<T>::getTransposition(Matrix<T> & mat) const
 	{
 		Matrix tmp {
-			rows[0].shuffle<0, 1, 0, 1>(rows[1]),
-			rows[0].shuffle<2, 3, 2, 3>(rows[1]),
-			rows[2].shuffle<0, 1, 0, 1>(rows[3]),
-			rows[2].shuffle<2, 3, 2, 3>(rows[3])
+			rows[0].template shuffle<0, 1, 0, 1>(rows[1]),
+			rows[0].template shuffle<2, 3, 2, 3>(rows[1]),
+			rows[2].template shuffle<0, 1, 0, 1>(rows[3]),
+			rows[2].template shuffle<2, 3, 2, 3>(rows[3])
 		};
 
-		mat[0] = tmp[0].shuffle<0, 2, 0, 2>(tmp[2]);
-		mat[1] = tmp[0].shuffle<1, 3, 1, 3>(tmp[2]);
-		mat[2] = tmp[1].shuffle<0, 2, 0, 2>(tmp[3]);
-		mat[3] = tmp[1].shuffle<1, 3, 1, 3>(tmp[3]);
+		mat[0] = tmp[0].template shuffle<0, 2, 0, 2>(tmp[2]);
+		mat[1] = tmp[0].template shuffle<1, 3, 1, 3>(tmp[2]);
+		mat[2] = tmp[1].template shuffle<0, 2, 0, 2>(tmp[3]);
+		mat[3] = tmp[1].template shuffle<1, 3, 1, 3>(tmp[3]);
 	}
 
 
@@ -535,8 +568,8 @@ namespace Rapture
 
 		return {
 			Vector<T>::positiveX,		// 1,  0,  0
-			v.shuffle<3, 1, 2, 3>(),	// 0,  c, -s
-			v.shuffle<3, 0, 1, 3>()		// 0,  s,  c
+			v.template shuffle<3, 1, 2, 3>(),	// 0,  c, -s
+			v.template shuffle<3, 0, 1, 3>()		// 0,  s,  c
 		};
 	}
 
@@ -546,9 +579,9 @@ namespace Rapture
 		auto v = VectorMath<T>::trigon(angle);
 
 		return {
-			v.shuffle<1, 3, 0, 3>(),	// c,  0,  s
+			v.template shuffle<1, 3, 0, 3>(),	// c,  0,  s
 			Vector<T>::positiveY,		// 0,  1,  0
-			v.shuffle<2, 3, 1, 3>()		//-s,  0,  c
+			v.template shuffle<2, 3, 1, 3>()		//-s,  0,  c
 		};
 	}
 
@@ -558,8 +591,8 @@ namespace Rapture
 		auto v = VectorMath<T>::trigon(angle);
 
 		return {
-			v.shuffle<1, 2, 3, 3>(),	// c, -s,  0
-			v.shuffle<0, 1, 3, 3>(),	// s,  c,  0
+			v.template shuffle<1, 2, 3, 3>(),	// c, -s,  0
+			v.template shuffle<0, 1, 3, 3>(),	// s,  c,  0
 			Vector<T>::positiveZ
 		};
 	}
@@ -568,20 +601,20 @@ namespace Rapture
 	inline Matrix<T> Matrix<T>::rotationMatrix(const Vector<T> & v, T angle)
 	{
 		auto sc = VectorMath<T>::trigon(angle);
-		auto cc = sc.shuffle<1, 1, 1, 3>();
+		auto cc = sc.template shuffle<1, 1, 1, 3>();
 		auto nc = (Vector<T>::oneXYZ - cc) * v;
-		auto ss = sc.shuffle<0, 0, 0, 3>() * v;
+		auto ss = sc.template shuffle<0, 0, 0, 3>() * v;
 
-		sc = nc.shuffle<1, 0, 0, 3>() * v.shuffle<2, 2, 1, 3>();
+		sc = nc.template shuffle<1, 0, 0, 3>() * v.template shuffle<2, 2, 1, 3>();
 		cc += v * nc;
 
 		nc = sc + ss;
 		sc -= ss;
 
 		return {
-			cc.shuffle<0, 0, 2, 2>(nc).shuffle<0, 2, 1, 3>(sc), // cc.x, nc.z, sc.y, 0,
-			sc.shuffle<2, 2, 1, 1>(cc).shuffle<0, 2, 0, 3>(nc), // sc.z, cc.y, nc.x, 0,
-			nc.shuffle<1, 1, 0, 0>(sc).shuffle<0, 2, 2, 3>(cc)  // nc.y, sc.x, cc.z, 0,
+			cc.template shuffle<0, 0, 2, 2>(nc).template shuffle<0, 2, 1, 3>(sc), // cc.x, nc.z, sc.y, 0,
+			sc.template shuffle<2, 2, 1, 1>(cc).template shuffle<0, 2, 0, 3>(nc), // sc.z, cc.y, nc.x, 0,
+			nc.template shuffle<1, 1, 0, 0>(sc).template shuffle<0, 2, 2, 3>(cc)  // nc.y, sc.x, cc.z, 0,
 		};
 	}
 
@@ -591,17 +624,17 @@ namespace Rapture
 		Vector<T> sine, cosine;
 		VectorMath<T>::sincos(euler, sine, cosine);
 
-		Vector<T> x = sine.shuffle<0, 0, 0, 0>(cosine).blend<0, 1, 1, 0>(Vector<T>::positiveY);	// [ sx, 1, 0, cx ]
-		Vector<T> y = sine.shuffle<1, 1, 1, 1>(cosine).blend<0, 1, 1, 0>(Vector<T>::positiveY);	// [ sy, 1, 0, cy ]
-		Vector<T> z = sine.shuffle<2, 2, 2, 2>(cosine).blend<0, 1, 1, 0>(Vector<T>::positiveY).shuffle<3, 0, 1, 2>(); // [ cz, sz, 1, 0 ]
+		Vector<T> x = sine.template shuffle<0, 0, 0, 0>(cosine).template blend<0, 1, 1, 0>(Vector<T>::positiveY);	// [ sx, 1, 0, cx ]
+		Vector<T> y = sine.template shuffle<1, 1, 1, 1>(cosine).template blend<0, 1, 1, 0>(Vector<T>::positiveY);	// [ sy, 1, 0, cy ]
+		Vector<T> z = sine.template shuffle<2, 2, 2, 2>(cosine).template blend<0, 1, 1, 0>(Vector<T>::positiveY).template shuffle<3, 0, 1, 2>(); // [ cz, sz, 1, 0 ]
 
-		Vector<T> yz = y.shuffle<0, 0, 3, 2>().negateZ() * z;	// [ sy * cz, sy * sz, -cy, 0 ]
-		Vector<T> mz = z.shuffle<1, 0, 2, 3>().negateX();		// [ -sz, cz, 1, 0 ]
+		Vector<T> yz = y.template shuffle<0, 0, 3, 2>().negateZ() * z;	// [ sy * cz, sy * sz, -cy, 0 ]
+		Vector<T> mz = z.template shuffle<1, 0, 2, 3>().negateX();		// [ -sz, cz, 1, 0 ]
 
 		return {
-			y.shuffle<3, 3, 0, 0>() * z,						//  cy * cz,			   | cy * sz,				| sy,	  | 0
-			x.shuffle<3, 3, 2, 2>() * mz + x.spreadX() * yz,	// -cx * sz + sx * sy * cz | cx * cz + sx * sy * sz |-sx * cy |	0
-			x.shuffle<0, 0, 2, 2>() * mz - x.spreadW() * yz		// -sx * sz - cx * sy * cz | sx * cz - cx * sy * sz | cx * cy | 0
+			y.template shuffle<3, 3, 0, 0>() * z,						//  cy * cz,			   | cy * sz,				| sy,	  | 0
+			x.template shuffle<3, 3, 2, 2>() * mz + x.spreadX() * yz,	// -cx * sz + sx * sy * cz | cx * cz + sx * sy * sz |-sx * cy |	0
+			x.template shuffle<0, 0, 2, 2>() * mz - x.spreadW() * yz		// -sx * sz - cx * sy * cz | sx * cz - cx * sy * sz | cx * cy | 0
 		};
 	}
 
@@ -617,9 +650,9 @@ namespace Rapture
 	inline Matrix<T> Matrix<T>::translationMatrix(const Vector<T> & t)
 	{
 		return {
-			Vector<T>::positiveX.blend<0, 0, 0, 1>(t.spreadX()),
-			Vector<T>::positiveY.blend<0, 0, 0, 1>(t.spreadY()),
-			Vector<T>::positiveZ.blend<0, 0, 0, 1>(t.spreadZ())
+			Vector<T>::positiveX.template blend<0, 0, 0, 1>(t.spreadX()),
+			Vector<T>::positiveY.template blend<0, 0, 0, 1>(t.spreadY()),
+			Vector<T>::positiveZ.template blend<0, 0, 0, 1>(t.spreadZ())
 		};
 	}
 
@@ -637,49 +670,49 @@ namespace Rapture
 	}
 
 	template<class T>
-    inline Matrix<T> orthoMatrix(T left, T right, T bottom, T top, T near, T far)
+	inline Matrix<T> orthoMatrix(T x0, T x1, T y0, T y1, T z0, T z1)
 	{
 		static const Vector<T> q { 2,  2, -2, 0 };
 
-		Vector<T> max { right, top,    far,   1 };
-		Vector<T> min { left,  bottom, near, -1 };
+		Vector<T> max { x1, y1,    z1,   1 };
+		Vector<T> min { x0,  y0, z0, -1 };
 
 		Vector<T> k = (min - max).inverse();
 		Vector<T> t = (max + min) * k;
 		Vector<T> s = q * k;
 
 		return {
-			s.shuffle<0, 3, 3, 0>(t),
-			s.shuffle<3, 1, 3, 1>(t),
-			t.shuffle<3, 3, 3, 2>().blend<0, 0, 1, 0>(s),
+			s.template shuffle<0, 3, 3, 0>(t),
+			s.template shuffle<3, 1, 3, 1>(t),
+			t.template shuffle<3, 3, 3, 2>().template blend<0, 0, 1, 0>(s),
 		};
 	}
 
 	template<class T>
-	inline Matrix<T> perspectiveMatrix(T fov, T aspect, T near, T far)
+	inline Matrix<T> perspectiveMatrix(T fov, T aspect, T z0, T z1)
 	{
 		const T f = 1 / std::tan(Math<T>::dtor(fov) / 2);
-		const T delta = near - far;
-		const Vector<T> v = {f / aspect, f, (far + near) / delta, (2 * far * near) / delta};
+		const T delta = z0 - z1;
+		const Vector<T> v = {f / aspect, f, (z1 + z0) / delta, (2 * z1 * z0) / delta};
 
 		return {
 			v.maskX(),
 			v.maskY(),
-			v.mask<0, 0, 1, 1>(),
+			v.template maskV<0, 0, 1, 1>(),
 			Vector<T>::negativeZ
 		};
 	}
 
 	template<class T>
-	inline Matrix<T> frustumMatrix(T left, T right, T bottom, T top, T near, T far)
+	inline Matrix<T> frustumMatrix(T x0, T x1, T y0, T y1, T z0, T z1)
 	{
-		const T n = 2 * near;
-		const Vector<T> v {1 / (right - left), 1 / (top - bottom), 1 / (near - far), 0};
+		const T n = 2 * z0;
+		const Vector<T> v {1 / (x1 - x0), 1 / (y1 - y0), 1 / (z0 - z1), 0};
 
 		return {
-			v.spreadX() * Vector<T>{ n, 0, right + left,   0       },
-			v.spreadY() * Vector<T>{ 0, n, top   + bottom, 0       },
-			v.spreadZ() * Vector<T>{ 0, 0, near  + far,    n * far },
+			v.spreadX() * Vector<T>{ n, 0, x1 + x0,   0       },
+			v.spreadY() * Vector<T>{ 0, n, y1   + y0, 0       },
+			v.spreadZ() * Vector<T>{ 0, 0, z0  + z1,    n * z1 },
 			Vector<T>::negativeZ
 		};
 	}
@@ -692,9 +725,9 @@ namespace Rapture
 		Vector<T> u = (f.cross(s)).normalize();
 
 		return {
-			s.blend<0, 0, 0, 1>(-s.dot(position)),
-			u.blend<0, 0, 0, 1>(-u.dot(position)),
-			f.blend<0, 0, 0, 1>(-f.dot(position))
+			s.template blend<0, 0, 0, 1>(-s.dot(position)),
+			u.template blend<0, 0, 0, 1>(-u.dot(position)),
+			f.template blend<0, 0, 0, 1>(-f.dot(position))
 		};
 	}
 }

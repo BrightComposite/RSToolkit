@@ -8,7 +8,7 @@
 #include <core/container/Set.h>
 #include <math/Vector.h>
 #include <graphics/Graphics3D.h>
-#include <ui/WindowAdapter.h>
+#include <ui/UISpace.h>
 
 #include <chrono>
 
@@ -16,6 +16,11 @@
 
 namespace Rapture
 {
+	class Scene;
+	class SceneObject;
+	class Drawable;
+	class DrawableObject;
+
 	using namespace std::chrono;
 	using namespace std::chrono_literals;
 
@@ -31,7 +36,7 @@ namespace Rapture
 		friend class Scene;
 
 	public:
-		SceneObject(Scene * scene);
+		SceneObject(Scene * scene, const DoubleVector & pos = DoubleVector::positiveW);
 		virtual ~SceneObject() {}
 
 		Scene * scene() const
@@ -129,7 +134,7 @@ namespace Rapture
 
 		void invalidate() const
 		{
-			adapter()->invalidate(_widget);
+			space()->invalidate(_widget);
 		}
 
 		template<class T, typename ... A, useif <
@@ -150,9 +155,14 @@ namespace Rapture
 			return _widget;
 		}
 
-		WindowAdapter * adapter() const
+		UISpace * space() const
 		{
-			return _widget->adapter();
+			return _widget->space();
+		}
+
+		void setZoom(float zoom)
+		{
+			_zoom = zoom;
 		}
 
 		void setTickLength(milliseconds length)
@@ -194,7 +204,7 @@ namespace Rapture
 		time_marker _firstTick;
 
 		ticks_t _ticks = 0;
-		float _zoom = 0.02f;
+		float _zoom = 0.01f;
 	};
 }
 

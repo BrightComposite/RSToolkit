@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 
 #include <physics/PhysicalObject.h>
+#include <physics/Physics.h>
 
 //---------------------------------------------------------------------------
 
@@ -8,14 +9,14 @@ namespace Rapture
 {
 	void MotionState::getWorldTransform(btTransform & trans) const
 	{
-		trans.setRotation(object->_rot.q);
-		trans.setOrigin(object->_pos.v);
+		trans.setRotation(object->_rot.elements);
+		trans.setOrigin(object->_pos.elements);
 	}
 
 	void MotionState::setWorldTransform(const btTransform & trans)
 	{
-		object->_rot.set(trans.getRotation());
-		object->_pos.set(trans.getOrigin());
+		object->_rot = trans.getRotation();
+		object->_pos = trans.getOrigin();
 	}
 
 	void PhysicalObject::setMass(double mass)
@@ -27,14 +28,13 @@ namespace Rapture
 
 	void PhysicalObject::setLinearVelocity(const DoubleVector & v)
 	{
-		_rigidBody->setLinearVelocity(v.v);
+		_rigidBody->setLinearVelocity(v.elements);
 		_rigidBody->activate();
 	}
 
 	DoubleVector PhysicalObject::getLinearVelocity()
 	{
-		auto & vel = _rigidBody->getLinearVelocity();
-		return {vel[0], vel[1], vel[2], vel[3]};
+		return _rigidBody->getLinearVelocity();
 	}
 }
 

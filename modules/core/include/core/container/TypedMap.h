@@ -5,62 +5,70 @@
 
 //---------------------------------------------------------------------------
 
-#include <atomic>
-#include <core/container/Map.h>
+#include <core/container/TypedSet.h>
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	template<class Base>
-	struct TypesCounter
-	{
-		static std::atomic<int> counter;
-	};
-
-	template<class Base>
-	std::atomic<int> TypesCounter<Base>::counter;
-
-	template<class T, class Base>
-	struct TypeId
-	{
-		static int get()
-		{
-			static int id = TypesCounter<Base>::counter++;
-			return id;
-		}
-	};
-
-	template<class Base>
+	template<class K, class V, class ... OwnerAttr>
 	class TypedMap
 	{
 	public:
 		template<class T, class ... A,
-			useif <based_on<T, Base>::value && can_construct<T, A...>::value> endif
+			useif <based_on<T, K>::value && can_construct<V, A...>::value> endif
 		>
-		Handle<T> construct(A && ... args)
+		Handle<V, OwnerAttr...> & construct(A && ... args)
 		{
-			Handle<T> h;
-			place<T>() = h.init(forward<A>(args)...);
+			return place<T>().init(forward<A>(args)...);
+		}
+
+		template<class T, class Context,
+			useif <based_on<T, K>::value> endif,
+			typename = decltype(declval<Context>().template init<T>(declval<Handle<V, OwnerAttr...>>()))
+		>
+		Handle<V, OwnerAttr...> & construct(Context * ctx)
+		{
+			auto & h = place<T>();
+			ctx->template init<T>(h);
 
 			return h;
 		}
 
-		template<class T, useif <based_on<T, Base>::value> endif>
-		Handle<T> request()
+		template<class T, useif <based_on<T, K>::value && can_construct<V>::value> endif>
+		Handle<V, OwnerAttr...> & require()
 		{
 			auto & h = place<T>();
 
 			if(h == nullptr)
-				h = handle<T>();
+				h.init();
 
-			return Handle<T>::cast(h);
+			return h;
 		}
 
-		template<class T, useif <based_on<T, Base>::value> endif>
-		Handle<T> find() const
+		template<class T, class Context,
+			useif <based_on<T, K>::value> endif,
+			typename = decltype(declval<Context>().template init<T>(declval<Handle<V, OwnerAttr...>>()))
+		>
+		Handle<V, OwnerAttr...> & require(Context * ctx)
 		{
-			return Handle<T>::cast(place<T>());
+			auto & h = place<T>();
+
+			if(h == nullptr)
+				ctx->template init<T>(h);
+
+			return h;
+		}
+
+		template<class T, useif <based_on<T, K>::value> endif>
+		Handle<V, OwnerAttr...> seek() const
+		{
+			auto i = map.find(TypeId<T, K>::get());
+
+			if(i == map.end())
+				return nullptr;
+
+			return i->second;
 		}
 
 		size_t size() const
@@ -73,36 +81,15 @@ namespace Rapture
 			return map.clear();
 		}
 
-		template<class T, class Context,
-			useif <based_on<T, Base>::value> endif,
-			typename = decltype(declval<Context>.template init<T>(handle<Base>()))
-		>
-		Handle<T> request(Context * ctx)
-		{
-			auto & h = place<T>();
-
-			if(h == nullptr)
-				ctx->init<T>(h);
-
-			return Handle<T>::cast(h);
-		}
-
 	protected:
 		template<class T>
-		Handle<Base> & place() const
+		Handle<V, OwnerAttr...> & place() const
 		{
-			return map[TypeId<T, Base>::get()];
+			return map[TypeId<T, K>::get()];
 		}
 
-		mutable OrderedMap<int, Base> map;
+		mutable Map<int, V, OwnerAttr...> map;
 	};
-
-#define concurrent_types(...) using Concurrents = tuple<__VA_ARGS__>;
-
-	template<class T>
-	using get_concurrent_types = typename T::Concurrents;
-
-#define check_concurrent_types(T, Checker, map) foreach_t<get_concurrent_types<T>>::iterate<Checker>(map);
 }
 
 //---------------------------------------------------------------------------

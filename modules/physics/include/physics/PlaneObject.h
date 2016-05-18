@@ -11,27 +11,24 @@
 
 namespace Rapture
 {
-	link_class(PlaneObject, Class<PhysicalObject>);
+	declare_and_link(PlaneObject, Class<PhysicalObject>);
 
 	class PlaneObject : public PhysicalObject
 	{
 	public:
 		PlaneObject(Scene * scene, PhysicalWorld * world, double level) :
-			PhysicalObject(
+			PhysicalObject
+			(
 				scene,
 				world,
-				new btStaticPlaneShape(btVector3(0, 1.0, 0), level),
-				{0.0, 0.0, 0.0, 1.0}
-				),
-			_level(level)
+				new btStaticPlaneShape(btVector3(0, 1.0, 0), 0.0),
+				{0.0, level, 0.0}
+			)
 		{
 			setclass(PlaneObject);
 		}
 
 		virtual ~PlaneObject() {}
-
-	protected:
-		double _level = 0;
 	};
 }
 

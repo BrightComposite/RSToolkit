@@ -7,7 +7,7 @@
 namespace Rapture
 {
 	template<class string_t>
-	IntSize Graphics::textSize(const Graphics * graphics, const string_t & text)
+	IntSize Graphics::textSize(Graphics * graphics, const string_t & text)
 	{
 		if(graphics->_font == nullptr)
 			return {0, 0};
@@ -95,8 +95,8 @@ namespace Rapture
 		}
 	}
 
-	template IntSize Graphics::textSize<string>(const Graphics * graphics, const string & text);
-	template IntSize Graphics::textSize<wstring>(const Graphics * graphics, const wstring & text);
+	template IntSize Graphics::textSize<string>(Graphics * graphics, const string & text);
+	template IntSize Graphics::textSize<wstring>(Graphics * graphics, const wstring & text);
 
 	template void Graphics::draw<string>(Graphics * graphics, const string & text, int x, int y);
 	template void Graphics::draw<wstring>(Graphics * graphics, const wstring & text, int x, int y);

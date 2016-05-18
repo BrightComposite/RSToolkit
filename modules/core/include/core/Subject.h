@@ -6,21 +6,26 @@
 //---------------------------------------------------------------------------
 
 #include <core/Exception.h>
+#include <core/Hash.h>
 
 #include <core/addition/Named.h>
+#include <core/container/Set.h>
 #include <core/message/Channel.h>
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
+	class Subject;
+
 	/**
 	 *	@brief
 	 *	Receiver must be initialized after this message
 	 */
-	message_class(InitializeMessage,
+	message_class(
+		InitializeMessage,
 		(int, type)
-		);
+	);
 
 	link_class(Subject, Class<Object, Named>);
 
@@ -37,7 +42,7 @@ namespace Rapture
 			setclass(Subject);
 		}
 
-		Subject(String && name) : Object(), Named(name)
+		Subject(String && name) : Object(), Named(forward<String>(name))
 		{
 			setclass(Subject);
 		}
@@ -74,46 +79,50 @@ namespace Rapture
 			return !_enabled;
 		}
 
-		template<class Msg, class Dst, class ... F, useif <can_construct<Msg, Subject *, F...>::value> endif>
+		template<class Msg, class Dst, class ... F, useif <can_construct<Msg, const Subject *, F ...>::value> endif>
 		Handle<Msg> send(Dst & dest, F &&... fields) const
 		{
-			auto msg = handle<Msg>(this, forward<F>(fields)...);
-			channel_t<Dst, Msg>::transmit(msg, dest);
-
-			return msg;
+			return Channel<Dst, Msg>::transmit(Handle<Msg>(this, forward<F>(fields)...), dest);
 		}
 
-		template<class Msg, class Dst, class ... F, useif <can_construct<Msg, Subject *, F...>::value> endif>
+		template<class Msg, class Dst, class ... F, useif <can_construct<Msg, const Subject *, F ...>::value> endif>
 		Handle<Msg> send(Dst * dest, F &&... fields) const
 		{
 			if(dest == nullptr)
 				throw Exception("Destination should be not null!");
 
-			auto msg = handle<Msg>(this, forward<F>(fields)...);
-			channel_t<Dst, Msg>::transmit(msg, *dest);
-
-			return msg;
+			return Channel<Dst, Msg>::transmit(Handle<Msg>(this, forward<F>(fields)...), *dest);
 		}
 
 		template<class Dst, class Msg>
-		void resend(Handle<Msg> & message, Dst & dest) const
+		Handle<Msg> & resend(Handle<Msg> & message, Dst & dest) const
 		{
 			auto * src = message->source;
 			message->source = this;
-			channel_t<Dst, Msg>::transmit(message, dest);
+			Channel<Dst, Msg>::transmit(message, dest);
 			message->source = src;
+
+			return message;
 		}
 
 		template<class Dst, class Msg>
-		void resend(Handle<Msg> & message, Dst * dest) const
+		Handle<Msg> & resend(Handle<Msg> & message, Dst * dest) const
 		{
 			if(dest == nullptr)
 				throw Exception("Destination should be not null!");
 
 			auto * src = message->source;
 			message->source = this;
-			channel_t<Dst, Msg>::transmit(message, *dest);
+			Channel<Dst, Msg>::transmit(message, *dest);
 			message->source = src;
+
+			return message;
+		}
+
+		static const Subject * universe()
+		{
+			static Subject u("Universe");
+			return &u;
 		}
 
 	protected:
@@ -123,23 +132,31 @@ namespace Rapture
 		declare_receivers();
 	};
 
-	template<class Msg, class Dst, class ... F, useif <can_construct<Msg, Subject *, F...>::value> endif>
+	template<class Subj>
+	using SubjectSet = CustomHashSet<Subj, std::hash<Handle<Subject>>>;
+
+	template<class Msg, class Dst, class ... F, useif <can_construct<Msg, Subject *, F ...>::value> endif>
 	Handle<Msg> send(Dst & dest, F &&... fields)
 	{
-		auto msg = handle<Msg>(nullptr, forward<F>(fields)...);
-		channel_t<Dst, Msg>::transmit(msg, dest);
-
-		return msg;
+		return Channel<Dst, Msg>::transmit(Handle<Msg>(Subject::universe(), forward<F>(fields)...), dest);
 	}
 
 	template<class Dst, class Msg>
-	void resend(Handle<Msg> & message, Dst & dest)
+	Handle<Msg> &  resend(Handle<Msg> & message, Dst & dest)
 	{
 		auto * src = message->source;
-		message->source = nullptr;
-		channel_t<Dst, Msg>::transmit(message, dest);
+		message->source = Subject::universe();
+		Channel<Dst, Msg>::transmit(message, dest);
 		message->source = src;
+
+		return message;
 	}
+}
+
+namespace std
+{
+	template<>
+	struct hash<Rapture::Subject> : hash<Rapture::AutoIdentifier> {};
 }
 
 //---------------------------------------------------------------------------

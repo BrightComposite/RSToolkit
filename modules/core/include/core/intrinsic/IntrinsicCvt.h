@@ -5,7 +5,12 @@
 
 //---------------------------------------------------------------------------
 
-#include <intrin.h>
+#ifdef USE_AVX
+#include <immintrin.h>
+#else
+#include <tmmintrin.h>
+#endif
+
 #include <meta/Types.h>
 
 //---------------------------------------------------------------------------
@@ -101,6 +106,28 @@ namespace Rapture
 		return *(reinterpret_cast<const __m64 *>(&in));
 	}
 
+	inline double & _mm_hi(__m128d & in)
+	{
+		return *(reinterpret_cast<double *>(&in) + 1);
+	}
+
+	inline const double & _mm_hi(const __m128d & in)
+	{
+		return *(reinterpret_cast<const double *>(&in) + 1);
+	}
+
+	inline double & _mm_lo(__m128d & in)
+	{
+		return *(reinterpret_cast<double *>(&in));
+	}
+
+	inline const double & _mm_lo(const __m128d & in)
+	{
+		return *(reinterpret_cast<const double *>(&in));
+	}
+
+#ifdef USE_AVX
+
 	inline __m128 & _mm256_hi(__m256 & in)
 	{
 		return *(reinterpret_cast<__m128 *>(&in) + 1);
@@ -194,7 +221,12 @@ namespace Rapture
 	{
 		static inline void perform(const __m256d (&in)[2], __m256 & out)
 		{
+#ifdef MSVC
 			out = _mm256_set_m128(_mm256_cvtpd_ps(in[0]), _mm256_cvtpd_ps(in[1]));
+#else
+			_mm256_lo(out) = _mm256_cvtpd_ps(in[0]);
+			_mm256_hi(out) = _mm256_cvtpd_ps(in[1]);
+#endif // MSVC
 		}
 	};
 
@@ -207,6 +239,7 @@ namespace Rapture
 			out[1] = in[1];
 		}
 	};
+#endif // USE_AVX
 
 	template<typename A, typename B>
 	inline void intrin_cvt(A && in, B & out)

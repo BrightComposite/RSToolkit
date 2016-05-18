@@ -5,9 +5,10 @@
 
 //---------------------------------------------------------------------------
 
-#include <utility>
-#include <tuple>
 #include "Macro.h"
+
+#include <tuple>
+#include <array>
 #include <stdint.h>
 
 #ifndef _MSC_VER
@@ -15,22 +16,25 @@
 #include <initializer_list>
 #endif
 
-namespace Rapture
-{
 #ifndef _MSC_VER
-	namespace std
-	{
-		template<class T>
-		using decay_t = typename decay<T>::type;
+namespace std
+{
+    template<class T>
+    using remove_extent_t = typename remove_extent<T>::type;
 
-		template<class T>
-		using remove_extent_t = typename remove_extent<T>::type;
+    template<class T>
+    using make_signed_t = typename make_signed<T>::type;
 
-		template<bool cond, class T>
-		using enable_if_t = typename enable_if<cond, T>::type;
-	}
+    template<class T>
+    using make_unsigned_t = typename make_unsigned<T>::type;
+
+    template<bool value>
+    using bool_constant = integral_constant<bool, value>;
+}
 #endif // _MSC_VER
 
+namespace Rapture
+{
 	using std::move;
 	using std::forward;
 	using std::swap;
@@ -47,6 +51,8 @@ namespace Rapture
 
 	using std::is_same;
 	using std::is_base_of;
+	using std::is_convertible;
+
 	using std::true_type;
 	using std::false_type;
 
@@ -63,161 +69,116 @@ namespace Rapture
 
 	using std::result_of_t;
 
-	using std::initializer_list;
-	using std::pair;
 	using std::tuple;
+	using std::array;
+	using std::nullptr_t;
 
 	using std::make_integer_sequence;
 	using std::make_index_sequence;
 	using std::integer_sequence;
 	using std::index_sequence;
-
-	template<typename T, size_t N>
-	using array_t = T[N];
-
-	template<typename ... T>
-	using Tuple = tuple<T...>;
+	using std::index_sequence_for;
 
 	template<class T>
-	using remove_ptr_t = typename std::remove_pointer<T>::type;
+	using remove_ptr_t		= typename std::remove_pointer<T>::type;
+	template<class T>
+	using clear_t			= remove_ptr_t<decay_t<T>>;
+	template<class T>
+	using remove_cv_ref_t	= remove_cv_t<remove_reference_t<T>>;
+
+//---------------------------------------------------------------------------
 
 	template<class T>
-	using clear_t = remove_ptr_t<decay_t<T>>;
-
-	template<class T>
-	using remove_cv_ref_t = remove_cv_t<remove_reference_t<T>>;
-
-	template<class T, class Example>
-	using adapt_t = conditional_t<is_rvalue_reference<Example>::value, T &&, const T &>;
-
-#define declare_flag_class(name, checker)	\
-	class name {};							\
-											\
-	template<class T>						\
-	using checker = is_base_of<name, T>;	\
-
-#define template_constant(name)	\
-	template<class T>			\
-	struct name					\
-	{							\
-		static const T value;	\
-	};							\
-
-	inline size_t addr(const void * ptr)
+	struct identity
 	{
-		return reinterpret_cast<size_t>(ptr);
-	}
-
-	template<int offset>
-	struct bitmask
-	{
-		static const size_t value = 1 << offset;
-
-		template<typename I>
-		static constexpr bool state(I s)
-		{
-			return check_flag(value, s);
-		}
-
-		template<typename I>
-		static constexpr void setState(I & s)
-		{
-			set_flag(value, s);
-		}
-
-		template<typename I>
-		static constexpr void clearState(I & s)
-		{
-			clear_flag(value, s);
-		}
+		using type = T;
 	};
 
-	struct bits
-	{
-		template<typename I>
-		static constexpr bool state(int offset, I s)
-		{
-			return check_flag(I(1 << offset), s);
-		}
-
-		template<typename I>
-		static constexpr void setState(int offset, I & s)
-		{
-			set_flag(I(1 << offset), s);
-		}
-
-		template<typename I>
-		static constexpr void clearState(int offset, I & s)
-		{
-			clear_flag(I(1 << offset), s);
-		}
-	};
-
-	using lo_bit_mask = bitmask<0>;
-	using hi_bit_mask = bitmask<15>;
-
-	template<size_t Mask, int offset>
-	struct has_bit
-	{
-		static const bool value = (Mask >> offset) & 1;
-	};
-
-	namespace Internals
-	{
-		template<size_t Mask, class S>
-		struct unfold_mask0 {};
-
-		template<size_t Mask, int ... Values>
-		struct unfold_mask0<Mask, integer_sequence<int, Values...>>
-		{
-			typedef integer_sequence<bool, has_bit<Mask, Values>::value...> type;
-		};
-	}
-
-	template<size_t Mask, int size>
-	using unfold_mask = typename Internals::unfold_mask0<Mask, make_integer_sequence<int, size>>::type;
+//---------------------------------------------------------------------------
 
 	/**
-	*  @brief
-	*  Can be used as clear function argument (const Empty & instead of void *).
-	*  Also it is needed for template-class identification (e.g. Template<Empty>::meta)
-	*/
+	 *  @brief
+	 *  Can be used as clear function argument (Empty instead of void *)
+	 */
 	class Empty {};
 
 	static Empty emptiness;
 
-	template<class ... A>
-	inline tuple<A...> wrap(A &&... args)
-	{
-		return tuple<A...>(forward<A>(args)...);
-	}
+//---------------------------------------------------------------------------
 
-	typedef unsigned char byte;
-	typedef unsigned int  uint;
-	typedef unsigned long ulong;
+	template<typename T>
+	struct Type { Type() {} };
 
-	typedef unsigned __int8  __uint8;
-	typedef unsigned __int16 __uint16;
-	typedef unsigned __int32 __uint32;
-	typedef unsigned __int64 __uint64;
+	template<typename ... T>
+	struct Types { Types() {} };
+
+#define gettype(...) Type<__VA_ARGS__>()
+#define gettypes(...) Types<__VA_ARGS__>()
+
+//---------------------------------------------------------------------------
+
+	typedef long long 			llong;
+
+	typedef unsigned char 		byte;
+	typedef unsigned int  		uint;
+	typedef unsigned long 		ulong;
+	typedef unsigned long long  ullong;
+
+#ifdef __GNUC__
+	typedef int              	errno_t;
+	typedef long              __time32_t;
+	typedef __int64           __time64_t;
+#endif // __GNUC__
+
+	typedef unsigned __int8   __uint8;
+	typedef unsigned __int16  __uint16;
+	typedef unsigned __int32  __uint32;
+	typedef unsigned __int64  __uint64;
 
 	typedef __int64 int64;
 
 #ifndef _SSIZE_T_
 #define _SSIZE_T_
-	typedef long long ssize_t;
+	using ssize_t = std::make_signed_t<size_t>;
 #endif // ssize_t
 
-	typedef int		int2[2];
-	typedef int		int3[3];
-	typedef int		int4[4];
+//---------------------------------------------------------------------------
 
-	typedef float	float2[2];
-	typedef float	float3[3];
-	typedef float	float4[4];
+	typedef array<byte, 2>	byte2;
+	typedef array<byte, 3>	byte3;
+	typedef array<byte, 4>	byte4;
 
+	typedef array<int, 2>	int2;
+	typedef array<int, 3>	int3;
+	typedef array<int, 4>	int4;
+
+	typedef array<float, 2>	float2;
+	typedef array<float, 3>	float3;
+	typedef array<float, 4>	float4;
+
+	typedef initializer_list<byte>	byte_list;
 	typedef initializer_list<int>	int_list;
 	typedef initializer_list<float> float_list;
+
+//---------------------------------------------------------------------------
+
+	template<typename T>
+	struct array_size
+	{
+		static const size_t value = 0;
+	};
+
+	template<typename T, size_t N>
+	struct array_size<T[N]>
+	{
+		static const size_t value = N;
+	};
+
+	template<typename T, size_t N>
+	struct array_size<array<T, N>>
+	{
+		static const size_t value = N;
+	};
 }
 
 //---------------------------------------------------------------------------

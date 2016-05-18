@@ -30,7 +30,6 @@ namespace Rapture
 
 //---------------------------------------------------------------------------
 
-	static void testMaps();
 	static void testSubjects();
 	static void testHandles();
 	static void testHandlesSafety();
@@ -57,7 +56,6 @@ namespace Rapture
 
 	static Entrance open([]()
 	{
-		testMaps();
 		testSubjects();
 		testHandles();
 		testHandlesSafety();
@@ -70,11 +68,12 @@ namespace Rapture
 
 	message_class(DummyMessage,
 		(int, value)
-	)
+	);
 
 	class DummySubject : public Subject
 	{
 	public:
+		bind_message(DummySubject, DummyMessage);
 	};
 
 	class DummyReceiver : public MessageReceiver
@@ -127,16 +126,14 @@ namespace Rapture
 
 	static void testHandles()
 	{
-		const int times = 64;
+		static const int times = 64;
 
-		Handle<Object> h = handle<Object>();
+		auto h = handle<Object>();
 
 		start = hrc::now();
 
 		for(register int i = 0; i < times; ++i)
-		{
-			Handle<Object> h1 = h;
-		}
+			Handle<Object> hh = h;
 
 		elapsed = hrc::now() - start;
 		cout << "Handle assignment time (" << times << " times): " << elapsed.count() << " ns" << endl;
@@ -144,9 +141,7 @@ namespace Rapture
 		start = hrc::now();
 
 		for(register int i = 0; i < times; ++i)
-		{
 			Object * h1 = h;
-		}
 
 		elapsed = hrc::now() - start;
 		cout << "Pointer assignment time (" << times << " times): " << elapsed.count() << " ns" << endl;
@@ -176,12 +171,34 @@ namespace Rapture
 		cout << "Message plain callback connection: " << elapsed.count() << " ns" << endl;
 
 		start = hrc::now();
-		connect(dummy, lambda([](Handle<DummyMessage> & msg, DummySubject & dst)
+
+		global_connect(DummySubject, DummyMessage)
+		{
+
+		};
+
+		elapsed = hrc::now() - start;
+		cout << "Global message lambda callback connection: " << elapsed.count() << " ns" << endl;
+
+		start = hrc::now();
+
+		dest_connect(dummy, DummySubject, DummyMessage)
 		{
 		
-		}));
+		};
+
 		elapsed = hrc::now() - start;
 		cout << "Message lambda callback connection: " << elapsed.count() << " ns" << endl;
+
+		start = hrc::now();
+
+		connect<DummySubject, DummyMessage>(dummy, [](Handle<DummyMessage> & msg, DummySubject & dst)
+		{
+
+		});
+
+		elapsed = hrc::now() - start;
+		cout << "Message lambda callback connection 2: " << elapsed.count() << " ns" << endl;
 
 		start = hrc::now();
 		connect(dummy, rcvr, &DummyReceiver::receive);
@@ -189,12 +206,17 @@ namespace Rapture
 		cout << "Message object callback connection: " << elapsed.count() << " ns" << endl;
 
 		start = hrc::now();
+		connect<DummySubject, DummyMessage>(dummy, std::bind(&DummyReceiver::receive, rcvr, std::placeholders::_1, std::placeholders::_2));
+		elapsed = hrc::now() - start;
+		cout << "Message object callback connection 2: " << elapsed.count() << " ns" << endl;
+
+		start = hrc::now();
 
 		for(register int i = 0; i < times; ++i)
 			subj.resend(message, dummy);
 
 		elapsed = hrc::now() - start;
-		cout << "Message delivery time with 3 connections (" << times << " times): " << elapsed.count() << " ns" << endl;
+		cout << "Message delivery time with 6 connections (" << times << " times): " << elapsed.count() << " ns" << endl;
 		/*
 		start = hrc::now();
 
@@ -222,10 +244,10 @@ namespace Rapture
 	}
 
 	template<class MapClass, class V, class ... A>
-	static void testMapClass(const string & name, const V & val, A ... args)
+	static void testMapClass(const string & name, const V & val, A &&... args)
 	{
 		cout << "* " << name << endl;
-		MapClass map(args...);
+		MapClass map(forward<A>(args)...);
 
 		start = hrc::now();
 
@@ -243,50 +265,5 @@ namespace Rapture
 		elapsed = hrc::now() - start;
 		cout << "Accessing time: " << elapsed.count() << "ns" << endl;
 		cout << endl;
-	}
-
-	template<class F>
-	static void makeMapTest(const String & caption, F & keygen)
-	{
-		cout << endl;
-		cout << "---------------------------------------" << endl;
-		cout << endl;
-		cout << caption << endl;
-		cout << endl;
-		cout << "---------------------------------------" << endl;
-
-		for(auto & key : keys)
-			key = keygen();
-
-		testMapClass<Map<string, const String>>("Rapture::Map", shstr, map_size);
-		testMapClass<map<string, Handle<const String>>>("Standard map", shstr);
-		testMapClass<unordered_map<string, Handle<const String>>>("Standard unordered map", shstr, map_size);
-	}
-
-	static void testMaps()
-	{
-		cout << "Maps' performance test" << endl;
-		cout << "Each operation is repeated " << count << " times" << endl;
-		cout << "Keys are objects of the std::string class. Value is the object of the Rapture::Handle<Rapture::String> class" << endl;
-
-		makeMapTest("The single long key (\"LongLongLongLongLongLongLongKey\")", []()
-		{
-			return "LongLongLongLongLongLongLongKey";
-		});
-
-		makeMapTest("Different random long keys with the length "_s << longstrsize << " (e.g. \"" << randomString(longstrsize) << "\")", []()
-		{
-			return randomString(longstrsize);
-		});
-
-		makeMapTest("The single short key (\"abc\")", []()
-		{
-			return "abc";
-		});
-
-		makeMapTest("Different random short keys with the length "_s << shortstrsize << " (e.g. \"" << randomString(shortstrsize) << "\")", []()
-		{
-			return randomString(shortstrsize);
-		});
 	}
 }

@@ -6,7 +6,7 @@
 
 namespace Rapture
 {
-	SceneObject::SceneObject(Scene * scene) : _scene(scene)
+	SceneObject::SceneObject(Scene * scene, const DoubleVector & pos) : _scene(scene), _pos(pos)
 	{
 		setclass(SceneObject);
 		scene->_objects.push_back(this);

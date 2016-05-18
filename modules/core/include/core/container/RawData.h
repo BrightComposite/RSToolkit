@@ -5,10 +5,9 @@
 
 //---------------------------------------------------------------------------
 
-#include <vector>
-
-#include <core/memory/Memory.h>
 #include <core/Handle.h>
+
+#include <vector>
 
 //---------------------------------------------------------------------------
 
@@ -82,7 +81,7 @@ namespace Rapture
 
 	public:
 		OwnedData() : Base() {}
-		OwnedData(const RawData & rd) : Base(Memory<T>::copy(rd.data, rd.size), rd.size) {}
+		OwnedData(const Base & rd) : Base(Memory<T>::copy(rd.data, rd.size), rd.size) {}
 		OwnedData(const OwnedData & rd) : Base(Memory<T>::copy(rd.data, rd.size), rd.size) {}
 		OwnedData(const T * data, size_t size) : Base(Memory<T>::copy(data, size), size) {}
 		OwnedData(const vector<T> & v) : Base(Memory<T>::copy(v.data(), v.size()), v.size()) {}
@@ -96,28 +95,28 @@ namespace Rapture
 			rd.size = 0;
 		}
 
-		virtual ~OwnedData() { delete[] data; }
+		virtual ~OwnedData() { Memory<void>::free(this->data); }
 
 		OwnedData & operator = (const OwnedData & od)
 		{
-			delete[] data;
-			data = Memory<T>::copy(od.data, od.size);
-			size = od.size;
+			Memory<void>::free(this->data);
+			this->data = Memory<T>::copy(od.data, od.size);
+			this->size = od.size;
 
 			return *this;
 		}
 
 		OwnedData & operator = (OwnedData && rd)
 		{
-			swap(data, rd.data);
-			swap(size, rd.size);
+			swap(this->data, rd.data);
+			swap(this->size, rd.size);
 
 			return *this;
 		}
 
 		auto alloc(size_t size)
 		{
-			delete[] this->data;
+			Memory<void>::free(this->data);
 			this->data = Memory<T>::allocate(size);
 			this->size = size;
 
@@ -126,20 +125,20 @@ namespace Rapture
 
 		void set(const OwnedData<T> & od)
 		{
-			delete[] data;
-			data = Memory<T>::copy(od.data, od.size);
-			size = od.size;
+			Memory<void>::free(this->data);
+			this->data = Memory<T>::copy(od.data, od.size);
+			this->size = od.size;
 		}
 
 		void set(OwnedData<T> && od)
 		{
-			swap(data, od.data);
-			swap(size, od.size);
+			swap(this->data, od.data);
+			swap(this->size, od.size);
 		}
 
 		void set(const T * data, size_t size)
 		{
-			delete[] this->data;
+			Memory<void>::free(this->data);
 			this->data = Memory<T>::copy(data, size);
 			this->size = size;
 		}
@@ -147,27 +146,27 @@ namespace Rapture
 		template<size_t N>
 		void set(const T(& data)[N])
 		{
-			delete[] this->data;
+			Memory<void>::free(this->data);
 			this->data = Memory<T>::copy(data, N);
 			this->size = N;
 		}
 
 		void set(T *&& data, size_t size)
 		{
-			delete[] this->data;
-			Base::set(forward<T*>(data), size);
+			Memory<void>::free(this->data);
+			Base::set(forward<T*>(this->data), size);
 		}
 
 		void apply(const T * data)
 		{
-			Memory<T>::move(this->data, data, size);
+			Memory<T>::move(this->data, data, this->size);
 		}
 
 		T * send()
 		{
-			T * out = data;
-			size = 0;
-			data = nullptr;
+			T * out = this->data;
+			this->size = 0;
+			this->data = nullptr;
 
 			return out;
 		}
@@ -277,7 +276,7 @@ namespace Rapture
 			data = nullptr;
 		}
 
-		virtual ~OwnedData() { delete [] data; }
+		virtual ~OwnedData() { Memory<void>::free(data); }
 
 		OwnedData & operator = (const OwnedData & rd)
 		{
@@ -297,7 +296,7 @@ namespace Rapture
 
 		auto alloc(size_t size)
 		{
-			delete[] this->data;
+			Memory<void>::free(this->data);
 			this->data = Memory<void>::allocate(size);
 			this->size = size;
 
@@ -306,7 +305,7 @@ namespace Rapture
 
 		void set(const OwnedData<void> & od)
 		{
-			delete[] data;
+			Memory<void>::free(data);
 			data = Memory<void>::copy(od.data, od.size);
 			size = od.size;
 		}
@@ -319,7 +318,7 @@ namespace Rapture
 
 		void set(const void * data, size_t size)
 		{
-			delete[] this->data;
+			Memory<void>::free(this->data);
 			this->data = Memory<void>::copy(data, size);
 			this->size = size;
 		}
@@ -327,14 +326,14 @@ namespace Rapture
 		template<class T, size_t N>
 		void set(const T(&data)[N])
 		{
-			delete[] this->data;
+			Memory<void>::free(this->data);
 			this->data = Memory<T>::copy(data, N);
 			this->size = N;
 		}
 
 		void set(void *&& data, size_t size)
 		{
-			delete[] this->data;
+			Memory<void>::free(this->data);
 			Base::set(forward<void *>(data), size);
 		}
 

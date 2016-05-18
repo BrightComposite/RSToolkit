@@ -11,17 +11,25 @@
 
 //---------------------------------------------------------------------------
 
-//#ifdef _MSC_VER
-//#pragma warning(disable: 4756)
-//#endif
-
 namespace Rapture
 {
+	template<typename T>
+	struct Vector;
+
 	template<typename T, size_t Mask>
 	using VectorMaskAxis = IntrinsicMask<T, IntrinMax, Mask>;
 
 	template<typename T, size_t Mask>
 	using VectorSignAxis = IntrinsicMask<T, IntrinSignmask, Mask>;
+
+	template<class T>
+	struct VectorMath : Math<Vector<T>> {};
+
+	template<class T>
+	using VectorCfs = Cfs<Vector<T>>;
+
+	template<class T>
+	using VectorConstants = MathConstants<Vector<T>>;
 
 	template<typename T>
 	struct alignas(sizeof(T) * 4) Vector
@@ -40,14 +48,11 @@ namespace Rapture
 				T x, y, z, w;
 			};
 
-			T v[4];
+			array<T, 4> v;
+			T elements[4];
 		};
 
-		Vector()
-		{
-			data = zero.data;
-		}
-
+		Vector() {}
 		Vector(const Vector & v) : data(v.data) {}
 		Vector(const Data & data) : data(data) {}
 		Vector(Vector && v) : data(move(v.data)) {}
@@ -55,6 +60,12 @@ namespace Rapture
 
 		template<class U, useif <!is_same<T, U>::value> endif>
 		Vector(const Vector<U> & v) : data(intrin_cvt<IntrinType>(v.intrinsic)) {}
+
+		template<class U, useif <can_cast<U, Vector>::value> endif>
+		Vector(const U & v)
+		{
+			Cast<U, Vector>::cast(*this, v);
+		}
 
 		Vector(const T * v)
 		{
@@ -74,6 +85,13 @@ namespace Rapture
 		Vector & operator = (const Vector & v)
 		{
 			data = v.data;
+			return *this;
+		}
+
+		template<class U, useif <can_cast<U, Vector>::value> endif>
+		Vector & operator = (const U & v)
+		{
+			Cast<U, Vector>::cast(*this, v);
 			return *this;
 		}
 
@@ -202,17 +220,17 @@ namespace Rapture
 
 		Vector operator & (const Data & v) const
 		{
-			return Intrin::and(data, v);
+			return Intrin::bit_and(data, v);
 		}
 
 		Vector operator | (const Data & v) const
 		{
-			return Intrin::or(data, v);
+			return Intrin::bit_or(data, v);
 		}
 
 		Vector operator ^ (const Data & v) const
 		{
-			return Intrin::xor(data, v);
+			return Intrin::bit_xor(data, v);
 		}
 
 		Vector dot(const Data & v) const
@@ -249,6 +267,16 @@ namespace Rapture
 		}
 
 		const T & operator [] (size_t index) const
+		{
+			return v[index];
+		}
+
+		T & operator [] (int index)
+		{
+			return v[index];
+		}
+
+		const T & operator [] (int index) const
 		{
 			return v[index];
 		}
@@ -318,13 +346,13 @@ namespace Rapture
 		template<byte X, byte Y, byte Z, byte W, useif <(X < 2 && Y < 2 && Z < 2 && W < 2)> endif>
 		Vector mask() const // select some components (e.g. if X == 1 then result.x = v.x else result.x = 0)
 		{
-			return Intrin::and(VectorMaskAxis<T, mk_mask4(X, Y, Z, W)>::get(), data);
+			return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(X, Y, Z, W)>::get(), data);
 		}
 
 		template<uint Axis, useif <(Axis < 4)> endif>
 		Vector maskAxis() const // set all components of a vector to zero except of one
 		{
-			return Intrin::and(VectorMaskAxis<T, bitmask<Axis>::value>::get(), data);
+			return Intrin::bit_and(VectorMaskAxis<T, bitmask<Axis>::value>::get(), data);
 		}
 
 		Vector maskX() const
@@ -350,7 +378,7 @@ namespace Rapture
 		template<uint Axis, useif <(Axis < 4)> endif>
 		Vector clearAxis() const // set a single component to zero
 		{
-			return Intrin::and(VectorMaskAxis<T, 0xF ^ bitmask<Axis>::value>::get(), data);
+			return Intrin::bit_and(VectorMaskAxis<T, 0xF ^ bitmask<Axis>::value>::get(), data);
 		}
 
 		Vector clearX() const
@@ -376,13 +404,13 @@ namespace Rapture
 		template<byte X, byte Y, byte Z, byte W, useif <(X < 2 && Y < 2 && Z < 2 && W < 2)> endif>
 		Vector negate() const // negate some components (e.g. if X == 1 then result.x = -v.x else result.x = v.x)
 		{
-			return Intrin::xor(VectorSignAxis<T, mk_mask4(X, Y, Z, W)>::get(), data);
+			return Intrin::bit_xor(VectorSignAxis<T, mk_mask4(X, Y, Z, W)>::get(), data);
 		}
 
 		template<uint Axis, useif <(Axis < 4)> endif>
 		Vector negateAxis() const // negate one component
 		{
-			return Intrin::xor(VectorSignAxis<T, bitmask<Axis>::value>::get(), data);
+			return Intrin::bit_xor(VectorSignAxis<T, bitmask<Axis>::value>::get(), data);
 		}
 
 		Vector negateX() const
@@ -478,34 +506,49 @@ namespace Rapture
 			return *this;
 		}
 
-		operator array_t<T, 4> & ()
+		operator array<T, 4> & () &
 		{
 			return v;
 		}
 
-		operator const array_t<T, 4> & () const
+		operator const array<T, 4> & () const &
 		{
 			return v;
 		}
 
-		operator Data & ()
+		operator array<T, 4> && () &&
+		{
+			return move(v);
+		}
+
+		operator Data & () &
 		{
 			return data;
 		}
 
-		operator const Data & () const
+		operator const Data & () const &
 		{
 			return data;
 		}
 
-		operator IntrinType & ()
+		operator Data && () &&
+		{
+			return move(data);
+		}
+
+		operator IntrinType & () &
 		{
 			return intrinsic;
 		}
 
-		operator const IntrinType & () const
+		operator const IntrinType & () const &
 		{
 			return intrinsic;
+		}
+
+		operator IntrinType && () &&
+		{
+			return move(intrinsic);
 		}
 
 		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)> endif>
@@ -559,8 +602,15 @@ namespace Rapture
 		static const Vector negativeW;	// [  0,  0,  0, -1 ]
 	};
 
+	using ByteVector = Vector<byte>;
+	using IntVector = Vector<int>;
 	using FloatVector = Vector<float>;
 	using DoubleVector = Vector<double>;
+
+	using bvec = Vector<byte>;
+	using ivec = Vector<int>;
+	using fvec = Vector<float>;
+	using dvec = Vector<double>;
 
 	template<class T>
 	struct BasicMath<Vector<T>, false>
@@ -621,9 +671,9 @@ namespace Rapture
 		{
 			auto x = VectorMath<T>::rmod(angle);
 			auto sign = Intrin::sign(x);
-			auto comp = Intrin::cmple(Intrin::andnot(sign, x), VectorMath<T>::half_pi);
+			auto comp = Intrin::cmple(Intrin::bit_andnot(sign, x), VectorMath<T>::half_pi);
 
-			s = Intrin::or(Intrin::and(comp, x), Intrin::andnot(comp, Intrin::sub(Intrin::or(VectorMath<T>::pi, sign), x)));
+			s = Intrin::bit_or(Intrin::bit_and(comp, x), Intrin::bit_andnot(comp, Intrin::sub(Intrin::bit_or(VectorMath<T>::pi, sign), x)));
 			x = Intrin::sqr(s);
 
 			s *= 
@@ -639,11 +689,11 @@ namespace Rapture
 		{
 			auto x = VectorMath<T>::rmod(angle);
 			auto sign = Intrin::sign(x);
-			auto comp = Intrin::cmple(Intrin::andnot(sign, x), VectorMath<T>::half_pi);
+			auto comp = Intrin::cmple(Intrin::bit_andnot(sign, x), VectorMath<T>::half_pi);
 
-			x = Intrin::sqr(Intrin::or(Intrin::and(comp, x), Intrin::andnot(comp, Intrin::sub(Intrin::or(VectorMath<T>::pi, sign), x))));
+			x = Intrin::sqr(Intrin::bit_or(Intrin::bit_and(comp, x), Intrin::bit_andnot(comp, Intrin::sub(Intrin::bit_or(VectorMath<T>::pi, sign), x))));
 
-			c = Intrin::or(Intrin::and(comp, Vector<T>::one), Intrin::andnot(comp, Vector<T>::minusOne)) * (
+			c = Intrin::bit_or(Intrin::bit_and(comp, Vector<T>::one), Intrin::bit_andnot(comp, Vector<T>::minusOne)) * (
 				Vector<T>::one + x * (
 					VectorCfs<T>::cos[0] + x * (
 						VectorCfs<T>::cos[1] + x * (
@@ -656,9 +706,9 @@ namespace Rapture
 		{
 			auto x = VectorMath<T>::rmod(angle);
 			auto sign = Intrin::sign(x);
-			auto comp = Intrin::cmple(Intrin::andnot(sign, x), VectorMath<T>::half_pi);
+			auto comp = Intrin::cmple(Intrin::bit_andnot(sign, x), VectorMath<T>::half_pi);
 
-			s = Intrin::or(Intrin::and(comp, x), Intrin::andnot(comp, Intrin::sub(Intrin::or(VectorMath<T>::pi, sign), x)));
+			s = Intrin::bit_or(Intrin::bit_and(comp, x), Intrin::bit_andnot(comp, Intrin::sub(Intrin::bit_or(VectorMath<T>::pi, sign), x)));
 			x = Intrin::sqr(s);
 
 			s *=
@@ -669,7 +719,7 @@ namespace Rapture
 								VectorCfs<T>::sin[3] + x * (
 									VectorCfs<T>::sin[4])))));
 
-			c = Intrin::or(Intrin::and(comp, Vector<T>::one), Intrin::andnot(comp, Vector<T>::minusOne)) * (
+			c = Intrin::bit_or(Intrin::bit_and(comp, Vector<T>::one), Intrin::bit_andnot(comp, Vector<T>::minusOne)) * (
 				Vector<T>::one + x * (
 					VectorCfs<T>::cos[0] + x * (
 						VectorCfs<T>::cos[1] + x * (
@@ -685,17 +735,14 @@ namespace Rapture
 		}
 	};
 
-	template<class T>
-	struct VectorMath : Math<Vector<T>> {};
-
 	using FloatVectorMath = VectorMath<float>;
 	using DoubleVectorMath = VectorMath<double>;
 
-	template<class T>
-	using VectorCfs = Cfs<Vector<T>>;
-
 	using FloatVectorCfs = VectorCfs<float>;
 	using DoubleVectorCfs = VectorCfs<double>;
+
+	using FloatVectorConstants = VectorConstants<float>;
+	using DoubleVectorConstants = VectorConstants<double>;
 
 	inline Vector<float> vec()
 	{

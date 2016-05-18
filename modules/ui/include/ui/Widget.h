@@ -7,8 +7,7 @@
 
 #include <core/Subject.h>
 #include <core/container/Array.h>
-#include <core/container/Set.h>
-#include <core/container/TypedMap.h>
+#include <core/container/TypedSet.h>
 
 #include <graphics/Graphics.h>
 #include "WidgetMessages.h"
@@ -18,18 +17,19 @@
 namespace Rapture
 {
 	class Widget;
+	class BasicWidget;
+	class Layer;
 
-	template<>
-	attach_hash(Widget);
-
-	class WidgetRegion : public Subject
+	class BasicWidget : public Subject
 	{
-	public:
-		WidgetRegion(Widget * parent, const IntRect & rect);
-		WidgetRegion(Widget * parent, const IntPoint & pos, const IntSize & size);
-		WidgetRegion(const WidgetRegion & region);
+		friend class Widget;
 
-		virtual ~WidgetRegion() {}
+	public:
+		BasicWidget(Widget * parent, const IntRect & rect);
+		BasicWidget(Widget * parent, const IntPoint & pos, const IntSize & size);
+		BasicWidget(const BasicWidget & w);
+
+		virtual ~BasicWidget() {}
 
 		const IntSize & size() const
 		{
@@ -172,19 +172,17 @@ namespace Rapture
 		inline void setOffsets(const IntRect & offsets);
 		inline void setAnchors(const FloatRect & anchors);
 
-		static void calculateRegionRect(IntRect & out, const IntRect & offsets, const FloatRect & anchors, const WidgetRegion & parent);
-		static void calculateOffsets(IntRect & out, const WidgetRegion & region, const WidgetRegion & parent);
+		static void calculateRegionRect(IntRect & out, const IntRect & offsets, const FloatRect & anchors, const BasicWidget & parent);
+		static void calculateOffsets(IntRect & out, const BasicWidget & region, const BasicWidget & parent);
 
 	protected:
 		void changeSize(int width, int height, ModelMask mask);
 		void changePlacement(int left, int top, int right, int bottom, ModelMask mask);
 		void updateAnchors();
 
-		create_readers(
-			WidgetMoveMessage,
-			AfterWidgetMoveMessage,
-			WidgetResizeMessage
-		);
+		create_empty_readers(BasicWidget,
+			WidgetMessages
+		)
 
 		Widget * _parent;
 
@@ -302,18 +300,18 @@ namespace Rapture
 
 #define is_layer(T)  based_on<T, Layer>::value
 
-#define is_drawer(T) (std::is_function<T>::value || Rapture::is_functor<T, const Widget *, const IntRect &>::value)
+#define is_drawer(T) (std::is_function<T>::value || Rapture::is_callable<T, const Widget *, const IntRect &>::value)
 
-	class Widget : public WidgetRegion
+	class Widget : public BasicWidget
 	{
-		friend class WindowAdapter;
+		friend class UISpace;
 		friend class Layer;
 
 	public:
 		Widget(Widget * parent);
 		Widget(Widget * parent, const IntRect & region);
-		Widget(WindowAdapter * adapter);
-		Widget(WindowAdapter * adapter, const IntRect & region);
+		Widget(UISpace * space);
+		Widget(UISpace * space, const IntRect & region);
 		Widget(const Widget & widget);
 		Widget(const Widget & widget, Widget * parent);
 
@@ -380,7 +378,7 @@ namespace Rapture
 			return _focusOrder;
 		}
 
-		WindowAdapter * adapter() const;
+		UISpace * space() const;
 		Graphics * graphics() const;
 
 		void show()
@@ -404,9 +402,7 @@ namespace Rapture
 		void sendToBack();
 
 	protected:
-		typedef list<Widget *>::iterator iterator;
-
-		Widget(WindowAdapter * adapter, Widget * parent, const IntRect & region);
+		Widget(UISpace * space, Widget * parent, const IntRect & region);
 
 		void draw(Graphics * graphics, const IntRect & clipRegion);
 
@@ -415,19 +411,13 @@ namespace Rapture
 		void removeFocus();
 		void receiveFocus();
 
-		static void sort(list<Widget *> & list, int(Widget::*sortAttribute));
-		static void insert(Widget * w, list<Widget *> & list, int(Widget::*sortAttribute));
-		static void remove(Widget * w, list<Widget *> & list);
+		UISpace * _space;
 
-		static iterator find(Widget * w, list<Widget *> & list);
+		TypedSet<Layer> _layers;
+		SubjectSet<BasicWidget> _children;
 
-		WindowAdapter * _adapter;
-
-		TypedMap<Layer> _layers;
-		Set<Widget> _children;
-
-		list<Layer *> _layerList;
-		list<Widget *> _displayList;
+		vector<Layer *> _layerList;
+		vector<Widget *> _displayList;
 
 		int _flags = 0;
 		MouseState _mouseState;
@@ -435,105 +425,105 @@ namespace Rapture
 		int _focusOrder = 0;
 		int _displayOrder = 0;
 
-		bind_messages(Widget,
-			WidgetMessages
-		);
+		using DisplaySort = MemberSort<Widget, int, &Widget::_displayOrder>;
+		using FocusSort = MemberSort<Widget, int, &Widget::_focusOrder>;
 
-		create_readers(
-			KeyDownMessage, KeyUpMessage, CharMessage
-		);
+		bind_messages(Widget, WidgetMessages)
 
-		override_reader(
+		override_readers(Widget,
+			KeyDownMessage,
+			CharMessage,
+			KeyUpMessage,
 			WidgetResizeMessage
-		);
+		)
 	};
 
-	inline void WidgetRegion::setLeft(int value)
+	inline void BasicWidget::setLeft(int value)
 	{
 		changePlacement(value, top(), right(), bottom(), ModelMask::Left);
 	}
 
-	inline void WidgetRegion::setTop(int value)
+	inline void BasicWidget::setTop(int value)
 	{
 		changePlacement(left(), value, right(), bottom(), ModelMask::Top);
 	}
 
-	inline void WidgetRegion::setRight(int value)
+	inline void BasicWidget::setRight(int value)
 	{
 		changePlacement(left(), top(), value, bottom(), ModelMask::Right);
 	}
 
-	inline void WidgetRegion::setBottom(int value)
+	inline void BasicWidget::setBottom(int value)
 	{
 		changePlacement(left(), top(), right(), value, ModelMask::Bottom);
 	}
 
-	inline void WidgetRegion::setWidth(int value)
+	inline void BasicWidget::setWidth(int value)
 	{
 		changeSize(value, height(), ModelMask::Horizontal);
 	}
 
-	inline void WidgetRegion::setHeight(int value)
+	inline void BasicWidget::setHeight(int value)
 	{
 		changeSize(width(), value, ModelMask::Vertical);
 	}
 
-	inline void WidgetRegion::setRegion(const IntRect & r)
+	inline void BasicWidget::setRegion(const IntRect & r)
 	{
 		changePlacement(r.left, r.top, r.right, r.bottom, ModelMask::FullSize);
 	}
 
-	inline void WidgetRegion::setPos(int left, int top)
+	inline void BasicWidget::setPos(int left, int top)
 	{
 		changePlacement(left, top, left + width(), top + height(), ModelMask::FullSize);
 	}
 
-	inline void WidgetRegion::setPos(const IntPoint & pt)
+	inline void BasicWidget::setPos(const IntPoint & pt)
 	{
 		changePlacement(pt.x, pt.y, pt.x + width(), pt.y + height(), ModelMask::FullSize);
 	}
 
-	inline void WidgetRegion::setSize(int width, int height)
+	inline void BasicWidget::setSize(int width, int height)
 	{
 		changeSize(width, height, ModelMask::FullSize);
 	}
 
-	inline void WidgetRegion::setSize(const IntSize & size)
+	inline void BasicWidget::setSize(const IntSize & size)
 	{
 		changeSize(size.x, size.y, ModelMask::FullSize);
 	}
 
-	inline void WidgetRegion::setPlacement(int left, int top, int width, int height)
+	inline void BasicWidget::setPlacement(int left, int top, int width, int height)
 	{
 		changePlacement(left, top, left + width, top + height, ModelMask::FullSize);
 	}
 
-	inline void WidgetRegion::setPlacement(const IntPoint & pt, const IntSize & size)
+	inline void BasicWidget::setPlacement(const IntPoint & pt, const IntSize & size)
 	{
 		changePlacement(pt.x, pt.y, pt.x + size.x, pt.y + size.y, ModelMask::FullSize);
 	}
 
-	inline void WidgetRegion::setPlacement(ModelMask alignment, const IntRect & offsets)
+	inline void BasicWidget::setPlacement(ModelMask alignment, const IntRect & offsets)
 	{
 		_offsets = offsets;
 		setAlignment(alignment);
 	}
 
-	inline void WidgetRegion::setPlacement(ModelMask alignment, int left, int top, int width, int height)
+	inline void BasicWidget::setPlacement(ModelMask alignment, int left, int top, int width, int height)
 	{
 		_offsets.set(left, top, left, top);
 		setAlignment(alignment);
 		setSize(width, height);
 	}
 
-	inline void WidgetRegion::setPlacement(ModelMask alignment, const IntPoint & offset, const IntSize & size)
+	inline void BasicWidget::setPlacement(ModelMask alignment, const IntPoint & offset, const IntSize & size)
 	{
 		_offsets.set(offset.x, offset.y, offset.x, offset.y);
 		setAlignment(alignment);
 		setSize(size);
 	}
 
-	inline void WidgetRegion::setPlacement(const FloatRect & anchors, const IntRect & offsets)
+	inline void BasicWidget::setPlacement(const FloatRect & anchors, const IntRect & offsets)
 	{
 		_alignment = ModelMask::Custom;
 		_anchors = anchors;
@@ -542,7 +532,7 @@ namespace Rapture
 		updateAnchors();
 	}
 
-	inline void WidgetRegion::setAlignment(ModelMask alignment)
+	inline void BasicWidget::setAlignment(ModelMask alignment)
 	{
 		if(_alignment == alignment)
 			return;
@@ -560,26 +550,26 @@ namespace Rapture
 		updateAnchors();
 	}
 
-	inline void WidgetRegion::setOffset(int side, int value)
+	inline void BasicWidget::setOffset(int side, int value)
 	{
 		_offsets[side] = value;
 		updateAnchors();
 	}
 
-	inline void WidgetRegion::setOffsets(const IntRect & offsets)
+	inline void BasicWidget::setOffsets(const IntRect & offsets)
 	{
 		_offsets = offsets;
 		updateAnchors();
 	}
 
-	inline void WidgetRegion::setAnchor(int side, float value)
+	inline void BasicWidget::setAnchor(int side, float value)
 	{
 		_alignment = ModelMask::Custom;
 		_anchors[side] = value;
 		updateAnchors();
 	}
 
-	inline void WidgetRegion::setAnchors(const FloatRect & anchors)
+	inline void BasicWidget::setAnchors(const FloatRect & anchors)
 	{
 		_alignment = ModelMask::Custom;
 		_anchors = anchors;
@@ -623,7 +613,7 @@ namespace Rapture
 	template<class LayerClass, useif_t>
 	inline Handle<LayerClass> Widget::layer()
 	{
-		return _layers.request<LayerClass>(this);
+		return _layers.require<LayerClass>(this);
 	}
 
 	inline Widget & Widget::operator += (const Handle<Widget> & child)
@@ -646,12 +636,6 @@ namespace Rapture
 		attach(drawer);
 		return *this;
 	}
-}
-
-namespace std
-{
-	template<>
-	use_class_hash(Rapture::Widget);
 }
 
 //---------------------------------------------------------------------------

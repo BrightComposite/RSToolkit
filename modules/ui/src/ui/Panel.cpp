@@ -9,6 +9,6 @@ namespace Rapture
 {
 	implement_reader(Panel, WidgetChangedStateMessage)
 	{
-		_adapter->invalidate(this);
+		_space->invalidate(this);
 	}
 }

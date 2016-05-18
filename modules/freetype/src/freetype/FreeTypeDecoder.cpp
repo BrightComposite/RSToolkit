@@ -31,7 +31,7 @@ namespace Rapture
 	protected:
 		FreeTypeFont(const Handle<ByteData> & data) : data(data) {}
 
-		virtual void loadSymbol(Handle<Symbol> & symbol, const Graphics * graphics, int size, wchar_t character) const override
+		virtual void loadSymbol(Handle<Symbol> & symbol, Graphics * graphics, int size, wchar_t character) const override
 		{
 			FT_Set_Char_Size(face, 0, size << 6, 96, 96);
 			//FT_Set_Pixel_Sizes(face, 0, size);
@@ -85,30 +85,37 @@ namespace Rapture
 			if(data.width * data.height > 0)
 			{
 				data.set(bmp.buffer, bmp.width * bmp.rows);
-				symbol.reinit(graphics, data);
+				symbol.init(graphics, data);
 			}
 			else
-				symbol.reinit(data);
+				symbol.init(data);
 		}
 
-		virtual Handle<Symbol> & findSymbol(const Graphics * graphics, int size, wchar_t character) const override
+		virtual Handle<Symbol> & findSymbol(Graphics * graphics, int size, wchar_t character) const override
 		{
-			auto & size_map = _cache[graphics];
+			auto size_map_i = _cache.find(graphics);
 
-			if(size_map == nullptr)
-				size_map.init();
+			if(size_map_i == _cache.end())
+				size_map_i = _cache.insert(size_map_i, {graphics, {}});
 
-			auto & symbols = size_map[size];
+			auto & size_map = size_map_i->second;
+			auto symbols_i = size_map.find(size);
 
-			if(symbols == nullptr)
-				symbols.init();
+			if(symbols_i == size_map.end())
+				symbols_i = size_map.insert(symbols_i, {size, {}});
 
-			return symbols[character];
+			auto & symbols = symbols_i->second;
+			auto i = symbols.find(character);
+
+			if(i == symbols.end())
+				i = symbols.insert(i, {character, nullptr});
+
+			return i->second;
 		}
 
 		Handle<ByteData> data;
 		FT_Face face;
-		mutable Map<const Graphics *, Map<int, Map<wchar_t, Symbol>>> _cache;
+		mutable map<const Graphics *, map<int, HashMap<wchar_t, Symbol>>> _cache;
 	};
 
 	FreeTypeDecoder::FreeTypeDecoder()

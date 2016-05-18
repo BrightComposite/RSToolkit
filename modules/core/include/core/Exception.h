@@ -30,25 +30,32 @@ namespace Rapture
     {
     public:
 		template<class H, class ... T, useif <
-				not_based_on<H, exception>::value,
-				can_construct<String, H>::value,
-				can_construct<String, T>::value...
-			>
-			endif>
-		Exception(H && head, T &&... tail) : runtime_error(""), data()
+			not_based_on<H, exception>::value,
+			can_construct<String, H>::value,
+			can_construct<String, T>::value...
+			> endif
+		>
+		Exception(H && head, T &&... tail) : runtime_error(""), data(forward<H>(head))
 		{
-			data.add(forward<H>(head), forward<T>(tail)...);
+			data.add(forward<T>(tail)...);
 			viewException(*this);
 		}
 
 		Exception(const Exception & except) : runtime_error(except), data(except.data) {}
 		Exception(Exception && except) : runtime_error(forward<Exception>(except)), data(move(except.data)) {}
 
-		Exception(const exception & except) : runtime_error(""), data(except.what()) {}
+		template<class ... A, useif <
+			can_construct<String, A>::value...
+			> endif
+		 >
+		Exception(const exception & except, A &&... args) : runtime_error(""), data(except.what())
+		{
+			data.add(forward<A>(args)...);
+		}
 
 		virtual ~Exception() {}
 
-		virtual const char * what() const override
+		virtual const char * what() const noexcept override
 		{
 			return data.c_str();
 		}

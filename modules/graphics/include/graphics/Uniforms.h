@@ -8,117 +8,105 @@
 #include <meta/Meta.h>
 #include <math/Matrix.h>
 
+#include <core/container/TypedMap.h>
+
 #include "Shaders.h"
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
+	class Graphics3D;
+
 	namespace Uniforms
 	{
-		template<class T, int index>
-		class Component
-		{
-		public:
-			Component(const T & c)
-			{
-				Initialize::init(component, c);
-			}
-
-			Component(T && c)
-			{
-				Initialize::init(component, forward<T>(c));
-			}
-
-			Component(const initializer_list<remove_extent_t<T>> & c)
-			{
-				Initialize::init(component, c);
-			}
-
-		private:
-			T component;
-		};
-
-		template<class ... T>
-		class Base : public Base<make_integer_sequence<size_t, sizeof...(T)>, T...>
-		{
-			typedef Base<make_integer_sequence<size_t, sizeof...(T)>, T...> Impl;
-
-		public:
-			using Impl::Base;
-		};
-
-		declare_flag_class(UniformFlag, is_uniform)
-
-		template<int ... I, class ... T>
-		class Base<integer_sequence<size_t, I...>, T...> : public UniformFlag, public Component<T, I>...
-		{
-		public:
-			template<class ... A, useif <
-				sizeof...(A) == sizeof...(T),
-				is_true<can_construct<Component<T, I>, A>::value...>::value
-				> endif
-			>
-			Base(const A & ... args) : Component<T, I>(static_cast<T>(args))... {}
-
-			template<class ... A, useif <
-				sizeof...(A) == sizeof...(T),
-				is_true<can_construct<Component<T, I>, A>::value...>::value
-				> endif
-			>
-			Base(A && ... args) : Component<T, I>(static_cast<adapt_t<T, A>>(forward<A>(args)))... {}
-		};
-
-#define declare_uniform(name, shader_index, shader_type, components)	\
-		class alignas(16) name : public Base<pp_seq_enum(components)>	\
-		{																\
-		public:															\
-			typedef Base<pp_seq_enum(components)> Base;					\
-																		\
-			using Base::Base;											\
-																		\
-			static const uint index = shader_index;						\
-			static const ShaderType shader = ShaderType::shader_type;	\
-		}
-
-		declare_uniform(
-			BrushOptions, 0, Pixel,
-			(float4) // color
-			(float) // line width
-			);
-
-		declare_uniform(
-			Model, 1, Vertex,
-			(FloatMatrix)
-			);
-
-		declare_uniform(
-			View, 2, Vertex,
-			(FloatMatrix)
-			);
-
-		declare_uniform(
-			Projection, 3, Vertex,
-			(FloatMatrix)
-			);
-
-		declare_uniform(
-			Area, 4, Vertex,
-			(float2) // position
-			(float2) // size
-			(float)  // depth
-			);
-
-		declare_uniform(
-			Viewport, 5, Vertex,
-			(float2) // width and height
-			);
-
-		struct Animation;
-		struct PhongLighting;
+		struct Base {};
 	}
 
-	using Uniforms::is_uniform;
+#define uniform_class(name, shader_index, shader_type, components)		\
+	namespace Uniforms													\
+	{																	\
+		struct name : Base												\
+		{																\
+			static const uint index = shader_index;						\
+			static const ShaderType shader = ShaderType::shader_type;	\
+		};																\
+	}																	\
+																		\
+	aligned_contents(Uniforms::name, 16, components)					\
+
+	uniform_class
+	(
+		BrushOptions, 0, Pixel,
+		(float4, color)
+		(float, lineWidth)
+	);
+
+	uniform_class
+	(
+		Model, 1, Vertex,
+		(FloatMatrix, transform)
+	);
+
+	uniform_class
+	(
+		View, 2, Vertex,
+		(FloatMatrix, transform)
+	);
+
+	uniform_class
+	(
+		Projection, 3, Vertex,
+		(FloatMatrix, transform)
+	);
+
+	uniform_class
+	(
+		Area, 4, Vertex,
+		(float2, pos)
+		(float2, size)
+		(float,  depth)
+	);
+
+	uniform_class
+	(
+		Viewport, 5, Vertex,
+		(float2, size)
+	);
+
+	template<class T>
+	using is_uniform = is_base_of<Uniforms::Base, T>;
+
+	class UniformAdapter : public Shared
+	{
+		friend class Uniform;
+
+	protected:
+		virtual void update(const void * data) = 0;
+	};
+
+	class Uniform : public Shared
+	{
+	public:
+		Uniform(const Uniform & uniform) = delete;
+		Uniform & operator = (const Uniform & uniform) = delete;
+
+		template<class T, class ... A, useif <can_construct_contents<T, A...>::value> endif>
+		void set(A &&... args)
+		{
+			_adapter->update(Contents<T>(forward<A>(args)...));
+		}
+
+	protected:
+		friend_owned_handle(Uniform, Graphics3D);
+
+		Uniform(const Handle<UniformAdapter> & adapter) : _adapter(adapter) {}
+		Uniform(Uniform && uniform) : _adapter(move(uniform._adapter)) {}
+
+		Handle<UniformAdapter> _adapter;
+	};
+
+	using UniformMap = TypedMap<Uniforms::Base, Uniform, Graphics3D>;
 }
 
 //---------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
 #include <physics/PhysicalWorld.h>
-#include <physics/PhysicalObject.h>
+#include <physics/Physics.h>
 
 //---------------------------------------------------------------------------
 
@@ -17,6 +17,9 @@ namespace Rapture
 		for(int i = 0; i < num; i++)
 		{
 			auto * manifold = world->getDispatcher()->getManifoldByIndexInternal(i);
+
+			if(manifold->getNumContacts() == 0)
+				continue;
 
 			auto * obj0 = static_cast<PhysicalObject *>(manifold->getBody0() ? manifold->getBody0()->getUserPointer() : nullptr);
 			auto * obj1 = static_cast<PhysicalObject *>(manifold->getBody1() ? manifold->getBody1()->getUserPointer() : nullptr);

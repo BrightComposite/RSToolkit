@@ -11,6 +11,7 @@
 
 namespace Rapture {
 
+	class Named;
 	class NamedClass;
 
 	link_class(Named, MetaClass);

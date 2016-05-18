@@ -8,8 +8,10 @@
 #include <core/Object.h>
 #include <core/container/Array.h>
 
-#include <bullet/btBulletCollisionCommon.h>
-#include <bullet/btBulletDynamicsCommon.h>
+#include <math/Vector.h>
+
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
 
 //---------------------------------------------------------------------------
 
@@ -19,9 +21,9 @@ namespace Rapture
 
 	struct ContactInfo
 	{
-		btVector3 normal;
-		btVector3 pos;
-		btScalar force;
+		dvec normal;
+		dvec pos;
+		double force;
 	};
 
 	class PhysicalWorld : public Object, public btDiscreteDynamicsWorld
@@ -33,7 +35,8 @@ namespace Rapture
 			setGravity({0.0, -10.0, 0.0});
 		}
 
-	protected: public_for_handle(PhysicalWorld);
+	protected:
+		friend_handle;
 		using btDiscreteDynamicsWorld::operator new;
 		using btDiscreteDynamicsWorld::operator delete;
 		using btDiscreteDynamicsWorld::operator new[];

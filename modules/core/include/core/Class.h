@@ -121,19 +121,17 @@ namespace Rapture
 			if(this == metaClass)
 				return true;
 
-			return ParentsLoop::iterate<KindOfClass, false>(metaClass);
+			return ParentsLoop::template iterate<KindOfClass, false>(metaClass);
 		}
 
 		virtual void forEachClass(const std::function<void(const MetaClass *)> & func) const override
 		{
 			func(this);
-			ParentsLoop::iterate<ForEachMetaClass>(func);
+			ParentsLoop::template iterate<ForEachMetaClass>(func);
 		}
 	};
 
 #define link_class(cl, /* class */...)		\
-	class cl;								\
-											\
 	template<>								\
 	struct ClassInstance<cl>				\
 	{										\
@@ -143,7 +141,10 @@ namespace Rapture
 			static const Class meta(#cl);	\
 			return &meta;					\
 		}									\
-	};
+	}
+
+#define declare_and_link(cl, /* Class */...)		\
+	class cl; link_class(cl, __VA_ARGS__)
 }
 
 //---------------------------------------------------------------------------

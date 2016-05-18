@@ -31,6 +31,8 @@
 
 namespace Rapture
 {
+	class UISpace;
+
 	class Surface : public Shared
 	{
 		friend class Graphics;
@@ -83,7 +85,7 @@ namespace Rapture
 
 	class Graphics : public Subject
 	{
-		friend class WindowAdapter;
+		friend class UISpace;
 
 	public:
 		Graphics() { setclass(Graphics); }
@@ -106,8 +108,8 @@ namespace Rapture
 			return _surface->viewport;
 		}
 
-		virtual Handle<Image> createImage(const ImageData & data) const = 0;
-		virtual Handle<Figure> createFigure(const FigureData & data) const = 0;
+		virtual Handle<Image> createImage(const ImageData & data) = 0;
+		virtual Handle<Figure> createFigure(const FigureData & data) = 0;
 
 		virtual void present() const = 0;
 
@@ -116,12 +118,12 @@ namespace Rapture
 			return _clipRect;
 		}
 
-		const color4 & clearColor() const
+		const colorf & clearColor() const
 		{
 			return *_clearColor;
 		}
 
-		const color4 & color() const
+		const colorf & color() const
 		{
 			return *_color;
 		}
@@ -131,9 +133,9 @@ namespace Rapture
 			return *_fontSize;
 		}
 
-		int lineSize() const
+		int lineWidth() const
 		{
-			return *_lineSize;
+			return *_lineWidth;
 		}
 
 		FillMode fillMode() const
@@ -141,29 +143,43 @@ namespace Rapture
 			return *_fillMode;
 		}
 
-		void setClearColor(const color4 & color)
+		template<class ... A, useif <can_construct<colorf, A...>::value> endif>
+		void setClearColor(A &&... a)
 		{
-			*_clearColor = color;
+			_clearColor->set(forward<A>(a)...);
 		}
 
-		void setColor(const color4 & color)
+		template<class C, class ... A, useif <is_color<C>::value, can_construct<C, A...>::value, not_same_types<C, tuple<A...>>::value> endif>
+		void setClearColor(A &&... a)
 		{
-			*_color = color;
+			_clearColor->set(C {forward<A>(a)...});
+		}
+
+		template<class ... A, useif <can_construct<colorf, A...>::value> endif>
+		void setColor(A &&... a)
+		{
+			_color->set(forward<A>(a)...);
+		}
+
+		template<class C, class ... A, useif <is_color<C>::value, can_construct<C, A...>::value, not_same_types<C, tuple<A...>>::value> endif>
+		void setColor(A &&... a)
+		{
+			_color->set(C {forward<A>(a)...});
 		}
 
 		void setFontSize(int size)
 		{
-			*_fontSize = size;
+			_fontSize->set(size);
 		}
 
-		void setLineSize(int size)
+		void setLineWidth(int size)
 		{
-			*_lineSize = size;
+			_lineWidth->set(size);
 		}
 
 		void setFillMode(FillMode mode)
 		{
-			*_fillMode = mode;
+			_fillMode->set(mode);
 		}
 
 		virtual void clip(const IntRect & rect) = 0;
@@ -218,17 +234,17 @@ namespace Rapture
 			draw(text, pt.x, pt.y);
 		}
 
-		IntSize getTextSize(const string & text) const
+		IntSize getTextSize(const string & text)
 		{
 			return textSize<string>(this, text);
 		}
 
-		IntSize getTextSize(const wstring & text) const
+		IntSize getTextSize(const wstring & text)
 		{
 			return textSize<wstring>(this, text);
 		}
 
-		State<color4> * colorState()
+		State<colorf> * colorState()
 		{
 			return _color;
 		}
@@ -238,9 +254,9 @@ namespace Rapture
 			return _fontSize;
 		}
 
-		State<int> * lineSizeState()
+		State<int> * lineWidthState()
 		{
-			return _lineSize;
+			return _lineWidth;
 		}
 
 		State<FillMode> * fillModeState()
@@ -257,14 +273,14 @@ namespace Rapture
 		}
 
 	protected:
-		virtual Handle<Surface> createWindowSurface(WindowAdapter * adapter) const = 0;
+		virtual Handle<Surface> createSurface(UISpace * space) = 0;
 		virtual void updateBrushState() {}
 
 		template<class string_t>
 		static void draw(Graphics * graphics, const string_t & text, int x, int y);
 
 		template<class string_t>
-		static IntSize textSize(const Graphics * graphics, const string_t & text);
+		static IntSize textSize(Graphics * graphics, const string_t & text);
 
 		Handle<Surface> _surface;
 		Handle<Font> _font;
@@ -294,10 +310,10 @@ namespace Rapture
 		template<class T>
 		using BrushStateHandle = Handle<BrushState<T>>;
 
-		BrushStateHandle<color4> _color {this, 0.0f, 0.0f, 0.0f, 1.0f};
-		BrushStateHandle<int> _lineSize {this, 1};
+		BrushStateHandle<colorf> _color {this, 0.0f, 0.0f, 0.0f, 1.0f};
+		BrushStateHandle<int> _lineWidth {this, 1};
 
-		StateHandle<color4> _clearColor {1.0f, 1.0f, 1.0f, 1.0f};
+		StateHandle<colorf> _clearColor {1.0f, 1.0f, 1.0f, 1.0f};
 		StateHandle<int> _fontSize {14};
 		StateHandle<FillMode> _fillMode {FillMode::Solid};
 	};

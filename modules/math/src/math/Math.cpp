@@ -11,39 +11,39 @@ namespace Rapture
 	template struct MathConstants<Vector<float>>;
 	template struct MathConstants<Vector<double>>;
 
-	const float  MathConstants<float> ::one			= 1.0f;
-	const double MathConstants<double>::one			= 1.0;
-	const float  MathConstants<float> ::pi			= 3.141592653f;
-	const double MathConstants<double>::pi			= 3.14159265358979323846;
-	const float  MathConstants<float> ::pi2			= 6.283185307f;
-	const double MathConstants<double>::pi2			= 6.28318530717958647692;
-	const float  MathConstants<float> ::half_pi		= 1.570796326f;
-	const double MathConstants<double>::half_pi		= 1.57079632679489661923;
-	const float  MathConstants<float> ::half_pi3	= 4.712388980f;
-	const double MathConstants<double>::half_pi3	= 4.71238898038468985769;
-	const float  MathConstants<float> ::inv_pi		= 0.318309886f;
-	const double MathConstants<double>::inv_pi		= 0.318309886183790671538;
-	const float  MathConstants<float> ::inv_pi2		= 0.159154943f;
-	const double MathConstants<double>::inv_pi2		= 0.159154943091895335769;
-	const float  MathConstants<float> ::degree180	= 180.0f;
-	const double MathConstants<double>::degree180	= 180.0;
-	const float  MathConstants<float> ::degree360	= 360.0f;
-	const double MathConstants<double>::degree360	= 360.0;
-	const float  MathConstants<float> ::eps			= 1.192092896e-07f;
-	const double MathConstants<double>::eps			= 2.2204460492503131e-016;
-	const float  MathConstants<float> ::eps2		= Math<float> ::eps * Math<float> ::eps;
-	const double MathConstants<double>::eps2		= Math<double>::eps * Math<double>::eps;
-	const float  MathConstants<float> ::eps3		= Math<float> ::eps * Math<float> ::eps * Math<float> ::eps;
-	const double MathConstants<double>::eps3		= Math<double>::eps * Math<double>::eps * Math<double>::eps;
-	const float  MathConstants<float> ::infinity	= std::numeric_limits<float>::infinity();
-	const double MathConstants<double>::infinity	= std::numeric_limits<double>::infinity();
+	template<> const float  MathConstants<float> ::one			= 1.0f;
+	template<> const double MathConstants<double>::one			= 1.0;
+	template<> const float  MathConstants<float> ::pi			= 3.141592653f;
+	template<> const double MathConstants<double>::pi			= 3.14159265358979323846;
+	template<> const float  MathConstants<float> ::pi2			= 6.283185307f;
+	template<> const double MathConstants<double>::pi2			= 6.28318530717958647692;
+	template<> const float  MathConstants<float> ::half_pi		= 1.570796326f;
+	template<> const double MathConstants<double>::half_pi		= 1.57079632679489661923;
+	template<> const float  MathConstants<float> ::half_pi3		= 4.712388980f;
+	template<> const double MathConstants<double>::half_pi3		= 4.71238898038468985769;
+	template<> const float  MathConstants<float> ::inv_pi		= 0.318309886f;
+	template<> const double MathConstants<double>::inv_pi		= 0.318309886183790671538;
+	template<> const float  MathConstants<float> ::inv_pi2		= 0.159154943f;
+	template<> const double MathConstants<double>::inv_pi2		= 0.159154943091895335769;
+	template<> const float  MathConstants<float> ::degree180	= 180.0f;
+	template<> const double MathConstants<double>::degree180	= 180.0;
+	template<> const float  MathConstants<float> ::degree360	= 360.0f;
+	template<> const double MathConstants<double>::degree360	= 360.0;
+	template<> const float  MathConstants<float> ::eps			= 1.192092896e-07f;
+	template<> const double MathConstants<double>::eps			= 2.2204460492503131e-016;
+	template<> const float  MathConstants<float> ::eps2		= Math<float> ::eps * Math<float> ::eps;
+	template<> const double MathConstants<double>::eps2		= Math<double>::eps * Math<double>::eps;
+	template<> const float  MathConstants<float> ::eps3		= Math<float> ::eps * Math<float> ::eps * Math<float> ::eps;
+	template<> const double MathConstants<double>::eps3		= Math<double>::eps * Math<double>::eps * Math<double>::eps;
+	template<> const float  MathConstants<float> ::infinity	= std::numeric_limits<float>::infinity();
+	template<> const double MathConstants<double>::infinity	= std::numeric_limits<double>::infinity();
 
-	const float  MathConstants<float> ::degreetorad = Math<float> ::pi / Math<float> ::degree180;
-	const double MathConstants<double>::degreetorad = Math<double>::pi / Math<double>::degree180;
-	const float  MathConstants<float> ::radtodegree = Math<float> ::degree180 / Math<float> ::pi;
-	const double MathConstants<double>::radtodegree = Math<double>::degree180 / Math<double>::pi;
+	template<> const float  MathConstants<float> ::degreetorad = Math<float> ::pi / Math<float> ::degree180;
+	template<> const double MathConstants<double>::degreetorad = Math<double>::pi / Math<double>::degree180;
+	template<> const float  MathConstants<float> ::radtodegree = Math<float> ::degree180 / Math<float> ::pi;
+	template<> const double MathConstants<double>::radtodegree = Math<double>::degree180 / Math<double>::pi;
 
-	const float MathCoefficients<float>::sin[] = {
+	template<> const float MathCoefficients<float>::sin[] = {
 		-0.16666666666666666666666666666667f,
 		+0.00833333333333333333333333333333f,
 		-1.984126984126984126984126984127e-4f,
@@ -51,7 +51,7 @@ namespace Rapture
 		-2.5052108385441718775052108385442e-8f
 	};
 
-	const double MathCoefficients<double>::sin[] = {
+	template<> const double MathCoefficients<double>::sin[] = {
 		-0.16666666666666666666666666666667,
 		+0.00833333333333333333333333333333,
 		-1.984126984126984126984126984127e-4,
@@ -59,7 +59,7 @@ namespace Rapture
 		-2.5052108385441718775052108385442e-8
 	};
 
-	const float MathCoefficients<float>::cos[] = {
+	template<> const float MathCoefficients<float>::cos[] = {
 		-0.5f,
 		+0.04166666666666666666666666666667f,
 		-0.00138888888888888888888888888889f,
@@ -67,7 +67,7 @@ namespace Rapture
 		-2.7557319223985890652557319223986e-7f
 	};
 
-	const double MathCoefficients<double>::cos[] = {
+	template<> const double MathCoefficients<double>::cos[] = {
 		-0.5,
 		+0.04166666666666666666666666666667,
 		-0.00138888888888888888888888888889,
@@ -82,42 +82,42 @@ namespace Rapture
 	template struct Matrix2x2<float>;
 	template struct Matrix2x2<double>;
 
-	const FloatVector  FloatVector ::positiveX  { 1,  0,  0,  0 };
-	const DoubleVector DoubleVector::positiveX  { 1,  0,  0,  0 };
-	const FloatVector  FloatVector ::positiveY  { 0,  1,  0,  0 };
-	const DoubleVector DoubleVector::positiveY  { 0,  1,  0,  0 };
-	const FloatVector  FloatVector ::positiveZ  { 0,  0,  1,  0 };
-	const DoubleVector DoubleVector::positiveZ  { 0,  0,  1,  0 };
-	const FloatVector  FloatVector ::positiveW  { 0,  0,  0,  1 };
-	const DoubleVector DoubleVector::positiveW  { 0,  0,  0,  1 };
-	const FloatVector  FloatVector ::negativeX  {-1,  0,  0,  0 };
-	const DoubleVector DoubleVector::negativeX  {-1,  0,  0,  0 };
-	const FloatVector  FloatVector ::negativeY  { 0, -1,  0,  0 };
-	const DoubleVector DoubleVector::negativeY  { 0, -1,  0,  0 };
-	const FloatVector  FloatVector ::negativeZ  { 0,  0, -1,  0 };
-	const DoubleVector DoubleVector::negativeZ  { 0,  0, -1,  0 };
-	const FloatVector  FloatVector ::negativeW  { 0,  0,  0, -1 };
-	const DoubleVector DoubleVector::negativeW  { 0,  0,  0, -1 };
+	template<> const FloatVector  FloatVector ::positiveX = { 1,  0,  0,  0 };
+	template<> const DoubleVector DoubleVector::positiveX = { 1,  0,  0,  0 };
+	template<> const FloatVector  FloatVector ::positiveY = { 0,  1,  0,  0 };
+	template<> const DoubleVector DoubleVector::positiveY = { 0,  1,  0,  0 };
+	template<> const FloatVector  FloatVector ::positiveZ = { 0,  0,  1,  0 };
+	template<> const DoubleVector DoubleVector::positiveZ = { 0,  0,  1,  0 };
+	template<> const FloatVector  FloatVector ::positiveW = { 0,  0,  0,  1 };
+	template<> const DoubleVector DoubleVector::positiveW = { 0,  0,  0,  1 };
+	template<> const FloatVector  FloatVector ::negativeX = {-1,  0,  0,  0 };
+	template<> const DoubleVector DoubleVector::negativeX = {-1,  0,  0,  0 };
+	template<> const FloatVector  FloatVector ::negativeY = { 0, -1,  0,  0 };
+	template<> const DoubleVector DoubleVector::negativeY = { 0, -1,  0,  0 };
+	template<> const FloatVector  FloatVector ::negativeZ = { 0,  0, -1,  0 };
+	template<> const DoubleVector DoubleVector::negativeZ = { 0,  0, -1,  0 };
+	template<> const FloatVector  FloatVector ::negativeW = { 0,  0,  0, -1 };
+	template<> const DoubleVector DoubleVector::negativeW = { 0,  0,  0, -1 };
 
-	const FloatVector  FloatVector ::zero		{ 0,  0,  0,  0 };
-	const DoubleVector DoubleVector::zero		{ 0,  0,  0,  0 };
-	const FloatVector  FloatVector ::one		{ 1,  1,  1,  1 };
-	const DoubleVector DoubleVector::one		{ 1,  1,  1,  1 };
-	const FloatVector  FloatVector ::two		{ 2,  2,  2,  2 };
-	const DoubleVector DoubleVector::two		{ 2,  2,  2,  2 };
-	const FloatVector  FloatVector ::oneXYZ		{ 1,  1,  1,  0 };
-	const DoubleVector DoubleVector::oneXYZ		{ 1,  1,  1,  0 };
-	const FloatVector  FloatVector ::twoXYZ		{ 2,  2,  2,  0 };
-	const DoubleVector DoubleVector::twoXYZ		{ 2,  2,  2,  0 };
-	const FloatVector  FloatVector ::minusOne	{-1, -1, -1, -1 };
-	const DoubleVector DoubleVector::minusOne	{-1, -1, -1, -1 };
+	template<> const FloatVector  FloatVector ::zero	  = { 0,  0,  0,  0 };
+	template<> const DoubleVector DoubleVector::zero	  = { 0,  0,  0,  0 };
+	template<> const FloatVector  FloatVector ::one		  = { 1,  1,  1,  1 };
+	template<> const DoubleVector DoubleVector::one		  = { 1,  1,  1,  1 };
+	template<> const FloatVector  FloatVector ::two		  = { 2,  2,  2,  2 };
+	template<> const DoubleVector DoubleVector::two		  = { 2,  2,  2,  2 };
+	template<> const FloatVector  FloatVector ::oneXYZ	  = { 1,  1,  1,  0 };
+	template<> const DoubleVector DoubleVector::oneXYZ	  = { 1,  1,  1,  0 };
+	template<> const FloatVector  FloatVector ::twoXYZ	  = { 2,  2,  2,  0 };
+	template<> const DoubleVector DoubleVector::twoXYZ	  = { 2,  2,  2,  0 };
+	template<> const FloatVector  FloatVector ::minusOne  = {-1, -1, -1, -1 };
+	template<> const DoubleVector DoubleVector::minusOne  = {-1, -1, -1, -1 };
 
-	const FloatVector  FloatVector ::half		{.5f,.5f,.5f,.5f};
-	const DoubleVector DoubleVector::half		{.5, .5, .5, .5 };
+	template<> const FloatVector  FloatVector ::half	  = {.5f,.5f,.5f,.5f};
+	template<> const DoubleVector DoubleVector::half	  = {.5, .5, .5, .5 };
 
-#define implement_vector_constants(constant)																									\
-	const FloatVector  FloatVectorMath ::constant { FloatMath::constant,  FloatMath::constant,  FloatMath::constant,  FloatMath::constant  };	\
-	const DoubleVector DoubleVectorMath::constant { DoubleMath::constant, DoubleMath::constant, DoubleMath::constant, DoubleMath::constant };	\
+#define implement_vector_constants(constant)																													\
+	template<> const FloatVector  FloatVectorConstants ::constant = { FloatMath::constant,  FloatMath::constant,  FloatMath::constant,  FloatMath::constant  };	\
+	template<> const DoubleVector DoubleVectorConstants::constant = { DoubleMath::constant, DoubleMath::constant, DoubleMath::constant, DoubleMath::constant }	\
 
 	implement_vector_constants(one);
 	implement_vector_constants(pi);
@@ -138,7 +138,7 @@ namespace Rapture
 #undef implement_vector_constants
 
 #define implement_vector_coefs(coefs)															\
-	const FloatVector FloatVectorCfs::coefs[] {													\
+	template<> const FloatVector FloatVectorCfs::coefs[5] = {									\
 		{FloatCfs::coefs[0], FloatCfs::coefs[0], FloatCfs::coefs[0], FloatCfs::coefs[0]},		\
 		{FloatCfs::coefs[1], FloatCfs::coefs[1], FloatCfs::coefs[1], FloatCfs::coefs[1]},		\
 		{FloatCfs::coefs[2], FloatCfs::coefs[2], FloatCfs::coefs[2], FloatCfs::coefs[2]},		\
@@ -146,7 +146,7 @@ namespace Rapture
 		{FloatCfs::coefs[4], FloatCfs::coefs[4], FloatCfs::coefs[4], FloatCfs::coefs[4]},		\
 	};																							\
 																								\
-	const DoubleVector DoubleVectorCfs::coefs[] {												\
+	template<> const DoubleVector DoubleVectorCfs::coefs[5] = {									\
 		{DoubleCfs::coefs[0], DoubleCfs::coefs[0], DoubleCfs::coefs[0], DoubleCfs::coefs[0]},	\
 		{DoubleCfs::coefs[1], DoubleCfs::coefs[1], DoubleCfs::coefs[1], DoubleCfs::coefs[1]},	\
 		{DoubleCfs::coefs[2], DoubleCfs::coefs[2], DoubleCfs::coefs[2], DoubleCfs::coefs[2]},	\
@@ -159,32 +159,32 @@ namespace Rapture
 
 #undef implement_vector_coefs
 
-	const Matrix2x2<float> Matrix2x2<float>::initial {
+	template<> const Matrix2x2<float> Matrix2x2<float>::initial = {
 		 1,  0,
 		 0,  1
 	};
 
-	const Matrix2x2<double> Matrix2x2<double>::initial {
+	template<> const Matrix2x2<double> Matrix2x2<double>::initial = {
 		 1,  0,
 		 0,  1
 	};
 
-	const Matrix2x2<float> Matrix2x2<float>::negative {
+	template<> const Matrix2x2<float> Matrix2x2<float>::negative = {
 		-1,  0,
 		 0, -1
 	};
 
-	const Matrix2x2<double> Matrix2x2<double>::negative {
+	template<> const Matrix2x2<double> Matrix2x2<double>::negative = {
 		-1,  0,
 		 0, -1
 	};
 
-	const Matrix2x2<float> Matrix2x2<float>::inversemask {
+	template<> const Matrix2x2<float> Matrix2x2<float>::inversemask = {
 		 1, -1,
 		-1,  1
 	};
 
-	const Matrix2x2<double> Matrix2x2<double>::inversemask {
+	template<> const Matrix2x2<double> Matrix2x2<double>::inversemask = {
 		 1, -1,
 		-1,  1
 	};

@@ -132,7 +132,7 @@ namespace Rapture
 		if(!FreeImage_SaveToMemory(internal_format, bmp, mem))
 			throw ImageConversionException("Can't save bitmap of format \"", type, "\" to memory");
 
-		unsigned long size;
+		DWORD size;
 
 		FreeImage_AcquireMemory(mem, &data, &size);
 		output->set(data, size);

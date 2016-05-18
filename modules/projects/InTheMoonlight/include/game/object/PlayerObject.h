@@ -19,19 +19,19 @@ namespace Rapture
 		friend class Contacter;
 
 	public:
-		Contact(double x, double y, double z, float force) : _pos {x, y, z, 1.0}, _force(std::min(1.0f, force)) {}
+		Contact(DoubleVector pos, double force) : _pos {pos}, _force(std::min(1.0, force)) {}
 
 	protected:
 		void draw(Graphics3D * graphics, const IntRect & viewport, float zoom) const
 		{
 			auto pos = FloatPoint {_pos.x, _pos.y} * FloatPoint {zoom, zoom};
-			graphics->setColor({1.0f, 1.0f, 1.0f, (1.0f - float(_ticks) / _maxTicks) * _force});
-			graphics->ellipse(SqRect {centeredSquare(pos, zoom * float(_ticks) * std::max(_force, 0.5f) * 0.04f)});
+			graphics->setColor(1.0f, 1.0f, 1.0f, (1.0f - float(_ticks) / _maxTicks) * _force);
+			graphics->ellipse(SqRect {centeredSquare(pos, zoom * float(_ticks) * float(std::max(_force, 0.5)) * 0.04f)});
 		}
 
 		DoubleVector _pos;
 
-		float _force = 1.0f;
+		double _force = 1.0f;
 		int _ticks = 0;
 		int _maxTicks = 100;
 	};
@@ -41,9 +41,9 @@ namespace Rapture
 	public:
 		Contacter(Scene * scene) : DrawableObject(scene) {}
 
-		void addContact(double x, double y, double z, float force)
+		void addContact(DoubleVector pos, double force)
 		{
-			_contacts.emplace_back(x, y, z, force);
+			_contacts.emplace_back(pos, force);
 		}
 
 		int contactsCount() const
@@ -69,7 +69,7 @@ namespace Rapture
 		virtual void draw(Graphics3D * graphics, const IntRect & viewport, float zoom) const override
 		{
 			auto dt = hold(graphics->depthTestModeState(), false);
-			auto lw = hold(graphics->lineSizeState(), 2);
+			auto lw = hold(graphics->lineWidthState(), 2);
 			auto fm = hold(graphics->fillModeState(), FillMode::Wireframe);
 
 			for(auto & contact : _contacts)
@@ -79,20 +79,20 @@ namespace Rapture
 		deque<Contact> _contacts;
 	};
 
-	link_class(PlayerObject, Class<PhysicalObject, Drawable>);
+	declare_and_link(PlayerObject, Class<PhysicalObject, Drawable>);
 
 	class PlayerObject : public PhysicalObject, public Drawable
 	{
 		friend class PlayerController;
 
 	public:
-		PlayerObject(Scene * scene, PhysicalWorld * world) :
+		PlayerObject(Scene * scene, PhysicalWorld * world, const dvec & pos) :
 			PhysicalObject(
 				scene,
 				world,
 				new btBoxShape(btVector3{1.0, 1.0, 1.0}),
-				{ 0.0, 20.0, 0.0, 1.0 },
-				10.0
+				pos,
+				5.0
 				),
 			Drawable(scene),
 			_contacter(scene),
@@ -111,7 +111,7 @@ namespace Rapture
 			if(obj == nullptr || obj notkindof (PlaneObject) || info.force < 100)
 				return;
 
-			_contacter->addContact(info.pos[0], info.pos[1], info.pos[2], float(info.force / 5000));
+			_contacter->addContact(info.pos, info.force / 5000);
 		}
 
 	protected:
@@ -126,7 +126,7 @@ namespace Rapture
 
 			DoubleVector a;
 
-			btVector3 from(_pos.x, _pos.y, _pos.z);
+			btVector3 from(_pos.elements);
 			btVector3 to(_pos.x, _pos.y - 2.0, _pos.z);
 			btCollisionWorld::AllHitsRayResultCallback res(from, to);
 
@@ -136,7 +136,7 @@ namespace Rapture
 			{
 				if(res.m_collisionObjects[i] != _rigidBody)
 				{    
-					setVector(a, res.m_hitPointWorld[i]);
+					a = res.m_hitPointWorld[i];
 
 					if(_pos.distanceTo(a) < 1.2)
 					{
@@ -180,7 +180,7 @@ namespace Rapture
 					_rigidBody->activate();
 			}
 
-			_rigidBody->applyCentralForce(force.v);
+			_rigidBody->applyCentralForce(force.elements);
 		}
 
 		virtual void draw(Graphics3D * graphics, const IntRect & viewport, float zoom) const override
@@ -192,13 +192,13 @@ namespace Rapture
 			FloatQuaternion r {_rot};
 			FloatScaling s {zoom};
 
-			graphics->setColor(_color * 0.5_v);
+			graphics->setColor(_color.vector * 0.5_v);
 			graphics->draw(_figure, FloatTransform {t, r} * s);
 			graphics->setColor(_color);
 			graphics->draw(_figure, FloatTransform {t, r, FloatScaling{0.9f}} * s);
 		}
 
-		FloatVector _color = FloatVector::one;
+		colorf _color = FloatVector::one;
 		Handle<Contacter> _contacter;
 		Handle<Figure> _figure;
 
@@ -215,12 +215,12 @@ namespace Rapture
 		public:
 			Receiver(PlayerObject * object) : object(object) {}
 
-			void onKeyDown(Handle<KeyDownMessage> & message, WindowAdapter & dest)
+			void onKeyDown(Handle<KeyDownMessage> & message, UISpace & dest)
 			{
 				object->_keyMap.press(message->key);
 			}
 
-			void onKeyUp(Handle<KeyUpMessage> & message, WindowAdapter & dest)
+			void onKeyUp(Handle<KeyUpMessage> & message, UISpace & dest)
 			{
 				object->_keyMap.unpress(message->key);
 			}
@@ -231,14 +231,14 @@ namespace Rapture
 	public:
 		PlayerController(PlayerObject * object) : receiver(object)
 		{
-			connect(*receiver->object->scene()->adapter(), receiver, &Receiver::onKeyDown);
-			connect(*receiver->object->scene()->adapter(), receiver, &Receiver::onKeyUp);
+			connect(*receiver->object->scene()->space(), receiver, &Receiver::onKeyDown);
+			connect(*receiver->object->scene()->space(), receiver, &Receiver::onKeyUp);
 		}
 
 		virtual ~PlayerController()
 		{
-			disconnect<WindowAdapter, KeyDownMessage>(*receiver->object->scene()->adapter(), receiver);
-			disconnect<WindowAdapter, KeyUpMessage>(*receiver->object->scene()->adapter(), receiver);
+			disconnect<UISpace, KeyDownMessage>(*receiver->object->scene()->space(), receiver);
+			disconnect<UISpace, KeyUpMessage>(*receiver->object->scene()->space(), receiver);
 		}
 
 	protected:

@@ -10,11 +10,11 @@ include(${RAPTURE_TOOLS}/project.cmake)
 
 #--------------------------------------------------------
 
+start_module()
+
 require_modules(
 	RaptureMath "math"
 )
-
-start_module()
 
 if(WIN32)
 set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
@@ -25,7 +25,7 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 			RectAdapter.h
 			Message.h
 		END_SECTION
-		
+
 	SRC_GROUP src Sources
 		START_SECTION windows
 			Message.cpp
@@ -38,14 +38,7 @@ endif()
 #--------------------------------------------------------
 
 add_library(${PROJECT_NAME} STATIC ${PROJECT_SOURCES})
-set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-#--------------------------------------------------------
-
-set_project_include_dirs(${PROJECT_NAME}
-	${PROJECT_SOURCE_DIR}/include
-)
-
-target_link_libraries(${PROJECT_NAME} PUBLIC RaptureMath)
+end_module()
 
 #--------------------------------------------------------

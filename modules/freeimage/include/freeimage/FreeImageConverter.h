@@ -24,7 +24,7 @@ namespace Rapture
 
 		static void initialize()
 		{
-			Type<FreeImageConverter> ThisClass;
+			auto ThisClass = gettype(FreeImageConverter);
 
 			ImageIO::setConverter("bmp", ThisClass);
 			ImageIO::setConverter("ico", ThisClass);

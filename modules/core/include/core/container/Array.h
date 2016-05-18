@@ -7,7 +7,6 @@
 
 #include <core/Handle.h>
 
-#include <array>
 #include <vector>
 
 //---------------------------------------------------------------------------
@@ -15,29 +14,37 @@
 namespace Rapture
 {
 	using std::vector;
-	using std::array;
-
-	template<typename T>
-	class CustomArray : public vector<T>
-	{
-		typedef vector<T> Base;
-
-	public:
-		using Base::vector;
-		using Base::erase;
-
-		typename Base::iterator erase(int pos)
-		{
-			return erase(begin() + pos);
-		}
-	};
 
 	template<typename T, class ... OwnerAttr>
-	class Array : public CustomArray<Handle<T, OwnerAttr...>>
+	class Array : public vector<Handle<T, OwnerAttr...>>
 	{
 	public:
-		using CustomArray<Handle<T, OwnerAttr...>>::CustomArray;
+		using vector<Handle<T, OwnerAttr...>>::vector;
 	};
+
+	template<typename T>
+	void sort(vector<T> & v)
+	{
+		std::sort(v.begin(), v.end());
+	}
+
+	template<typename Pred, typename T, useif <
+		is_callable<Pred, const T &, const T &>::value
+		> endif
+	>
+	void sort(vector<T> & v)
+	{
+		std::sort(v.begin(), v.end(), Pred());
+	}
+
+	template<typename T, typename Pred, useif <
+		is_callable<Pred, const T &, const T &>::value
+		> endif
+	>
+	void sort(vector<T> & v, Pred pred)
+	{
+		std::sort(v.begin(), v.end(), pred);
+	}
 }
 
 //---------------------------------------------------------------------------

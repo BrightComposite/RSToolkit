@@ -3,12 +3,8 @@ cd ..
 echo -- Removing cmake build directories and projects...
 set errors=0
 
-if exist "build-x86" (
-	( rd /S /Q "build-x86" ) && ( echo -- Successfully removed build directory for x86 architecture ) || ( set /a errors="%errors%+1" & echo !! Can't remove build directory for x86 architecture )
-)
-
-if exist "build-x64" (
-	( rd /S /Q "build-x64" ) && ( echo -- Successfully removed build directory for x64 architecture ) || ( set /a errors="%errors%+1" & echo !! Can't remove build directory for x64 architecture )
+for /d %%f in (build-*) do (
+	( rd /S /Q %%~nf ) && ( echo -- Successfully removed build directory %%~nf ) || ( set /a errors="%errors%+1" & echo !! Can't remove build directory %%~nf )
 )
 
 if exist "bin" (

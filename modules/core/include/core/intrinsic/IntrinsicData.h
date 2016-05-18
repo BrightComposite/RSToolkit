@@ -5,9 +5,9 @@
 
 //---------------------------------------------------------------------------
 
+#ifdef MSVC
 #include <intrin.h>
-
-#define USE_AVX
+#endif // MSVC
 
 #ifdef USE_AVX
 #include <immintrin.h>
@@ -26,38 +26,63 @@
 
 namespace Rapture
 {
-	template<size_t N>
-	struct IntrinTypes {};
+	template<class T, int N>
+	struct IntrinType {};
 
-	template<>
-	struct IntrinTypes<2>
+#define declare_intrin_type(T, N, intrin)	\
+	template<>								\
+	struct IntrinType<T, N>					\
+	{										\
+		using type = intrin;				\
+	}
+
+	struct __m16
 	{
-		typedef __m64 int_type;
-		typedef __m64 float_type;
-		typedef __m128d double_type;
+		union
+		{
+			struct
+			{
+				byte x, y;
+			};
+
+			__int16 i;
+			byte a[2];
+		};
 	};
 
+	struct __m32
+	{
+		union
+		{
+			struct
+			{
+				byte x, y, z, w;
+			};
+
+			__int32 i;
+			byte a[4];
+		};
+	};
+
+	declare_intrin_type(byte,   2, __m16);
+	declare_intrin_type(int,    2, __m64);
+	declare_intrin_type(float,  2, __m64);
+	declare_intrin_type(double, 2, __m128d);
+
+	declare_intrin_type(byte,   4, __m32);
+	declare_intrin_type(int,    4, __m128i);
+	declare_intrin_type(float,  4, __m128);
 #ifdef USE_AVX
-	template<>
-	struct IntrinTypes<4>
-	{
-		typedef __m128i int_type;
-		typedef __m128 float_type;
-		typedef __m256d double_type;
-	};
+	declare_intrin_type(double, 4, __m256d);
 #else
-	template<>
-	struct IntrinTypes<4>
-	{
-		typedef __m128i int_type;
-		typedef __m128 float_type;
-		typedef __m128d double_type[2];
-	};
+	declare_intrin_type(double, 4, __m128d[2]);
 #endif
-
+	
 	template<class T>
 	struct is_intrin : false_type {};
 
+	template<>
+	struct is_intrin<__m32>		 : true_type {};
 	template<>
 	struct is_intrin<__m64>		 : true_type {};
 	template<>
@@ -78,34 +103,13 @@ namespace Rapture
 	struct is_intrin<__m256d>	 : true_type {};
 #endif
 
-	template<class T, size_t N>
-	struct IntrinType {};
-
-	template<size_t N>
-	struct IntrinType<int, N>
-	{
-		typedef typename IntrinTypes<N>::int_type type;
-	};
-
-	template<size_t N>
-	struct IntrinType<float, N>
-	{
-		typedef typename IntrinTypes<N>::float_type type;
-	};
-
-	template<size_t N>
-	struct IntrinType<double, N>
-	{
-		typedef typename IntrinTypes<N>::double_type type;
-	};
-
-	template<class T, size_t N>
+	template<class T, int N>
 	using intrin_t = typename IntrinType<T, N>::type;
 
-	template<class T, size_t N>
+	template<class T, int N>
 	using intrin_base_t = remove_extent_t<intrin_t<T, N>>;
 
-	template<typename T, size_t N, size_t sz = array_size<intrin_t<T, N>>::value>
+	template<typename T, int N, size_t sz = array_size<intrin_t<T, N>>::value>
 	struct alignas(sizeof(intrin_t<T, N>)) IntrinData
 	{
 		typedef intrin_t<T, N> type;
@@ -123,18 +127,18 @@ namespace Rapture
 		IntrinData() {}
 		IntrinData(const type & v)
 		{
-			Initialize::init(this->v, v);
+			intrin_cvt(v, this->v);
 		}
 
-		template<class T, useif <is_intrin<T>::value> endif>
-		IntrinData(const T & v)
+		template<class U, useif <is_intrin<T>::value> endif>
+		IntrinData(const U & v)
 		{
 			intrin_cvt(v, this->v);
 		}
 
 		IntrinData & operator = (const type & v)
 		{
-			Initialize::init(this->v, v);
+			intrin_cvt(v, this->v);
 			return *this;
 		}
 
@@ -207,18 +211,18 @@ namespace Rapture
 		IntrinData() {}
 		IntrinData(const type & v)
 		{
-			Initialize::init(this->v, v);
+			intrin_cvt(v, this->v);
 		}
 
-		template<class T, useif <is_intrin<T>::value> endif>
-		IntrinData(const T & v)
+		template<class U, useif <is_intrin<U>::value> endif>
+		IntrinData(const U & v)
 		{
 			intrin_cvt(v, this->v);
 		}
 
-		IntrinData & __vectorcall operator = (const type & v)
+		IntrinData & operator = (const type & v)
 		{
-			this->v = v;
+			intrin_cvt(v, this->v);
 			return *this;
 		}
 
@@ -243,13 +247,13 @@ namespace Rapture
 		}
 
 		template<int I, useif <(I < 2)> endif>
-		static inline T __vectorcall get(const IntrinData & in)
+		static inline T get(const IntrinData & in)
 		{
 			return in.data[I];
 		}
 
 		template<int I, useif <(I < 2)> endif>
-		static inline void __vectorcall set(type & out, T value)
+		static inline void set(type & out, T value)
 		{
 			reinterpret_cast<IntrinData *>(out)->data[I] = value;
 		}
@@ -275,18 +279,18 @@ namespace Rapture
 
 		IntrinData(const type & v)
 		{
-			Initialize::init(this->v, v);
+			intrin_cvt(v, this->v);
 		}
 
-		template<class T, useif <is_intrin<T>::value> endif>
-		IntrinData(const T & v)
+		template<class U, useif <is_intrin<T>::value> endif>
+		IntrinData(const U & v)
 		{
 			intrin_cvt(v, this->v);
 		}
 
 		IntrinData & operator = (const type & v)
 		{
-			Initialize::init(this->v, v);
+			intrin_cvt(v, this->v);
 			return *this;
 		}
 
@@ -331,13 +335,13 @@ namespace Rapture
 		}
 
 		template<int I, useif <(I < 4)> endif>
-		static inline T __vectorcall get(const IntrinData & in)
+		static inline T get(const IntrinData & in)
 		{
 			return in.data[I];
 		}
 
 		template<int I, useif <(I < 4)> endif>
-		static inline void __vectorcall set(type & out, T value)
+		static inline void set(type & out, T value)
 		{
 			reinterpret_cast<IntrinData *>(out)->data[I] = value;
 		}
@@ -359,7 +363,7 @@ namespace Rapture
 		IntrinData() {}
 		IntrinData(const type & v) : v(v) {}
 
-		IntrinData & __vectorcall operator = (const type & v)
+		IntrinData & operator = (const type & v)
 		{
 			this->v = v;
 			return *this;
@@ -386,20 +390,20 @@ namespace Rapture
 		}
 
 		template<int I, useif <(I < 4)> endif>
-		static inline T __vectorcall get(const IntrinData & in)
+		static inline T get(const IntrinData & in)
 		{
 			return in.data[I];
 		}
 
 		template<int I, useif <(I < 4)> endif>
-		static inline void __vectorcall set(type & out, T value)
+		static inline void set(type & out, T value)
 		{
 			reinterpret_cast<IntrinData *>(out)->data[I] = value;
 		}
 	};
 
 	template<class T, size_t N>
-	using intrin_data = typename IntrinData<T, N>;
+	using intrin_data = IntrinData<T, N>;
 }
 
 //---------------------------------------------------------------------------

@@ -6,6 +6,7 @@
 //---------------------------------------------------------------------------
 
 #include <core/Handle.h>
+
 #include <list>
 
 //---------------------------------------------------------------------------
@@ -27,6 +28,30 @@ namespace Rapture
 	public:
 		using list<T *>::list;
 	};
+
+	template<typename T>
+	void sort(list<T> & l)
+	{
+		l.sort();
+	}
+
+	template<typename Pred, typename T, useif <
+		is_callable<Pred, const T &, const T &>::value
+		> endif
+	>
+	void sort(list<T> & l)
+	{
+		l.sort(Pred());
+	}
+
+	template<typename T, typename Pred, useif <
+		is_callable<Pred, const T &, const T &>::value
+		> endif
+	>
+	void sort(list<T> & l, Pred pred)
+	{
+		l.sort(pred);
+	}
 }
 
 //---------------------------------------------------------------------------

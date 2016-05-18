@@ -29,7 +29,7 @@ namespace Rapture
 		template<class T>
 		Handle<T> property(const String & key) const
 		{
-			return Handle<T>::cast(properties[key]);
+			return handle_cast<T>(properties[key]);
 		}
 
 		void setProperty(const String & key, const Handle<Object> & value)

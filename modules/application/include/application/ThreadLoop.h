@@ -8,6 +8,8 @@
 #include <core/addition/Singleton.h>
 #include <core/container/Array.h>
 #include <core/action/Action.h>
+#include <core/Exception.h>
+
 #include <chrono>
 
 //---------------------------------------------------------------------------
@@ -27,7 +29,7 @@ namespace Rapture
 			auto & loop = instance();
 
 			if(loop.active)
-				throw std::exception("ThreadLoop is already running!");
+				throw Exception("ThreadLoop is already running!");
 
 			loop.active = true;
 
@@ -41,7 +43,7 @@ namespace Rapture
 					return;
 				}
 
-				for(auto & it = list.begin(); it != list.end(); ++it)
+				for(auto it = list.begin(); it != list.end(); ++it)
 				{
 					int result = (*it)();
 

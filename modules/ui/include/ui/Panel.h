@@ -27,7 +27,7 @@ namespace Rapture
 			return true;
 		}
 
-		create_reader(WidgetChangedStateMessage);
+		override_reader(Panel, WidgetChangedStateMessage);
 	};
 }
 

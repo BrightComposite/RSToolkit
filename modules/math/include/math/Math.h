@@ -7,11 +7,11 @@
 
 #define _USE_MATH_DEFINES
 
+#include <meta/Meta.h>
+
 #include <math.h>
 #include <algorithm>
 #include <float.h>
-
-#include <meta/Meta.h>
 
 #include <stdlib.h>
 #undef min
@@ -21,6 +21,9 @@
 
 namespace Rapture
 {
+	template<class T>
+	struct Math;
+
 	template<class T>
 	struct MathConstants
 	{

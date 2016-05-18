@@ -2,7 +2,7 @@
 
 #include <opengl/OpenGL3_3.h>
 
-#include <ui/WindowAdapter.h>
+#include <ui/UISpace.h>
 
 //---------------------------------------------------------------------------
 
@@ -12,6 +12,9 @@ namespace Rapture
 	{
 		Graphics3D::Graphics3D()
 		{
+			initDevice();
+			initFacilities();
+
 			_wnd = createEmptyWindowHandle();
 			_device = GetDC(_wnd);
 			_handle = wglCreateContext(_device);
@@ -27,6 +30,8 @@ namespace Rapture
 
 			if(_wnd != nullptr)
 				DestroyWindow(_wnd);
+
+			freeFacilities();
 		}
 	}
 }

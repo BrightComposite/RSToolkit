@@ -15,6 +15,12 @@
 namespace Rapture
 {
 	class Graphics3D;
+	class VertexData;
+	class Model;
+	class Uniform;
+
+	link_class(Graphics3D, Class<Graphics>);
+	link_class(Model, Class<Object>);
 
 	using Texture = Image;
 
@@ -31,8 +37,6 @@ namespace Rapture
 
 	using VertexIndices = vector<uint16_t>;
 
-	link_class(Model, Class<Object>);
-
 	class Model : public Object
 	{
 	public:
@@ -45,19 +49,21 @@ namespace Rapture
 		uint stride, verticesLocation;
 	};
 
-	link_class(Graphics3D, Class<Graphics>);
-
 	class Graphics3D : public Graphics
 	{
+		friend class Uniform;
+
 	public:
 		Graphics3D() { setclass(Graphics3D); }
 		virtual ~Graphics3D() {}
 
 		using Graphics::bind;
-		virtual void bind(const Handle<Texture> & texture, uint index) = 0;
-
 		using Graphics::draw;
+
+		virtual void bind(const Handle<Texture> & texture, uint index) = 0;
 		virtual void draw(const Model * model) = 0;
+
+		virtual Handle<ShaderCode> getShaderCode(const string & id, ShaderType type) = 0;
 
 		float depth()
 		{
@@ -84,9 +90,25 @@ namespace Rapture
 			return _depthTestMode;
 		}
 
+		template<class T, typename ... A, useif <is_uniform<T>::value, can_construct_contents<T, A...>::value> endif>
+		void updateUniform(A && ... args)
+		{
+			uniforms.require<T>(this)->template set<T>(forward<A>(args)...);
+		}
+
 	protected:
+		friend UniformMap;
+		virtual Handle<UniformAdapter> createUniformAdapter(ShaderType shader, int index, size_t size) = 0;
+
+		template<class T>
+		void init(Handle<Uniform, Graphics3D> & uniform)
+		{
+			uniform.init(createUniformAdapter(T::shader, T::index, sizeof(Contents<T>)));
+		}
+
 		float _depth = 1.0f;
 		StateHandle<bool> _depthTestMode {false};
+		UniformMap uniforms;
 	};
 }
 

@@ -8,7 +8,7 @@
 namespace Rapture
 {
 	template<typename Pool>
-	using pool_t = typename Pool::Type;
+	using pool_t = typename Pool::type;
 
 	template<class Pool>
 	class PoolAllocator

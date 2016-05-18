@@ -17,7 +17,7 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 		START_SECTION io
 			FileSystem.h
 		END_SECTION
-			
+
 	SRC_GROUP src Sources
 		START_SECTION io
 			io.cpp
@@ -25,20 +25,11 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 )
 
 #--------------------------------------------------------
-			
+
 add_library(${PROJECT_NAME} STATIC ${PROJECT_SOURCES})
-set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+setup_third_party(boost COMPONENT filesystem)
+setup_third_party(boost COMPONENT system)
 
-#--------------------------------------------------------
-
-set_project_include_dirs(
-	${PROJECT_SOURCE_DIR}/include
-	${BOOST_SOURCE_DIR}/include
-)
-
-#--------------------------------------------------------
-
-target_setup_third_party(${PROJECT_NAME} boost COMPONENT filesystem)
-target_setup_third_party(${PROJECT_NAME} boost COMPONENT system)
+end_module()
 
 #--------------------------------------------------------

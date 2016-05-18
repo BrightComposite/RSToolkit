@@ -72,10 +72,9 @@ namespace Rapture
 			return wrap_method(inptr_(), method);
 		}
 
-		template<
-			typename V,
-				useif <std::is_member_pointer<V>::value> endif
-
+		template<typename V, useif <
+			std::is_member_pointer<V>::value
+			> endif
 		>
 		inline V & operator ->* (V T::*member) const
 		{

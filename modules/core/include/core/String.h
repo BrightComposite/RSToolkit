@@ -10,7 +10,10 @@
 
 #include <stdarg.h>
 #include <array>
+#include <cctype>
 #include <string>
+
+#include <core/algorithm/lookup3.h>
 
 //---------------------------------------------------------------------------
 
@@ -25,48 +28,6 @@ namespace Rapture
 {
 	class String;
 	class WideString;
-
-#ifndef _WIN64
-	inline errno_t _sttoa_s(size_t _Value, char * _Buffer, size_t _BufferCount, int _Radix)
-	{
-		return _ultoa_s(_Value, _Buffer, _BufferCount, _Radix);
-	}
-
-	inline size_t _strtost(char const * _String, char ** _EndPtr, int _Radix)
-	{
-		return strtoul(_String, _EndPtr, _Radix);
-	}
-
-	inline errno_t _sttow_s(size_t _Value, wchar_t * _Buffer, size_t _BufferCount, int _Radix)
-	{
-		return _ultow_s(_Value, _Buffer, _BufferCount, _Radix);
-	}
-
-	inline size_t _wcstost(wchar_t const * _String, wchar_t ** _EndPtr, int _Radix)
-	{
-		return wcstoul(_String, _EndPtr, _Radix);
-	}
-#else
-	inline errno_t _sttoa_s(size_t _Value, char * _Buffer, size_t _BufferCount, int _Radix)
-	{
-		return _ui64toa_s(_Value, _Buffer, _BufferCount, _Radix);
-	}
-
-	inline size_t _strtost(char const * _String, char ** _EndPtr, int _Radix)
-	{
-		return _strtoui64(_String, _EndPtr, _Radix);
-	}
-
-	inline errno_t _sttow_s(size_t _Value, wchar_t * _Buffer, size_t _BufferCount, int _Radix)
-	{
-		return _ui64tow_s(_Value, _Buffer, _BufferCount, _Radix);
-	}
-
-	inline size_t _wcstost(wchar_t const * _String, wchar_t ** _EndPtr, int _Radix)
-	{
-		return _wcstoui64(_String, _EndPtr, _Radix);
-	}
-#endif
 
 	string  narrow(const wstring & wide);
 	string  narrow(const wstring & wide, const locale & loc);
@@ -135,7 +96,6 @@ namespace Rapture
 		String(const wchar_t * s) : string(narrow(s))
 		{
 			setclass(String);
-			_Myptr()[_Mysize()] = '\0';
 		}
 
 		String(const wchar_t * const s, size_t length) : string(narrow({s, length}))
@@ -148,129 +108,13 @@ namespace Rapture
 			setclass(String);
 		}
 
-		String(byte value, int radix = 16) : String(static_cast<int>(value), radix) {}
+		String(byte value) : String(static_cast<int>(value)) {}
 
-		String(int value, int radix = 10) : String()
-		{
-			auto * buf = Memory<char>::allocate(16);
+		template<class T, class U = T, typename = decltype(std::to_string(declval<U>()))>
+		String(T value) : String(std::to_string(value)) {}
 
-			if(radix == 16)
-			{
-				buf[0] = '0';
-				buf[1] = 'x';
-
-				_itoa_s(value, buf + 2, 14, radix);
-			}
-			else
-				_itoa_s(value, buf, 16, radix);
-
-			string::assign(buf);
-			Memory<char>::free(buf);
-		}
-
-		String(long value, int radix = 16) : String()
-		{
-			auto * buf = Memory<char>::allocate(16);
-
-			if(radix == 16)
-			{
-				buf[0] = '0';
-				buf[1] = 'x';
-
-				_ltoa_s(value, buf + 2, 14, radix);
-			}
-			else
-				_ltoa_s(value, buf, 16, radix);
-
-			string::assign(buf);
-			Memory<char>::free(buf);
-		}
-
-		String(ulong value, int radix = 16) : String()
-		{
-			auto * buf = Memory<char>::allocate(16);
-
-			if(radix == 16)
-			{
-				buf[0] = '0';
-				buf[1] = 'x';
-
-				_ultoa_s(value, buf + 2, 14, radix);
-			}
-			else
-				_ultoa_s(value, buf, 16, radix);
-
-			string::assign(buf);
-			Memory<char>::free(buf);
-		}
-
-		String(size_t value, int radix = 16) : String()
-		{
-			auto * buf = Memory<char>::allocate(32);
-
-			if(radix == 16)
-			{
-				buf[0] = '0';
-				buf[1] = 'x';
-
-				_sttoa_s(value, buf + 2, 30, radix);
-			}
-			else
-				_sttoa_s(value, buf, 32, radix);
-
-			string::assign(buf);
-			Memory<char>::free(buf);
-		}
-
-		String(double value) : String()
-		{
-			auto * buf = Memory<char>::allocate(16);
-			sprintf_s(buf, 16, "%.5f", value);
-
-			size_t length = strlen(buf);
-
-			while(buf[length - 1] == '0')
-				length--;
-
-			if(buf[length - 1] == '.')
-			{
-				length++;
-				buf[length - 1] = '0';
-			}
-
-			buf[length] = '\0';
-
-			string::assign(buf);
-			Memory<char>::free(buf);
-		}
-
-		String(float value) : String()
-		{
-			auto * buf = Memory<char>::allocate(16);
-			sprintf_s(buf, 16, "%.5f", value);
-
-			size_t length = strlen(buf);
-
-			while(buf[length - 1] == '0')
-				length--;
-
-			if(buf[length - 1] == '.')
-			{
-				length++;
-				buf[length - 1] = '0';
-			}
-
-			buf[length] = '\0';
-
-			string::assign(buf);
-			Memory<char>::free(buf);
-		}
-
-		template<class T, useif <can_str_print<T>::value> endif>
-		String(const T & obj) : String()
-		{
-			print(*this, obj);
-		}
+		template<class T, typename = decltype(print(declval<String &>(), declval<T>()))>
+		String(const T & obj) : String() { print(*this, obj); }
 
 		String(const char * s1, size_t l1, const char * s2, size_t l2) : string(string(s1, l1) + string(s2, l2))
 		{
@@ -373,8 +217,8 @@ namespace Rapture
 			can_construct<String, T>::value,
 			not_same_type<String, T>::value,
 			not_same_type<WideString, T>::value
-			>
-			endif>
+			> endif
+		>
 		String & operator += (T && value)
 		{
 			return operator += (String(forward<T>(value)));
@@ -460,7 +304,7 @@ namespace Rapture
 
 		operator const char * () const
 		{
-			return this->_Myptr();
+			return this->data();
 		}
 
 		char & operator [] (int index)
@@ -494,7 +338,7 @@ namespace Rapture
 		String & flood(size_t start, size_t count, char sym, char limiter = '\0');
 
 		template<class T, class ... A, useif <
-				can_construct<String, T>::value, 
+				can_construct<String, T>::value,
 				can_construct<String, A>::value...
 			>
 			endif>
@@ -504,7 +348,7 @@ namespace Rapture
 		}
 
 		template<class T, class ... A, useif <
-			can_construct<String, T>::value, 
+			can_construct<String, T>::value,
 			can_construct<String, A>::value...
 			>
 			endif>
@@ -514,6 +358,7 @@ namespace Rapture
 			return add(forward<A>(others)...);
 		}
 
+		template<typename = Empty>
 		String & add()
 		{
 			return *this;
@@ -526,11 +371,11 @@ namespace Rapture
 			Cleaner(String & str) : string(str) {}
 
 			Cleaner & q(char ch = '\"'); // quotes
-			
+
 			Cleaner & b(char first = '(', char last = ')'); // brackets;
 
 			Cleaner & ls(); // leading spaces
-			
+
 			Cleaner & ts(); // trailing spaces
 
 			Cleaner & ds(); // double spaces
@@ -545,67 +390,56 @@ namespace Rapture
 
 		char asChar()
 		{
-			return this->empty() ? '\0' : this->_Myptr()[0];
+			return this->empty() ? '\0' : this->data()[0];
 		}
 
 		wchar_t asWideChar()
 		{
-			return this->empty() ? '\0' : this->_Myptr()[0];
+			return this->empty() ? '\0' : this->data()[0];
 		}
 
 		int asInt(int radix = 10)
 		{
-			const char * ptr = this->_Myptr();
-			char * end = nullptr;
-
-			return static_cast<int>(strtol(ptr, &end, radix));
+			return std::stoi(*this, nullptr, radix);
 		}
 
 		long asLong(int radix = 10)
 		{
-			const char * ptr = this->_Myptr();
-			char * end = nullptr;
-
-			return strtol(ptr, &end, radix);
+			return std::stol(*this, nullptr, radix);
 		}
 
 		ulong asUnsignedLong(int radix = 10)
 		{
-			const char * ptr = this->_Myptr();
-			char * end = nullptr;
-
-			return strtoul(ptr, &end, radix);
+			return std::stoul(*this, nullptr, radix);
 		}
 
+		#ifdef ARCH_X64
 		size_t asSize(int radix = 10)
 		{
-			const char * ptr = this->_Myptr();
-			char * end = nullptr;
-
-			return _strtost(ptr, &end, radix);
+			return std::stoull(*this, nullptr, radix);
 		}
+		#else
+		size_t asSize(int radix = 10)
+		{
+			return std::stoul(*this, nullptr, radix);
+		}
+		#endif
 
 		float asFloat()
 		{
-			const char * ptr = this->_Myptr();
-			char * end = nullptr;
-
-			return strtof(ptr, &end);
+			return std::stof(*this);
 		}
 
 		double asDouble()
 		{
-			const char * ptr = this->_Myptr();
-			char * end = nullptr;
-
-			return strtod(ptr, &end);
+			return std::stod(*this);
 		}
 
 		bool isAlpha()
 		{
-			for(auto ptr = this->cbegin(); ptr < this->cend(); ++ptr)
+			for(auto ptr = cbegin(); ptr < cend(); ++ptr)
 			{
-				if(!isalpha((unsigned char)*ptr))
+				if(!isalpha(*ptr))
 					return false;
 			}
 
@@ -614,9 +448,9 @@ namespace Rapture
 
 		bool isAlnum()
 		{
-			for(auto ptr = this->cbegin(); ptr < this->cend(); ++ptr)
+			for(auto ptr = cbegin(); ptr < cend(); ++ptr)
 			{
-				if(!isalnum((unsigned char)*ptr))
+				if(!std::isalnum(*ptr))
 					return false;
 			}
 
@@ -625,9 +459,9 @@ namespace Rapture
 
 		bool isDigits()
 		{
-			for(auto ptr = this->cbegin(); ptr < this->cend(); ++ptr)
+			for(auto ptr = cbegin(); ptr < cend(); ++ptr)
 			{
-				if(!isdigit((unsigned char)*ptr))
+				if(!std::isdigit(*ptr))
 					return false;
 			}
 
@@ -636,14 +470,14 @@ namespace Rapture
 
 		bool isHexDigits()
 		{
-			const char * s = this->_Myptr();
+			const char * s = this->data();
 
 			if(s[0] != '0' || s[1] != 'x')
 				return false;
 
 			for(const char * ptr = s + 2; *ptr != '\0'; ptr++)
 			{
-				if(!isxdigit((unsigned char)*ptr))
+				if(!std::isxdigit(*ptr))
 					return false;
 			}
 
@@ -652,20 +486,18 @@ namespace Rapture
 
 		bool isIntegral(int radix = 10)
 		{
-			const char * ptr = this->_Myptr();
-			char * end;
-			absorb() strtol(ptr, &end, radix);
+			size_t i;
+			absorb() std::stoi(*this, &i, radix);
 
-			return *end == '\0';
+			return i == size();
 		}
 
 		bool isFloating()
 		{
-			const char * ptr = this->_Myptr();
-			char * end;
-			absorb() strtod(ptr, &end);
+			size_t i;
+			absorb() std::stof(*this, &i);
 
-			return *end == '\0';
+			return i == size();
 		}
 	};
 
@@ -715,7 +547,6 @@ namespace Rapture
 		WideString(const char * s) : wstring(widen(s))
 		{
 			setclass(String);
-			_Myptr()[_Mysize()] = '\0';
 		}
 
 		WideString(const char * const s, size_t length) : wstring(widen({s, length}))
@@ -728,127 +559,16 @@ namespace Rapture
 			setclass(String);
 		}
 
-		WideString(byte value, int radix = 16) : WideString(static_cast<int>(value), radix) {}
+		WideString(byte value, int radix = 16) : WideString(static_cast<int>(value)) {}
 
-		WideString(int value, int radix = 10) : WideString()
-		{
-			auto * buf = Memory<wchar_t>::allocate(16);
+		template<class T, typename =
+			decltype(std::to_wstring(declval<T>()))
+		>
+		WideString(T value) : WideString(std::to_wstring(value)) {}
 
-			if(radix == 16)
-			{
-				buf[0] = '0';
-				buf[1] = 'x';
-
-				_itow_s(value, buf + 2, 14, radix);
-			}
-			else
-				_itow_s(value, buf, 16, radix);
-
-			wstring::assign(buf);
-			Memory<wchar_t>::free(buf);
-		}
-
-		WideString(long value, int radix = 16) : WideString()
-		{
-			auto * buf = Memory<wchar_t>::allocate(16);
-
-			if(radix == 16)
-			{
-				buf[0] = '0';
-				buf[1] = 'x';
-
-				_ltow_s(value, buf + 2, 14, radix);
-			}
-			else
-				_ltow_s(value, buf, 16, radix);
-
-			wstring::assign(buf);
-			Memory<wchar_t>::free(buf);
-		}
-
-		WideString(ulong value, int radix = 16) : WideString()
-		{
-			auto * buf = Memory<wchar_t>::allocate(16);
-
-			if(radix == 16)
-			{
-				buf[0] = '0';
-				buf[1] = 'x';
-
-				_ultow_s(value, buf + 2, 14, radix);
-			}
-			else
-				_ultow_s(value, buf, 16, radix);
-
-			wstring::assign(buf);
-			Memory<wchar_t>::free(buf);
-		}
-
-		WideString(size_t value, int radix = 16) : WideString()
-		{
-			auto * buf = Memory<wchar_t>::allocate(32);
-
-			if(radix == 16)
-			{
-				buf[0] = '0';
-				buf[1] = 'x';
-
-				_sttow_s(value, buf + 2, 30, radix);
-			}
-			else
-				_sttow_s(value, buf, 32, radix);
-
-			wstring::assign(buf);
-			Memory<wchar_t>::free(buf);
-		}
-
-		WideString(double value) : WideString()
-		{
-			auto * buf = Memory<wchar_t>::allocate(16);
-			swprintf_s(buf, 16, L"%.5f", value);
-
-			size_t length = wcslen(buf);
-
-			while(buf[length - 1] == '0')
-				length--;
-
-			if(buf[length - 1] == '.')
-			{
-				length++;
-				buf[length - 1] = '0';
-			}
-
-			buf[length] = '\0';
-
-			wstring::assign(buf);
-			Memory<wchar_t>::free(buf);
-		}
-
-		WideString(float value) : WideString()
-		{
-			auto * buf = Memory<wchar_t>::allocate(16);
-			swprintf_s(buf, 16, L"%.5f", value);
-
-			size_t length = wcslen(buf);
-
-			while(buf[length - 1] == '0')
-				length--;
-
-			if(buf[length - 1] == '.')
-			{
-				length++;
-				buf[length - 1] = '0';
-			}
-
-			buf[length] = '\0';
-
-			wstring::assign(buf);
-			Memory<wchar_t>::free(buf);
-		}
-
-		template<class T,
-			useif <can_wstr_print<T>::value> endif
-
+		template<class T, useif <
+			can_wstr_print<T>::value
+			> endif
 		>
 		WideString(const T & obj) : WideString()
 		{
@@ -908,7 +628,7 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class T, useif <can_construct<WideString, T>::value endif>>
+		template<class T, useif <can_construct<WideString, T>::value> endif>
 		WideString & operator = (const T & value)
 		{
 			return operator = (WideString(value));
@@ -1036,7 +756,7 @@ namespace Rapture
 
 		operator const wchar_t * () const
 		{
-			return this->_Myptr();
+			return this->data();
 		}
 
 		wchar_t & operator [] (int index)
@@ -1070,7 +790,7 @@ namespace Rapture
 		WideString & flood(size_t start, size_t count, wchar_t sym, wchar_t limiter = '\0');
 
 		template<class T, class ... A, useif <
-			can_construct<WideString, T>::value, 
+			can_construct<WideString, T>::value,
 			can_construct<WideString, A>::value...
 			>
 			endif>
@@ -1080,7 +800,7 @@ namespace Rapture
 		}
 
 		template<class T, class ... A, useif <
-			can_construct<WideString, T>::value, 
+			can_construct<WideString, T>::value,
 			can_construct<WideString, A>::value...
 			>
 			endif>
@@ -1121,60 +841,49 @@ namespace Rapture
 
 		wchar_t asChar()
 		{
-			return this->empty() ? '\0' : this->_Myptr()[0];
+			return this->empty() ? '\0' : this->data()[0];
 		}
 
 		char asWideChar()
 		{
-			return this->empty() ? '\0' : this->_Myptr()[0];
+			return this->empty() ? '\0' : this->data()[0];
 		}
 
 		int asInt(int radix = 10)
 		{
-			const wchar_t * ptr = this->_Myptr();
-			wchar_t * end = nullptr;
-
-			return static_cast<int>(wcstol(ptr, &end, radix));
+			return std::stoi(*this, nullptr, radix);
 		}
 
 		long asLong(int radix = 10)
 		{
-			const wchar_t * ptr = this->_Myptr();
-			wchar_t * end = nullptr;
-
-			return wcstol(ptr, &end, radix);
+			return std::stol(*this, nullptr, radix);
 		}
 
 		ulong asUnsignedLong(int radix = 10)
 		{
-			const wchar_t * ptr = this->_Myptr();
-			wchar_t * end = nullptr;
-
-			return wcstoul(ptr, &end, radix);
+			return std::stoul(*this, nullptr, radix);
 		}
 
+		#ifdef ARCH_X64
 		size_t asSize(int radix = 10)
 		{
-			const wchar_t * ptr = this->_Myptr();
-			wchar_t * end = nullptr;
-
-			return _wcstost(ptr, &end, radix);
+			return std::stoull(*this, nullptr, radix);
 		}
+		#else
+		size_t asSize(int radix = 10)
+		{
+			return std::stoul(*this, nullptr, radix);
+		}
+		#endif
 
 		float asFloat()
 		{
-			const wchar_t * ptr = this->_Myptr();
-			wchar_t * end = nullptr;
-
-			return wcstof(ptr, &end);
+			return std::stof(*this);
 		}
 
 		double asDouble()
 		{
-			const wchar_t * ptr = this->_Myptr();
-			wchar_t * end = nullptr;
-
-			return wcstod(ptr, &end);
+			return std::stod(*this);
 		}
 
 		bool isAlpha()
@@ -1212,7 +921,7 @@ namespace Rapture
 
 		bool isHexDigits()
 		{
-			const wchar_t * s = this->_Myptr();
+			const wchar_t * s = this->data();
 
 			if(s[0] != '0' || s[1] != 'x')
 				return false;
@@ -1228,7 +937,7 @@ namespace Rapture
 
 		bool isIntegral(int radix = 10)
 		{
-			const wchar_t * ptr = this->_Myptr();
+			const wchar_t * ptr = this->data();
 			wchar_t * end;
 			absorb() wcstol(ptr, &end, radix);
 
@@ -1237,7 +946,7 @@ namespace Rapture
 
 		bool isFloating()
 		{
-			const wchar_t * ptr = this->_Myptr();
+			const wchar_t * ptr = this->data();
 			wchar_t * end;
 			absorb() wcstod(ptr, &end);
 
@@ -1253,8 +962,23 @@ namespace Rapture
 		return *this;
 	}
 
+	template<class T>
+	struct printer {};
+
 	template<class T, useif <can_str_print<T>::value> endif>
 	inline void print(String & target, const Handle<T> & object)
+	{
+		target << *object;
+	}
+
+	template<class T, selectif(0) <can_wstr_print<T>::value> endif>
+	inline void print(WideString & target, const Handle<T> & object)
+	{
+		target << *object;
+	}
+
+	template<class T, selectif(1) <can_str_print<T>::value, !can_wstr_print<T>::value> endif>
+	inline void print(WideString & target, const Handle<T> & object)
 	{
 		target << *object;
 	}
@@ -1268,23 +992,8 @@ namespace Rapture
 		return target;
 	}
 
-	template<class T, useif <can_str_print<T>::value> endif>
-	inline std::ostream & operator << (std::ostream & ostr, const T & object)
-	{
-		String target;
-		print(target, object);
-
-		return ostr << target;
-	}
-
 	template<class T, selectif(0) <can_wstr_print<T>::value> endif>
-	inline void print(WideString & target, const Handle<T> & object)
-	{
-		target << *object;
-	}
-
-	template<class T, selectif(0) <can_wstr_print<T>::value> endif>
-	inline WideString print(const T & object)
+	inline WideString wprint(const T & object)
 	{
 		WideString target;
 		print(target, object);
@@ -1292,40 +1001,12 @@ namespace Rapture
 		return target;
 	}
 
-	template<class T, selectif(0) <can_wstr_print<T>::value> endif>
-	inline std::wostream & operator << (std::wostream & ostr, const T & object)
+	template<class T, selectif(1) <can_str_print<T>::value, !can_wstr_print<T>::value> endif>
+	inline WideString wprint(const T & object)
 	{
-		WideString target;
-		print(target, object);
-
-		return ostr << target;
+		return widen(print(object));
 	}
 
-	template<class T, selectif(1) <can_str_print<T>::value> endif>
-	inline void print(WideString & target, const Handle<T> & object)
-	{
-		target << *object;
-	}
-
-	template<class T, selectif(1) <can_str_print<T>::value> endif>
-	inline WideString print(const T & object)
-	{
-		String target;
-		print(target, object);
-
-		return widen(target);
-	}
-
-	
-	template<class T, selectif(1) <can_str_print<T>::value> endif>
-	inline std::wostream & operator << (std::wostream & ostr, const T & object)
-	{
-		String target;
-		print(target, object);
-
-		return ostr << widen(target);
-	}
-	
 	typedef list<string> StringList;
 	typedef list<wstring> WideStringList;
 
@@ -1345,19 +1026,25 @@ namespace Rapture
 		return {s, wcslen(s), string.c_str(), string.length()};
 	}
 
-	function_checker(is_str_printable, print);
+	function_checker(is_printable, print);
+
+	template<class T, class StringType, bool = based_on<T, string>::value || based_on<T, wstring>::value>
+	struct is_str_printable : is_printable<StringType &, const T &> {};
+
+	template<class T, class StringType>
+	struct is_str_printable<T, StringType, true> : false_type {};
 
 	template<class T>
-	declare_bool_struct(can_str_print, is_str_printable<String &, T>::value && !based_on<T, string>::value && !based_on<T, wstring>::value)
+	struct can_str_print : is_str_printable<T, String> {};
 
 	template<class T>
-	declare_bool_struct(can_wstr_print, is_str_printable<WideString &, T>::value && !based_on<T, string>::value && !based_on<T, wstring>::value)
+	struct can_wstr_print : is_str_printable<T, WideString> {};
 
 	template<class ... T>
-	declare_bool_struct(can_string_assemble, is_true<can_construct<String, T>::value...>::value)
+	struct can_string_assemble : is_true<can_construct<String, T>::value...> {};
 
 	template<class ... T>
-	declare_bool_struct(can_wstring_assemble, is_true<can_construct<WideString, T>::value...>::value)
+	struct can_wstring_assemble : is_true<can_construct<WideString, T>::value...> {};
 
 	byte	toByte(const char * s);
 	char	toChar(const char * s);
@@ -1377,33 +1064,82 @@ namespace Rapture
 
 	String operator "" _s(const char * s, size_t unitsCount);
 	WideString operator "" _s(const wchar_t * s, size_t unitsCount);
-}
 
-#include <core/algorithm/lookup3.h>
+	template<class Ch>
+	struct GetStringType {};
 
-namespace std
-{
 	template<>
-	struct hash<Rapture::String> : unary_function<Rapture::String, size_t>
+	struct GetStringType<char> : identity<String> {};
+
+	template<>
+	struct GetStringType<wchar_t> : identity<WideString> {};
+
+	template<class Ch>
+	using string_t = typename GetStringType<Ch>::type;
+
+	template<class Ch, class T>
+	struct can_cstr_print : is_str_printable<T, string_t<Ch>> {};
+
+	template<class T>
+	struct lookup3hash {};
+
+	template<>
+	struct lookup3hash<string> : std::unary_function<string, size_t>
+	{
+		typedef string _Kty;
+
+		size_t operator () (const _Kty& _Keyval) const
+		{
+			return hashbytes(_Keyval.data(), _Keyval.length());
+		}
+	};
+
+	template<>
+	struct lookup3hash<wstring> : std::unary_function<wstring, size_t>
+	{
+		typedef wstring _Kty;
+
+		size_t operator () (const _Kty& _Keyval) const
+		{
+			return hashbytes(_Keyval.data(), _Keyval.length());
+		}
+	};
+
+	template<>
+	struct lookup3hash<Rapture::String> : std::unary_function<Rapture::String, size_t>
 	{
 		typedef Rapture::String _Kty;
 
-		size_t operator()(const _Kty& _Keyval) const
+		size_t operator () (const _Kty& _Keyval) const
 		{
 			return hashbytes(_Keyval.data(), _Keyval.length());
 		}
 	};
 
 	template<>
-	struct hash<Rapture::WideString> : unary_function<Rapture::WideString, size_t>
+	struct lookup3hash<Rapture::WideString> : std::unary_function<Rapture::WideString, size_t>
 	{
 		typedef Rapture::WideString _Kty;
 
-		size_t operator()(const _Kty& _Keyval) const
+		size_t operator () (const _Kty& _Keyval) const
 		{
 			return hashbytes(_Keyval.data(), _Keyval.length());
 		}
 	};
+
+	inline std::ostream & operator << (std::ostream & ostr, const String & str)
+	{
+		return ostr << static_cast<const string &>(str);
+	}
+
+	inline std::wostream & operator << (std::wostream & ostr, const WideString & str)
+	{
+		return ostr << static_cast<const wstring &>(str);
+	}
+}
+
+namespace std
+{
 }
 
 //---------------------------------------------------------------------------

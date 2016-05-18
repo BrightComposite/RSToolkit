@@ -32,50 +32,21 @@ namespace Rapture
 {
 	namespace Direct3D
 	{
-		implement(SimpleTechnique::rectangle);
-		implement(SimpleTechnique::ellipse);
-		implement(SimpleTechnique::wired_rectangle);
-		implement(SimpleTechnique::wired_ellipse);
-		implement(SimpleTechnique::figure);
-		implement(SimpleTechnique::image);
-		implement(SimpleTechnique::text);
-
-		ShaderMap Shaders::shaders;
-
-		template<class ShaderType>
-		static Handle<SimpleTechnique> setShadersCode(const string & id, const Handle<VertexLayout> & vil, ShaderType type, const initializer_list<ShaderCode> & set)
-		{
-			return handle<SimpleTechnique>(vil, type, Shaders::setCode(id, set));
-		}
-
-		void Shaders::initialize()
+		Shaders::Shaders(GraphicContext * ctx) : ctx(ctx)
 		{
 			auto & p2 = VertexLayout::get("p2");
 			auto & p2t = VertexLayout::get("p2 t");
 			auto vptype = gettype(VPShaderProgram);
 
-			SimpleTechnique::rectangle = setShadersCode("2d/rect", p2, vptype, {shader_code_2d_rect_vs,	shader_code_2d_rect_ps});
-			SimpleTechnique::ellipse = setShadersCode("2d/ellipse", p2t, vptype, {shader_code_2d_ellipse_vs, shader_code_2d_ellipse_ps});
-			SimpleTechnique::wired_rectangle = setShadersCode("2d/wired/rect", p2, vptype, {shader_code_2d_wired_rect_vs, shader_code_2d_wired_rect_ps});
-			SimpleTechnique::wired_ellipse = setShadersCode("2d/wired/ellipse", p2t, vptype, {shader_code_2d_wired_ellipse_vs, shader_code_2d_wired_ellipse_ps});
-			SimpleTechnique::figure = setShadersCode("2d/figure", p2, vptype, {shader_code_2d_figure_vs, shader_code_2d_figure_ps});
-			SimpleTechnique::image = setShadersCode("2d/image", p2t, vptype, {shader_code_2d_image_vs, shader_code_2d_image_ps});
-			SimpleTechnique::text = setShadersCode("2d/text", p2t, vptype, {shader_code_2d_text_vs, shader_code_2d_text_ps});
+			rectangle		= setCode("2d/rect",		  p2,  vptype, shader_code_2d_rect_vs,			shader_code_2d_rect_ps);
+			ellipse			= setCode("2d/ellipse",		  p2t, vptype, shader_code_2d_ellipse_vs,		shader_code_2d_ellipse_ps);
+			wired_rectangle = setCode("2d/wired/rect",	  p2,  vptype, shader_code_2d_wired_rect_vs,	shader_code_2d_wired_rect_ps);
+			wired_ellipse	= setCode("2d/wired/ellipse", p2t, vptype, shader_code_2d_wired_ellipse_vs, shader_code_2d_wired_ellipse_ps);
+			figure			= setCode("2d/figure",		  p2,  vptype, shader_code_2d_figure_vs,		shader_code_2d_figure_ps);
+			image			= setCode("2d/image",		  p2t, vptype, shader_code_2d_image_vs,			shader_code_2d_image_ps);
+			text			= setCode("2d/text",		  p2t, vptype, shader_code_2d_text_vs,			shader_code_2d_text_ps);
 
-			SimpleTechnique::rectangle->apply();
-		}
-
-		void Shaders::free()
-		{
-			SimpleTechnique::rectangle = nullptr;
-			SimpleTechnique::ellipse = nullptr;
-			SimpleTechnique::wired_rectangle = nullptr;
-			SimpleTechnique::wired_ellipse = nullptr;
-			SimpleTechnique::figure = nullptr;
-			SimpleTechnique::image = nullptr;
-			SimpleTechnique::text = nullptr;
-
-			shaders.clear();
+			rectangle->apply();
 		}
 	}
 }

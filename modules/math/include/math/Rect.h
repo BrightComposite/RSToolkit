@@ -15,7 +15,7 @@
 namespace Rapture
 {
 	template <typename T>
-	template_subclass(Size, Point, T);
+	subclass(Size, Point<T>);
 
     template <typename T>
     class Rect
@@ -479,12 +479,12 @@ namespace Rapture
 			return data[i];
 		}
 
-        operator array_t<T, 4> & ()
+        operator array<T, 4> & ()
         {
             return data;
         }
 
-        operator const array_t<T, 4> & () const
+        operator const array<T, 4> & () const
         {
             return data;
         }

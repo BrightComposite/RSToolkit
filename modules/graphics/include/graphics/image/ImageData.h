@@ -108,12 +108,14 @@ namespace Rapture
 		switch(bpp)
 		{
 #define op(format, bpp) \
-	case bpp: return ImageFormat::format;
-			enum_image_bpps(op)
-#undef op
+		case bpp:		\
+			return ImageFormat::format;
+
+		enum_image_bpps(op)
 
 		default:
 			return ImageFormat::unknown;
+#undef op
 		}
 	}
 
@@ -122,12 +124,14 @@ namespace Rapture
 		switch(bpp)
 		{
 #define op(format, bpp) \
-	case bpp: return ImageFormat::format;
-			enum_alt_image_bpps(op)
-#undef op
+		case bpp:		\
+			return ImageFormat::format;
+
+		enum_alt_image_bpps(op)
 
 		default:
 			return ImageFormat::unknown;
+#undef op
 		}
 	}
 
@@ -135,13 +139,17 @@ namespace Rapture
 	{
 		switch(format)
 		{
-#define op(format, bpp) case ImageFormat::format: s << #format; return;
-			enum_image_formats(op)
-#undef op
+#define op(format, bpp)				\
+		case ImageFormat::format:	\
+			s << #format;			\
+			return;
+
+		enum_image_formats(op)
 
 		default:
 			s << "unknown";
 			return;
+#undef op
 		}
 	}
 

@@ -16,7 +16,8 @@
 
 #include <graphics/image/io/ImageIO.h>
 
-#include <direct3d/Direct3D11.h>
+#include <graphics/Provider.h>
+
 #include <windows/Message.h>
 
 #include <freeimage/FreeImageConverter.h>
@@ -29,7 +30,7 @@
 
 namespace Rapture
 {
-	link_class(SimpleGroundObject, Class<PlaneObject, Drawable>);
+	declare_and_link(SimpleGroundObject, Class<PlaneObject, Drawable>);
 
 	class SimpleGroundObject : public PlaneObject, public Drawable
 	{
@@ -53,10 +54,10 @@ namespace Rapture
 			auto dt = hold(graphics->depthTestModeState(), true);
 			graphics->setDepth(0.0f);
 
-			graphics->setColor({0.1f, 0.1f, 0.1f});
-			graphics->rectangle(SqRect{-1.0f, -1.0f, 1.0f, (_level - 0.1f) * zoom});
-			graphics->setColor({1.0f, 1.0f, 1.0f});
-			graphics->rectangle(SqRect{-1.0f, (_level - 0.1f) * zoom, 1.0f, _level * zoom});
+			graphics->setColor(0.1f, 0.1f, 0.1f);
+			graphics->rectangle(SqRect{-1.0f, -1.0f, 1.0f, (_pos.y - 0.1f) * zoom});
+			graphics->setColor(1.0f, 1.0f, 1.0f);
+			graphics->rectangle(SqRect{-1.0f, (_pos.y - 0.1f) * zoom, 1.0f, _pos.y * zoom});
 		}
 	};
 
@@ -101,44 +102,36 @@ namespace Rapture
 			this->_world = world;
 			this->_world->setGravity({0.0, -9.8, 0.0});
 
-			Graphics3D * graphics = D3DGraphics::initialize();
-			graphics->setClearColor({0.0f, 0.0f, 0.0f});
+			auto graphics = GraphicsProvider::provide();
+			graphics->setClearColor(0.0f, 0.0f, 0.0f);
 
-			{
-				auto window = unique_handle<Window>(graphics, 0, 0, 1024, 758);
-				this->_window = window;
+			auto window = unique_handle<Window>(graphics, 0, 0, 1024, 758);
+			this->_window = window;
 
-				Handle<WindowBackground> back(_window);
+			auto back = handle<BackgroundWidget>(_window);
+			auto scene = unique_handle<Scene>(back);
+			this->_scene = scene;
+			this->_scene->setZoom(0.01f);
 
-				{
-					auto scene = unique_handle<Scene>(back);
-					this->_scene = scene;
-
-					{
-						//_scene->append<BigEyeObject>();
+			//_scene->append<BigEyeObject>();
 						
-						this->_player = _scene->append<PlayerObject>(_world);
-						this->_ground = _scene->append<SimpleGroundObject>(_world, -20);
+			this->_player = _scene->append<PlayerObject>(_world, dvec {0.0, 60.0, 0.0, 1.0});
+			this->_ground = _scene->append<SimpleGroundObject>(_world, -60);
 
-						Handle<PlayerController> controller(this->_player);
+			Handle<PlayerController> controller(this->_player);
 						
-						connect(*this->_window, onWindowKeyDown);
-						connect(*this->_window, onWindowKeyUp);
+			connect(*this->_window, onWindowKeyDown);
+			connect(*this->_window, onWindowKeyUp);
 
-						this->_window->setCaption(_name);
-						this->_window->centralize();
-						this->_window->show();
+			this->_window->setCaption(_name);
+			this->_window->centralize();
+			this->_window->show();
 
-						hideConsole();
+			hideConsole();
 
-						ThreadLoop::add(processWindowMessage);
-						ThreadLoop::add(mainLoop);
-						ThreadLoop::run();
-					}
-				}
-			}
-
-			D3DGraphics::free();
+			ThreadLoop::add(processWindowMessage);
+			ThreadLoop::add(mainLoop);
+			ThreadLoop::run();
 
 			return 0;
 		}
@@ -148,8 +141,7 @@ namespace Rapture
 			auto & that = instance();
 
 			that._scene->update();
-
-			that._world->stepSimulation(1 / 480.f, 10);
+			that._world->stepSimulation(1 / 2000.f, 10);
 
 			that._scene->invalidate();
 			that._window->validate();
@@ -167,17 +159,17 @@ namespace Rapture
 			ImageIO::save(initial_path() / "screenshot.bmp", graphics->surfaceData());
 		}
 
-		static void onWindowKeyDown(Handle<KeyDownMessage> & message, WindowAdapter & dest)
+		static void onWindowKeyDown(Handle<KeyDownMessage> & message, UISpace & dest)
 		{
 			switch(message->key)
 			{
 				case VK_ESCAPE:
-					dest.close();
+					static_cast<Window &>(dest).close();
 					break;
 			}
 		}
 
-		static void onWindowKeyUp(Handle<KeyUpMessage> & message, WindowAdapter & dest)
+		static void onWindowKeyUp(Handle<KeyUpMessage> & message, UISpace & dest)
 		{
 			switch(message->key)
 			{

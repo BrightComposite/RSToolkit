@@ -13,11 +13,31 @@ namespace Rapture
 {
 	type_checker(is_iterable, iterator);
 
-	template<typename T, useif <is_iterable<T>::value> endif>
-	typename T::iterator erase(T & container, int pos)
+	template<class Container, useif <is_iterable<Container>::value> endif>
+	typename Container::iterator erase(Container & container, int pos)
 	{
 		return container.erase(container.begin() + pos);
 	}
+
+	template<class Container, typename T, useif <is_iterable<Container>::value> endif>
+	typename Container::iterator erase(Container & container, const T & value)
+	{
+		return container.erase(std::remove(container.begin(), container.end(), value), container.end());
+	}
+
+	template<class T, class A, A T::*member>
+	struct MemberSort
+	{
+		bool operator() (const T & a, const T & b)
+		{
+			return a.*member < b.*member;
+		}
+
+		bool operator() (const T * a, const T * b)
+		{
+			return a->*member < b->*member;
+		}
+	};
 }
 
 //---------------------------------------------------------------------------

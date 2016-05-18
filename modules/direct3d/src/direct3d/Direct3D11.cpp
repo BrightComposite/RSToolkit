@@ -4,7 +4,7 @@
 #include <d3dcompiler.h>
 #include <dxgidebug.h>
 
-#include <ui/WindowAdapter.h>
+#include <ui/UISpace.h>
 #include <windows/RectAdapter.h>
 
 //---------------------------------------------------------------------------
@@ -18,11 +18,6 @@ namespace Rapture
 	namespace Direct3D
 	{
 		using namespace DirectX;
-
-		implement(Graphics3D::pool);
-
-		implement(D3DModel::quad);
-		implement(D3DModel::texquad);
 
 		class FillModeState : public State<FillMode>
 		{
@@ -64,6 +59,9 @@ namespace Rapture
 		{
 			setclass(Graphics3D);
 
+			initDevice();
+			initFacilities();
+
 			_fillMode = handle<FillModeState>(this);
 			_depthTestMode = handle<DepthTestState>(this);
 		}
@@ -77,6 +75,12 @@ namespace Rapture
 
 				context->ClearState();
 			}
+
+			freeFacilities();
+
+		#ifdef DEBUG_DX
+			debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+		#endif
 		}
 
 		void Graphics3D::initDevice()
@@ -124,7 +128,7 @@ namespace Rapture
 			setContext(ndevice, ncontext);
 
 		#ifdef DEBUG_DX
-			debug.instance = device;
+			debug = device;
 		#endif
 
 			D3D11_RASTERIZER_DESC rd;
@@ -210,23 +214,23 @@ namespace Rapture
 
 		void Graphics3D::initFacilities()
 		{
-			Shaders::initialize();
+			shaders.init(this);
 
 			auto & p2 = VertexLayout::get("p2");
 			auto & p2t = VertexLayout::get("p2 t");
 
-			D3DModel::quad.init(this, p2, VertexData::quad);
-			D3DModel::texquad.init(this, p2t, VertexData::texquad);
+			quad.init(this, p2, VertexData::quad);
+			texquad.init(this, p2t, VertexData::texquad);
 
 			updateBrushState();
 		}
 
 		void Graphics3D::freeFacilities()
 		{
-			D3DModel::quad = nullptr;
-			D3DModel::texquad = nullptr;
+			quad = nullptr;
+			texquad = nullptr;
 
-			Shaders::free();
+			shaders = nullptr;
 		}
 
 		void Graphics3D::printInfo() {}
@@ -245,44 +249,47 @@ namespace Rapture
 
 		void Graphics3D::bind(const Handle<Texture> & texture, uint index)
 		{
-			Graphics3D * graphics = Graphics3D::instance();
-
-			if(graphics->textures.size() > index && graphics->textures[index] == texture)
+			if(textures.size() > index && textures[index] == texture)
 				return;
 
-			graphics->textures[index] = texture;
+			textures[index] = texture;
 			texture->apply();
 		}
 
-		Handle<Image> Graphics3D::createImage(const ImageData & data) const
+		Handle<Image> Graphics3D::createImage(const ImageData & data)
 		{
 			return Handle<D3DImage>(this, data);
 		}
 
-		Handle<Figure> Graphics3D::createFigure(const FigureData & data) const
+		Handle<Figure> Graphics3D::createFigure(const FigureData & data)
 		{
 			return Handle<D3DFigure>(this, data);
 		}
-
-		Handle<Surface> Graphics3D::createWindowSurface(WindowAdapter * adapter) const
+		
+		Handle<Rapture::UniformAdapter> Graphics3D::createUniformAdapter(ShaderType shader, int index, size_t size)
 		{
-			auto & surface = adapter->surface();
+			return Handle<UniformAdapter>(this, shader, index, size);
+		}
 
-			if(surface != nullptr)
-				return surface;
+		Handle<ShaderCode> Graphics3D::getShaderCode(const string & id, ShaderType type)
+		{
+			return shaders->getCode(id, type);
+		}
 
-			auto newSurface = handle<WindowSurface>(adapter);
+		Handle<Surface> Graphics3D::createSurface(UISpace * space)
+		{
+			auto s = handle<UISurface>(this, space);
 
-			connect(*adapter, newSurface, &WindowSurface::onWindowResize);
-			connect(*adapter, newSurface, &WindowSurface::onWindowFullscreen);
-			connect(*adapter, newSurface, &WindowSurface::onWindowClose);
+			connect(*space, s, &UISurface::onUIResize);
+			connect(*space, s, &UISurface::onUIFullscreen);
+			connect(*space, s, &UISurface::onUIDestroy);
 
-			return newSurface;
+			return s;
 		}
 
 		void Graphics3D::updateBrushState()
 		{
-			updateUniform<Uniforms::BrushOptions>({color(), lineSize()});
+			updateUniform<Uniforms::BrushOptions>(color(), lineWidth());
 		}
 
 		void Graphics3D::present() const
@@ -309,14 +316,14 @@ namespace Rapture
 			FloatSize s;
 
 			ScreenCoord::toRel(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>({t, s, _depth});
+			updateUniform<Uniforms::Area>(move(t), move(s), _depth);
 
 			if(fm.old == FillMode::Solid)
-				SimpleTechnique::rectangle->apply();
+				shaders->rectangle->apply();
 			else
-				SimpleTechnique::wired_rectangle->apply();
+				shaders->wired_rectangle->apply();
 
-			draw(D3DModel::quad);
+			draw(quad);
 		}
 
 		void Graphics3D::ellipse(const IntRect & rect)
@@ -327,14 +334,14 @@ namespace Rapture
 			FloatSize s;
 
 			ScreenCoord::toSq(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>({t, s, _depth});
+			updateUniform<Uniforms::Area>(move(t), move(s), _depth);
 
 			if(fm.old == FillMode::Solid)
-				SimpleTechnique::ellipse->apply();
+				shaders->ellipse->apply();
 			else
-				SimpleTechnique::wired_ellipse->apply();
+				shaders->wired_ellipse->apply();
 
-			draw(D3DModel::texquad);
+			draw(texquad);
 		}
 
 		void Graphics3D::rectangle(const SqRect & rect)
@@ -345,14 +352,14 @@ namespace Rapture
 			FloatSize s;
 
 			ScreenCoord::toRel(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>({t, s, _depth});
+			updateUniform<Uniforms::Area>(move(t), move(s), _depth);
 
 			if(fm.old == FillMode::Solid)
-				SimpleTechnique::rectangle->apply();
+				shaders->rectangle->apply();
 			else
-				SimpleTechnique::wired_rectangle->apply();
+				shaders->wired_rectangle->apply();
 
-			draw(D3DModel::texquad);
+			draw(texquad);
 		}
 
 		void Graphics3D::ellipse(const SqRect & rect)
@@ -360,14 +367,14 @@ namespace Rapture
 			auto fm = hold(_fillMode, FillMode::Solid);
 			auto s = rect.size();
 
-			updateUniform<Uniforms::Area>({rect.pos() + s * 0.5f, s, _depth});
+			updateUniform<Uniforms::Area>(rect.pos() + s * 0.5f, s, _depth);
 
 			if(fm.old == FillMode::Solid)
-				SimpleTechnique::ellipse->apply();
+				shaders->ellipse->apply();
 			else
-				SimpleTechnique::wired_ellipse->apply();
+				shaders->wired_ellipse->apply();
 
-			draw(D3DModel::texquad);
+			draw(texquad);
 		}
 
 		void Graphics3D::draw(const Figure * figure, const IntRect & bounds)
@@ -380,8 +387,8 @@ namespace Rapture
 
 			ScreenCoord::toRel(bounds, viewport(), t, s);
 
-			updateUniform<Uniforms::Model>(FloatTransform(t, s, _depth));
-			SimpleTechnique::figure->apply();
+			updateUniform<Uniforms::Model>(FloatTransform(move(t), move(s), _depth));
+			shaders->figure->apply();
 
 			draw(static_cast<const D3DFigure *>(figure)->model);
 		}
@@ -394,7 +401,7 @@ namespace Rapture
 			const auto & v = viewport();
 
 			updateUniform<Uniforms::Model>(transform * FloatScaling {1.0f, v.invratio(), 1.0f, 1.0f});
-			SimpleTechnique::figure->apply();
+			shaders->figure->apply();
 
 			draw(static_cast<const D3DFigure *>(figure)->model);
 		}
@@ -454,11 +461,10 @@ namespace Rapture
 			FloatSize s;
 
 			ScreenCoord::toRel(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>({t, s, _depth});
+			updateUniform<Uniforms::Area>(move(t), move(s), _depth);
 
-			SimpleTechnique::image->apply();
-
-			draw(D3DModel::texquad);
+			shaders->image->apply();
+			draw(texquad);
 		}
 
 		void Graphics3D::draw(const Image * image, const SqRect & rect)
@@ -473,11 +479,10 @@ namespace Rapture
 			FloatSize s;
 
 			ScreenCoord::toRel(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>({t, s, _depth});
+			updateUniform<Uniforms::Area>(move(t), move(s), _depth);
 
-			SimpleTechnique::image->apply();
-
-			draw(D3DModel::texquad);
+			shaders->image->apply();
+			draw(texquad);
 		}
 
 		void Graphics3D::draw(const Symbol * symbol, int x, int y)
@@ -499,11 +504,10 @@ namespace Rapture
 			FloatSize s;
 
 			ScreenCoord::toRel(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>({t, s, _depth});
+			updateUniform<Uniforms::Area>(move(t), move(s), _depth);
 
-			SimpleTechnique::text->apply();
-
-			draw(D3DModel::texquad);
+			shaders->text->apply();
+			draw(texquad);
 		}
 
 		void Graphics3D::draw(const Image * image, int x, int y, int width, int height)
@@ -511,9 +515,9 @@ namespace Rapture
 			draw(image, IntRect{x, y, x + width, y + height});
 		}
 
-		FxTechnique::FxTechnique(const Handle<VertexLayout> & vil) : ctx(Graphics3D::instance()), vil(vil) {}
+		FxTechnique::FxTechnique(GraphicContext * ctx, const Handle<VertexLayout> & vil) : ctx(ctx), vil(vil) {}
 
-		VertexBuffer::VertexBuffer(const Handle<VertexLayout> & vil, const VertexData & vd, D3D_PRIMITIVE_TOPOLOGY topology) : ctx(Graphics3D::instance()), topology(topology), vil(vil), size(static_cast<uint>(vd.size / vil->stride))
+		VertexBuffer::VertexBuffer(GraphicContext * ctx, const Handle<VertexLayout> & vil, const VertexData & vd, D3D_PRIMITIVE_TOPOLOGY topology) : ctx(ctx), topology(topology), vil(vil), size(static_cast<uint>(vd.size / vil->stride))
 		{
 			if(vd.size % vil->stride != 0)
 				throw Exception("Size of vertex buffer doesn't matches its vertex input layout: \"", vil->key, "\"");
@@ -535,7 +539,7 @@ namespace Rapture
 				);
 		}
 
-		IndexBuffer::IndexBuffer(const VertexIndices & indices) : ctx(Graphics3D::instance()), size(static_cast<uint>(indices.size()))
+		IndexBuffer::IndexBuffer(GraphicContext * ctx, const VertexIndices & indices) : ctx(ctx), size(static_cast<uint>(indices.size()))
 		{
 			D3D11_BUFFER_DESC bd;
 			ZeroMemory(&bd, sizeof(bd));
@@ -555,9 +559,9 @@ namespace Rapture
 				);
 		}
 
-		CommonShader::Shader() : ctx(Graphics3D::instance()) {}
+		CommonShader::Shader(GraphicContext * ctx) : ctx(ctx) {}
 
-		void CommonShader::read(const String & filename, ShaderCode & out)
+		void CommonShader::read(const String & filename, Handle<ShaderCode> & out)
 		{
 			ComHandle<ID3DBlob> code;
 			com_assert(
@@ -565,11 +569,10 @@ namespace Rapture
 				"Can't read shader from file: ", filename
 				);
 
-			out.data = code->GetBufferPointer();
-			out.size = code->GetBufferSize();
+			out.init(code->GetBufferPointer(), code->GetBufferSize());
 		}
 
-		void CommonShader::compile(const String & filename, const String & entrance, const String & shaderModel, ShaderCode & out)
+		void CommonShader::compile(const String & filename, const String & entrance, const String & shaderModel, Handle<ShaderCode> & out)
 		{
 			ComHandle<ID3DBlob> code;
 			DWORD flags = D3DCOMPILE_ENABLE_STRICTNESS;
@@ -581,15 +584,14 @@ namespace Rapture
 
 			com_assert(hr, (char *)error->GetBufferPointer());
 
-			out.data = code->GetBufferPointer();
-			out.size = code->GetBufferSize();
+			out.init(code->GetBufferPointer(), code->GetBufferSize());
 		}
 
 		//#define COMPILE_SHADERS
 
-		VertexShader::Shader(const Handle<FxTechnique> & technique, const String & path, ShaderCodeState state)
+		VertexShader::Shader(const Handle<FxTechnique> & technique, const String & path, ShaderCodeState state) : CommonShader(technique->ctx)
 		{
-			ShaderCode code;
+			Handle<ShaderCode> code;
 
 			switch(state)
 			{
@@ -602,16 +604,16 @@ namespace Rapture
 					break;
 
 				case ShaderCodeState::Embedded:
-					code = Shaders::getCode(path, ShaderType::Vertex);
+					code = ctx->getShaderCode(path, ShaderType::Vertex);
 					break;
 			}
 
 			init(technique, code);
 		}
 
-		VertexShader::Shader(const Handle<FxTechnique> & technique, const Handle<ShaderCode> & code)
+		VertexShader::Shader(const Handle<FxTechnique> & technique, const Handle<ShaderCode> & code) : CommonShader(technique->ctx)
 		{
-			init(technique, *code);
+			init(technique, code);
 		}
 
 		void VertexShader::apply() const
@@ -620,28 +622,26 @@ namespace Rapture
 			ctx->context->VSSetShader(id, nullptr, 0);
 		}
 
-		void VertexShader::init(const Handle<FxTechnique> & technique, const ShaderCode & code)
+		void VertexShader::init(const Handle<FxTechnique> & technique, const Handle<ShaderCode> & code)
 		{
 			HRESULT hr = S_OK;
 
-			auto & ctx = technique->ctx;
-
 			com_assert(
-				ctx->device->CreateVertexShader(code.data, code.size, nullptr, &id),
+				ctx->device->CreateVertexShader(code->data, code->size, nullptr, &id),
 				"Can't create vertex shader!"
 				);
 
 			auto & vlayout = technique->vil->layout;
 
 			com_assert(
-				ctx->device->CreateInputLayout(vlayout.data(), static_cast<uint>(vlayout.size()), code.data, code.size, &layout),
+				ctx->device->CreateInputLayout(vlayout.data(), static_cast<uint>(vlayout.size()), code->data, code->size, &layout),
 				"Can't create vertex input layout for shader"
 				);
 		}
 
-		PixelShader::Shader(const Handle<FxTechnique> & technique, const String & path, ShaderCodeState state)
+		PixelShader::Shader(const Handle<FxTechnique> & technique, const String & path, ShaderCodeState state) : CommonShader(technique->ctx)
 		{
-			ShaderCode code;
+			Handle<ShaderCode> code;
 
 			switch(state)
 			{
@@ -654,16 +654,16 @@ namespace Rapture
 					break;
 
 				case ShaderCodeState::Embedded:
-					code = Shaders::getCode(path, ShaderType::Pixel);
+					code = ctx->getShaderCode(path, ShaderType::Pixel);
 					break;
 			}
 
 			init(technique, code);
 		}
 
-		PixelShader::Shader(const Handle<FxTechnique> & technique, const Handle<ShaderCode> & code)
+		PixelShader::Shader(const Handle<FxTechnique> & technique, const Handle<ShaderCode> & code) : CommonShader(technique->ctx)
 		{
-			init(technique, *code);
+			init(technique, code);
 		}
 
 		void PixelShader::apply() const
@@ -671,15 +671,15 @@ namespace Rapture
 			ctx->context->PSSetShader(id, nullptr, 0);
 		}
 
-		void PixelShader::init(const Handle<FxTechnique> & technique, const ShaderCode & code)
+		void PixelShader::init(const Handle<FxTechnique> & technique, const Handle<ShaderCode> & code)
 		{
 			com_assert(
-				technique->ctx->device->CreatePixelShader(code.data, code.size, nullptr, &id),
+				ctx->device->CreatePixelShader(code->data, code->size, nullptr, &id),
 				"Can't create pixel shader!"
 				);
 		}
 
-		D3DImage::D3DImage(const GraphicContext * ctx, const ImageData & data) : Image(ctx, data), _ctx(ctx)
+		D3DImage::D3DImage(GraphicContext * ctx, const ImageData & data) : Image(ctx, data), _ctx(ctx)
 		{
 			ComHandle<ID3D11Texture2D> tex;
 
@@ -806,7 +806,7 @@ namespace Rapture
 			_ctx->context->Unmap(texture, 0);
 		}
 
-		D3DFigure::D3DFigure(const Graphics3D * graphics, const FigureData & data) : Figure(graphics, data)
+		D3DFigure::D3DFigure(GraphicContext * graphics, const FigureData & data) : Figure(graphics, data)
 		{
 			vector<FloatPoint> points;
 			auto & p = data.points;
@@ -827,15 +827,15 @@ namespace Rapture
 
 	#define USE_3D
 
-		WindowSurface::WindowSurface(WindowAdapter * adapter) : D3DSurface(adapter->size()), adapter(adapter)
+		UISurface::UISurface(Graphics3D * graphics, UISpace * space) : D3DSurface(graphics, space->size()), space(space)
 		{
 			createSwapChain(false);
 			ZeroMemory(&presentParams, sizeof(presentParams));
 		}
 
-		WindowSurface::~WindowSurface() {}
+		UISurface::~UISurface() {}
 
-		void WindowSurface::createSwapChain(bool fullscreen)
+		void UISurface::createSwapChain(bool fullscreen)
 		{
 			releaseRenderTarget();
 
@@ -866,7 +866,7 @@ namespace Rapture
 						swapChain->GetContainingOutput(&output)
 						);
 
-					output->FindClosestMatchingMode(&md, &md, ctx->device);
+					output->FindClosestMatchingMode(&md, &md, graphics->device);
 					//findPreferredMode(output, md);
 				}
 				else
@@ -877,7 +877,7 @@ namespace Rapture
 
 			sd.BufferCount = 1;
 			sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-			sd.OutputWindow = adapter->windowHandle();
+			sd.OutputWindow = space->handle();
 			sd.SampleDesc.Count = 1;
 			sd.SampleDesc.Quality = 0;
 			sd.Windowed = TRUE;
@@ -885,7 +885,7 @@ namespace Rapture
 			//sd.SwapEffect = DXGI_SWAP_EFFECT::DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
 
 			com_assert(
-				ctx->dxgiFactory->CreateSwapChain(ctx->device, &sd, &sc)
+				graphics->dxgiFactory->CreateSwapChain(graphics->device, &sd, &sc)
 				);
 
 			swapChain = sc;
@@ -895,7 +895,7 @@ namespace Rapture
 				swapChain->SetFullscreenState(TRUE, nullptr);
 		}
 
-		void WindowSurface::createRenderTarget()
+		void UISurface::createRenderTarget()
 		{
 			createDepthStencil();
 
@@ -907,7 +907,7 @@ namespace Rapture
 			vp.TopLeftX = 0;
 			vp.TopLeftY = 0;
 
-			ctx->context->RSSetViewports(1, &vp);
+			graphics->context->RSSetViewports(1, &vp);
 
 			{
 				ComHandle<ID3D11Texture2D> buffer;
@@ -917,29 +917,29 @@ namespace Rapture
 					);
 
 				com_assert(
-					ctx->device->CreateRenderTargetView(buffer, nullptr, &renderTargetView)
+					graphics->device->CreateRenderTargetView(buffer, nullptr, &renderTargetView)
 					);
 			}
 
 		#ifdef USE_3D
-			ctx->context->OMSetRenderTargets(1, &renderTargetView, nullptr);
+			graphics->context->OMSetRenderTargets(1, &renderTargetView, nullptr);
 		#else
-			ctx->context->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
+			graphics->context->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
 		#endif
 		}
 
-		void WindowSurface::releaseRenderTarget()
+		void UISurface::releaseRenderTarget()
 		{
 			if(renderTargetView != nullptr || depthStencilView != nullptr)
 			{
-				ctx->context->OMSetRenderTargets(0, 0, 0);
-				ctx->context->Flush();
+				graphics->context->OMSetRenderTargets(0, 0, 0);
+				graphics->context->Flush();
 				renderTargetView = nullptr;
 				depthStencilView = nullptr;
 			}
 		}
 
-		void WindowSurface::findPreferredMode(const ComHandle<IDXGIOutput> & output, DXGI_MODE_DESC & mode)
+		void UISurface::findPreferredMode(const ComHandle<IDXGIOutput> & output, DXGI_MODE_DESC & mode)
 		{
 			uint num;
 			output->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, 0, &num, nullptr);
@@ -965,14 +965,14 @@ namespace Rapture
 			Memory<DXGI_MODE_DESC>::free(descs);
 		}
 
-		void WindowSurface::present() const
+		void UISurface::present() const
 		{
 			swapChain->Present(0, 0);
-			//ctx->context->DiscardView(renderTargetView);
+			//graphics->context->DiscardView(renderTargetView);
 			apply();
 		}
 
-		void WindowSurface::requestData(ImageData * output) const
+		void UISurface::requestData(ImageData * output) const
 		{
 			if(output == nullptr)
 				throw Exception("Output image buffer should be not-null!");
@@ -992,14 +992,14 @@ namespace Rapture
 			texDesc.Usage = D3D11_USAGE_STAGING;
 
 			com_assert(
-				ctx->device->CreateTexture2D(&texDesc, nullptr, &texture)
+				graphics->device->CreateTexture2D(&texDesc, nullptr, &texture)
 				);
 
-			ctx->context->CopyResource(texture, buffer);
+			graphics->context->CopyResource(texture, buffer);
 
 			D3D11_MAPPED_SUBRESOURCE resource;
 			com_assert(
-				ctx->context->Map(texture, 0, D3D11_MAP_READ, 0, &resource)
+				graphics->context->Map(texture, 0, D3D11_MAP_READ, 0, &resource)
 				);
 
 			output->width = texDesc.Width;
@@ -1015,25 +1015,25 @@ namespace Rapture
 			for(uint y = 0; y < output->height; ++y, src += resource.RowPitch, dst += pitch)
 				memcpy(dst, src, pitch);
 
-			ctx->context->Unmap(texture, 0);
+			graphics->context->Unmap(texture, 0);
 		}
 
-		void WindowSurface::apply() const
+		void UISurface::apply() const
 		{
 		#ifdef USE_3D
-			ctx->context->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
+			graphics->context->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
 		#else
-			ctx->context->OMSetRenderTargets(1, &renderTargetView, nullptr);
+			graphics->context->OMSetRenderTargets(1, &renderTargetView, nullptr);
 		#endif
 		}
 
-		void WindowSurface::onWindowResize(Handle<WindowResizeMessage> & msg, WindowAdapter & adapter)
+		void UISurface::onUIResize(Handle<UIResizeMessage> & msg, UISpace & space)
 		{
 			if(msg->width == 0 || msg->height == 0)
 				return;
 
 			viewport.set(msg->width, msg->height);
-			Graphics3D::instance()->updateUniform<Uniforms::Viewport>(FloatSize{viewport.size()});
+			graphics->updateUniform<Uniforms::Viewport>(FloatSize{viewport.size()});
 
 			releaseRenderTarget();
 
@@ -1043,20 +1043,20 @@ namespace Rapture
 
 			createRenderTarget();
 
-			adapter.invalidate();
+			space.invalidate();
 		}
 
-		void WindowSurface::onWindowFullscreen(Handle<WindowFullscreenMessage> & msg, WindowAdapter & adapter)
+		void UISurface::onUIFullscreen(Handle<UIFullscreenMessage> & msg, UISpace & space)
 		{
 			createSwapChain(msg->fullscreen);
 		}
 
-		void WindowSurface::onWindowClose(Handle<WindowCloseMessage> & msg, WindowAdapter & adapter)
+		void UISurface::onUIDestroy(Handle<UIDestroyMessage> & msg, UISpace & space)
 		{
 			swapChain->SetFullscreenState(FALSE, nullptr);
 		}
 
-		DepthBufferSurface::DepthBufferSurface(const IntSize & size) : D3DSurface(size)
+		DepthBufferSurface::DepthBufferSurface(Graphics3D * graphics, const IntSize & size) : D3DSurface(graphics, size)
 		{
 			createDepthStencil();
 		}
@@ -1064,13 +1064,13 @@ namespace Rapture
 		void DepthBufferSurface::apply() const
 		{
 		#ifdef USE_3D
-			ctx->context->OMSetRenderTargets(1, nullptr, depthStencilView);
+			graphics->context->OMSetRenderTargets(1, nullptr, depthStencilView);
 		#else
-			ctx->context->OMSetRenderTargets(1, nullptr, nullptr);
+			graphics->context->OMSetRenderTargets(1, nullptr, nullptr);
 		#endif
 		}
 
-		TextureSurface::TextureSurface(const IntSize & size) : D3DSurface(size)
+		TextureSurface::TextureSurface(Graphics3D * graphics, const IntSize & size) : D3DSurface(graphics, size)
 		{}
 
 		void TextureSurface::apply() const
@@ -1079,24 +1079,24 @@ namespace Rapture
 		VertexElement            VertexElement::pos2("p2", "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, sizeof(float[2]));
 		VertexElement            VertexElement::pos3("p3", "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float[3]));
 		VertexElement          VertexElement::color3("c3", "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float[3]));
-		VertexElement          VertexElement::color4("c4", "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, sizeof(float[4]));
+		VertexElement          VertexElement::colorf("c4", "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, sizeof(float[4]));
 		VertexElement             VertexElement::tex("t", "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, sizeof(float[2]));
 		VertexElement          VertexElement::normal("n", "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float[3]));
 		VertexElement VertexElement::secondaryColor3("s3", "COLOR", 1, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float[3]));
 		VertexElement VertexElement::secondaryColor4("s4", "COLOR", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, sizeof(float[4]));
 
-		D3DSurface::D3DSurface(const IntSize & size) : Rapture::Surface(size), ctx(Graphics3D::instance()) {}
+		D3DSurface::D3DSurface(Graphics3D * graphics, const IntSize & size) : Rapture::Surface(size), graphics(graphics) {}
 
 		D3DSurface::~D3DSurface() {}
 
 		void D3DSurface::clear() const
 		{
-			auto cs = hold(ctx->colorState(), ctx->clearColor());
-			ctx->rectangle(ctx->clipRect());
+			auto cs = hold(graphics->colorState(), graphics->clearColor());
+			graphics->rectangle(graphics->clipRect());
 
 			//ctx->context->ClearRenderTargetView(renderTargetView, clearColor);
 		#ifdef USE_3D
-			ctx->context->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+			graphics->context->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 		#endif
 		}
 
@@ -1119,7 +1119,7 @@ namespace Rapture
 			descDepth.MiscFlags = 0;
 
 			com_assert(
-				ctx->device->CreateTexture2D(&descDepth, NULL, &depthStencil)
+				graphics->device->CreateTexture2D(&descDepth, NULL, &depthStencil)
 				);
 
 			D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
@@ -1129,22 +1129,22 @@ namespace Rapture
 			descDSV.Texture2D.MipSlice = 0;
 
 			com_assert(
-				ctx->device->CreateDepthStencilView(depthStencil, &descDSV, &depthStencilView)
+				graphics->device->CreateDepthStencilView(depthStencil, &descDSV, &depthStencilView), "Can't create depth stencil view"
 				);
 		}
 
-		Uniform::Uniform(ShaderType shader, uint index, uint size) : ctx(Graphics3D::instance()), index(index)
+		UniformAdapter::UniformAdapter(GraphicContext * ctx, ShaderType shader, int index, size_t size) : ctx(ctx), index(index)
 		{
 			D3D11_BUFFER_DESC bd;
 			ZeroMemory(&bd, sizeof(bd));
 
 			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = size;
+			bd.ByteWidth = static_cast<uint>(size);
 			bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 			bd.CPUAccessFlags = 0;
 
 			com_assert(
-				ctx->device->CreateBuffer(&bd, NULL, &buffer)
+				ctx->device->CreateBuffer(&bd, NULL, &buffer), "Can't create uniform buffer"
 				);
 
 			switch(shader)
@@ -1159,7 +1159,7 @@ namespace Rapture
 			}
 		}
 
-		void Uniform::update(const void * data)
+		void UniformAdapter::update(const void * data)
 		{
 			ctx->context->UpdateSubresource(buffer, 0, NULL, data, 0, 0);
 		}

@@ -23,8 +23,7 @@ namespace Rapture
 
 		static void initialize()
 		{
-			Type<FreeTypeDecoder> ThisClass;
-			FontIO::setDecoder("ttf", ThisClass);
+			FontIO::setDecoder("ttf", gettype(FreeTypeDecoder));
 		}
 	};
 }

@@ -34,12 +34,14 @@ namespace Rapture
 	{
 		class GraphicContext;
 		class Graphics3D;
-		class GLModel;
+		class Model;
+		class Image;
+		class Surface;
 	}
 
 	link_class(OpenGL3_3::GraphicContext, Class<Graphics3D>);
 	link_class(OpenGL3_3::Graphics3D, Class<OpenGL3_3::GraphicContext>);
-	link_class(OpenGL3_3::GLModel, Class<Model>);
+	link_class(OpenGL3_3::Model, Class<Model>);
 
 	namespace OpenGL3_3
 	{
@@ -63,12 +65,12 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
-		class GLImage : public Image
+		class Image : public Rapture::Image
 		{
 			friend class Graphics3D;
 
 		public:
-			GLImage(const GraphicContext * ctx, const ImageData & data);
+			Image(const GraphicContext * ctx, const ImageData & data);
 
 			virtual void apply() const override;
 			virtual void requestData(ImageData * output) const override;
@@ -79,11 +81,11 @@ namespace Rapture
 			uint  _id;
 		};
 
-		typedef GLImage GLTexture;
+		typedef Image Texture;
 
 		//---------------------------------------------------------------------------
 
-		class VertexElement : public Shared
+		class VertexElement : public Shared, public Precached<string, VertexElement>
 		{
 			friend class VertexLayout;
 
@@ -95,7 +97,7 @@ namespace Rapture
 			static VertexElement pos2;
 			static VertexElement pos3;
 			static VertexElement color3;
-			static VertexElement color4;
+			static VertexElement colorf;
 			static VertexElement secondaryColor3;
 			static VertexElement secondaryColor4;
 			static VertexElement tex;
@@ -108,9 +110,9 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
-		class VertexLayout : public Shared
+		class VertexLayout : public Shared, public Cached<string, VertexLayout>
 		{
-			typedef Cached<string, VertexLayout, ProtectedCache> Cache;
+			typedef Cached<string, VertexLayout> Cache;
 
 		public:
 			string key;
@@ -118,7 +120,7 @@ namespace Rapture
 			uint stride;
 
 		protected:
-			public_for_cache(Cache);
+			friend_handle;
 
 			VertexLayout(const String & key) : key(key)
 			{
@@ -128,9 +130,8 @@ namespace Rapture
 			static uint decodeData(const String & data, Array<VertexElement> & elements)
 			{
 				uint stride = 0;
-				auto list = split(data);
 
-				for(const auto & str : *list)
+				for(const auto & str : split(data))
 				{
 					auto & vie = VertexElement::get(str);
 					elements.push_back(vie);
@@ -157,47 +158,53 @@ namespace Rapture
 			uint size;
 		};
 
+		class IndexBuffer : public Shared
+		{
+		public:
+			IndexBuffer(const VertexIndices & indices);
+
+			GraphicContext * ctx;
+			uint handle;
+			uint size;
+		};
+
 		//---------------------------------------------------------------------------
 
-		class UniformBase : public Shared
+		class Uniform : public Shared
 		{
 			friend class Graphics3D;
 
 		public:
-			UniformBase(ShaderType shader, uint index, uint size);
-
-			void update(const void * data);
+			Uniform(ShaderType shader, uint index, uint size);
 
 		protected:
+			void update(const void * data);
+
+			uint buffer;
 			uint index;
 			GraphicContext * ctx;
 		};
 
+		template<class T, bool isValid = is_uniform<T>::value>
+		class GenericUniform {};
+
 		template<class T>
-		class Uniform : public UniformBase, public StaticIdentifier<Uniform<T>>, public HandleSingleton<Uniform<T>>
+		class GenericUniform<T, true> : public Uniform, public StaticIdentifier<GenericUniform<T>>, public Singleton<GenericUniform<T>, ThreadLocalModel>
 		{
 		public:
-			Uniform() : UniformBase(T::shader, T::index, static_cast<uint>(sizeof(T))) {}
-		};
+			GenericUniform() : Uniform(T::shader, T::index, static_cast<uint>(sizeof(T))) {}
 
-		using UniformId = PointerId;
-
-		class UniformData
-		{
-		public:
-			UniformData(UniformBase * uniform) : uniform(uniform) {}
-
-			template<class T,
-				useif(
-					is_uniform<T>::value
-					)>
 			void set(const T & data)
 			{
-				uniform->update(&data);
+				update(&data);
 			}
 
-		protected:
-			UniformBase * uniform;
+			template<class ... A, useif <can_construct<T, A...>::value> endif>
+			void set(A &&... args)
+			{
+				T data(forward<A>(args)...);
+				update(&data);
+			}
 		};
 
 		//---------------------------------------------------------------------------
@@ -231,7 +238,7 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
-		template<ShaderType Type>
+		template<ShaderType type>
 		class Shader {};
 
 		typedef Shader<ShaderType::Common>		CommonShader;
@@ -240,8 +247,8 @@ namespace Rapture
 		typedef Shader<ShaderType::Pixel>		PixelShader;
 
 		typedef RawData<const void> ShaderCode;
-		typedef Map<ShaderType, ShaderCode> ShaderCodeSet;
-		typedef Map<string, ShaderCodeSet> ShaderMap;
+		typedef HashMap<ShaderType, ShaderCode> ShaderCodeSet;
+		typedef HashMap<string, ShaderCodeSet> ShaderMap;
 
 		enum class ShaderCodeState
 		{
@@ -294,7 +301,7 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
-		class Graphics3D : public GraphicContext, public Singleton<Handle<Graphics3D, Graphics3D>, ThreadLocalModel>
+		class Graphics3D : public GraphicContext
 		{
 		public:
 			struct ContextAttributes
@@ -308,11 +315,7 @@ namespace Rapture
 				int flags;
 			};
 
-			static inline Handle<Graphics3D, Graphics3D> & findInstance(const thread::id & id);
-
-			static inline Graphics3D * initialize();
-			static inline Graphics3D * initialize(const Handle<Graphics3D> & inst);
-			static inline void free();
+			friend Handle<Graphics3D, Graphics3D> provide();
 
 			virtual void clip(const IntRect & rect) override;
 			virtual void rectangle(const IntRect & rect) override;
@@ -320,17 +323,17 @@ namespace Rapture
 			virtual void rectangle(const SqRect & r) override;
 			virtual void ellipse(const SqRect & r) override;
 
-			virtual void draw(const Figure * figure, const IntRect & bounds) override;
-			virtual void draw(const Figure * figure, const FloatTransform & transform) override;
+			virtual void draw(const Rapture::Figure * figure, const IntRect & bounds) override;
+			virtual void draw(const Rapture::Figure * figure, const FloatTransform & transform) override;
 
-			virtual void draw(const Model * model) override;
+			virtual void draw(const Rapture::Model * model) override;
 
-			virtual void draw(const Image * image, int x, int y) override;
-			virtual void draw(const Image * image, int x, int y, int width, int height) override;
-			virtual void draw(const Image * image, const IntRect & rect) override;
-			virtual void draw(const Image * image, const SqRect & r) override;
+			virtual void draw(const Rapture::Image * image, int x, int y) override;
+			virtual void draw(const Rapture::Image * image, int x, int y, int width, int height) override;
+			virtual void draw(const Rapture::Image * image, const IntRect & rect) override;
+			virtual void draw(const Rapture::Image * image, const SqRect & r) override;
 
-			virtual void draw(const Symbol * symbol, int x, int y) override;
+			virtual void draw(const Rapture::Symbol * symbol, int x, int y) override;
 
 			virtual void present() const override;
 
@@ -338,121 +341,43 @@ namespace Rapture
 			virtual void printDebug();
 			virtual void checkForErrors();
 
-			virtual void bind(const Handle<Surface> & surface) override;
-			virtual void bind(const Handle<Texture> & texture, uint index) override;
+			using Rapture::Graphics::bind;
 
-			virtual Handle<Image> createImage(const ImageData & data) const override;
-			virtual Handle<Figure> createFigure(const FigureData & data) const override;
+			virtual void bind(const Handle<Rapture::Surface> & surface) override;
+			virtual void bind(const Handle<Rapture::Texture> & texture, uint index) override;
 
-			template<class T, useif <is_uniform<T>::value> endif>
-			void updateUniform(const T & uniform) const;
-			template<class T, typename ... A, useif <is_uniform<T>::value && can_construct<T, A...>::value> endif>::value
-			void updateUniform(A && ... args) const;
-
-			static Class<Subject> meta;
-
-			static Map<thread::id, Graphics3D, Graphics3D> pool;
+			virtual Handle<Rapture::Image> createImage(const ImageData & data) override;
+			virtual Handle<Rapture::Figure> createFigure(const FigureData & data) override;
 
 		protected:
-			public_for_handle(Graphics3D, Graphics3D);
-			friend class GLModel;
+			friend_handle;
+			friend class Model;
 
 			Graphics3D();
 			virtual ~Graphics3D();
 
-			virtual Handle<Surface> createWindowSurface(WindowAdapter * adapter) const override;
+			virtual Handle<Rapture::Surface> createSurface(UISpace * space) override;
 			virtual void updateBrushState() override;
 
-			template<class T, typename ... Components, typename ... A>
-			void setUniform(Type<Uniforms::Base<Components...>> type, Handle<UniformData> & data, A && ... args) const
-			{
-				data->set(T {static_cast<adapt_t<Components, A>>(forward<A>(args))...});
-			}
-
-			void draw(const GLModel * model);
+			void draw(const Model * model);
 
 			void initDevice();
 			void initFacilities();
 			void freeFacilities();
 
-			static inline void updatePool();
-
 			Handle<VertexShader> vshader = nullptr;
 			Handle<PixelShader> pshader = nullptr;
-			
+
 			mutable Handle<VertexBuffer> vbuffer = nullptr;
-			mutable Map<UniformId, UniformData> uniformData;
+			mutable Handle<IndexBuffer> ibuffer = nullptr;
+			mutable TypedSet<Uniform> uniformData;
 
 			Array<Texture> textures;
 		};
 
-		inline Handle<Graphics3D, Graphics3D> & Graphics3D::findInstance(const thread::id & id)
+		inline Handle<Graphics3D, Graphics3D> provide()
 		{
-			return pool[id];
-		}
-
-		inline Graphics3D * Graphics3D::initialize()
-		{
-			auto & graphics = instance().init();
-
-			graphics->initDevice();
-			graphics->initFacilities();
-
-			updatePool();
-
-			return graphics;
-		}
-
-		inline Graphics3D * Graphics3D::initialize(const Handle<Graphics3D> & inst)
-		{
-			auto & graphics = instance();
-
-			if(graphics == inst)
-				return graphics;
-
-			graphics = inst;
-			updatePool();
-
-			return graphics;
-		}
-
-		inline void Graphics3D::free()
-		{
-			auto & graphics = instance();
-
-			if(graphics == nullptr)
-				return;
-
-			graphics->freeFacilities();
-			graphics = nullptr;
-			updatePool();
-		}
-
-		inline void Graphics3D::updatePool()
-		{
-			pool[std::this_thread::get_id()] = instance();
-		}
-
-		template<class T, selectif_t<0>>
-		void Graphics3D::updateUniform(const T & uniform) const
-		{
-			Handle<UniformData> & ud = uniformData[Uniform<T>::id()];
-
-			if(ud == nullptr)
-				ud.init(Uniform<T>::instance());
-
-			ud->set(uniform);
-		}
-
-		template<class T, typename ... A, selectif_t<1>>
-		void Graphics3D::updateUniform(A && ... args) const
-		{
-			Handle<UniformData> & ud = uniformData[Uniform<T>::id()];
-
-			if(ud == nullptr)
-				ud.init(Uniform<T>::instance());
-
-			setUniform<T>(gettype(typename T::Base), ud, forward<A>(args)...);
+			return {emptiness};
 		}
 
 		//---------------------------------------------------------------------------
@@ -464,25 +389,32 @@ namespace Rapture
 		public:
 			static ShaderCode getCode(const string & id, ShaderType type)
 			{
-				auto & codeSet = shaders[id];
+				auto i = shaders.find(id);
 
-				if(codeSet.isNull())
-					throw new Exception("Can't find embedded shader set with id \"", id, "\"");
+				if(i == shaders.end())
+					throw Exception("Can't find embedded shader set with id \"", id, "\"");
 
-				auto & code = (*codeSet)[type];
+				auto & set = i->second;
+				auto ci = set->code.find(type);
 
-				if(code.isNull())
-					throw new Exception("Embedded shader set with id \"", id, "\" doesn't contain shader of type \"", type, "\"");
+				if(ci == set->code.end())
+					throw Exception("Embedded shader set with id \"", id, "\" doesn't contain shader of type \"", type, "\"");
 
-				return *code;
+				return *ci->second;
 			}
 
-			static Handle<ShaderCodeSet> & setCode(const string & id, const initializer_list<ShaderCode> & codeSet)
+			static Handle<ShaderCodeSet> setCode(const string & id, const initializer_list<Handle<ShaderCode>> & codeSet)
 			{
-				auto & set = shaders[id].reinit();
+				Handle<ShaderCodeSet> set;
+				auto i = shaders.find(id);
+
+				if(i == shaders.end())
+					shaders.insert({id, set.init()});
+				else
+					set = i->second;
 
 				for(size_t i = 0; i < codeSet.size(); ++i)
-					set->insert_or_assign(static_cast<ShaderType>(i), handle<ShaderCode>(*(codeSet.begin() + i)));
+					set->code.insert({static_cast<ShaderType>(i), *(codeSet.begin() + i)});
 
 				return set;
 			}
@@ -496,38 +428,38 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
-		class GLModel : public Model
+		class Model : public Rapture::Model
 		{
 		public:
-			GLModel(const Graphics3D * graphics, const Handle<VertexLayout> & vil, const VertexData & vertexData)
-				: Model(graphics, vertexData, vil->stride), buffer(vil, vertexData)
+			Model(const Graphics3D * graphics, const Handle<VertexLayout> & vil, const VertexData & vertexData)
+				: Rapture::Model(graphics, vertexData, vil->stride), buffer(vil, vertexData)
 			{
-				setclass(GLModel);
+				setclass(Model);
 			}
 
 			Handle<VertexBuffer> buffer;
 
-			static Handle<GLModel, Graphics3D> quad;
-			static Handle<GLModel, Graphics3D> texquad;
+			static Handle<Model, Graphics3D> quad;
+			static Handle<Model, Graphics3D> texquad;
 		};
 
-		class GLFigure : public Figure
+		class Figure : public Rapture::Figure
 		{
 		public:
-			GLFigure(const Graphics3D * graphics, const FigureData & data);
+			Figure(const Graphics3D * graphics, const FigureData & data);
 
-			Handle<GLModel> model;
+			Handle<Model> model;
 		};
 
 		//---------------------------------------------------------------------------
 
-		class GLSurface : public Surface
+		class Surface : public Rapture::Surface
 		{
 			friend class Graphics3D;
 
 		public:
-			GLSurface(const IntSize & size);
-			virtual ~GLSurface();
+			Surface(const IntSize & size);
+			virtual ~Surface();
 
 			virtual void clear() const;
 
@@ -539,7 +471,7 @@ namespace Rapture
 			Graphics3D::ContextAttributes attr;
 		};
 
-		class DepthBufferSurface : public GLSurface
+		class DepthBufferSurface : public Surface
 		{
 		public:
 			DepthBufferSurface(const IntSize & size);
@@ -549,14 +481,14 @@ namespace Rapture
 			virtual void apply() const override;
 		};
 
-		class WindowSurface : public GLSurface
+		class UISurface : public Surface
 		{
 			friend class Graphics3D;
 
 		public:
-			WindowSurface(WindowAdapter * adapter);
-			WindowSurface(const WindowSurface &) = delete;
-			virtual ~WindowSurface();
+			UISurface(UISpace * space);
+			UISurface(const UISurface &) = delete;
+			virtual ~UISurface();
 
 			virtual void apply() const override;
 			virtual void present() const override;
@@ -567,20 +499,14 @@ namespace Rapture
 			void createRenderTarget();
 			void releaseRenderTarget();
 
-			static void findPreferredMode(const ComHandle<IDXGIOutput> & output, DXGI_MODE_DESC & mode);
+			void onUIResize(Handle<UIResizeMessage> & msg, UISpace & space, const Subject * src);
+			void onUIFullscreen(Handle<UIFullscreenMessage> & msg, UISpace & space, const Subject * src);
+			void onUIDestroy(Handle<WindowCloseMessage> & msg, UISpace & space, const Subject * src);
 
-			void onWindowResize(Handle<WindowResizeMessage> & msg, WindowAdapter & adapter, const Subject * src);
-			void onWindowFullscreen(Handle<WindowFullscreenMessage> & msg, WindowAdapter & adapter, const Subject * src);
-			void onWindowClose(Handle<WindowCloseMessage> & msg, WindowAdapter & adapter, const Subject * src);
-
-			ComHandle<IDXGISwapChain1> swapChain;
-			ComHandle<ID3D11RenderTargetView> renderTargetView;
-
-			DXGI_PRESENT_PARAMETERS presentParams;
-			WindowAdapter * adapter;
+			UISpace * space;
 		};
 
-		class TextureSurface : public GLSurface
+		class TextureSurface : public Surface
 		{
 		public:
 			TextureSurface(const IntSize & size);
@@ -631,7 +557,7 @@ namespace Rapture
 			SimpleTechnique(const Handle<VertexLayout> & vil, const Handle<ShaderProgram> & program)
 				: FxTechnique(vil), program(program) {}
 
-			template<class ShaderProgramType, class ... A, useif <can_construct<ShaderProgramType, Handle<FxTechnique>, A...>::value> endif>::value
+			template<class ShaderProgramType, class ... A, useif <can_construct<ShaderProgramType, Handle<FxTechnique>, A...>::value> endif>
 			SimpleTechnique(const Handle<VertexLayout> & vil, const Type<ShaderProgramType> &, A &&... args)
 				: FxTechnique(vil), program(handle<ShaderProgramType>(this, forward<A>(args)...)) {}
 

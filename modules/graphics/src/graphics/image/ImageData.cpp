@@ -52,8 +52,10 @@ namespace Rapture
 
 		auto cvt = getConverter(format, newFormat);
 
+		String f(format);
+
 		if(cvt == nullptr)
-			throw Exception("Can't transform image data from \"", format, "\" to \"", newFormat, "\" format!");
+			throw Exception("Can't transform image data from \"", f, "\" to \"", newFormat, "\" format!");
 
 		format = newFormat;
 		cvt(this);

@@ -31,9 +31,8 @@ namespace Rapture
 	 *	Each pool allocates <blocksCount> * <count> * sizeof(<type>) bytes.
 	 *	If there is more memory needed, next pool is allocated automatically.
 	 */
-
 	template<class id, class type = id, uint16_t count = 1, uint32_t blocksCount = 0x1000>
-	class BlockPool : protected std::mutex, public Singleton<BlockPool<id, type, count, blocksCount>>
+	class BlockPool : public Singleton<BlockPool<id, type, count, blocksCount>>, protected std::mutex
 	{
 		friend Singleton<BlockPool<id, type, count, blocksCount>>;
 
@@ -85,9 +84,6 @@ namespace Rapture
 		template<class ... A>
 		friend class Handle;
 
-		template<class T>
-		friend inline T & getsingleton();
-
 		BlockPool()
 		{
 			buffer = Memory<type>::allocate(blocksCount * count);
@@ -103,7 +99,7 @@ namespace Rapture
 			if(_next != nullptr)
 				delete _next;
 		}
-		
+
 		static const uint16_t lastBlock = static_cast<uint16_t>(blocksCount - 1);
 		static const uint32_t lastElement = lastBlock * blockSize;
 

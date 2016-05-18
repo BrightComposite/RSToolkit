@@ -5,6 +5,8 @@
 
 //---------------------------------------------------------------------------
 
+#define BOOST_NO_AUTO_PTR
+
 #include <boost/filesystem/operations.hpp>
 #include <string>
 

@@ -43,7 +43,7 @@ namespace Rapture
 		static VertexElement pos2;
 		static VertexElement pos3;
 		static VertexElement color3;
-		static VertexElement color4;
+		static VertexElement colorf;
 		static VertexElement secondaryColor3;
 		static VertexElement secondaryColor4;
 		static VertexElement tex;

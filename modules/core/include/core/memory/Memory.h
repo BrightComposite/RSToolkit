@@ -84,6 +84,18 @@ namespace Rapture
 			move(to, from, N);
 		}
 
+		template<size_t N>
+		static inline void move(T * to, const array<T, N> & from)
+		{
+			move(to, from.data(), N);
+		}
+
+		template<size_t N>
+		static inline void move(array<T, N> & to, const array<T, N> & from)
+		{
+			move(to.data(), from.data(), N);
+		}
+
 		static inline T * copy(const T * src, size_t size)
 		{
 			T * buffer = allocate(size);
@@ -104,22 +116,22 @@ namespace Rapture
 	public:
 		static inline void * allocate(size_t size)
 		{
-			return malloc(size);
+			return ::malloc(size);
 		}
 
 		static inline void free(const void * ptr)
 		{
-			free(const_cast<void *>(ptr));
+			::free(const_cast<void *>(ptr));
 		}
 
 		static inline void * reallocate(void * ptr, size_t size)
 		{
-			return realloc(ptr, size);
+			return ::realloc(ptr, size);
 		}
 
 		static inline void move(void * to, const void * from, size_t size)
 		{
-			memmove(to, from, size);
+			::memmove(to, from, size);
 		}
 
 		template<class T, size_t N>
@@ -138,7 +150,7 @@ namespace Rapture
 
 		static inline void fill(void * ptr, byte value, size_t size)
 		{
-			memset(ptr, value, size);
+			::memset(ptr, value, size);
 		}
 	};
 }

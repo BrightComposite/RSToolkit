@@ -18,7 +18,7 @@ namespace Rapture
 	String stdError()
 	{
 		char buffer[EXC_BUFFER_SIZE];
-		strerror_s(buffer, errno);
+		strerror_s(buffer, EXC_BUFFER_SIZE, errno);
 
 		return buffer;
 	}
@@ -26,7 +26,7 @@ namespace Rapture
 	String stdError(errno_t err)
 	{
 		char buffer[EXC_BUFFER_SIZE];
-		strerror_s(buffer, err);
+		strerror_s(buffer, EXC_BUFFER_SIZE, err);
 
 		return buffer;
 	}

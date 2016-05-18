@@ -4,13 +4,15 @@
 #include <core/addition/Named.h>
 #include <core/Exception.h>
 
+#include <locale>
+
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
 	string narrow(const wstring & wide)
 	{
-		return narrow(wide, locale());
+		return narrow(wide, locale::classic());
 	}
 
 	string narrow(const wstring & wide, const locale & loc)
@@ -56,7 +58,7 @@ namespace Rapture
 
 			case codecvt_base::noconv:
 				narrow.resize(sz + (from_end - from_beg) * sizeof(wchar_t));
-				std::memcpy(&narrow[sz], from_beg, (from_end - from_beg) * sizeof(wchar_t));
+				memcpy(&narrow[sz], from_beg, (from_end - from_beg) * sizeof(wchar_t));
 				r = std::codecvt_base::ok;
 				break;
 
@@ -119,7 +121,7 @@ namespace Rapture
 
 			case codecvt_base::noconv:
 				wide.resize(sz + (from_end - from_beg));
-				std::memcpy(&wide[sz], from_beg, (from_end - from_beg));
+				memcpy(&wide[sz], from_beg, (from_end - from_beg));
 				r = std::codecvt_base::ok;
 				break;
 
@@ -138,13 +140,17 @@ namespace Rapture
 
 	String & String::upper()
 	{
-		_strupr_s(this->_Myptr(), this->_Mysize());
+		for(auto i = begin(); i != end(); ++i)
+			*i = std::toupper(*i, locale::classic());
+
 		return *this;
 	}
 
 	String & String::lower()
 	{
-		_strlwr_s(this->_Myptr(), this->_Mysize());
+		for(auto i = begin(); i != end(); ++i)
+			*i = std::tolower(*i, locale::classic());
+
 		return *this;
 	}
 
@@ -154,7 +160,7 @@ namespace Rapture
 			return *this;
 
 		if(*string.cbegin() == ch && *(string.cend() - 1) == ch)
-			string = move(string.substr(1, string._Mysize() - 2));
+			string = move(string.substr(1, string.size() - 2));
 
 		return *this;
 	}
@@ -165,7 +171,7 @@ namespace Rapture
 			return *this;
 
 		if(*string.cbegin() == first && *(string.cend() - 1) == last)
-			string = move(string.substr(1, string._Mysize() - 2));
+			string = move(string.substr(1, string.size() - 2));
 
 		return *this;
 	}
@@ -177,7 +183,7 @@ namespace Rapture
 
 		size_t i;
 
-		for(i = 0; i < string._Mysize() && isspace(string[i]); ++i)
+		for(i = 0; i < string.size() && std::isspace(string[i], locale::classic()); ++i)
 			;
 
 		string.assign(string.data() + i);
@@ -192,10 +198,10 @@ namespace Rapture
 
 		size_t i;
 
-		for(i = string._Mysize() - 1; i >= 0 && isspace(string[i]); --i)
+		for(i = string.size() - 1; i >= 0 && std::isspace(string[i], locale::classic()); --i)
 			;
 
-		if(i < string._Mysize() - 1)
+		if(i < string.size() - 1)
 			string.resize(i + 1);
 
 		return *this;
@@ -230,27 +236,34 @@ namespace Rapture
 
 	String & String::replace(const string & search, const string & replace, size_t offset)
 	{
-		size_t pos = this->find(search, offset);
+		size_t pos = find(search, offset);
 
 		if(pos == string::npos)
 			return *this;
 
-		string::replace(pos, search._Mysize(), replace);
+		string::replace(pos, search.size(), replace);
 
 		return *this;
 	}
 
 	String & String::flood(size_t start, size_t count, char sym, char limiter)
 	{
-		if(start + count >= this->_Myres())
-			resize(start + count + 1);
+		size_t l = start + count + 1;
 
-		char * ptr = this->_Myptr();
-		memset(ptr + start, sym, count);
-		ptr[start + count] = limiter;
+		if(l > capacity())
+			reserve(l);
+
+		char * ptr = new char[l];
+
+		for(size_t i = start; i < l - 1; ++i)
+			ptr[i] = sym;
+
+		ptr[l - 1] = limiter;
 
 		if(limiter != '\0')
-			ptr[start + count + 1] = '\0';
+			ptr[l] = '\0';
+
+		assign(ptr, l);
 
 		return *this;
 	}
@@ -259,13 +272,17 @@ namespace Rapture
 
 	WideString & WideString::upper()
 	{
-		_wcsupr_s(this->_Myptr(), this->_Mysize());
+		for(auto i = begin(); i != end(); ++i)
+			*i = std::toupper(*i, locale::classic());
+
 		return *this;
 	}
 
 	WideString & WideString::lower()
 	{
-		_wcslwr_s(this->_Myptr(), this->_Mysize());
+		for(auto i = begin(); i != end(); ++i)
+			*i = std::tolower(*i, locale::classic());
+
 		return *this;
 	}
 
@@ -275,7 +292,7 @@ namespace Rapture
 			return *this;
 
 		if(*wstring.cbegin() == ch && *(wstring.cend() - 1) == ch)
-			wstring = move(wstring.substr(1, wstring._Mysize() - 2));
+			wstring = move(wstring.substr(1, wstring.size() - 2));
 
 		return *this;
 	}
@@ -286,7 +303,7 @@ namespace Rapture
 			return *this;
 
 		if(*wstring.cbegin() == first && *(wstring.cend() - 1) == last)
-			wstring = move(wstring.substr(1, wstring._Mysize() - 2));
+			wstring = move(wstring.substr(1, wstring.size() - 2));
 
 		return *this;
 	}
@@ -298,7 +315,7 @@ namespace Rapture
 
 		size_t i;
 
-		for(i = 0; i < wstring._Mysize() && isspace(wstring[i]); ++i)
+		for(i = 0; i < wstring.size() && isspace(wstring[i]); ++i)
 			;
 
 		wstring.assign(wstring.data() + i);
@@ -313,10 +330,10 @@ namespace Rapture
 
 		size_t i;
 
-		for(i = wstring._Mysize() - 1; i >= 0 && isspace(wstring[i]); --i)
+		for(i = wstring.size() - 1; i >= 0 && isspace(wstring[i]); --i)
 			;
 
-		if(i < wstring._Mysize() - 1)
+		if(i < wstring.size() - 1)
 			wstring.resize(i + 1);
 
 		return *this;
@@ -351,30 +368,34 @@ namespace Rapture
 
 	WideString & WideString::replace(const wstring & search, const wstring & replace, size_t offset)
 	{
-		size_t pos = this->find(search, offset);
+		size_t pos = find(search, offset);
 
 		if(pos == wstring::npos)
 			return *this;
 
-		wstring::replace(pos, search._Mysize(), replace);
+		wstring::replace(pos, search.size(), replace);
 
 		return *this;
 	}
 
 	WideString & WideString::flood(size_t start, size_t count, wchar_t sym, wchar_t limiter)
 	{
-		if(start + count >= this->_Myres())
-			resize(start + count + 1);
+		size_t l = start + count + 1;
 
-		wchar_t * ptr = this->_Myptr();
+		if(l > capacity())
+			reserve(l);
 
-		for(size_t i = 0; i < count; ++i)
-			ptr[start + i] = sym;
+		wchar_t * ptr = new wchar_t[l];
 
-		ptr[start + count] = limiter;
+		for(size_t i = start; i < l - 1; ++i)
+			ptr[i] = sym;
+
+		ptr[l - 1] = limiter;
 
 		if(limiter != '\0')
-			ptr[start + count + 1] = '\0';
+			ptr[l] = '\0';
+
+		assign(ptr, l);
 
 		return *this;
 	}

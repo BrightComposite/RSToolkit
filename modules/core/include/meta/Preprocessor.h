@@ -52,10 +52,19 @@
 #define pp_enum					BOOST_PP_ENUM
 
 #define pp_expand(...)			__VA_ARGS__
+#define pp_eat(...)
+#define pp_zero(...)			0
 
 #define pp_enum_prepend(z, n, text) text n
 
 #define pp_seq_expand(op, seq)	pp_seq_enum(pp_seq_transform(op, ~, seq))
+
+#define pack_sequence0(...) ((__VA_ARGS__)) pack_sequence1
+#define pack_sequence1(...) ((__VA_ARGS__)) pack_sequence0
+#define pack_sequence0_end
+#define pack_sequence1_end
+
+#define pp_seq_pack(seq) pp_cat(pack_sequence0 seq, _end)
 
 #define pp_seq_elem_t(seq)		pp_seq_elem(0, seq)
 #define pp_seq_elem_n(seq)		pp_seq_elem(1, seq)
@@ -73,14 +82,16 @@
 #define op_arr_elem_n(z, data, tpl)	pp_tuple_elem_n(tpl)
 #define op_arr_elem_d(z, data, tpl)	pp_tuple_elem_d(tpl)
 
-#define tuples_sequence_0(...) ((__VA_ARGS__)) tuples_sequence_1
-#define tuples_sequence_1(...) ((__VA_ARGS__)) tuples_sequence_0
-#define tuples_sequence_0_end
-#define tuples_sequence_1_end
+#define op_fields(z, data, ...) pp_tuple_elem_d(__VA_ARGS__);
+#define op_fields_types(z, data, ...) pp_tuple_elem_t(__VA_ARGS__)
 
-#define tuples_sequence(tuples) pp_cat(tuples_sequence_0 tuples, _end)
+#define pp_seq_fields0(fields)			pp_seq_foreach(op_fields, ~, pp_seq_pack(fields))
+#define pp_seq_fields_types0(fields)	pp_seq_expand(op_fields_types, pp_seq_pack(fields))
+#define pp_seq_fields_count0(fields)	pp_seq_size(pp_seq_pack(fields))
 
-#define template_class_tuple(tuple) pp_tuple_head(tuple)<pp_tuple_enum(pp_tuple_tail(tuple))>
+#define pp_seq_fields(... /*fields*/)		pp_if(pp_is_empty(__VA_ARGS__), pp_eat, pp_seq_fields0) (__VA_ARGS__)
+#define pp_seq_fields_types(... /*fields*/)	pp_if(pp_is_empty(__VA_ARGS__), pp_eat, pp_seq_fields_types0) (__VA_ARGS__)
+#define pp_seq_fields_count(... /*fields*/)	pp_if(pp_is_empty(__VA_ARGS__), pp_zero, pp_seq_fields_count0) (__VA_ARGS__)
 
 //---------------------------------------------------------------------------
 #endif

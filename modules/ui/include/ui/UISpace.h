@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
-#ifndef WINDOW_ADAPTER_H
-#define WINDOW_ADAPTER_H
+#ifndef UI_SPACE_H
+#define UI_SPACE_H
 
 //---------------------------------------------------------------------------
 
@@ -11,17 +11,17 @@
 
 namespace Rapture
 {
-	link_class(WindowAdapter, Class<Subject>);
+	declare_and_link(UISpace, Class<Subject>);
 
-	class WindowAdapter : public Subject
+	class UISpace : public Subject
 	{
 		friend class Widget;
 
 	public:
-		WindowAdapter(Graphics * graphics, const IntSize & size, HWND shandle);
-		virtual ~WindowAdapter();
+		UISpace(Graphics * graphics, const IntSize & size, HWND handle);
+		virtual ~UISpace();
 
-		HWND windowHandle() const
+		HWND handle() const
 		{
 			return _handle;
 		}
@@ -46,7 +46,7 @@ namespace Rapture
 			return {0, 0, _width, _height};
 		}
 
-		const UniquePtr<Widget> & rootWidget() const
+		const UniquePtr<Widget> & root() const
 		{
 			return _root;
 		}
@@ -82,34 +82,30 @@ namespace Rapture
 			validate();
 		}
 
-		void close();
-
 		virtual void registerHotkey(int id, int key, int modifiers = 0) {}
 		virtual void unregisterHotkey(int id) {}
 
 	protected:
-		bind_messages(WindowAdapter,
+		bind_messages(UISpace,
 			KeyDownMessage,
 			CharMessage,
 			KeyUpMessage,
 			MouseDownMessage,
 			MouseUpdateMessage,
 			MouseUpMessage,
-			WindowHotkeyMessage,
-			WindowResizeMessage,
-			WindowFullscreenMessage,
-			WindowCloseMessage
-		);
+			HotkeyMessage,
+			UIMessages
+		)
 
-		create_readers(
+		create_readers(UISpace,
 			KeyDownMessage,
 			CharMessage,
 			KeyUpMessage,
 			MouseDownMessage,
 			MouseUpdateMessage,
 			MouseUpMessage,
-			WindowResizeMessage
-		);
+			UIResizeMessage
+		)
 
 		Widget * focused() const;
 
@@ -122,9 +118,9 @@ namespace Rapture
 		int _width, _height;
 
 		Widget * _pointed = nullptr;
-		Widget::iterator _focused;
 
-		list<Widget *> _focusList;
+		list<Widget *>::iterator _focused;
+		list<Widget *> _focusList; //!!! Create ordered_list
 		set<pair<MouseButton, Widget *>> _pressedList;
 		MouseState _mouseState;
 
@@ -157,6 +153,23 @@ namespace Rapture
 		}
 
 		int data[8];
+	};
+
+	class BackgroundWidget : public Widget
+	{
+	public:
+		BackgroundWidget(UISpace * space) : Widget(space)
+		{
+			setVisibility(true);
+			setPlacement(ModelMask::FullSize, {0, 0, 0, 0});
+		}
+
+		virtual ~BackgroundWidget() {}
+
+		virtual bool isDisplayable() const final
+		{
+			return true;
+		}
 	};
 
 #define WS_SIMPLE (WS_POPUP | WS_CLIPCHILDREN | WS_MINIMIZEBOX)

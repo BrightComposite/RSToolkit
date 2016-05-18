@@ -91,7 +91,7 @@ namespace Rapture
 			based_on<Decoder, ImageDecoder>::value
 			> endif
 		>
-		static void setDecoder(const string & type, Type<Decoder> = nullptr)
+		static void setDecoder(const string & type, Type<Decoder> = {})
 		{
 			decoders[type] = &Decoder::instance();
 		}
@@ -101,7 +101,7 @@ namespace Rapture
 			based_on<Encoder, ImageEncoder>::value
 			> endif
 		>
-		static void setEncoder(const string & type, Type<Encoder> = nullptr)
+		static void setEncoder(const string & type, Type<Encoder> = {})
 		{
 			encoders[type] = &Encoder::instance();
 		}
@@ -112,7 +112,7 @@ namespace Rapture
 			based_on<Converter, ImageEncoder>::value
 			> endif
 		>
-		static void setConverter(const string & type, Type<Converter> = nullptr)
+		static void setConverter(const string & type, Type<Converter> = {})
 		{
 			decoders[type] = &Converter::instance();
 			encoders[type] = &Converter::instance();

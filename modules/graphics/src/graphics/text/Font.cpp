@@ -9,13 +9,13 @@
 
 namespace Rapture
 {
-	Symbol::Symbol(const Graphics * graphics, const SymbolData & data) :
+	Symbol::Symbol(Graphics * graphics, const SymbolData & data) :
 		_image(graphics->createImage(data)), _left(data.left), _top(data.top), _advance(data.advance), _character(data.character) {}
 
 	Symbol::Symbol(const SymbolData & data) :
 		_image(nullptr), _left(data.left), _top(data.top), _advance(data.advance), _character(data.character) {}
 
-	void Font::getSymbol(Handle<Symbol> & output, const Graphics * graphics, int size, wchar_t character) const
+	void Font::getSymbol(Handle<Symbol> & output, Graphics * graphics, int size, wchar_t character) const
 	{
 		auto & s = findSymbol(graphics, size, character);
 

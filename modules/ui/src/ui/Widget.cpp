@@ -1,17 +1,17 @@
 //---------------------------------------------------------------------------
 
 #include <ui/Widget.h>
-#include <ui/WindowAdapter.h>
+#include <ui/UISpace.h>
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	WidgetRegion::WidgetRegion(Widget * parent, const IntRect & rect) : _relPos(rect.pos()), _absPos(_parent ? _relPos + _parent->_absPos : _relPos), _size(rect.size()), _parent(parent), _offsets(rect) {}
-	WidgetRegion::WidgetRegion(Widget * parent, const IntPoint & pos, const IntSize & size) : _relPos(pos), _absPos(_parent ? _relPos + _parent->_absPos : _relPos), _size(size), _parent(parent), _offsets(pos, size) {}
-	WidgetRegion::WidgetRegion(const WidgetRegion & region) : _relPos(region._relPos), _absPos(region._absPos), _size(region._size), _parent(region._parent), _offsets(region._offsets), _anchors(region._anchors) {}
+	BasicWidget::BasicWidget(Widget * parent, const IntRect & rect) : _relPos(rect.pos()), _absPos(_parent ? _relPos + _parent->_absPos : _relPos), _size(rect.size()), _parent(parent), _offsets(rect) {}
+	BasicWidget::BasicWidget(Widget * parent, const IntPoint & pos, const IntSize & size) : _relPos(pos), _absPos(_parent ? _relPos + _parent->_absPos : _relPos), _size(size), _parent(parent), _offsets(pos, size) {}
+	BasicWidget::BasicWidget(const BasicWidget & w) : _relPos(w._relPos), _absPos(w._absPos), _size(w._size), _parent(w._parent), _offsets(w._offsets), _anchors(w._anchors) {}
 
-	void WidgetRegion::calculateOffsets(IntRect & out, const WidgetRegion & region, const WidgetRegion & parent)
+	void BasicWidget::calculateOffsets(IntRect & out, const BasicWidget & region, const BasicWidget & parent)
 	{
 		if(region._alignment == ModelMask::LeftTop)
 		{
@@ -25,7 +25,7 @@ namespace Rapture
 		out.bottom = region.bottom() - (int)(region._anchors.bottom * parent.height());
 	}
 
-	void WidgetRegion::calculateRegionRect(IntRect & out, const IntRect & offsets, const FloatRect & anchors, const WidgetRegion & parent)
+	void BasicWidget::calculateRegionRect(IntRect & out, const IntRect & offsets, const FloatRect & anchors, const BasicWidget & parent)
 	{
 		out.left   = (int)(anchors.left   * parent.width())  + offsets.left  ;
 		out.top    = (int)(anchors.top    * parent.height()) + offsets.top   ;
@@ -33,40 +33,33 @@ namespace Rapture
 		out.bottom = (int)(anchors.bottom * parent.height()) + offsets.bottom;
 	}
 
-	implement_reader(WidgetRegion, WidgetMoveMessage) {}
-	implement_reader(WidgetRegion, AfterWidgetMoveMessage) {}
-	implement_reader(WidgetRegion, WidgetResizeMessage) {}
-
 	Layer::Layer(Widget * widget, int order) : _widget(widget), _order(order)
 	{
 		_widget->_layerList.push_back(this);
-		_widget->_layerList.sort();
+		std::sort(_widget->_layerList.begin(), _widget->_layerList.end());
 	}
 
-	Layer::~Layer()
-	{
-		_widget->_layerList.remove(this);
-	}
+	Layer::~Layer() {}
 
 	void Layer::setOrder(int order)
 	{
 		_order = order;
-		_widget->_layerList.sort();
+		std::sort(_widget->_layerList.begin(), _widget->_layerList.end());
 	}
 
 	Widget::Widget(Widget * parent) : Widget(parent, *parent) {}
-	Widget::Widget(WindowAdapter * adapter) : Widget(adapter, adapter->region()) {}
-	Widget::Widget(Widget * parent, const IntRect & area) : Widget(parent->_adapter, parent, area) {}
-	Widget::Widget(WindowAdapter * adapter, const IntRect & area) : Widget(adapter, adapter->_root, area) {}
+	Widget::Widget(UISpace * space) : Widget(space, space->region()) {}
+	Widget::Widget(Widget * parent, const IntRect & area) : Widget(parent->_space, parent, area) {}
+	Widget::Widget(UISpace * space, const IntRect & area) : Widget(space, space->_root, area) {}
 	Widget::Widget(const Widget & widget) : Widget(widget, nullptr) {}
 
-	Widget::Widget(WindowAdapter * adapter, Widget * parent, const IntRect & region) : WidgetRegion(parent, region), _adapter(adapter)
+	Widget::Widget(UISpace * space, Widget * parent, const IntRect & region) : BasicWidget(parent, region), _space(space)
 	{
 		if(_parent != nullptr)
 			_parent->_children.insert(this);
 	}
 
-	Widget::Widget(const Widget & widget, Widget * parent) : Widget(widget._adapter, parent, widget)
+	Widget::Widget(const Widget & widget, Widget * parent) : Widget(widget._space, parent, widget)
 	{
 		_flags = widget._flags;
 
@@ -83,6 +76,8 @@ namespace Rapture
 
 	Widget::~Widget()
 	{
+		_layerList.clear();
+		_displayList.clear();
 		_layers.clear();
 		_children.clear();
 
@@ -93,12 +88,12 @@ namespace Rapture
 			if(isPointed())
 			{
 				send<MouseLeaveMessage>(*this);
-				_adapter->_pointed = nullptr;
+				_space->_pointed = nullptr;
 			}
 
 			if(isPressed())
 			{
-				auto & pl = _adapter->_pressedList;
+				auto & pl = _space->_pressedList;
 
 				for(auto i = pl.begin(); i != pl.end(); ++i)
 				{
@@ -139,14 +134,17 @@ namespace Rapture
 
 	Handle<Widget> Widget::attach(const Handle<Widget> & child)
 	{
-		if(child->_parent != nullptr || child->_adapter != _adapter)
+		if(child->_parent != nullptr || child->_space != _space)
 			return child->clone(this);
 
 		child->_parent = this;
 		_children.insert(child);
 
 		if(child->isVisible())
-			insert(child, _displayList, &Widget::_displayOrder);
+		{
+			_displayList.push_back(this);
+			sort<DisplaySort>(_displayList);
+		}
 
 		return child;
 	}
@@ -171,26 +169,7 @@ namespace Rapture
 		auto & dl = _parent->_displayList;
 
 		if(isVisible() && dl.size() > 0)
-			remove(this, dl);
-	}
-
-	void Widget::sort(list<Widget *> & list, int(Widget::*attribute))
-	{
-		list.sort([&attribute](const Handle<Widget> & a, const Handle<Widget> & b)
-		{
-			return a->*attribute < b->*attribute;
-		});
-	}
-
-	void Widget::insert(Widget * w, list<Widget *> & list, int(Widget::*attribute))
-	{
-		list.push_back(w);
-		sort(list, attribute);
-	}
-
-	void Widget::remove(Widget * w, list<Widget *> & list)
-	{
-		list.remove(w);
+			erase(dl, this);
 	}
 
 	void Widget::setVisibility(bool visible)
@@ -207,12 +186,11 @@ namespace Rapture
 
 		if(visible)
 		{
-			insert(this, dl, &Widget::_displayOrder);
+			dl.push_back(this);
+			sort<DisplaySort>(dl);
 		}
 		else
-		{
-			remove(this, dl);
-		}
+			erase(dl, this);
 	}
 
 	void Widget::setFocusability(bool focusable)
@@ -221,18 +199,19 @@ namespace Rapture
 			return;
 		
 		change_flag(WidgetFlag::Focusable, _flags, focusable);
-		auto & fl = _adapter->_focusList;
+		auto & fl = _space->_focusList;
 
 		if(focusable)
 		{
-			insert(this, fl, &Widget::_focusOrder);
+			fl.push_back(this);
+			sort<FocusSort>(fl);
 		}
 		else
 		{
 			if(isFocused())
-				_adapter->_focused = fl.end();
+				_space->_focused = fl.end();
 
-			remove(this, fl);
+			erase(fl, this);
 		}
 	}
 
@@ -252,7 +231,7 @@ namespace Rapture
 		if(_parent == nullptr)
 			return;
 
-		sort(_parent->_displayList, &Widget::_displayOrder);
+		sort<DisplaySort>(_parent->_displayList);
 		send<AfterChangeDisplayOrderMessage>(*this, _displayOrder);
 	}
 
@@ -302,14 +281,14 @@ namespace Rapture
 			return;
 
 		_focusOrder = premsg->newValue;
-		sort(_adapter->_focusList, &Widget::_focusOrder);
+		sort<FocusSort>(_space->_focusList);
 
 		send<AfterChangeFocusOrderMessage>(*this, _focusOrder);
 	}
 
 	bool Widget::isPointed() const
 	{
-		return this == _adapter->_pointed;
+		return this == _space->_pointed;
 	}
 
 	bool Widget::isPressed() const
@@ -329,7 +308,7 @@ namespace Rapture
 
 	bool Widget::isFocused() const
 	{
-		return this == _adapter->focused();
+		return this == _space->focused();
 	}
 
 	void Widget::focus()
@@ -337,25 +316,14 @@ namespace Rapture
 		if(!isFocusable() || !isVisible() || isFocused())
 			return;
 
-		auto & f = _adapter->_focused;
-		auto & fl = _adapter->_focusList;
+		auto & f = _space->_focused;
+		auto & fl = _space->_focusList;
 
 		if(f != fl.end())
 			(*f)->removeFocus();
 
-		f = find(this, fl);
+		f = std::find(fl.begin(), fl.end(), this);
 		receiveFocus();
-	}
-
-	Widget::iterator Widget::find(Widget * w, list<Widget *> & list)
-	{
-		for(auto i = list.begin(); i != list.end(); ++i)
-		{
-			if(*i == w)
-				return i;
-		}
-
-		return list.end();
 	}
 
 	void Widget::removeFocus()
@@ -368,17 +336,17 @@ namespace Rapture
 		send<WidgetChangedStateMessage>(*this, WidgetState::Focused, true);
 	}
 
-	WindowAdapter * Widget::adapter() const
+	UISpace * Widget::space() const
 	{
-		return _adapter;
+		return _space;
 	}
 
 	Graphics * Widget::graphics() const
 	{
-		return _adapter->graphics();
+		return _space->graphics();
 	}
 
-	void WidgetRegion::changeSize(int width, int height, ModelMask mask)
+	void BasicWidget::changeSize(int width, int height, ModelMask mask)
 	{
 		if(_parent != nullptr)
 		{
@@ -432,7 +400,7 @@ namespace Rapture
 		}
 	}
 
-	void WidgetRegion::changePlacement(int left, int top, int right, int bottom, ModelMask mask)
+	void BasicWidget::changePlacement(int left, int top, int right, int bottom, ModelMask mask)
 	{
 		auto msg = send<WidgetMoveMessage>(*this, left, top, right, bottom, mask);
 		
@@ -482,13 +450,13 @@ namespace Rapture
 		send<AfterWidgetMoveMessage>(*this, _relPos.x, _relPos.y, _relPos.x + _size.x, _relPos.y + _size.y);
 	}
 
-	void WidgetRegion::updateAnchors()
+	void BasicWidget::updateAnchors()
 	{
 		if(_parent == nullptr)
 			return;
 
 		IntRect newRegion;
-		WidgetRegion::calculateRegionRect(newRegion, _offsets, _anchors, *_parent);
+		BasicWidget::calculateRegionRect(newRegion, _offsets, _anchors, *_parent);
 
 		ModelMask mask = ModelMask(0);
 
@@ -505,7 +473,7 @@ namespace Rapture
 			set_flag(ModelMask::Bottom, mask);
 
 		changePlacement(newRegion.left, newRegion.top, newRegion.right, newRegion.bottom, mask);
-		WidgetRegion::calculateOffsets(_offsets, *this, *_parent);
+		BasicWidget::calculateOffsets(_offsets, *this, *_parent);
 	}
 
 	Widget * Widget::findWidget(const IntPoint & pt)
@@ -542,7 +510,7 @@ namespace Rapture
 
 	implement_reader(Widget, WidgetResizeMessage)
 	{
-		for(auto _child : _children)
+		for(auto & _child : _children)
 			_child->updateAnchors();
 	}
 }

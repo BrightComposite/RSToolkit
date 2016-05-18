@@ -21,10 +21,10 @@ namespace Rapture {
 		template<typename Tx, typename Ty, useif <std::is_pod<Tx>::value, std::is_pod<Ty>::value> endif>
         Point(Tx x, Ty y)           : x(static_cast<T>(x)),		y(static_cast<T>(y))     {}
 
-		template<typename U, useif <std::is_pod<U>::value> endif>
+		template<typename U, useif <std::is_convertible<U, T>::value> endif>
 		Point(const U (&pt)[2])	: x(static_cast<T>(pt[0])),	y(static_cast<T>(pt[1]))	 {}
 
-        template<typename U, useif <not_same_type<T, U>::value, std::is_pod<U>::value> endif>
+		template<typename U, useif <not_same_type<T, U>::value, std::is_convertible<U, T>::value> endif>
         explicit Point(const Point<U> & pt) : x(static_cast<T>(pt.x)),	y(static_cast<T>(pt.y))  {}
 
 		template<typename Tx, typename Ty, useif <std::is_pod<Tx>::value, std::is_pod<Ty>::value> endif>
@@ -130,7 +130,8 @@ namespace Rapture {
         template<typename U>
         Point middle(const Point<U> & pt)
         {
-			return {Rapture::middle(x, pt.x), Rapture::middle(y, pt.y)};
+			using V = std::common_type_t<T, U>;
+			return {Math<V>::avg(x, pt.x), Math<V>::avg(y, pt.y)};
         }
 
         template<typename U>
@@ -290,14 +291,19 @@ namespace Rapture {
             return Point(*this) /= value;
         }
 
-		operator array_t<T, 2> & ()
+		operator array<T, 2> & () &
 		{
 			return data;
 		}
 
-		operator const array_t<T, 2> & () const
+		operator const array<T, 2> & () const &
 		{
 			return data;
+		}
+
+		operator array<T, 2> && () &&
+		{
+			return move(data);
 		}
 
 		union
@@ -307,7 +313,7 @@ namespace Rapture {
 				T x, y;
 			};
 
-			T data[2];
+			array<T, 2> data;
 		};
     };
 

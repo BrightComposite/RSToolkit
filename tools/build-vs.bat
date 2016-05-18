@@ -15,10 +15,10 @@
 
 :build
 call cmake-build
-@cd "../build-x86"
+@cd "../build-vs-x86"
 msbuild ALL_BUILD.vcxproj /p:Configuration=Release
 msbuild ALL_BUILD.vcxproj /p:Configuration=Debug
-@cd "../build-x64"
+@cd "../build-vs-x64"
 msbuild ALL_BUILD.vcxproj /p:Configuration=Release
 msbuild ALL_BUILD.vcxproj /p:Configuration=Debug
 @cd "../tools"

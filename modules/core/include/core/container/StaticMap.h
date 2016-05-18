@@ -50,16 +50,16 @@ namespace Rapture
 	};
 
 	template<typename V, typename KH, typename ... KT>
-	class StaticMap<Tuple<KH, KT...>, V> : public StaticMap<Tuple<KT...>, V>, public StaticMap<KH, V>
+	class StaticMap<tuple<KH, KT...>, V> : public StaticMap<tuple<KT...>, V>, public StaticMap<KH, V>
 	{
 	public:
 		typedef V Value;
 		typedef StaticMap<KH, decay_t<V>> HeadType;
-		typedef StaticMap<Tuple<KT ...>, V> Base;
+		typedef StaticMap<tuple<KT ...>, V> Base;
 		typedef expand_t<sizeof...(KT) + 1, V> Values;
 		typedef expand_t<sizeof...(KT), V> ValuesBase;
-		typedef Tuple<KH, KT...> Types;
-		typedef Tuple<KT...> TypesBase;
+		typedef tuple<KH, KT...> types;
+		typedef tuple<KT...> TypesBase;
 
 		static const int size = sizeof...(KT) + 1;
 
@@ -69,13 +69,13 @@ namespace Rapture
 		StaticMap(const StaticMap & map) : HeadType(map.get<KH>()), Base(map) {}
 		StaticMap(StaticMap && map) : HeadType(move(map.get<KH>())), Base(forward<Base>(map)) {}
 
-		template <typename ... KL, typename ... KR, useif <same_type<Tuple<KL..., KR...>, Types>::value> endif>
-		StaticMap(const StaticMap<Tuple<KH, KL ...>, V> & left, const StaticMap<Tuple<KR ...>, V> & right) : HeadType(left.get<KH>), Base(left, right) {}
-		StaticMap(const StaticMap<Tuple<KH>, V> & left, const Base & right) : HeadType(left), Base(right) {}
+		template <typename ... KL, typename ... KR, useif <same_type<tuple<KL..., KR...>, types>::value> endif>
+		StaticMap(const StaticMap<tuple<KH, KL ...>, V> & left, const StaticMap<tuple<KR ...>, V> & right) : HeadType(left.get<KH>), Base(left, right) {}
+		StaticMap(const StaticMap<tuple<KH>, V> & left, const Base & right) : HeadType(left), Base(right) {}
 
-		template <typename ... KL, typename ... KR, useif <same_type<Tuple<KL..., KR...>, Types>::value> endif>
-		StaticMap(StaticMap<Tuple<KH, KL ...>, V> && left, StaticMap<Tuple<KR ...>, V> && right) : HeadType(move(left.get<KH>)), Base(forward<StaticMap<Tuple<KL ...>, V>>(left), forward<StaticMap<Tuple<KR ...>, V>>(right)) {}
-		StaticMap(StaticMap<Tuple<KH>, V> && left, Base && right) : HeadType(forward<V>(left.get<KH>)), Base(forward<Base>(right)) {}
+		template <typename ... KL, typename ... KR, useif <same_type<tuple<KL..., KR...>, types>::value> endif>
+		StaticMap(StaticMap<tuple<KH, KL ...>, V> && left, StaticMap<tuple<KR ...>, V> && right) : HeadType(move(left.get<KH>)), Base(forward<StaticMap<tuple<KL ...>, V>>(left), forward<StaticMap<tuple<KR ...>, V>>(right)) {}
+		StaticMap(StaticMap<tuple<KH>, V> && left, Base && right) : HeadType(forward<V>(left.get<KH>)), Base(forward<Base>(right)) {}
 
 		template <typename A>
 		Value & get()
@@ -157,11 +157,11 @@ namespace Rapture
 
 
 	template <typename I>
-	class StaticMap<Tuple<>, I>
+	class StaticMap<tuple<>, I>
 	{
 	public:
-		typedef Tuple<> Items;
-		typedef Tuple<> Types;
+		typedef tuple<> Items;
+		typedef tuple<> types;
 
 		StaticMap() {}
 

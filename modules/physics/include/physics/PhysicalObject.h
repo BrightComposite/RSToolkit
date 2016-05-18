@@ -8,16 +8,14 @@
 #include <scene/Scene.h>
 #include <physics/PhysicalWorld.h>
 
-#include <bullet/btBulletCollisionCommon.h>
-#include <bullet/btBulletDynamicsCommon.h>
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	class PhysicalObject;
-
-	link_class(PhysicalObject, Class<SceneObject>);
+	declare_and_link(PhysicalObject, Class<SceneObject>);
 
 	class MotionState : public btMotionState
 	{
@@ -25,8 +23,8 @@ namespace Rapture
 		MotionState(PhysicalObject * object) : object(object) {}
 		virtual ~MotionState() {}
 
-		virtual void getWorldTransform(btTransform & worldTrans) const;
-		virtual void setWorldTransform(const btTransform & worldTrans);
+		virtual void getWorldTransform(btTransform & trans) const override;
+		virtual void setWorldTransform(const btTransform & trans) override;
 
 		PhysicalObject * object;
 	};
@@ -36,12 +34,10 @@ namespace Rapture
 		friend class MotionState;
 
 	public:
-		PhysicalObject(Scene * scene, PhysicalWorld * world, btCollisionShape * shape, const DoubleVector & pos = DoubleVector({0.0, 0.0, 0.0, 1.0}), double mass = 0.0) : SceneObject(scene), _shape(shape), _world(world), _rot(0.0, 0.0, 0.0)
+		PhysicalObject(Scene * scene, PhysicalWorld * world, btCollisionShape * shape, const DoubleVector & pos = DoubleVector::positiveW, double mass = 0.0) : SceneObject(scene, pos), _shape(shape), _world(world), _rot(0, 0, 1, 1)
 		{
 			setclass(PhysicalObject);
-
 			_motionState = new MotionState(this);
-			_pos = pos;
 
 			btVector3 inertia;
 			_shape->calculateLocalInertia(mass, inertia);
@@ -67,9 +63,7 @@ namespace Rapture
 		virtual void contactWith(PhysicalObject * obj, const ContactInfo & info) {}
 
 	protected:
-		virtual void update(long long ticks)
-		{
-		}
+		virtual void update(long long ticks) {}
 
 		DoubleQuaternion _rot;
 		PhysicalWorld * _world;

@@ -5,12 +5,14 @@
 
 //---------------------------------------------------------------------------
 
-#include "WindowAdapter.h"
+#include "UISpace.h"
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
+	class Window;
+
 	enum class WindowState
 	{
 		Normal,
@@ -27,15 +29,16 @@ namespace Rapture
 		None
 	};
 
-	link_class(Window, Class<WindowAdapter>);
+	link_class(Window, Class<UISpace>);
 
-	class Window : public WindowAdapter
+	class Window : public UISpace
 	{
 	public:
 		Window(Graphics * graphics, long left, long top, long width, long height, const WideString & caption = L"") : Window(graphics, IntRect {left, top, left + width, top + height}, caption) {}
 		Window(Graphics * graphics, long width, long height, const WideString & caption = L"") : Window(graphics, IntSize {width, height}, caption) {}
 		Window(Graphics * graphics, const IntSize & size, const WideString & caption = L"") : Window(graphics, IntRect {0, 0, size.x, size.y}, caption) {}
 		Window(Graphics * graphics, const IntRect & rect, const WideString & caption = L"");
+
 		virtual ~Window();
 
 		long outerWidth() const
@@ -99,6 +102,8 @@ namespace Rapture
 		void setCaption(const WideString & caption);
 		WideString getCaption();
 
+		void close();
+
 	protected:
 		void makeFullscreen();
 		void restoreSize();
@@ -117,29 +122,14 @@ namespace Rapture
 		UINT_PTR _timer;
 		WindowState _state = WindowState::Hidden;
 		BorderStyle _borderStyle = BorderStyle::Normal;
+
+		bind_messages(Window, WindowMessages);
 	};
 
 	inline bool IsKeyPressed(int v_key)
 	{
 		return hi_bit_mask::state(GetKeyState(v_key));
 	}
-
-	class WindowBackground : public Widget
-	{
-	public:
-		WindowBackground(Window * window) : Widget(window)
-		{
-			setVisibility(true);
-			setPlacement(ModelMask::FullSize, {0, 0, 0, 0});
-		}
-
-		virtual ~WindowBackground() {}
-
-		virtual bool isDisplayable() const final
-		{
-			return true;
-		}
-	};
 }
 
 //---------------------------------------------------------------------------

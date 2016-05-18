@@ -6,12 +6,34 @@
 //---------------------------------------------------------------------------
 
 #include <meta/Meta.h>
-#include <core/String.h>
+#include <xstddef>
+#include <string>
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
+	template<class, bool>
+	class Hashed;
+}
+
+namespace std
+{
+	template<class T, bool isPod>
+	struct hash<Rapture::Hashed<T, isPod>>;
+}
+
+namespace Rapture
+{
+	template<class T, useif <is_callable<std::hash<T>, const T &>::value> endif>
+	size_t hash(const T & value);
+
+	template<class T, useif <is_callable<std::hash<T>, const T &>::value> endif>
+	size_t ptr_hash(const T * value);
+
+	template<class T, skipif <is_callable<std::hash<T>, const T &>::value> endif>
+	size_t ptr_hash(const T * value);
+
 	template<class T, bool isPod = std::is_pod<T>::value>
 	class Hashed : public T
 	{
@@ -19,7 +41,7 @@ namespace Rapture
 
 	public:
 		template<typename ... A, useif <can_construct<T, A...>::value> endif>
-		Hashed(A &&... args) : T(forward<A>(args)...), _hashValue(Rapture::hash(static_cast<const T &>(*this))) {}
+		Hashed(A &&... args) : T(forward<A>(args)...), _hashValue(std::hash<Hashed>()(static_cast<const T &>(*this))) {}
 
 		Hashed(const Hashed & val) : T(val), _hashValue(val._hashValue) {}
 		Hashed(Hashed && val) : T(forward<Hashed>(val)), _hashValue(val._hashValue) {}
@@ -40,7 +62,7 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class A, skipif<based_on<A, Hashed>()>::value>
+		template<class A, skipif <based_on<A, Hashed>::value> endif>
 		Hashed & operator = (A && val)
 		{
 			T::operator = (forward<A>(val));
@@ -51,7 +73,7 @@ namespace Rapture
 
 		bool operator == (const Hashed & val) const
 		{
-			return _hashValue == val._hashValue && Rapture::equal_to(static_cast<const T &>(*this), static_cast<const T &>(val));
+			return _hashValue == val._hashValue && static_cast<const T &>(*this) == static_cast<const T &>(val);
 		}
 
 		size_t hash() const
@@ -89,7 +111,7 @@ namespace Rapture
 
 		bool operator == (const Hashed & val) const
 		{
-			return _hashValue == val._hashValue && Rapture::equal_to(_inner, val._inner);
+			return _hashValue == val._hashValue && _inner == val._inner;
 		}
 
 		operator T()
@@ -159,18 +181,24 @@ namespace Rapture
 		}
 	};
 
-	class SharedIdentifier : public EmptyHandle
-	{
-	public:
-		SharedIdentifier() : EmptyHandle(emptiness) {}
-	};
-
-	template<class T, useif <is_functor<std::hash<T>, const T &>::value> endif>
+	template<class T, useif_t>
 	size_t hash(const T & value)
 	{
 		return std::hash<T>()(value);
 	}
-	
+
+	template<class T, useif_t>
+	size_t ptr_hash(const T * value)
+	{
+		return value != nullptr ? std::hash<T>()(*value) : 0;
+	}
+
+	template<class T, skipif_t>
+	size_t ptr_hash(const T * value)
+	{
+		return reinterpret_cast<size_t>(value);
+	}
+
 	template<class T>
 	class StaticIdentifier
 	{
@@ -186,19 +214,33 @@ namespace Rapture
 #define use_class_hash(... /* Class */)								\
 	struct hash<__VA_ARGS__> : unary_function<__VA_ARGS__, size_t>	\
 	{																\
-		size_t operator()(const __VA_ARGS__ & val) const			\
+		size_t operator()(const __VA_ARGS__ & val) const noexcept	\
 		{															\
 			return val.hash();										\
 		}															\
-	};																\
+	}																\
 
-#define attach_hash(... /* Class */) struct std::hash<__VA_ARGS__>
+#define use_enum_hash(... /* Enum */)								\
+	struct hash<__VA_ARGS__> : unary_function<__VA_ARGS__, size_t>	\
+	{																\
+		size_t operator()(const __VA_ARGS__ & val) const noexcept	\
+		{															\
+			return std::underlying_type_t<__VA_ARGS__>(val);		\
+		}															\
+	}																\
+
+#define use_enum_key(... /* Enum */)													\
+	struct less<__VA_ARGS__> : binary_function<__VA_ARGS__, __VA_ARGS__, bool>			\
+	{																					\
+		bool operator() (const __VA_ARGS__ & a, const __VA_ARGS__ & b) const noexcept	\
+		{																				\
+			return std::underlying_type_t<__VA_ARGS__>(a) <								\
+				std::underlying_type_t<__VA_ARGS__>(b);									\
+		}																				\
+	}																					\
 
 namespace std
 {
-	template<class T>
-	use_class_hash(Rapture::Handle<T>);
-
 	template<class T>
 	use_class_hash(Rapture::Hashed<T>);
 

@@ -9,8 +9,19 @@
 
 //---------------------------------------------------------------------------
 
+#ifndef _MSC_VER
+namespace std
+{
+    template<class T>
+    using underlying_type_t = typename underlying_type<T>::type;
+}
+#endif // _MSC_VER
+
+
 namespace Rapture
 {
+    using std::declval;
+
 	template<class F, class S>
 	constexpr auto check_flag(F flag, S set) -> decltype((flag & set) == flag)
 	{
@@ -40,14 +51,6 @@ namespace Rapture
 	{
 		return (flags & set) != 0;
 	}
-
-#ifndef _MSC_VER
-	namespace std
-	{
-		template<class T>
-		using underlying_type_t = typename underlying_type<T>::type;
-	}
-#endif // _MSC_VER
 
 	using std::underlying_type;
 	using std::underlying_type_t;
@@ -106,7 +109,7 @@ namespace Rapture
 	inline constexpr underlying_type_t<Enum> operator ~ (Enum value)								\
 	{																								\
 		return ~static_cast<underlying_type_t<Enum>>(value);										\
-	}														
+	}
 }
 
 //---------------------------------------------------------------------------

@@ -10,14 +10,29 @@ cmake_minimum_required(VERSION 3.0)
 
 #--------------------------------------------------------
 
-get_filename_component(RAPTURE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/.. REALPATH)
-set(RAPTURE_TOOLS ${RAPTURE_ROOT}/tools)
-
 set(GUARD_BLOCKS CACHE INTERNAL "Guard blocks" FORCE)
-set(COMPILE_OPTIONS "/arch:AVX2" CACHE INTERNAL "Compile options" FORCE)
+set(DEPENDENCIES_LIST_INDENTATION CACHE STRING "Dependency list indentation" FORCE)
+
+get_filename_component(RAPTURE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/.. ABSOLUTE)
+set(RAPTURE_ROOT ${RAPTURE_ROOT} CACHE PATH "Rapture state engine root directory")
+set(RAPTURE_TOOLS ${RAPTURE_ROOT}/tools CACHE PATH "Rapture tools directory")
+
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+    add_compile_options(/arch:AVX2)
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
+    add_compile_options(-std=c++14 -pthread -mavx2 -fabi-version=10)
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
+    set(CMAKE_CXX_FLAGS -Wall -std=c++14)
+endif()
+
+add_definitions(-DUSE_AVX)
 
 add_subdirectory(tests/core-test)
+
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
 add_subdirectory(tests/d3d-test)
+endif()
+
 add_subdirectory(tests/ui-test)
 
 add_subdirectory(projects/independence)

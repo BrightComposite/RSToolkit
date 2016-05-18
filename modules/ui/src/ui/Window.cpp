@@ -9,7 +9,41 @@
 
 namespace Rapture
 {
-	static LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+	Window::Window(Graphics * graphics, const IntRect & rect, const WideString & caption) : UISpace(graphics, rect.size(), createWindowHandle(rect, caption, L"RaptureWindowClass", wndProc))
+	{
+		setclass(Window);
+
+		RectAdapter a;
+		GetWindowRect(_handle, &a.rect);
+		a.assignTo(_outerRegion);
+
+		_normalStyle = GetWindowLongW(_handle, GWL_STYLE);
+
+		SetWindowLongPtrW(_handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+		ShowWindow(_handle, SW_HIDE);
+
+		_timer = SetTimer(_handle, 0, 25, nullptr);
+
+	#define HOTKEY_FULLSCREEN 0x20
+
+		registerHotkey(HOTKEY_FULLSCREEN, VK_RETURN, MOD_ALT);
+
+		dest_connect(*this, UISpace, HotkeyMessage)
+		{
+			auto window = static_cast<Window *>(&dest);
+
+			switch(msg->id)
+			{
+				case HOTKEY_FULLSCREEN:
+					window->toggleFullscreen();
+					break;
+			}
+		};
+	}
+
+	Window::~Window() {}
+
+	LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		PAINTSTRUCT ps;
 		HDC hdc;
@@ -81,7 +115,7 @@ namespace Rapture
 
 			case WM_HOTKEY:
 			{
-				send<WindowHotkeyMessage>(*window, (int)wParam);
+				send<HotkeyMessage>(*window, (int)wParam);
 				break;
 			}
 
@@ -184,7 +218,7 @@ namespace Rapture
 					window->_width = a.width();
 					window->_height = a.height();
 
-					send<WindowResizeMessage>(*window, window->_width, window->_height);
+					send<UIResizeMessage>(*window, window->_width, window->_height);
 				}
 
 				if(check_flag(SWP_HIDEWINDOW, pos.flags))
@@ -254,8 +288,8 @@ namespace Rapture
 		getMonitorSize(_width, _height);
 		_outerRegion.set(0, 0, _width, _height);
 
-		send<WindowResizeMessage>(*this, _width, _height);
-		send<WindowFullscreenMessage>(*this, true);
+		send<UIResizeMessage>(*this, _width, _height);
+		send<UIFullscreenMessage>(*this, true);
 
 		SetWindowLongW(_handle, GWL_STYLE, WS_CAPTION);
 		SetWindowLongW(_handle, GWL_STYLE, WS_POPUP | WS_MINIMIZEBOX);
@@ -267,7 +301,7 @@ namespace Rapture
 
 	void Window::restoreSize()
 	{
-		send<WindowFullscreenMessage>(*this, false);
+		send<UIFullscreenMessage>(*this, false);
 
 		SetWindowLongW(_handle, GWL_STYLE, WS_CAPTION);
 		SetWindowLongW(_handle, GWL_STYLE, _normalStyle);
@@ -285,40 +319,6 @@ namespace Rapture
 		else
 			restoreSize();
 	}
-
-	Window::Window(Graphics * graphics, const IntRect & rect, const WideString & caption) : WindowAdapter(graphics, rect.size(), createWindowHandle(rect, caption, L"RaptureWindowClass", wndProc))
-	{
-		setclass(Window);
-
-		RectAdapter a;
-		GetWindowRect(_handle, &a.rect);
-		a.assignTo(_outerRegion);
-
-		_normalStyle = GetWindowLongW(_handle, GWL_STYLE);
-
-		SetWindowLongPtrW(_handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
-		ShowWindow(_handle, SW_HIDE);
-
-		_timer = SetTimer(_handle, 0, 25, nullptr);
-
-#define HOTKEY_FULLSCREEN 0x20
-
-		registerHotkey(HOTKEY_FULLSCREEN, VK_RETURN, MOD_ALT);
-
-		dest_connect(*this, WindowAdapter, WindowHotkeyMessage)
-		{
-			auto window = static_cast<Window *>(&dest);
-
-			switch(msg->id)
-			{
-			case HOTKEY_FULLSCREEN:
-				window->toggleFullscreen();
-				break;
-			}
-		};
-	}
-
-	Window::~Window() {}
 
 	void Window::centralize()
 	{
@@ -457,6 +457,11 @@ namespace Rapture
 			return;
 
 		ShowWindow(_handle, SW_HIDE);
+	}
+
+	void Window::close()
+	{
+		SendMessageW(_handle, WM_CLOSE, 0, 0);
 	}
 }
 

@@ -17,7 +17,7 @@ namespace Rapture
 	class Image : public Object
 	{
 	public:
-		Image(const Graphics * graphics, const ImageData & data) : _format(data.format), _width(data.width), _height(data.height), _graphics(graphics) {}
+		Image(Graphics * graphics, const ImageData & data) : _format(data.format), _width(data.width), _height(data.height), _graphics(graphics) {}
 		virtual ~Image() {}
 
 		uint width() const
@@ -30,7 +30,7 @@ namespace Rapture
 			return _height;
 		}
 
-		const Graphics * graphics() const
+		Graphics * graphics() const
 		{
 			return _graphics;
 		}
@@ -44,7 +44,7 @@ namespace Rapture
 	protected:
 		uint _width, _height;
 		ImageFormat _format;
-		const Graphics * _graphics;
+		Graphics * _graphics;
 	};
 }
 

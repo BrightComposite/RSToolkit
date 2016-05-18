@@ -17,7 +17,7 @@ namespace Rapture
 	class Snake : public DrawableObject
 	{
 	public:
-		Snake(Scene * scene, const color4 & color) : DrawableObject(scene)
+		Snake(Scene * scene, const colorf & color) : DrawableObject(scene)
 		{
 			_color.set(color);
 
@@ -38,7 +38,7 @@ namespace Rapture
 		}
 
 	protected:
-		void onWidgetResize(Handle<WidgetResizeMessage> & msg, WidgetRegion & dest, const Subject * source)
+		void onWidgetResize(Handle<WidgetResizeMessage> & msg, Widget & dest)
 		{
 			_initialPos.x = static_cast<float>(msg->width / 2);
 			_initialPos.y = static_cast<float>(msg->height / 2);
@@ -79,8 +79,8 @@ namespace Rapture
 		{
 			auto dt = hold(graphics->depthTestModeState(), true);
 
-			const FloatPoint & offset = viewport.minPos();
-			const FloatSize s0 = _size / 2;
+			FloatPoint offset(viewport.minPos());
+			const FloatSize s0(_size / 2);
 
 			if(_length > 0)
 			{
@@ -95,9 +95,9 @@ namespace Rapture
 
 					graphics->setDepth(1.0f - ratio);
 					graphics->setColor(c0 * FloatVector::half);
-					graphics->ellipse(FloatRect {p.x - s2.x, p.y - s2.y, p.x + s2.x, p.y + s2.y} +offset);
+					graphics->ellipse(FloatRect {p.x - s2.x, p.y - s2.y, p.x + s2.x, p.y + s2.y} + offset);
 					graphics->setColor(c0);
-					graphics->ellipse(FloatRect {p.x - s1.x, p.y - s1.y, p.x + s1.x, p.y + s1.y} +offset);
+					graphics->ellipse(FloatRect {p.x - s1.x, p.y - s1.y, p.x + s1.x, p.y + s1.y} + offset);
 
 					ratio += delta;
 				}
@@ -107,9 +107,9 @@ namespace Rapture
 
 			graphics->setDepth(0.0f);
 			graphics->setColor(_color * 0.5f);
-			graphics->ellipse(FloatRect {_pos.x - s1.x, _pos.y - s1.y, _pos.x + s1.x, _pos.y + s1.y} +offset);
+			graphics->ellipse(FloatRect {_pos.x - s1.x, _pos.y - s1.y, _pos.x + s1.x, _pos.y + s1.y} + offset);
 			graphics->setColor(_color);
-			graphics->ellipse(FloatRect {_pos.x - s0.x, _pos.y - s0.y, _pos.x + s0.x, _pos.y + s0.y} +offset);
+			graphics->ellipse(FloatRect {_pos.x - s0.x, _pos.y - s0.y, _pos.x + s0.x, _pos.y + s0.y} + offset);
 		}
 
 		DoubleVector _initialPos;

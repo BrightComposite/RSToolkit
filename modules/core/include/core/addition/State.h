@@ -64,6 +64,13 @@ namespace Rapture
 			change();
 		}
 
+		template<class ... A, useif <not_same_types<T, tuple<A...>>::value, can_construct<T, A...>::value> endif>
+		void set(A &&... a)
+		{
+			_state = T {forward<A>(a)...};
+			change();
+		}
+
 		operator const T & () const
 		{
 			return _state;

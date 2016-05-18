@@ -57,7 +57,7 @@ namespace Rapture
 			based_on<Decoder, FontDecoder>::value
 			> endif
 		>
-		static void setDecoder(const string & type, Type<Decoder> = nullptr)
+		static void setDecoder(const string & type, Type<Decoder> = {})
 		{
 			decoders[type] = &Decoder::instance();
 		}

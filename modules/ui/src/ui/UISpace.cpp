@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------
 
-#include <ui/WindowAdapter.h>
+#include <ui/UISpace.h>
 #include <windows/RectAdapter.h>
 #include <windows.h>
 
@@ -84,20 +84,23 @@ namespace Rapture
 		return hWnd;
 	}
 
-	WindowAdapter::WindowAdapter(Graphics * graphics, const IntSize & size, HWND handle) : _handle(handle), _root(), _width(size.x), _height(size.y), _graphics(graphics)
+	UISpace::UISpace(Graphics * graphics, const IntSize & size, HWND handle) : _handle(handle), _root(), _width(size.x), _height(size.y), _graphics(graphics)
 	{
-		setclass(WindowAdapter);
+		setclass(UISpace);
 
-		_surface = _graphics->createWindowSurface(this);
+		_surface = _graphics->createSurface(this);
 		_graphics->bind(_surface);
 
 		_root.reset(new Widget(this, region()));
 		_focused = _focusList.end();
 	}
 
-	WindowAdapter::~WindowAdapter() {}
+	UISpace::~UISpace()
+	{
+		send<UIDestroyMessage>(this);
+	}
 
-	void WindowAdapter::invalidate()
+	void UISpace::invalidate()
 	{
 		if(!_invalids.empty())
 			_invalids.clear();
@@ -105,14 +108,14 @@ namespace Rapture
 		_invalids.emplace_back(0, 0, _width, _height);
 	}
 
-	void WindowAdapter::invalidate(const Widget * w)
+	void UISpace::invalidate(const Widget * w)
 	{
 		if(!w->isVisible())
 			return;
 
 		IntRect rect = w->absRegion();
 
-		for(auto & i = _invalids.begin(); i != _invalids.end(); ++i)
+		for(auto i = _invalids.begin(); i != _invalids.end(); ++i)
 		{
 			auto & r = *i;
 
@@ -132,7 +135,7 @@ namespace Rapture
 		_invalids.push_back(rect);
 	}
 
-	void WindowAdapter::validate()
+	void UISpace::validate()
 	{
 		if(_invalids.empty())
 			return;
@@ -152,15 +155,12 @@ namespace Rapture
 		_graphics->present();
 	}
 
-	Widget * WindowAdapter::focused() const
+	Widget * UISpace::focused() const
 	{
-		if(_focused == _focusList.end())
-			return nullptr;
-
-		return *_focused;
+		return _focused != _focusList.end() ? *_focused : nullptr;
 	}
 
-	Widget * WindowAdapter::focusNext()
+	Widget * UISpace::focusNext()
 	{
 		if(_focusList.size() == 0)
 			return nullptr;
@@ -190,7 +190,7 @@ namespace Rapture
 		return *_focused;
 	}
 
-	Widget * WindowAdapter::focusPrevious()
+	Widget * UISpace::focusPrevious()
 	{
 		if(_focusList.size() == 0)
 			return nullptr;
@@ -217,12 +217,7 @@ namespace Rapture
 		return *_focused;
 	}
 
-	void WindowAdapter::close()
-	{
-		SendMessageW(_handle, WM_CLOSE, 0, 0);
-	}
-
-	implement_reader(WindowAdapter, KeyDownMessage)
+	implement_reader(UISpace, KeyDownMessage)
 	{
 		Widget * f = focused();
 
@@ -230,7 +225,7 @@ namespace Rapture
 			resend(msg, *f);
 	}
 
-	implement_reader(WindowAdapter, CharMessage)
+	implement_reader(UISpace, CharMessage)
 	{
 		Widget * f = focused();
 
@@ -238,7 +233,7 @@ namespace Rapture
 			resend(msg, *f);
 	}
 
-	implement_reader(WindowAdapter, KeyUpMessage)
+	implement_reader(UISpace, KeyUpMessage)
 	{
 		Widget * f = focused();
 
@@ -247,7 +242,7 @@ namespace Rapture
 	}
 
 
-	implement_reader(WindowAdapter, MouseDownMessage)
+	implement_reader(UISpace, MouseDownMessage)
 	{
 		_mouseState.press(msg->button);
 		send<MouseUpdateMessage>(*this, msg->x, msg->y);
@@ -275,7 +270,7 @@ namespace Rapture
 		}
 	}
 
-	implement_reader(WindowAdapter, MouseUpdateMessage)
+	implement_reader(UISpace, MouseUpdateMessage)
 	{
 		MouseButton buttons = MouseButton::None;
 
@@ -351,17 +346,17 @@ namespace Rapture
 		}
 	}
 
-	implement_reader(WindowAdapter, MouseUpMessage)
+	implement_reader(UISpace, MouseUpMessage)
 	{
 		send<MouseUpdateMessage>(*this, msg->x, msg->y);
 	}
 
-	implement_reader(WindowAdapter, WindowResizeMessage)
+	implement_reader(UISpace, UIResizeMessage)
 	{
 		_root->changeSize(_width, _height, ModelMask::FullSize);
 	}
 
-	void WindowAdapter::unpress(MouseButton buttons, int x, int y, int flags)
+	void UISpace::unpress(MouseButton buttons, int x, int y, int flags)
 	{
 		_mouseState.unpress(buttons);
 

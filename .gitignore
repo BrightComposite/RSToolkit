@@ -1,12 +1,19 @@
 ## Rapture State Toolkit .gitignore
 
 *
-!/data/
-!/modules/
-!/templates/
-!/tools/
+!data/
+!modules/
+!templates/
+!tools/
+!third-party/
+!data/**/*
+!modules/**/*
+!templates/**/*
+!tools/**/*
+**/*.*
 !*.cpp
 !*.h
+!*.inc
 !*.hpp
 !*.c
 !*.fx
@@ -16,9 +23,5 @@
 !.gitignore
 !.gitattributes
 !README.md
-/build-*/
-/bin/
-/lib/
-/third-party/
+!third-party/*.gz
 **/.vscode/
-*.user

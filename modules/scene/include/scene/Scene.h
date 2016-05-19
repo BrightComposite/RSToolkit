@@ -137,6 +137,12 @@ namespace Rapture
 			space()->invalidate(_widget);
 		}
 
+		void render() const
+		{
+			space()->invalidate(_widget);
+			space()->validate();
+		}
+
 		template<class T, typename ... A, useif <
 			based_on<T, SceneObject>::value,
 			can_construct<T, Scene *, A...>::value

@@ -264,7 +264,7 @@ namespace Rapture
 			return _fillMode;
 		}
 
-		Handle<ImageData> surfaceData() const
+		Handle<ImageData> requestSurfaceData() const
 		{
 			auto data = handle<ImageData>();
 			_surface->requestData(data);

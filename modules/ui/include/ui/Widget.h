@@ -325,10 +325,10 @@ namespace Rapture
 
 		Widget * findWidget(const IntPoint & pt);
 
-		template<class WidgetClass, typename ... A, selectif(0) <is_widget(WidgetClass) && can_construct<WidgetClass, Widget *, A...>::value> endif>
+		template<class WidgetClass, typename ... A, selectif(0) <is_widget(WidgetClass), can_construct<WidgetClass, Widget *, A...>::value> endif>
 		inline Handle<WidgetClass> append(A && ... args);
 
-		template<class LayerClass,  typename ... A, selectif(1) <is_layer(LayerClass)   && can_construct<LayerClass,  Widget *, A...>::value> endif>
+		template<class LayerClass,  typename ... A, selectif(1) <is_layer(LayerClass), can_construct<LayerClass,  Widget *, A...>::value> endif>
 		inline Handle<LayerClass> append(A && ... args);
 
 		template<class LayerClass, useif <is_layer(LayerClass)> endif>

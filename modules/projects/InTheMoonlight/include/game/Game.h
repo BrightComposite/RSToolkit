@@ -36,11 +36,7 @@ namespace Rapture
 	{
 	public:
 		SimpleGroundObject(Scene * scene, PhysicalWorld * world, double level) :
-			PlaneObject(
-				scene,
-				world,
-				level
-				),
+			PlaneObject(scene, world, level),
 			Drawable(scene)
 		{
 			setclass(SimpleGroundObject);
@@ -55,9 +51,9 @@ namespace Rapture
 			graphics->setDepth(0.0f);
 
 			graphics->setColor(0.1f, 0.1f, 0.1f);
-			graphics->rectangle(SqRect{-1.0f, -1.0f, 1.0f, (_pos.y - 0.1f) * zoom});
+			graphics->rectangle(SqRect{-1.0f, -1.0f, 1.0f, (_pos.y - 0.2f) * zoom});
 			graphics->setColor(1.0f, 1.0f, 1.0f);
-			graphics->rectangle(SqRect{-1.0f, (_pos.y - 0.1f) * zoom, 1.0f, _pos.y * zoom});
+			graphics->rectangle(SqRect{-1.0f, (_pos.y - 0.2f) * zoom, 1.0f, _pos.y * zoom});
 		}
 	};
 
@@ -72,16 +68,6 @@ namespace Rapture
 		static const auto & name()
 		{
 			return instance()._name;
-		}
-
-		static auto & scene()
-		{
-			return instance()._scene;
-		}
-
-		static auto & world()
-		{
-			return instance()._world;
 		}
 
 	protected:
@@ -99,52 +85,46 @@ namespace Rapture
 			auto solver = unique_handle<btSequentialImpulseConstraintSolver>();
 			auto world = unique_handle<PhysicalWorld>(dispatcher, broadphase, solver, collisionConfiguration);
 
-			this->_world = world;
-			this->_world->setGravity({0.0, -9.8, 0.0});
+			world->setGravity({0.0, -9.8, 0.0});
 
 			auto graphics = GraphicsProvider::provide();
 			graphics->setClearColor(0.0f, 0.0f, 0.0f);
 
-			auto window = unique_handle<Window>(graphics, 0, 0, 1024, 758);
-			this->_window = window;
+			UniqueHandle<Window>     window(graphics, 0, 0, 1024, 758);
+			Handle<BackgroundWidget> back(window);
+			UniqueHandle<Scene>      scene(back);
 
-			auto back = handle<BackgroundWidget>(_window);
-			auto scene = unique_handle<Scene>(back);
-			this->_scene = scene;
-			this->_scene->setZoom(0.01f);
+			scene->setZoom(0.02f);
 
 			//_scene->append<BigEyeObject>();
 						
-			this->_player = _scene->append<PlayerObject>(_world, dvec {0.0, 60.0, 0.0, 1.0});
-			this->_ground = _scene->append<SimpleGroundObject>(_world, -60);
-
-			Handle<PlayerController> controller(this->_player);
+			UniqueHandle<PlayerObject>       player(scene, world, dvec {0.0, 0.0, 0.0, 1.0});
+			UniqueHandle<SimpleGroundObject> ground(scene, world, -20);
+			UniqueHandle<PlayerController>   controller(player);
 						
-			connect(*this->_window, onWindowKeyDown);
-			connect(*this->_window, onWindowKeyUp);
+			connect(*window, onWindowKeyDown);
+			connect(*window, onWindowKeyUp);
 
-			this->_window->setCaption(_name);
-			this->_window->centralize();
-			this->_window->show();
+			window->setCaption(_name);
+			window->centralize();
+			window->show();
 
 			hideConsole();
 
 			ThreadLoop::add(processWindowMessage);
-			ThreadLoop::add(mainLoop);
+			ThreadLoop::add(std::bind(mainLoop, scene.inner(), world.inner()));
 			ThreadLoop::run();
 
 			return 0;
 		}
 
-		static int mainLoop()
+		static int mainLoop(Scene * scene, PhysicalWorld * world)
 		{
 			auto & that = instance();
 
-			that._scene->update();
-			that._world->stepSimulation(1 / 2000.f, 10);
-
-			that._scene->invalidate();
-			that._window->validate();
+			scene->update();
+			world->stepSimulation(1 / 480.0f, 10);
+			scene->render();
 
 			return 0;
 		}
@@ -156,7 +136,7 @@ namespace Rapture
 
 		static void makeScreenshot(Graphics * graphics)
 		{
-			ImageIO::save(initial_path() / "screenshot.bmp", graphics->surfaceData());
+			ImageIO::save(initial_path() / "screenshot.bmp", graphics->requestSurfaceData());
 		}
 
 		static void onWindowKeyDown(Handle<KeyDownMessage> & message, UISpace & dest)
@@ -174,18 +154,10 @@ namespace Rapture
 			switch(message->key)
 			{
 				case VK_SNAPSHOT:
-					makeScreenshot(scene()->graphics());
+					makeScreenshot(dest.graphics());
 					break;
 			}
 		}
-
-		PhysicalWorld * _world;
-
-		SimpleGroundObject * _ground;
-		PlayerObject * _player;
-
-		Window * _window;
-		Scene * _scene;
 
 		string _name;
 	};

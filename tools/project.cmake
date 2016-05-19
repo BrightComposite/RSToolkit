@@ -309,9 +309,11 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 			endif()
 		endif()
 
-		if("${ARGV2}" STREQUAL "COMPONENT" AND NOT "${ARGV3}" STREQUAL "")
-			set(PATH_SUFFIX ${ARGV3}/${PROJECT_ARCHITECTURE})
+		if("${ARGV1}" STREQUAL "COMPONENT" AND NOT "${ARGV2}" STREQUAL "")
+			message("${DEPENDENCIES_LIST_INDENTATION}  Depends on ${LIBRARY_PATH}:${ARGV2}")
+			set(PATH_SUFFIX ${ARGV2}/${PROJECT_ARCHITECTURE})
 		else()
+			message("${DEPENDENCIES_LIST_INDENTATION}  Depends on ${LIBRARY_PATH}")
 			set(PATH_SUFFIX ${PROJECT_ARCHITECTURE})
 		endif()
 
@@ -343,6 +345,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 			)
 
 			foreach(STATIC_LIB ${STATIC_LIBS})
+				message("${DEPENDENCIES_LIST_INDENTATION}    Found ${STATIC_LIB}")
 				setup_file(${STATIC_LIB} ${LIBRARY_SOURCE} ${LIBRARY_DEST})
 			endforeach()
 		endif()
@@ -371,10 +374,12 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 			endif()
 		endif()
 
-		if("${ARGV2}" STREQUAL "COMPONENT" AND NOT "${ARGV3}" STREQUAL "")
-			set(COMPONENT_NAME ${ARGV3})
+		if("${ARGV1}" STREQUAL "COMPONENT" AND NOT "${ARGV2}" STREQUAL "")
+			set(COMPONENT_NAME ${ARGV2})
+			message("${DEPENDENCIES_LIST_INDENTATION}  Depends on ${LIBRARY_PATH}:${COMPONENT_NAME}")
 			set(PATH_SUFFIX ${COMPONENT_NAME}/${PROJECT_ARCHITECTURE})
 		else()
+			message("${DEPENDENCIES_LIST_INDENTATION}  Depends on ${LIBRARY_PATH}")
 			set(PATH_SUFFIX ${PROJECT_ARCHITECTURE})
 		endif()
 
@@ -408,13 +413,10 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 			)
 
 			foreach(STATIC_LIB ${STATIC_LIBS})
+				message("${DEPENDENCIES_LIST_INDENTATION}    Found ${STATIC_LIB}")
 				setup_file(${STATIC_LIB} ${LIBRARY_SOURCE} ${LIBRARY_DEST})
 
 				string(REGEX REPLACE "[^a-zA-Z0-9_-]" _ LIBRARY_NAME ${STATIC_LIB})
-
-				if(NOT "${COMPONENT_NAME}" STREQUAL "")
-					set(LIBRARY_NAME ${LIBRARY_NAME}:${COMPONENT_NAME})
-				endif()
 
 				add_library(${LIBRARY_NAME} STATIC IMPORTED)
 				set_target_properties(${LIBRARY_NAME} PROPERTIES IMPORTED_LOCATION ${LIBRARY_DEST}/${STATIC_LIB})
@@ -433,14 +435,13 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 			)
 
 			foreach(DEBUG_DB ${STATIC_DEBUG_DATABASES})
-				setup_file(${DEBUG_DB} ${LIBRARY_SOURCE} ${LIBRARY_DEST})
+				setup_file(${DEBUG_DB} ${LIBRARY_SOURCE} ${BINARY_DEST})
 			endforeach()
 		endif()
 
 		if(EXISTS ${THIRD_PARTY_DIR}/include)
 			target_include_directories(${PROJECT_NAME} PUBLIC ${THIRD_PARTY_DIR}/include)
 		endif()
-
 	endfunction()
 
 endif()

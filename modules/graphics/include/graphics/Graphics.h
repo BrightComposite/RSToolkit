@@ -68,7 +68,11 @@ namespace Rapture
 	class FigureData : public Shared
 	{
 	public:
-		FigureData(const vector<FloatPoint> & points) : points(points) {}
+		FigureData(const vector<FloatPoint> & points) : points(points)
+		{
+			if(points.size() < 3)
+				throw Exception("A number of points should be greater than 3 to construct a figure");
+		}
 
 		vector<FloatPoint> points;
 	};
@@ -76,9 +80,9 @@ namespace Rapture
 	class Figure : public Shared
 	{
 	public:
-		Figure(const Graphics * graphics, const FigureData & data) : graphics(graphics) {}
+		Figure(Graphics * graphics, const FigureData & data) {}
 
-		const Graphics * graphics;
+		virtual void draw() const = 0;
 	};
 
 	link_class(Graphics, Class<Subject>);
@@ -91,7 +95,15 @@ namespace Rapture
 		Graphics() { setclass(Graphics); }
 		virtual ~Graphics() {}
 
-		virtual void bind(const Handle<Surface> & surface) = 0;
+		void bind(const Handle<Surface> & surface)
+		{
+			if(_surface == surface)
+				return;
+
+			_surface = surface;
+			clip(viewport());
+			_surface->apply();
+		}
 
 		void bind(const Handle<Font> & font)
 		{
@@ -109,7 +121,6 @@ namespace Rapture
 		}
 
 		virtual Handle<Image> createImage(const ImageData & data) = 0;
-		virtual Handle<Figure> createFigure(const FigureData & data) = 0;
 
 		virtual void present() const = 0;
 
@@ -274,6 +285,8 @@ namespace Rapture
 
 	protected:
 		virtual Handle<Surface> createSurface(UISpace * space) = 0;
+
+		virtual void initFacilities() {}
 		virtual void updateBrushState() {}
 
 		template<class string_t>
@@ -317,6 +330,21 @@ namespace Rapture
 		StateHandle<int> _fontSize {14};
 		StateHandle<FillMode> _fillMode {FillMode::Solid};
 	};
+
+	template<class G>
+	struct CommonGraphicsProvider
+	{
+		static inline Handle<G, CommonGraphicsProvider<G>> provide()
+		{
+			Handle<G, CommonGraphicsProvider<G>> graphics(emptiness);
+			graphics->initFacilities();
+			return graphics;
+		}
+	};
+
+#define friend_graphics_provider(G)						\
+	friend_owned_handle(G, CommonGraphicsProvider<G>);	\
+	friend struct CommonGraphicsProvider<G>
 
 	class RectangleData	: public FigureData
 	{

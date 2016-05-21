@@ -6,11 +6,14 @@
 //---------------------------------------------------------------------------
 
 #include "Graphics.h"
+#include "VertexLayout.h"
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
+	class Graphics3D;
+
 	enum class ShaderType : int
 	{
 		Common = -1,
@@ -19,6 +22,14 @@ namespace Rapture
 		Pixel = 1, // pixel shader (Direct3D)
 		Max
 	};
+
+	enum class ShaderCodeState
+	{
+		Raw,
+		Compiled,
+		Embedded
+	};
+
 }
 
 namespace std
@@ -29,7 +40,7 @@ namespace std
 
 namespace Rapture
 {
-	typedef RawData<const void> ShaderCode;
+	subclass(ShaderCode, RawData<const void>);
 
 	struct ShaderCodeSet : Shared
 	{
@@ -37,6 +48,68 @@ namespace Rapture
 	};
 
 	typedef Map<string, ShaderCodeSet> ShaderMap;
+
+//---------------------------------------------------------------------------
+
+	class ShaderProgram : public Shared
+	{
+		friend class FxTechnique;
+
+	public:
+		virtual ~ShaderProgram() {}
+
+	protected:
+		ShaderProgram() {}
+		virtual void apply() const {}
+	};
+
+	class FxTechnique : public Shared
+	{
+		friend_owned_handle(FxTechnique, Graphics3D);
+
+	public:
+		virtual ~FxTechnique() {}
+
+		virtual void apply(uint pass = 0) const
+		{
+			program->apply();
+		}
+
+	protected:
+		FxTechnique(const Handle<ShaderProgram> & program) : program(program) {}
+
+		Handle<ShaderProgram> program;
+		uint passes = 0;
+	};
+
+//---------------------------------------------------------------------------
+
+	template<ShaderType type>
+	class Shader : public Shader<ShaderType::Common>
+	{
+	public:
+		virtual ~Shader() {}
+	};
+
+	template<>
+	class Shader<ShaderType::Common> : public Shared
+	{
+		friend class Graphics3D;
+
+	public:
+		virtual ~Shader() {}
+
+	protected:
+		virtual void apply() const = 0;
+	};
+
+	using VertexShader = Shader<ShaderType::Vertex>;
+	using PixelShader  = Shader<ShaderType::Pixel>;
+
+	template<class T>
+	using is_shader_program = is_base_of<ShaderProgram, T>;
+
+//---------------------------------------------------------------------------
 
 	inline void print(String & s, ShaderType type)
 	{

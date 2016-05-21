@@ -16,9 +16,11 @@ struct VS_OUTPUT
 
 float4 main(VS_OUTPUT input) : SV_Target
 {
+	float l = lineWidth / input.ratio.w;
+
 	float x = input.texcoord[0] * 2.0 - 1.0;
 	float y = input.texcoord[1] * 2.0 - 1.0;
-	float l = lineWidth / input.ratio.w;
+
 	float x1 = x / input.ratio.x;
 	float y1 = y / input.ratio.y;
 	float x2 = x / (input.ratio.x - l);

@@ -278,7 +278,7 @@ static Entrance open([]()
 
 		for(register int i = 0; i < count; ++i)
 		{
-			fmat2 = fmat2.rotationMatrix(fmat2[0].positiveX, FloatMath::pi);
+			fmat2 = fmat2.rotation(fmat2[0].positiveX, FloatMath::pi);
 		}
 
 		t = duration_cast<nanoseconds>(hrc::now() - last).count();
@@ -310,7 +310,7 @@ static Entrance open([]()
 
 		for(register int i = 0; i < count; ++i)
 		{
-			fmat2 = fmat2.rotationMatrix({0.0f, 0.0f, 1.0f});
+			fmat2 = fmat2.rotation({0.0f, 0.0f, 1.0f});
 		}
 
 		t = duration_cast<nanoseconds>(hrc::now() - last).count();

@@ -66,9 +66,13 @@ namespace Rapture
 		Receiver(void callback(Handle<Msg> &, Dst &)) : Receiver(callback, reinterpret_cast<void *>(callback)) {}
 		Receiver(const Callback & callback) : Receiver(callback, reinterpret_cast<const void *>(callback.template target<void(*)(Handle<Msg> &, Dst &)>())) {}
 		template<class Rcvr>
-		Receiver(const Handle<Rcvr> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t additional = 0) : Receiver(std::bind(callback, receiver, std::placeholders::_1, std::placeholders::_2), static_cast<void *>(static_cast<Rcvr *>(receiver)), additional) {}
+		Receiver(Rcvr * receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t additional = 0) : Receiver(std::bind(callback, receiver, std::placeholders::_1, std::placeholders::_2), static_cast<void *>(receiver), additional) {}
 		template<class Rcvr>
-		Receiver(const Handle<Rcvr> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t additional = 0) : Receiver(std::bind(callback, receiver, std::placeholders::_1, std::placeholders::_2), static_cast<const void *>(static_cast<const Rcvr *>(receiver)), additional) {}
+		Receiver(const Rcvr * receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t additional = 0) : Receiver(std::bind(callback, receiver, std::placeholders::_1, std::placeholders::_2), static_cast<const void *>(receiver), additional) {}
+		template<class Rcvr, class ... Owner>
+		Receiver(const Handle<Rcvr, Owner...> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t additional = 0) : Receiver(std::bind(callback, receiver, std::placeholders::_1, std::placeholders::_2), static_cast<void *>(static_cast<Rcvr *>(receiver)), additional) {}
+		template<class Rcvr, class ... Owner>
+		Receiver(const Handle<Rcvr, Owner...> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t additional = 0) : Receiver(std::bind(callback, receiver, std::placeholders::_1, std::placeholders::_2), static_cast<const void *>(static_cast<const Rcvr *>(receiver)), additional) {}
 		Receiver(const Receiver & mc) : callback(mc.callback), id(mc.id), additional(mc.additional) {}
 
 		Receiver & operator = (const Receiver & mc)

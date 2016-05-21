@@ -8,8 +8,7 @@
 #include <core/String.h>
 #include <core/Exception.h>
 
-#include <core/container/Array.h>
-#include <core/container/Map.h>
+#include <core/addition/Cached.h>
 
 #include "Graphics.h"
 
@@ -17,28 +16,17 @@
 
 namespace Rapture
 {
-#if 0
-	class VertexElement : public Shared
+	class ShaderCode;
+
+	class VertexElement : public Shared, public Precached<string, VertexElement>
 	{
-		friend VertexLayout;
+		friend class VertexLayout;
 
 	public:
 		string id;
-		uint size;
-
-		static inline Handle<VertexElement> get(const string & id)
-		{
-#ifdef _DEBUG
-			auto && h = pool[id];
-
-			if(h == nullptr)
-				throw Exception("Can't find vertex input element with key -  \"", id, "\"");
-
-			return h;
-#else
-			return pool.get(id);
-#endif
-		}
+		const char * semantic;
+		uint index;
+		uint units;
 
 		static VertexElement pos2;
 		static VertexElement pos3;
@@ -50,57 +38,32 @@ namespace Rapture
 		static VertexElement normal;
 
 	protected:
-		VertexElement(const string & id, uint size) : id(id), size(size)
-		{
-			pool.add(id, share(*this));
-		}
-
-		static Map<string, VertexElement> pool;
+		VertexElement(const string & id, const char * semantic, uint index, uint units) : Precached<string, VertexElement>(id),
+			id(id), semantic(semantic), index(index), units(units) {}
 	};
+
+//---------------------------------------------------------------------------
 
 	class VertexLayout : public Shared
 	{
 	public:
-		static inline VertexLayout & get(const String & id)
+		VertexLayout(const string & fingerprint) : fingerprint(fingerprint), stride(0)
 		{
-			auto && h = pool[id];
-
-			if(h == nullptr)
+			for(const auto & key : split(fingerprint))
 			{
-				h.reinit(id);
-				pool.add(id, h);
+				auto & vie = VertexElement::get(key);
+				elements.push_back(vie);
+				stride += vie->units * sizeof(float);
 			}
-
-			return *h;
 		}
 
-		string key;
+		virtual void apply() {}
+		virtual void accept(const ShaderCode *) {}
+
+		string fingerprint;
+		vector<VertexElement *> elements;
 		uint stride;
-		Array<VertexElement> elements;
-
-	protected:
-		VertexLayout(const String & key) : key(key)
-		{
-			stride = decodeData(key, elements);
-		}
-
-		static uint decodeData(const String & data, Array<VertexElement> & elements)
-		{
-			uint stride;
-
-			for(const auto & str : split(data))
-			{
-				auto vie = VertexElement::get(*str);
-				stride += vie->size;
-				elements.addLast(vie);
-			}
-
-			return stride;
-		}
-
-		static Map<string, VertexLayout> pool;
 	};
-#endif
 }
 
 //---------------------------------------------------------------------------

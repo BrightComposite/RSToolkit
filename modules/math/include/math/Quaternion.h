@@ -22,19 +22,19 @@ namespace Rapture
 
 		union
 		{
-			Data data;
-
 			struct
 			{
 				T x, y, z, w;
 			};
+
+			Data data;
 
 			array<T, 4> q;
 			T elements[4];
 			Vector<T> v;
 		};
 
-		Quaternion() : data {Vector<T>::positiveZ} {}
+		Quaternion() : data {Vector<T>::positiveW} {}
 		Quaternion(const Quaternion & q) : data {q.data} {}
 		Quaternion(T x, T y, T z, T w) : q {x, y, z, w} {}
 
@@ -130,9 +130,24 @@ namespace Rapture
 			return *this = *this * q;
 		}
 
-		Vector<T> rotate(const Vector<T> & v)
+		Vector<T> applyTo(const Vector<T> & v)
 		{
 			return *this * Quaternion(v) * negation();
+		}
+
+		Quaternion & rotateX(T angle)
+		{
+			return *this *= fquat(fvec::positiveX, angle);
+		}
+
+		Quaternion & rotateY(T angle)
+		{
+			return *this *= fquat(fvec::positiveY, angle);
+		}
+
+		Quaternion & rotateZ(T angle)
+		{
+			return *this *= fquat(fvec::positiveZ, angle);
 		}
 
 		T & operator [] (size_t index)
@@ -220,6 +235,8 @@ namespace Rapture
 
 	using FloatQuaternion = Quaternion<float>;
 	using DoubleQuaternion = Quaternion<double>;
+	using fquat = Quaternion<float>;
+	using dquat = Quaternion<double>;
 
 	template<class T>
 	Quaternion<T> operator + (const Quaternion<T> & q1, const Quaternion<T> & q2)

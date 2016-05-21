@@ -17,8 +17,8 @@ struct VS_OUTPUT
 
 float4 main(VS_OUTPUT input) : SV_Target
 {
-	float x = (input.texcoord[0] * 2.0 - 1.0) / input.ratio.x;
-	float y = (input.texcoord[1] * 2.0 - 1.0) / input.ratio.y;
+	float x = (input.texcoord[0] * 2.0 - 1.0) * input.ratio.x;
+	float y = (input.texcoord[1] * 2.0 - 1.0) * input.ratio.y;
 
 	if(x * x + y * y > 1.0)
 		clip(-1);

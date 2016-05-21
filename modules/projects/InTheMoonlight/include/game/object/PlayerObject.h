@@ -25,8 +25,8 @@ namespace Rapture
 		void draw(Graphics3D * graphics, const IntRect & viewport, float zoom) const
 		{
 			auto pos = FloatPoint {_pos.x, _pos.y} * FloatPoint {zoom, zoom};
-			graphics->setColor(1.0f, 1.0f, 1.0f, (1.0f - float(_ticks) / _maxTicks) * _force);
-			graphics->ellipse(SqRect {centeredSquare(pos, zoom * float(_ticks) * float(std::max(_force, 0.5)) * 0.04f)});
+			graphics->setColor(1.0f, 1.0f, 1.0f, float((1.0f - float(_ticks) / _maxTicks) * _force));
+			graphics->ellipse(SqRect {centeredSquare(pos, zoom * float(_ticks) * float(std::min(_force, 0.5)) * 0.04f)});
 		}
 
 		DoubleVector _pos;
@@ -96,7 +96,7 @@ namespace Rapture
 				),
 			Drawable(scene),
 			_contacter(scene),
-			_figure(scene->graphics()->createFigure(RectangleData(1.0f, 1.0f)))
+			_figure(scene->graphics(), RectangleData(1.0f, 1.0f))
 		{
 			setclass(PlayerObject);
 
@@ -157,7 +157,7 @@ namespace Rapture
 			{
 				if(_hasFoothold)
 				{
-					force[1] += 6000;
+					force[1] += 2000;
 
 					if(!_rigidBody->isActive())
 						_rigidBody->activate();
@@ -190,17 +190,19 @@ namespace Rapture
 			
 			FloatTranslation t {_pos};
 			FloatQuaternion r {_rot};
-			FloatScaling s {zoom};
 
 			graphics->setColor(_color.vector * 0.5_v);
-			graphics->draw(_figure, FloatTransform {t, r} * s);
+			_figure->model.setTransform({t, r});
+			_figure->draw();
+
 			graphics->setColor(_color);
-			graphics->draw(_figure, FloatTransform {t, r, FloatScaling{0.9f}} * s);
+			_figure->model.setTransform({t, r, FloatScaling{0.9f}});
+			_figure->draw();
 		}
 
 		colorf _color = FloatVector::one;
 		Handle<Contacter> _contacter;
-		Handle<Figure> _figure;
+		Handle<Figure3D> _figure;
 
 		bool _hasFoothold = false;
 
@@ -209,40 +211,32 @@ namespace Rapture
 
 	class PlayerController : public Object
 	{
-	protected:
-		class Receiver : public Shared
-		{
-		public:
-			Receiver(PlayerObject * object) : object(object) {}
-
-			void onKeyDown(Handle<KeyDownMessage> & message, UISpace & dest)
-			{
-				object->_keyMap.press(message->key);
-			}
-
-			void onKeyUp(Handle<KeyUpMessage> & message, UISpace & dest)
-			{
-				object->_keyMap.unpress(message->key);
-			}
-
-			PlayerObject * object;
-		};
-
 	public:
-		PlayerController(PlayerObject * object) : receiver(object)
+		PlayerController(PlayerObject * object) : object(object)
 		{
-			connect(*receiver->object->scene()->space(), receiver, &Receiver::onKeyDown);
-			connect(*receiver->object->scene()->space(), receiver, &Receiver::onKeyUp);
+			connect(*object->scene()->space(), this, &PlayerController::onKeyDown);
+			connect(*object->scene()->space(), this, &PlayerController::onKeyUp);
 		}
 
 		virtual ~PlayerController()
 		{
-			disconnect<UISpace, KeyDownMessage>(*receiver->object->scene()->space(), receiver);
-			disconnect<UISpace, KeyUpMessage>(*receiver->object->scene()->space(), receiver);
+			disconnect(*object->scene()->space(), this, &PlayerController::onKeyDown);
+			disconnect(*object->scene()->space(), this, &PlayerController::onKeyUp);
 		}
 
 	protected:
-		Handle<Receiver> receiver;
+		void onKeyDown(Handle<KeyDownMessage> & message, UISpace & dest)
+		{
+			if(message->isFirst)
+				object->_keyMap.press(message->key);
+		}
+
+		void onKeyUp(Handle<KeyUpMessage> & message, UISpace & dest)
+		{
+			object->_keyMap.unpress(message->key);
+		}
+
+		PlayerObject * object;
 	};
 }
 

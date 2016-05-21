@@ -19,6 +19,7 @@ require_modules(
 set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 	SRC_GROUP include Headers
 		START_SECTION scene
+			Camera.h
 			Scene.h
 		END_SECTION
 

@@ -34,7 +34,7 @@ namespace Rapture
 		friend class MotionState;
 
 	public:
-		PhysicalObject(Scene * scene, PhysicalWorld * world, btCollisionShape * shape, const DoubleVector & pos = DoubleVector::positiveW, double mass = 0.0) : SceneObject(scene, pos), _shape(shape), _world(world), _rot(0, 0, 1, 1)
+		PhysicalObject(Scene * scene, PhysicalWorld * world, btCollisionShape * shape, const DoubleVector & pos = DoubleVector::positiveW, double mass = 0.0) : SceneObject(scene, pos), _shape(shape), _world(world)
 		{
 			setclass(PhysicalObject);
 			_motionState = new MotionState(this);

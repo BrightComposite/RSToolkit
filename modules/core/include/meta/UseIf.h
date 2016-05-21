@@ -16,12 +16,12 @@ namespace Rapture
 #define declare_useif_class(Class)														        \
 struct Class																			        \
 {																						        \
-	enum type { value };																        \
+	enum class type { value };																    \
 /*																								\
 	template<bool ... Test, typename = typename Rapture::use_filter_t<Class, Test...>::type>    \
 	static constexpr type filter()														        \
 	{																					        \
-		return type(0);																	        \
+		return type::value;																	    \
 	}																					        \
 */																								\
 																								\

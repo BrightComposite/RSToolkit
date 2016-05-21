@@ -39,25 +39,21 @@ namespace Rapture
 
 		static const bool exist = !is_same<Dst, Empty>::value && has_receivers<Dst>::value;
 
-		template<useif <exist> endif>
-		static void add_to(Dst & dest, const Receiver<Dst, Msg> & rcvr)
+		static void addTo(Dst & dest, const Receiver<Dst, Msg> & rcvr)
 		{
 			dest.receiversMap.template require<Receivers>()->contents.push_back(rcvr);
 		}
 
-		template<useif <exist> endif>
-		static void add_to(Dst & dest, Receiver<Dst, Msg> && rcvr)
+		static void addTo(Dst & dest, Receiver<Dst, Msg> && rcvr)
 		{
 			dest.receiversMap.template require<Receivers>()->contents.push_back(forward<Receiver<Dst, Msg>>(rcvr));
 		}
 
-		template<useif <exist> endif>
-		static ReceiversList<Dst, Msg> & require_from(Dst & dest)
+		static ReceiversList<Dst, Msg> & requireFrom(Dst & dest)
 		{
 			return dest.receiversMap.template require<Receivers>()->contents;
 		}
 
-		template<useif <exist> endif>
 		static ReceiversList<Dst, Msg> * seek(Dst & dest)
 		{
 			auto r = dest.receiversMap.template seek<Receivers>();
@@ -185,8 +181,8 @@ namespace Rapture
 			}
 		}
 
-		template<class R>
-		static void disconnect(const Handle<R> & rcvr)
+		template<class R, class ... Owner>
+		static void disconnect(const Handle<R, Owner...> & rcvr)
 		{
 			auto & r = receivers();
 
@@ -235,19 +231,19 @@ namespace Rapture
 
 		static size_t connect(Dst & dest, const Rcvr & receiver)
 		{
-			Rcvrs::add_to(dest, receiver);
+			Rcvrs::addTo(dest, receiver);
 			return receiver.id;
 		}
 
 		static size_t connect(Dst & dest, Rcvr && receiver)
 		{
-			Rcvrs::add_to(dest, forward<Rcvr>(receiver));
+			Rcvrs::addTo(dest, forward<Rcvr>(receiver));
 			return receiver.id;
 		}
 
 		static ReceiversWrapper receivers(Dst & dest)
 		{
-			return {Rcvrs::require_from(dest)};
+			return {Rcvrs::requireFrom(dest)};
 		}
 
 		static void disconnect(Dst & dest, const Rcvr & receiver)
@@ -292,8 +288,8 @@ namespace Rapture
 				}
 		}
 
-		template<class R>
-		static void disconnect(Dst & dest, const Handle<R> & rcvr)
+		template<class R, class ... Owner>
+		static void disconnect(Dst & dest, const Handle<R, Owner...> & rcvr)
 		{
 			auto * local = Receivers<Dst, Msg>::seek(dest);
 
@@ -397,14 +393,26 @@ namespace Rapture
 		return Channel<Dst, Msg>::connect(Receiver<Dst, Msg>(forward<Functor>(receiver), std::addressof(receiver)));
 	}
 
-	template<class Rcvr, class Dst, typename Msg, useif <!is_const<Rcvr>::value> endif>
-	size_t connect(const Handle<Rcvr> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t key = 0)
+	template<class Dst, typename Msg, class Rcvr, class ... RcvrOwner, useif <!is_const<Rcvr>::value> endif>
+	size_t connect(Rcvr * receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t key = 0)
 	{
 		return Channel<Dst, Msg>::connect(Receiver<Dst, Msg>(receiver, callback, key));
 	}
 
-	template<class Rcvr, class Dst, typename Msg>
-	size_t connect(const Handle<Rcvr> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t key = 0)
+	template<class Dst, typename Msg, class Rcvr, class ... RcvrOwner>
+	size_t connect(const Rcvr * receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t key = 0)
+	{
+		return Channel<Dst, Msg>::connect(Receiver<Dst, Msg>(receiver, callback, key));
+	}
+
+	template<class Dst, typename Msg, class Rcvr, class ... RcvrOwner, useif <!is_const<Rcvr>::value> endif>
+	size_t connect(const Handle<Rcvr, RcvrOwner...> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t key = 0)
+	{
+		return Channel<Dst, Msg>::connect(Receiver<Dst, Msg>(receiver, callback, key));
+	}
+
+	template<class Dst, typename Msg, class Rcvr, class ... RcvrOwner>
+	size_t connect(const Handle<Rcvr, RcvrOwner...> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t key = 0)
 	{
 		return Channel<Dst, Msg>::connect(Receiver<Dst, Msg>(receiver, callback, key));
 	}
@@ -460,20 +468,38 @@ namespace Rapture
 		return Channel<Dst, Msg>::connect(dest, Receiver<Dst, Msg>(forward<Functor>(receiver), std::addressof(receiver)));
 	}
 
-	template<class Rcvr, class Dst, typename Msg, class RealDst, useif <
+	template<class Dst, typename Msg, class RealDst, class Rcvr, useif <
 		is_dest<RealDst, Msg>::value, based_on<RealDst, Dst>::value, !is_const<Rcvr>::value
 		> endif
 	>
-	size_t connect(RealDst & dest, const Handle<Rcvr> & receiver, void (__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t key = 0)
+	size_t connect(RealDst & dest, Rcvr * receiver, void (__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t key = 0)
 	{
 		return Channel<Dst, Msg>::connect(dest, Receiver<Dst, Msg>(receiver, callback, key));
 	}
 
-	template<class Rcvr, class Dst, typename Msg, class RealDst, useif <
+	template<class Dst, typename Msg, class RealDst, class Rcvr, useif <
 		is_dest<RealDst, Msg>::value, based_on<RealDst, Dst>::value
 		> endif
 	>
-	size_t connect(RealDst & dest, const Handle<Rcvr> & receiver, void (__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t key = 0)
+	size_t connect(RealDst & dest, const Rcvr * receiver, void (__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t key = 0)
+	{
+		return Channel<Dst, Msg>::connect(dest, Receiver<Dst, Msg>(receiver, callback, key));
+	}
+
+	template<class Dst, typename Msg, class RealDst, class Rcvr, class ... RcvrOwner, useif <
+		is_dest<RealDst, Msg>::value, based_on<RealDst, Dst>::value, !is_const<Rcvr>::value
+		> endif
+	>
+	size_t connect(RealDst & dest, const Handle<Rcvr, RcvrOwner...> & receiver, void (__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t key = 0)
+	{
+		return Channel<Dst, Msg>::connect(dest, Receiver<Dst, Msg>(receiver, callback, key));
+	}
+
+	template<class Dst, typename Msg, class RealDst, class Rcvr, class ... RcvrOwner, useif <
+		is_dest<RealDst, Msg>::value, based_on<RealDst, Dst>::value
+		> endif
+	>
+	size_t connect(RealDst & dest, const Handle<Rcvr, RcvrOwner...> & receiver, void (__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t key = 0)
 	{
 		return Channel<Dst, Msg>::connect(dest, Receiver<Dst, Msg>(receiver, callback, key));
 	}
@@ -514,20 +540,32 @@ namespace Rapture
 		Channel<Dst, Msg>::disconnect(Receiver<Dst, Msg>(receiver, std::addressof(receiver)));
 	}
 
-	template<class Rcvr, class Dst, typename Msg>
-	void disconnect(Handle<Rcvr> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t key = 0)
-	{
-		Channel<Dst, Msg>::disconnect(Receiver<Dst, Msg>(receiver, callback, key));
-	}
-
-	template<class Rcvr, class Dst, typename Msg>
-	void disconnect(const Handle<Rcvr> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t key = 0)
+	template<class Dst, typename Msg, class Rcvr>
+	void disconnect(Rcvr * receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t key = 0)
 	{
 		Channel<Dst, Msg>::disconnect(Receiver<Dst, Msg>(receiver, callback, key));
 	}
 
 	template<class Dst, typename Msg, class Rcvr>
-	void disconnect(const Handle<Rcvr> & receiver)
+	void disconnect(const Rcvr * receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t key = 0)
+	{
+		Channel<Dst, Msg>::disconnect(Receiver<Dst, Msg>(receiver, callback, key));
+	}
+
+	template<class Dst, typename Msg, class Rcvr, class ... RcvrOwner>
+	void disconnect(const Handle<Rcvr, RcvrOwner...> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t key = 0)
+	{
+		Channel<Dst, Msg>::disconnect(Receiver<Dst, Msg>(receiver, callback, key));
+	}
+
+	template<class Dst, typename Msg, class Rcvr, class ... RcvrOwner>
+	void disconnect(const Handle<Rcvr, RcvrOwner...> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t key = 0)
+	{
+		Channel<Dst, Msg>::disconnect(Receiver<Dst, Msg>(receiver, callback, key));
+	}
+
+	template<class Dst, typename Msg, class Rcvr, class ... RcvrOwner>
+	void disconnect(const Handle<Rcvr, RcvrOwner...> & receiver)
 	{
 		Channel<Dst, Msg>::disconnect(receiver);
 	}
@@ -581,29 +619,47 @@ namespace Rapture
 		Channel<Dst, Msg>::disconnect(dest, Receiver<Dst, Msg>(receiver, std::addressof(receiver)));
 	}
 
-	template<class Rcvr, class Dst, typename Msg, class RealDst, useif <
+	template<class Dst, typename Msg, class RealDst, class Rcvr, useif <
 		is_dest<RealDst, Msg>::value && based_on<RealDst, Dst>::value
-		> endif
+	> endif
 	>
-	void disconnect(RealDst & dest, Handle<Rcvr> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t key = 0)
+	void disconnect(RealDst & dest, Rcvr * receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t key = 0)
 	{
 		Channel<Dst, Msg>::disconnect(dest, Receiver<Dst, Msg>(receiver, callback, key));
 	}
 
-	template<class Rcvr, class Dst, typename Msg, class RealDst, useif <
+	template<class Dst, typename Msg, class RealDst, class Rcvr, useif <
 		is_dest<RealDst, Msg>::value && based_on<RealDst, Dst>::value
-		> endif
+	> endif
 	>
-	void disconnect(RealDst & dest, const Handle<Rcvr> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t key = 0)
+	void disconnect(RealDst & dest, const Rcvr * receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t key = 0)
 	{
 		Channel<Dst, Msg>::disconnect(dest, Receiver<Dst, Msg>(receiver, callback, key));
 	}
 
-	template<class Dst, typename Msg, class Rcvr, class RealDst, useif <
+	template<class Dst, typename Msg, class RealDst, class Rcvr, class ... RcvrOwner, useif <
 		is_dest<RealDst, Msg>::value && based_on<RealDst, Dst>::value
 		> endif
 	>
-	void disconnect(RealDst & dest, const Handle<Rcvr> & receiver)
+	void disconnect(RealDst & dest, const Handle<Rcvr, RcvrOwner...> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t key = 0)
+	{
+		Channel<Dst, Msg>::disconnect(dest, Receiver<Dst, Msg>(receiver, callback, key));
+	}
+
+	template<class Dst, typename Msg, class RealDst, class Rcvr, class ... RcvrOwner, useif <
+		is_dest<RealDst, Msg>::value && based_on<RealDst, Dst>::value
+	> endif
+	>
+	void disconnect(RealDst & dest, const Handle<Rcvr, RcvrOwner...> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &) const, size_t key = 0)
+	{
+		Channel<Dst, Msg>::disconnect(dest, Receiver<Dst, Msg>(receiver, callback, key));
+	}
+
+	template<class Dst, typename Msg, class RealDst, class Rcvr, class ... RcvrOwner, useif <
+		is_dest<RealDst, Msg>::value && based_on<RealDst, Dst>::value
+		> endif
+	>
+	void disconnect(RealDst & dest, const Handle<Rcvr, RcvrOwner...> & receiver)
 	{
 		Channel<Dst, Msg>::disconnect(dest, receiver);
 	}

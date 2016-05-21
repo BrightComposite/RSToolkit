@@ -5,12 +5,12 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/container/Set.h>
-#include <math/Vector.h>
-#include <graphics/Graphics3D.h>
 #include <ui/UISpace.h>
+#include <graphics/Graphics3D.h>
 
 #include <chrono>
+
+#include "Camera.h"
 
 //---------------------------------------------------------------------------
 
@@ -26,10 +26,10 @@ namespace Rapture
 
 	using ticks_t = long long;
 
-	link_class(SceneObject, Class<Object>);
-	link_class(Drawable, MetaClass);
-	link_class(DrawableObject, Class<SceneObject, Drawable>);
 	link_class(Scene, Class<Object>);
+	link_class(SceneObject, Class<Object>);
+	link_class(Drawable, Class<>);
+	link_class(DrawableObject, Class<SceneObject, Drawable>);
 
 	class SceneObject : public Object
 	{
@@ -84,7 +84,7 @@ namespace Rapture
 		virtual ~DrawableObject() {}
 	};
 
-	class Scene : public Object
+	class Scene : public Object, public Named
 	{
 		friend class Drawable;
 		friend class SceneObject;
@@ -94,11 +94,11 @@ namespace Rapture
 		class SceneLayer : public Layer
 		{
 		public:
-			SceneLayer(Widget * widget, Scene * scene, int order = 0) : Layer(widget, order), _scene(scene) {}
+			SceneLayer(Widget * widget, Scene * scene) : Layer(widget, INT_MAX), _scene(scene) {}
 
 			virtual void draw(const IntRect & clipRegion) const override
 			{
-				_scene->draw(static_cast<Graphics3D *>(_widget->graphics()), scaleToSquare(_widget->absRegion()));
+				_scene->draw(_scene->graphics(), scaleToSquare(_widget->absRegion()));
 			}
 
 		protected:
@@ -109,16 +109,18 @@ namespace Rapture
 		typedef time_point<clock> time_marker;
 
 	public:
-		Scene(Handle<Widget> widget) : Scene()
+		Scene(Handle<Widget> widget, const string & name = "unknown") : Scene(name)
 		{
 			if(widget->graphics() notkindof (Graphics3D))
 				throw Exception("Widget for the scene must support 3D graphics!");
 
 			_widget = widget;
-			widget->append<SceneLayer>(this, INT_MAX);
+			widget->append<SceneLayer>(this);
 
 			_firstTick = _lastTick = clock::now();
 			_ticks = 0;
+
+			updateViewport();
 		}
 
 		virtual ~Scene()
@@ -132,6 +134,21 @@ namespace Rapture
 			return static_cast<Graphics3D *>(_widget->graphics());
 		}
 
+		Widget * widget() const
+		{
+			return _widget;
+		}
+
+		UISpace * space() const
+		{
+			return _widget->space();
+		}
+
+		Camera * camera() const
+		{
+			return _camera;
+		}
+
 		void invalidate() const
 		{
 			space()->invalidate(_widget);
@@ -143,32 +160,23 @@ namespace Rapture
 			space()->validate();
 		}
 
-		template<class T, typename ... A, useif <
-			based_on<T, SceneObject>::value,
-			can_construct<T, Scene *, A...>::value
-			> endif
-		>
-		Handle<T> append(A && ... args)
-		{
-			return handle<T>(this, forward<A>(args)...);
-		}
-
 		void attach(Handle<SceneObject> obj);
 		void detach(SceneObject * obj);
 
-		Widget * widget() const
+		void setProjection(const fmat & projection)
 		{
-			return _widget;
+			graphics()->updateUniform<Uniforms::Projection>(projection);
 		}
 
-		UISpace * space() const
+		void setProjection(fmat && projection)
 		{
-			return _widget->space();
+			graphics()->updateUniform<Uniforms::Projection>(forward<fmat>(projection));
 		}
 
 		void setZoom(float zoom)
 		{
 			_zoom = zoom;
+			updateViewport();
 		}
 
 		void setTickLength(milliseconds length)
@@ -193,7 +201,10 @@ namespace Rapture
 		}
 
 	protected:
-		Scene() { setclass(Scene); }
+		Scene(const string & name) : Named(name)
+		{
+			setclass(Scene);
+		}
 
 		void draw(Graphics3D * graphics, const IntRect & viewport) const
 		{
@@ -201,16 +212,31 @@ namespace Rapture
 				drawable->draw(graphics, viewport, _zoom);
 		}
 
+		void updateViewport()
+		{
+			float invzoom = 1 / _zoom;
+			float aspect = _widget->viewport().ratio() * invzoom;
+			setProjection(fmat::ortho(-invzoom, invzoom, -aspect, aspect, -invzoom, invzoom));
+		}
+
 		Widget * _widget;
 		Array<SceneObject> _objects;
 		vector<Drawable *> _drawables;
+
+		Handle<Camera> _camera;
+		float _zoom = 0.01f;
 
 		milliseconds _tickLength = 1ms;
 		time_marker _lastTick;
 		time_marker _firstTick;
 
 		ticks_t _ticks = 0;
-		float _zoom = 0.01f;
+	};
+
+	class SceneProvider
+	{
+
+		Map<string, Scene> _scenes;
 	};
 }
 

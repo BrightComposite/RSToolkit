@@ -74,7 +74,7 @@ namespace Rapture
 		FreeImageConverter::initialize();
 		FreeTypeDecoder::initialize();
 
-		auto graphics = Direct3D::provide();
+		auto graphics = GraphicsProvider::provide();
 
 		{
 			Handle<Window> window(graphics, 0, 0, 1280, 480);

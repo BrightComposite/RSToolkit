@@ -6,7 +6,7 @@
 //---------------------------------------------------------------------------
 
 #include <meta/Meta.h>
-#include <math/Matrix.h>
+#include <math/Transform.h>
 
 #include <core/container/TypedMap.h>
 
@@ -45,19 +45,19 @@ namespace Rapture
 	uniform_class
 	(
 		Model, 1, Vertex,
-		(FloatMatrix, transform)
+		(FloatTransform, transform)
 	);
 
 	uniform_class
 	(
 		View, 2, Vertex,
-		(FloatMatrix, transform)
+		(FloatTransform, transform)
 	);
 
 	uniform_class
 	(
 		Projection, 3, Vertex,
-		(FloatMatrix, transform)
+		(FloatTransform, transform)
 	);
 
 	uniform_class
@@ -95,6 +95,12 @@ namespace Rapture
 		void set(A &&... args)
 		{
 			_adapter->update(Contents<T>(forward<A>(args)...));
+		}
+
+		template<class T>
+		void set(const Contents<T> & contents)
+		{
+			_adapter->update(contents);
 		}
 
 	protected:

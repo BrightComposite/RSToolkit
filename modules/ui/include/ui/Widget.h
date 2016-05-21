@@ -103,6 +103,11 @@ namespace Rapture
 			return {_size};
 		}
 
+		Viewport viewport() const
+		{
+			return {_size};
+		}
+
 		const IntPoint & absPos() const
 		{
 			return _absPos;

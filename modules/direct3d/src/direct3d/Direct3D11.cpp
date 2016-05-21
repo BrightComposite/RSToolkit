@@ -22,51 +22,50 @@ namespace Rapture
 		class FillModeState : public State<FillMode>
 		{
 		public:
-			FillModeState(GraphicContext * ctx) : State<FillMode>(FillMode::Solid), ctx(ctx) {}
+			FillModeState(D3DGraphics * graphics) : State<FillMode>(FillMode::Solid), graphics(graphics) {}
 
 		protected:
 			virtual void change() override
 			{
 				if(_state == FillMode::Solid)
-					ctx->context->RSSetState(ctx->solidRS);
+					graphics->context->RSSetState(graphics->solidRS);
 				else
-					ctx->context->RSSetState(ctx->wiredRS);
+					graphics->context->RSSetState(graphics->wiredRS);
 			}
 
-			GraphicContext * ctx;
+			D3DGraphics * graphics;
 		};
 
 		class DepthTestState : public State<bool>
 		{
 		public:
-			DepthTestState(GraphicContext * ctx) : State<bool>(false), ctx(ctx) {}
+			DepthTestState(D3DGraphics * graphics) : State<bool>(false), graphics(graphics) {}
 
 		protected:
 			virtual void change() override
 			{
 				if(_state)
-					ctx->context->OMSetDepthStencilState(ctx->depthState3D, 0);
+					graphics->context->OMSetDepthStencilState(graphics->depthState3D, 0);
 				else
-					ctx->context->OMSetDepthStencilState(ctx->depthState2D, 0);
+					graphics->context->OMSetDepthStencilState(graphics->depthState2D, 0);
 
-				ctx->setDepth(1.0f);
+				graphics->setDepth(1.0f);
 			}
 
-			GraphicContext * ctx;
+			D3DGraphics * graphics;
 		};
 
-		Graphics3D::Graphics3D()
+		D3DGraphics::D3DGraphics()
 		{
-			setclass(Graphics3D);
+			setclass(D3DGraphics);
 
 			initDevice();
-			initFacilities();
 
 			_fillMode = handle<FillModeState>(this);
 			_depthTestMode = handle<DepthTestState>(this);
 		}
 
-		Graphics3D::~Graphics3D()
+		D3DGraphics::~D3DGraphics()
 		{
 			if(context != nullptr)
 			{
@@ -76,14 +75,12 @@ namespace Rapture
 				context->ClearState();
 			}
 
-			freeFacilities();
-
 		#ifdef DEBUG_DX
 			debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
 		#endif
 		}
 
-		void Graphics3D::initDevice()
+		void D3DGraphics::initDevice()
 		{
 			HRESULT hr = S_OK;
 			UINT createDeviceFlags = 0;
@@ -125,7 +122,8 @@ namespace Rapture
 
 			com_assert(hr);
 
-			setContext(ndevice, ncontext);
+			device = ndevice;
+			context = ncontext;
 
 		#ifdef DEBUG_DX
 			debug = device;
@@ -212,73 +210,45 @@ namespace Rapture
 			dxgiDevice->SetMaximumFrameLatency(1);
 		}
 
-		void Graphics3D::initFacilities()
+		void D3DGraphics::initFacilities()
 		{
-			shaders.init(this);
-
-			auto & p2 = VertexLayout::get("p2");
-			auto & p2t = VertexLayout::get("p2 t");
-
-			quad.init(this, p2, VertexData::quad);
-			texquad.init(this, p2t, VertexData::texquad);
-
+			initShaders();
+			Graphics3D::initFacilities();
 			updateBrushState();
 		}
 
-		void Graphics3D::freeFacilities()
-		{
-			quad = nullptr;
-			texquad = nullptr;
+		void D3DGraphics::printInfo() {}
+		void D3DGraphics::printDebug() {}
+		void D3DGraphics::checkForErrors() {}
 
-			shaders = nullptr;
+		Handle<Image> D3DGraphics::createImage(const ImageData & data)
+		{
+			return Handle<D3DImage, D3DGraphics>(this, data);
 		}
 
-		void Graphics3D::printInfo() {}
-		void Graphics3D::printDebug() {}
-		void Graphics3D::checkForErrors() {}
-
-		void Graphics3D::bind(const Handle<Surface> & surface)
+		Handle<VertexLayout> D3DGraphics::createVertexLayout(const string & fingerprint)
 		{
-			if(_surface == surface)
-				return;
-
-			_surface = surface;
-			clip(viewport());
-			_surface->apply();
+			return Handle<D3DVertexLayout, D3DGraphics>(this, fingerprint);
 		}
 
-		void Graphics3D::bind(const Handle<Texture> & texture, uint index)
+		Handle<VertexBuffer> D3DGraphics::createVertexBuffer(VertexLayout * vil, const VertexData & data)
 		{
-			if(textures.size() > index && textures[index] == texture)
-				return;
-
-			textures[index] = texture;
-			texture->apply();
+			return Handle<D3DVertexBuffer, D3DGraphics>(this, vil, data);
 		}
 
-		Handle<Image> Graphics3D::createImage(const ImageData & data)
+		Handle<IndexBuffer> D3DGraphics::createIndexBuffer(const VertexIndices & indices)
 		{
-			return Handle<D3DImage>(this, data);
+			return Handle<D3DIndexBuffer, D3DGraphics>(this, indices);
 		}
 
-		Handle<Figure> Graphics3D::createFigure(const FigureData & data)
+		Handle<UniformAdapter> D3DGraphics::createUniformAdapter(ShaderType shader, int index, size_t size)
 		{
-			return Handle<D3DFigure>(this, data);
-		}
-		
-		Handle<Rapture::UniformAdapter> Graphics3D::createUniformAdapter(ShaderType shader, int index, size_t size)
-		{
-			return Handle<UniformAdapter>(this, shader, index, size);
+			return Handle<D3DUniformAdapter, D3DGraphics>(this, shader, index, size);
 		}
 
-		Handle<ShaderCode> Graphics3D::getShaderCode(const string & id, ShaderType type)
+		Handle<Surface> D3DGraphics::createSurface(UISpace * space)
 		{
-			return shaders->getCode(id, type);
-		}
-
-		Handle<Surface> Graphics3D::createSurface(UISpace * space)
-		{
-			auto s = handle<UISurface>(this, space);
+			Handle<UISurface, D3DGraphics> s(this, space);
 
 			connect(*space, s, &UISurface::onUIResize);
 			connect(*space, s, &UISurface::onUIFullscreen);
@@ -287,17 +257,17 @@ namespace Rapture
 			return s;
 		}
 
-		void Graphics3D::updateBrushState()
+		void D3DGraphics::updateBrushState()
 		{
 			updateUniform<Uniforms::BrushOptions>(color(), lineWidth());
 		}
 
-		void Graphics3D::present() const
+		void D3DGraphics::present() const
 		{
 			_surface->present();
 		}
 
-		void Graphics3D::clip(const IntRect & rect)
+		void D3DGraphics::clip(const IntRect & rect)
 		{
 			if(_clipRect == rect)
 				return;
@@ -308,219 +278,45 @@ namespace Rapture
 			context->RSSetScissorRects(1, &r.set(_clipRect));
 		}
 
-		void Graphics3D::rectangle(const IntRect & rect)
+		D3DVertexLayout::D3DVertexLayout(D3DGraphics * graphics, const string & fingerprint) : VertexLayout(fingerprint), graphics(graphics) {}
+
+		void D3DVertexLayout::apply()
 		{
-			auto fm = hold(_fillMode, FillMode::Solid);
-
-			FloatPoint t;
-			FloatSize s;
-
-			ScreenCoord::toRel(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>(move(t), move(s), _depth);
-
-			if(fm.old == FillMode::Solid)
-				shaders->rectangle->apply();
-			else
-				shaders->wired_rectangle->apply();
-
-			draw(quad);
+			graphics->context->IASetInputLayout(handle);
 		}
 
-		void Graphics3D::ellipse(const IntRect & rect)
+		void D3DVertexLayout::accept(const ShaderCode * code)
 		{
-			auto fm = hold(_fillMode, FillMode::Solid);
-
-			FloatPoint t;
-			FloatSize s;
-
-			ScreenCoord::toSq(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>(move(t), move(s), _depth);
-
-			if(fm.old == FillMode::Solid)
-				shaders->ellipse->apply();
-			else
-				shaders->wired_ellipse->apply();
-
-			draw(texquad);
-		}
-
-		void Graphics3D::rectangle(const SqRect & rect)
-		{
-			auto fm = hold(_fillMode, FillMode::Solid);
-
-			FloatPoint t;
-			FloatSize s;
-
-			ScreenCoord::toRel(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>(move(t), move(s), _depth);
-
-			if(fm.old == FillMode::Solid)
-				shaders->rectangle->apply();
-			else
-				shaders->wired_rectangle->apply();
-
-			draw(texquad);
-		}
-
-		void Graphics3D::ellipse(const SqRect & rect)
-		{
-			auto fm = hold(_fillMode, FillMode::Solid);
-			auto s = rect.size();
-
-			updateUniform<Uniforms::Area>(rect.pos() + s * 0.5f, s, _depth);
-
-			if(fm.old == FillMode::Solid)
-				shaders->ellipse->apply();
-			else
-				shaders->wired_ellipse->apply();
-
-			draw(texquad);
-		}
-
-		void Graphics3D::draw(const Figure * figure, const IntRect & bounds)
-		{
-			if(figure->graphics != this)
-				return;
-			
-			FloatPoint t;
-			FloatSize s;
-
-			ScreenCoord::toRel(bounds, viewport(), t, s);
-
-			updateUniform<Uniforms::Model>(FloatTransform(move(t), move(s), _depth));
-			shaders->figure->apply();
-
-			draw(static_cast<const D3DFigure *>(figure)->model);
-		}
-
-		void Graphics3D::draw(const Figure * figure, const FloatTransform & transform)
-		{
-			if(figure->graphics != this)
+			if(handle != nullptr)
 				return;
 
-			const auto & v = viewport();
+			static const DXGI_FORMAT formats[] = {
+				DXGI_FORMAT_UNKNOWN,
+				DXGI_FORMAT_R32_FLOAT,
+				DXGI_FORMAT_R32G32_FLOAT,
+				DXGI_FORMAT_R32G32B32_FLOAT,
+				DXGI_FORMAT_R32G32B32A32_FLOAT
+			};
 
-			updateUniform<Uniforms::Model>(transform * FloatScaling {1.0f, v.invratio(), 1.0f, 1.0f});
-			shaders->figure->apply();
+			vector<D3D11_INPUT_ELEMENT_DESC> descs;
+			uint stride = 0;
 
-			draw(static_cast<const D3DFigure *>(figure)->model);
-		}
-
-		void Graphics3D::draw(const Model * model)
-		{
-			if(model->graphics != this)
-				return;
-
-			draw(static_cast<const D3DModel *>(model));
-		}
-
-		void Graphics3D::draw(const D3DModel * model)
-		{
-			if(model->buffer != vbuffer)
+			for(auto * vie : elements)
 			{
-				vbuffer = model->buffer;
-
-				uint stride = vbuffer->vil->stride;
-				uint offset = 0;
-
-				context->IASetVertexBuffers(0, 1, &vbuffer->handle, &stride, &offset);
-				context->IASetPrimitiveTopology(vbuffer->topology);
+				descs.push_back({vie->semantic, vie->index, formats[vie->units], 0, stride, D3D11_INPUT_PER_VERTEX_DATA, 0});
+				stride += vie->units * sizeof(float);
 			}
 
-			if(model notinstanceof (D3DIndexedModel))
-			{
-				context->Draw(vbuffer->size - model->verticesLocation, model->verticesLocation);
-				return;
-			}
-
-			auto * m = static_cast<const D3DIndexedModel *>(model);
-
-			if(m->indices != ibuffer)
-			{
-				ibuffer = m->indices;
-				context->IASetIndexBuffer(ibuffer->handle, DXGI_FORMAT_R16_UINT, 0);
-			}
-
-			context->DrawIndexed(ibuffer->size - m->indicesLocation, m->indicesLocation, model->verticesLocation);
+			com_assert(
+				graphics->device->CreateInputLayout(descs.data(), static_cast<uint>(descs.size()), code->data, code->size, &handle),
+				"Can't create vertex input layout for shader"
+			);
 		}
 
-		void Graphics3D::draw(const Image * image, int x, int y)
-		{
-			draw(image, IntRect{x, y, static_cast<int>(x + image->width()), static_cast<int>(y + image->height())});
-		}
-
-		void Graphics3D::draw(const Image * image, const IntRect & rect)
-		{
-			if(image->graphics() != this)
-				return;
-
-			auto img = static_cast<const D3DImage *>(image);
-			img->apply();
-
-			FloatPoint t;
-			FloatSize s;
-
-			ScreenCoord::toRel(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>(move(t), move(s), _depth);
-
-			shaders->image->apply();
-			draw(texquad);
-		}
-
-		void Graphics3D::draw(const Image * image, const SqRect & rect)
-		{
-			if(image->graphics() != this)
-				return;
-
-			auto img = static_cast<const D3DImage *>(image);
-			img->apply();
-
-			FloatPoint t;
-			FloatSize s;
-
-			ScreenCoord::toRel(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>(move(t), move(s), _depth);
-
-			shaders->image->apply();
-			draw(texquad);
-		}
-
-		void Graphics3D::draw(const Symbol * symbol, int x, int y)
-		{
-			if(symbol->graphics() != this)
-				return;
-
-			auto img = static_cast<const D3DImage *>(symbol->image());
-
-			if(img == nullptr)
-				return;
-
-			img->apply();
-
-			IntRect rect;
-			rect.setPlacement(x + symbol->left(), y + symbol->top(), img->_width, img->_height);
-
-			FloatPoint t;
-			FloatSize s;
-
-			ScreenCoord::toRel(rect, viewport(), t, s);
-			updateUniform<Uniforms::Area>(move(t), move(s), _depth);
-
-			shaders->text->apply();
-			draw(texquad);
-		}
-
-		void Graphics3D::draw(const Image * image, int x, int y, int width, int height)
-		{
-			draw(image, IntRect{x, y, x + width, y + height});
-		}
-
-		FxTechnique::FxTechnique(GraphicContext * ctx, const Handle<VertexLayout> & vil) : ctx(ctx), vil(vil) {}
-
-		VertexBuffer::VertexBuffer(GraphicContext * ctx, const Handle<VertexLayout> & vil, const VertexData & vd, D3D_PRIMITIVE_TOPOLOGY topology) : ctx(ctx), topology(topology), vil(vil), size(static_cast<uint>(vd.size / vil->stride))
+		D3DVertexBuffer::D3DVertexBuffer(D3DGraphics * graphics, VertexLayout * vil, const VertexData & vd, D3D_PRIMITIVE_TOPOLOGY topology) : VertexBuffer(vil, vd), graphics(graphics), topology(topology)
 		{
 			if(vd.size % vil->stride != 0)
-				throw Exception("Size of vertex buffer doesn't matches its vertex input layout: \"", vil->key, "\"");
+				throw Exception("Size of vertex buffer doesn't matches its vertex input layout");
 
 			D3D11_BUFFER_DESC bd;
 			ZeroMemory(&bd, sizeof(bd));
@@ -534,12 +330,26 @@ namespace Rapture
 			sdata.pSysMem = vd.data;
 
 			com_assert(
-				ctx->device->CreateBuffer(&bd, &sdata, &handle),
+				graphics->device->CreateBuffer(&bd, &sdata, &handle),
 				"Can't create vertex buffer!"
 				);
 		}
 
-		IndexBuffer::IndexBuffer(GraphicContext * ctx, const VertexIndices & indices) : ctx(ctx), size(static_cast<uint>(indices.size()))
+		void D3DVertexBuffer::apply() const
+		{
+			uint stride = vil->stride;
+			uint offset = 0;
+
+			graphics->context->IASetVertexBuffers(0, 1, &handle, &stride, &offset);
+			graphics->context->IASetPrimitiveTopology(topology);
+		}
+
+		void D3DVertexBuffer::draw(const Mesh * mesh) const
+		{
+			graphics->context->Draw(verticesCount - mesh->verticesLocation, mesh->verticesLocation);
+		}
+
+		D3DIndexBuffer::D3DIndexBuffer(D3DGraphics * graphics, const VertexIndices & indices) : IndexBuffer(indices), graphics(graphics)
 		{
 			D3D11_BUFFER_DESC bd;
 			ZeroMemory(&bd, sizeof(bd));
@@ -554,16 +364,27 @@ namespace Rapture
 			sdata.pSysMem = indices.data();
 
 			com_assert(
-				ctx->device->CreateBuffer(&bd, &sdata, &handle),
+				graphics->device->CreateBuffer(&bd, &sdata, &handle),
 				"Can't create index buffer!"
 				);
 		}
 
-		CommonShader::Shader(GraphicContext * ctx) : ctx(ctx) {}
+		void D3DIndexBuffer::apply() const
+		{
+			graphics->context->IASetIndexBuffer(handle, DXGI_FORMAT_R16_UINT, 0);
+		}
 
-		void CommonShader::read(const String & filename, Handle<ShaderCode> & out)
+		void D3DIndexBuffer::draw(const IndexedMesh * mesh) const
+		{
+			graphics->context->DrawIndexed(size - mesh->indicesLocation, mesh->indicesLocation, mesh->verticesLocation);
+		}
+
+		D3DShader<ShaderType::Common>::D3DShader(D3DShaderProgram * program) : program(program) {}
+
+		void D3DShader<ShaderType::Common>::read(const String & filename, Handle<ShaderCode> & out)
 		{
 			ComHandle<ID3DBlob> code;
+
 			com_assert(
 				D3DReadFileToBlob(widen(filename).c_str(), &code),
 				"Can't read shader from file: ", filename
@@ -572,7 +393,7 @@ namespace Rapture
 			out.init(code->GetBufferPointer(), code->GetBufferSize());
 		}
 
-		void CommonShader::compile(const String & filename, const String & entrance, const String & shaderModel, Handle<ShaderCode> & out)
+		void D3DShader<ShaderType::Common>::compile(const String & filename, const String & entrance, const String & shaderModel, Handle<ShaderCode> & out)
 		{
 			ComHandle<ID3DBlob> code;
 			DWORD flags = D3DCOMPILE_ENABLE_STRICTNESS;
@@ -589,7 +410,7 @@ namespace Rapture
 
 		//#define COMPILE_SHADERS
 
-		VertexShader::Shader(const Handle<FxTechnique> & technique, const String & path, ShaderCodeState state) : CommonShader(technique->ctx)
+		D3DShader<ShaderType::Vertex>::D3DShader(D3DShaderProgram * program, const String & path, ShaderCodeState state) : D3DShader<ShaderType::Common>(program)
 		{
 			Handle<ShaderCode> code;
 
@@ -604,42 +425,37 @@ namespace Rapture
 					break;
 
 				case ShaderCodeState::Embedded:
-					code = ctx->getShaderCode(path, ShaderType::Vertex);
+					code = program->graphics->getShaderCode(path, ShaderType::Vertex);
 					break;
 			}
 
-			init(technique, code);
+			init(code);
 		}
 
-		VertexShader::Shader(const Handle<FxTechnique> & technique, const Handle<ShaderCode> & code) : CommonShader(technique->ctx)
+		D3DShader<ShaderType::Vertex>::D3DShader(D3DShaderProgram * program, const Handle<ShaderCode> & code) : D3DShader<ShaderType::Common>(program)
 		{
-			init(technique, code);
+			init(code);
 		}
 
-		void VertexShader::apply() const
+		void D3DShader<ShaderType::Vertex>::apply() const
 		{
-			ctx->context->IASetInputLayout(layout);
-			ctx->context->VSSetShader(id, nullptr, 0);
+			program->vil->apply();
+			program->graphics->context->VSSetShader(id, nullptr, 0);
 		}
 
-		void VertexShader::init(const Handle<FxTechnique> & technique, const Handle<ShaderCode> & code)
+		void D3DShader<ShaderType::Vertex>::init(const Handle<ShaderCode> & code)
 		{
 			HRESULT hr = S_OK;
 
 			com_assert(
-				ctx->device->CreateVertexShader(code->data, code->size, nullptr, &id),
+				program->graphics->device->CreateVertexShader(code->data, code->size, nullptr, &id),
 				"Can't create vertex shader!"
 				);
 
-			auto & vlayout = technique->vil->layout;
-
-			com_assert(
-				ctx->device->CreateInputLayout(vlayout.data(), static_cast<uint>(vlayout.size()), code->data, code->size, &layout),
-				"Can't create vertex input layout for shader"
-				);
+			program->vil->accept(code);
 		}
 
-		PixelShader::Shader(const Handle<FxTechnique> & technique, const String & path, ShaderCodeState state) : CommonShader(technique->ctx)
+		D3DShader<ShaderType::Pixel>::D3DShader(D3DShaderProgram * program, const String & path, ShaderCodeState state) : D3DShader<ShaderType::Common>(program)
 		{
 			Handle<ShaderCode> code;
 
@@ -654,32 +470,32 @@ namespace Rapture
 					break;
 
 				case ShaderCodeState::Embedded:
-					code = ctx->getShaderCode(path, ShaderType::Pixel);
+					code = program->graphics->getShaderCode(path, ShaderType::Pixel);
 					break;
 			}
 
-			init(technique, code);
+			init(code);
 		}
 
-		PixelShader::Shader(const Handle<FxTechnique> & technique, const Handle<ShaderCode> & code) : CommonShader(technique->ctx)
+		D3DShader<ShaderType::Pixel>::D3DShader(D3DShaderProgram * program, const Handle<ShaderCode> & code) : D3DShader<ShaderType::Common>(program)
 		{
-			init(technique, code);
+			init(code);
 		}
 
-		void PixelShader::apply() const
+		void D3DShader<ShaderType::Pixel>::apply() const
 		{
-			ctx->context->PSSetShader(id, nullptr, 0);
+			program->graphics->context->PSSetShader(id, nullptr, 0);
 		}
 
-		void PixelShader::init(const Handle<FxTechnique> & technique, const Handle<ShaderCode> & code)
+		void D3DShader<ShaderType::Pixel>::init(const Handle<ShaderCode> & code)
 		{
 			com_assert(
-				ctx->device->CreatePixelShader(code->data, code->size, nullptr, &id),
+				program->graphics->device->CreatePixelShader(code->data, code->size, nullptr, &id),
 				"Can't create pixel shader!"
 				);
 		}
 
-		D3DImage::D3DImage(GraphicContext * ctx, const ImageData & data) : Image(ctx, data), _ctx(ctx)
+		D3DImage::D3DImage(D3DGraphics * graphics, const ImageData & data) : Image(graphics, data), _ctx(graphics)
 		{
 			ComHandle<ID3D11Texture2D> tex;
 
@@ -730,11 +546,11 @@ namespace Rapture
 			texInitData.SysMemSlicePitch = texInitData.SysMemPitch;
 
 			com_assert(
-				ctx->device->CreateTexture2D(&texDesc, &texInitData, &tex)
+				graphics->device->CreateTexture2D(&texDesc, &texInitData, &tex)
 				);
 
 			com_assert(
-				ctx->device->CreateShaderResourceView(tex, nullptr, &_handle)
+				graphics->device->CreateShaderResourceView(tex, nullptr, &_handle)
 				);
 
 			D3D11_SAMPLER_DESC sampDesc;
@@ -748,7 +564,7 @@ namespace Rapture
 			sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 			com_assert(
-				ctx->device->CreateSamplerState(&sampDesc, &_state)
+				graphics->device->CreateSamplerState(&sampDesc, &_state)
 				);
 		}
 
@@ -806,28 +622,9 @@ namespace Rapture
 			_ctx->context->Unmap(texture, 0);
 		}
 
-		D3DFigure::D3DFigure(GraphicContext * graphics, const FigureData & data) : Figure(graphics, data)
-		{
-			vector<FloatPoint> points;
-			auto & p = data.points;
-
-			for(int i = 0; i < p.size() - 3; i += 2)
-			{
-				points.push_back(p[i]);
-				points.push_back(p[i + 1]);
-				points.push_back(p[i + 2]);
-			}
-
-			points.push_back(p[p.size() - 2]);
-			points.push_back(p[p.size() - 1]);
-			points.push_back(p[0]);
-
-			model = handle<D3DModel>(graphics, VertexLayout::get("p2"), points);
-		}
-
 	#define USE_3D
 
-		UISurface::UISurface(Graphics3D * graphics, UISpace * space) : D3DSurface(graphics, space->size()), space(space)
+		UISurface::UISurface(D3DGraphics * graphics, UISpace * space) : D3DSurface(graphics, space->size()), space(space)
 		{
 			createSwapChain(false);
 			ZeroMemory(&presentParams, sizeof(presentParams));
@@ -1056,7 +853,7 @@ namespace Rapture
 			swapChain->SetFullscreenState(FALSE, nullptr);
 		}
 
-		DepthBufferSurface::DepthBufferSurface(Graphics3D * graphics, const IntSize & size) : D3DSurface(graphics, size)
+		DepthBufferSurface::DepthBufferSurface(D3DGraphics * graphics, const IntSize & size) : D3DSurface(graphics, size)
 		{
 			createDepthStencil();
 		}
@@ -1070,22 +867,13 @@ namespace Rapture
 		#endif
 		}
 
-		TextureSurface::TextureSurface(Graphics3D * graphics, const IntSize & size) : D3DSurface(graphics, size)
+		TextureSurface::TextureSurface(D3DGraphics * graphics, const IntSize & size) : D3DSurface(graphics, size)
 		{}
 
 		void TextureSurface::apply() const
 		{}
 
-		VertexElement            VertexElement::pos2("p2", "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, sizeof(float[2]));
-		VertexElement            VertexElement::pos3("p3", "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float[3]));
-		VertexElement          VertexElement::color3("c3", "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float[3]));
-		VertexElement          VertexElement::colorf("c4", "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, sizeof(float[4]));
-		VertexElement             VertexElement::tex("t", "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, sizeof(float[2]));
-		VertexElement          VertexElement::normal("n", "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float[3]));
-		VertexElement VertexElement::secondaryColor3("s3", "COLOR", 1, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float[3]));
-		VertexElement VertexElement::secondaryColor4("s4", "COLOR", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, sizeof(float[4]));
-
-		D3DSurface::D3DSurface(Graphics3D * graphics, const IntSize & size) : Rapture::Surface(size), graphics(graphics) {}
+		D3DSurface::D3DSurface(D3DGraphics * graphics, const IntSize & size) : Surface(size), graphics(graphics) {}
 
 		D3DSurface::~D3DSurface() {}
 
@@ -1094,7 +882,7 @@ namespace Rapture
 			auto cs = hold(graphics->colorState(), graphics->clearColor());
 			graphics->rectangle(graphics->clipRect());
 
-			//ctx->context->ClearRenderTargetView(renderTargetView, clearColor);
+			//graphics->context->ClearRenderTargetView(renderTargetView, clearColor);
 		#ifdef USE_3D
 			graphics->context->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 		#endif
@@ -1133,7 +921,7 @@ namespace Rapture
 				);
 		}
 
-		UniformAdapter::UniformAdapter(GraphicContext * ctx, ShaderType shader, int index, size_t size) : ctx(ctx), index(index)
+		D3DUniformAdapter::D3DUniformAdapter(D3DGraphics * graphics, ShaderType shader, int index, size_t size) : graphics(graphics), index(index)
 		{
 			D3D11_BUFFER_DESC bd;
 			ZeroMemory(&bd, sizeof(bd));
@@ -1144,24 +932,24 @@ namespace Rapture
 			bd.CPUAccessFlags = 0;
 
 			com_assert(
-				ctx->device->CreateBuffer(&bd, NULL, &buffer), "Can't create uniform buffer"
+				graphics->device->CreateBuffer(&bd, NULL, &buffer), "Can't create uniform buffer"
 				);
 
 			switch(shader)
 			{
 				case ShaderType::Vertex:
-					ctx->context->VSSetConstantBuffers(index, 1, &buffer);
+					graphics->context->VSSetConstantBuffers(index, 1, &buffer);
 					break;
 
 				case ShaderType::Pixel:
-					ctx->context->PSSetConstantBuffers(index, 1, &buffer);
+					graphics->context->PSSetConstantBuffers(index, 1, &buffer);
 					break;
 			}
 		}
 
-		void UniformAdapter::update(const void * data)
+		void D3DUniformAdapter::update(const void * data)
 		{
-			ctx->context->UpdateSubresource(buffer, 0, NULL, data, 0, 0);
+			graphics->context->UpdateSubresource(buffer, 0, NULL, data, 0, 0);
 		}
 	}
 }

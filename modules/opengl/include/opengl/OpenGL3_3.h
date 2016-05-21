@@ -33,15 +33,15 @@ namespace Rapture
 	namespace OpenGL3_3
 	{
 		class GraphicContext;
-		class Graphics3D;
-		class Model;
+		class GLGraphics;
+		class Mesh;
 		class Image;
 		class Surface;
 	}
 
 	link_class(OpenGL3_3::GraphicContext, Class<Graphics3D>);
 	link_class(OpenGL3_3::Graphics3D, Class<OpenGL3_3::GraphicContext>);
-	link_class(OpenGL3_3::Model, Class<Model>);
+	link_class(OpenGL3_3::Mesh, Class<Mesh>);
 
 	namespace OpenGL3_3
 	{
@@ -67,7 +67,7 @@ namespace Rapture
 
 		class Image : public Rapture::Image
 		{
-			friend class Graphics3D;
+			friend class GLGraphics;
 
 		public:
 			Image(const GraphicContext * ctx, const ImageData & data);
@@ -172,7 +172,7 @@ namespace Rapture
 
 		class Uniform : public Shared
 		{
-			friend class Graphics3D;
+			friend class GLGraphics;
 
 		public:
 			Uniform(ShaderType shader, uint index, uint size);
@@ -211,7 +211,7 @@ namespace Rapture
 
 		class FxTechnique : public Shared
 		{
-			friend class Graphics3D;
+			friend class GLGraphics;
 			friend class VertexBuffer;
 
 			template<ShaderType>
@@ -301,7 +301,7 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
-		class Graphics3D : public GraphicContext
+		class GLGraphics : public GraphicContext
 		{
 		public:
 			struct ContextAttributes
@@ -315,7 +315,7 @@ namespace Rapture
 				int flags;
 			};
 
-			friend Handle<Graphics3D, Graphics3D> provide();
+			friend Handle<GLGraphics, GLGraphics> provide();
 
 			virtual void clip(const IntRect & rect) override;
 			virtual void rectangle(const IntRect & rect) override;
@@ -326,7 +326,7 @@ namespace Rapture
 			virtual void draw(const Rapture::Figure * figure, const IntRect & bounds) override;
 			virtual void draw(const Rapture::Figure * figure, const FloatTransform & transform) override;
 
-			virtual void draw(const Rapture::Model * model) override;
+			virtual void draw(const Rapture::Mesh * model) override;
 
 			virtual void draw(const Rapture::Image * image, int x, int y) override;
 			virtual void draw(const Rapture::Image * image, int x, int y, int width, int height) override;
@@ -351,15 +351,15 @@ namespace Rapture
 
 		protected:
 			friend_handle;
-			friend class Model;
+			friend class Mesh;
 
-			Graphics3D();
-			virtual ~Graphics3D();
+			GLGraphics();
+			virtual ~GLGraphics();
 
 			virtual Handle<Rapture::Surface> createSurface(UISpace * space) override;
 			virtual void updateBrushState() override;
 
-			void draw(const Model * model);
+			void draw(const Mesh * model);
 
 			void initDevice();
 			void initFacilities();
@@ -372,10 +372,10 @@ namespace Rapture
 			mutable Handle<IndexBuffer> ibuffer = nullptr;
 			mutable TypedSet<Uniform> uniformData;
 
-			Array<Texture> textures;
+			Array<Texture> _textures;
 		};
 
-		inline Handle<Graphics3D, Graphics3D> provide()
+		inline Handle<GLGraphics, GLGraphics> provide()
 		{
 			return {emptiness};
 		}
@@ -384,7 +384,7 @@ namespace Rapture
 
 		class Shaders
 		{
-			friend class Graphics3D;
+			friend class GLGraphics;
 
 		public:
 			static ShaderCode getCode(const string & id, ShaderType type)
@@ -428,34 +428,34 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
-		class Model : public Rapture::Model
+		class Mesh : public Rapture::Mesh
 		{
 		public:
-			Model(const Graphics3D * graphics, const Handle<VertexLayout> & vil, const VertexData & vertexData)
-				: Rapture::Model(graphics, vertexData, vil->stride), buffer(vil, vertexData)
+			Mesh(const GLGraphics * graphics, const Handle<VertexLayout> & vil, const VertexData & vertexData)
+				: Rapture::Mesh(graphics, vertexData, vil->stride), buffer(vil, vertexData)
 			{
-				setclass(Model);
+				setclass(Mesh);
 			}
 
 			Handle<VertexBuffer> buffer;
 
-			static Handle<Model, Graphics3D> quad;
-			static Handle<Model, Graphics3D> texquad;
+			static Handle<Mesh, GLGraphics> quad;
+			static Handle<Mesh, GLGraphics> texquad;
 		};
 
 		class Figure : public Rapture::Figure
 		{
 		public:
-			Figure(const Graphics3D * graphics, const FigureData & data);
+			Figure(const GLGraphics * graphics, const FigureData & data);
 
-			Handle<Model> model;
+			Handle<Mesh> model;
 		};
 
 		//---------------------------------------------------------------------------
 
 		class Surface : public Rapture::Surface
 		{
-			friend class Graphics3D;
+			friend class GLGraphics;
 
 		public:
 			Surface(const IntSize & size);
@@ -468,7 +468,7 @@ namespace Rapture
 			void createDepthStencil();
 
 			RC _renderCtx;
-			Graphics3D::ContextAttributes attr;
+			GLGraphics::ContextAttributes attr;
 		};
 
 		class DepthBufferSurface : public Surface
@@ -483,7 +483,7 @@ namespace Rapture
 
 		class UISurface : public Surface
 		{
-			friend class Graphics3D;
+			friend class GLGraphics;
 
 		public:
 			UISurface(UISpace * space);
@@ -588,7 +588,8 @@ namespace Rapture
 
 #ifndef OpenGL
 #define OpenGL OpenGL3_3
-	using GLGraphics = OpenGL3_3::Graphics3D;
+	using OpenGL3_3::GLGraphics;
+	using GraphicsProvider = CommonGraphicsProvider<GLGraphics>;
 #endif
 }
 

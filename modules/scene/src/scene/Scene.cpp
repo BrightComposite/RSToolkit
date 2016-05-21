@@ -61,4 +61,9 @@ namespace Rapture
 			}
 		}
 	}
+
+	void Camera::update()
+	{
+		scene->graphics()->updateUniform<Uniforms::View>(FloatTransform {position, rotation});
+	}
 }

@@ -21,7 +21,7 @@ namespace Rapture
 			(
 				scene,
 				world,
-				new btStaticPlaneShape({1.0, 0, 0}, 0),
+				new btStaticPlaneShape({0, 1, 0}, 0),
 				{0.0, level, 0.0}
 			)
 		{

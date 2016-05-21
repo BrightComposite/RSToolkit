@@ -40,13 +40,13 @@ namespace Rapture
 
 		union
 		{
-			Data data;
-			IntrinType intrinsic;
-
 			struct
 			{
 				T x, y, z, w;
 			};
+
+			Data data;
+			IntrinType intrinsic;
 
 			array<T, 4> v;
 			T elements[4];
@@ -492,6 +492,20 @@ namespace Rapture
 		}
 
 		Vector & subtractAxis(T val, int Axis)
+		{
+			v[Axis] -= val;
+			return *this;
+		}
+
+		template<uint Axis, useif <(Axis < 4)> endif>
+		Vector & addAxis(T val)
+		{
+			v[Axis] += val;
+			return *this;
+		}
+
+		template<uint Axis, useif <(Axis < 4)> endif>
+		Vector & subtractAxis(T val)
 		{
 			v[Axis] -= val;
 			return *this;

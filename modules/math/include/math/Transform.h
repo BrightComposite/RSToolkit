@@ -27,7 +27,7 @@ namespace Rapture
 	using DoubleScaling = Scaling<double>;
 
 	template<class T>
-	class Transform
+	struct alignas(sizeof(T) * 4) Transform
 	{
 	public:
 		Transform() {}
@@ -166,7 +166,7 @@ namespace Rapture
 
 		Transform & operator *= (const Scaling<T> & s)
 		{
-			matrix *= Matrix<T>::scaleMatrix(s);
+			matrix *= Matrix<T>::scaling(s);
 			return *this;
 		}
 
@@ -197,7 +197,7 @@ namespace Rapture
 	template<class T>
 	Transform<T> operator * (const Transform<T> & t, const Scaling<T> & s)
 	{
-		return t.matrix * Matrix<T>::scaleMatrix(s);
+		return t.matrix * Matrix<T>::scaling(s);
 	}
 
 	using FloatTransform = Transform<float>;

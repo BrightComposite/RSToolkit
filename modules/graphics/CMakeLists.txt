@@ -21,11 +21,13 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 	SRC_GROUP include Headers
 		START_SECTION graphics
 			Color.h
+			GraphicModel.h
 			Graphics.h
 			Graphics3D.h
+			Mesh.h
 			ScreenCoord.h
 			Shaders.h
-			Uniforms.h
+			Uniform.h
 			VertexLayout.h
 
 			START_SECTION image

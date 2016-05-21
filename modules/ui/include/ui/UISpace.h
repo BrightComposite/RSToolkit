@@ -147,12 +147,17 @@ namespace Rapture
 			bits::clearState(key % 32, data[key / 32]);
 		}
 
+		void unpressAll()
+		{
+			data.fill(0);
+		}
+
 		bool isPressed(byte key)
 		{
 			return bits::state(key % 32, data[key / 32]);
 		}
 
-		int data[8];
+		array<int, 8> data;
 	};
 
 	class BackgroundWidget : public Widget

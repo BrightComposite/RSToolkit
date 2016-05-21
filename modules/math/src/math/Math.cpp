@@ -31,17 +31,17 @@ namespace Rapture
 	template<> const double MathConstants<double>::degree360	= 360.0;
 	template<> const float  MathConstants<float> ::eps			= 1.192092896e-07f;
 	template<> const double MathConstants<double>::eps			= 2.2204460492503131e-016;
-	template<> const float  MathConstants<float> ::eps2		= Math<float> ::eps * Math<float> ::eps;
-	template<> const double MathConstants<double>::eps2		= Math<double>::eps * Math<double>::eps;
-	template<> const float  MathConstants<float> ::eps3		= Math<float> ::eps * Math<float> ::eps * Math<float> ::eps;
-	template<> const double MathConstants<double>::eps3		= Math<double>::eps * Math<double>::eps * Math<double>::eps;
-	template<> const float  MathConstants<float> ::infinity	= std::numeric_limits<float>::infinity();
-	template<> const double MathConstants<double>::infinity	= std::numeric_limits<double>::infinity();
+	template<> const float  MathConstants<float> ::eps2			= Math<float> ::eps * Math<float> ::eps;
+	template<> const double MathConstants<double>::eps2			= Math<double>::eps * Math<double>::eps;
+	template<> const float  MathConstants<float> ::eps3			= Math<float> ::eps * Math<float> ::eps * Math<float> ::eps;
+	template<> const double MathConstants<double>::eps3			= Math<double>::eps * Math<double>::eps * Math<double>::eps;
+	template<> const float  MathConstants<float> ::infinity		= std::numeric_limits<float>::infinity();
+	template<> const double MathConstants<double>::infinity		= std::numeric_limits<double>::infinity();
 
-	template<> const float  MathConstants<float> ::degreetorad = Math<float> ::pi / Math<float> ::degree180;
-	template<> const double MathConstants<double>::degreetorad = Math<double>::pi / Math<double>::degree180;
-	template<> const float  MathConstants<float> ::radtodegree = Math<float> ::degree180 / Math<float> ::pi;
-	template<> const double MathConstants<double>::radtodegree = Math<double>::degree180 / Math<double>::pi;
+	template<> const float  MathConstants<float> ::degreetorad	= Math<float> ::pi / Math<float> ::degree180;
+	template<> const double MathConstants<double>::degreetorad	= Math<double>::pi / Math<double>::degree180;
+	template<> const float  MathConstants<float> ::radtodegree	= Math<float> ::degree180 / Math<float> ::pi;
+	template<> const double MathConstants<double>::radtodegree	= Math<double>::degree180 / Math<double>::pi;
 
 	template<> const float MathCoefficients<float>::sin[] = {
 		-0.16666666666666666666666666666667f,

@@ -43,6 +43,8 @@ namespace Rapture
 	{
 		using Base = Internals::Contents<T>;
 
+		Contents() {}
+
 		template<class ... A, useif <can_construct_contents<T, A...>::value> endif>
 		Contents(A &&... args) :
 			Contents(contents_types<T>(), forward<A>(args)...) {}

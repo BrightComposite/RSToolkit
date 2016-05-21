@@ -1,19 +1,31 @@
 //---------------------------------------------------------------------------
 
-#ifndef VERTEX_INPUT_LAYOUT_H
-#define VERTEX_INPUT_LAYOUT_H
+#ifndef CAMERA_H
+#define CAMERA_H
 
 //---------------------------------------------------------------------------
 
-//#include "_____.h"
+#include <math/Vector.h>
+#include <math/Quaternion.h>
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	class VertexInputLayout //: public _____
+	class Scene;
+
+	class Camera : public Shared
 	{
 	public:
+		Camera(Scene * scene) {}
+
+		void update();
+
+		fvec  position;
+		fquat rotation;
+
+	protected:
+		Scene * scene;
 	};
 }
 

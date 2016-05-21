@@ -10,7 +10,7 @@ namespace Rapture
 {
 	namespace OpenGL3_3
 	{
-		Graphics3D::Graphics3D()
+		GLGraphics::GLGraphics()
 		{
 			initDevice();
 			initFacilities();
@@ -20,7 +20,7 @@ namespace Rapture
 			_handle = wglCreateContext(_device);
 		}
 
-		Graphics3D::~Graphics3D()
+		GLGraphics::~GLGraphics()
 		{
 			if(_device != nullptr)
 			{

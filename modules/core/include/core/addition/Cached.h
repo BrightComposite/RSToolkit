@@ -20,14 +20,13 @@ namespace Rapture
 		typedef T Value;
 
 		template<class ... A>
-		static auto & get(const K & key, A &&... args)
+		static auto & get(const K & key)
 		{
 			static HashMap<K, T, Cached> _cache;
-
 			auto & h = _cache[key];
 
 			if(h == nullptr)
-				h.init(key, forward<A>(args)...);
+				h.init(key);
 
 			return h;
 		}

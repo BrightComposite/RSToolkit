@@ -172,13 +172,13 @@ namespace Rapture
 
 		Vector<T> transform(const Vector<T> & v) const;
 
-        static inline Matrix2x2 rotationMatrix(T radians)
+        static inline Matrix2x2 rotation(T radians)
 		{
 			const T c = Math<T>::cos(radians), s = Math<T>::sin(radians);
 			return {c, -s, s, c};
 		}
 
-        static inline Matrix2x2 scaleMatrix(const Vector<T> & v)
+        static inline Matrix2x2 scaling(const Vector<T> & v)
 		{
 			return {v.x, 0, 0, v.y};
 		}

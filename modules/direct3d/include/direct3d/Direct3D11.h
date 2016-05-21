@@ -37,204 +37,189 @@ namespace Rapture
 
 	namespace Direct3D11
 	{
-		class GraphicContext;
-		class Graphics3D;
-		class D3DModel;
-		class D3DIndexedModel;
+		class D3DGraphics;
+		class D3DGraphics;
+		class D3DVertexLayout;
+		class D3DMesh;
+		class D3DIndexedMesh;
 	}
 
-	link_class(Direct3D11::GraphicContext, Class<Graphics3D>);
-	link_class(Direct3D11::Graphics3D, Class<Direct3D11::GraphicContext>);
-	link_class(Direct3D11::D3DModel, Class<Model>);
-	link_class(Direct3D11::D3DIndexedModel, Class<Direct3D11::D3DModel>);
+	link_class(Direct3D11::D3DGraphics, Class<Graphics3D>);
 
 	namespace Direct3D11
 	{
-		class GraphicContext : public Rapture::Graphics3D
+		class D3DGraphics : public Graphics3D
 		{
+			friend_graphics_provider(D3DGraphics);
+
 		public:
-			ComHandle<ID3D11Device2, GraphicContext> device;
-			ComHandle<ID3D11DeviceContext2, GraphicContext> context;
-			ComHandle<ID3D11RasterizerState, GraphicContext> solidRS;
-			ComHandle<ID3D11RasterizerState, GraphicContext> wiredRS;
-			ComHandle<ID3D11DepthStencilState, GraphicContext> depthState2D;
-			ComHandle<ID3D11DepthStencilState, GraphicContext> depthState3D;
-			ComHandle<ID3D11BlendState, GraphicContext> blendState;
-			ComHandle<ID3D11SamplerState, GraphicContext> linearSampler;
-			ComHandle<IDXGIFactory2, GraphicContext> dxgiFactory;
-			ComHandle<ID3D11Debug> debug;
+			using Graphics3D::bind;
+			using Graphics3D::draw;
+
+			virtual void clip(const IntRect & rect) override;
+			virtual void present() const override;
+
+			virtual void printInfo();
+			virtual void printDebug();
+			virtual void checkForErrors();
+
+			virtual Handle<Image> createImage(const ImageData & data) override;
+
+			ComHandle<ID3D11Device2, D3DGraphics> device;
+			ComHandle<ID3D11DeviceContext2, D3DGraphics> context;
+			ComHandle<ID3D11RasterizerState, D3DGraphics> solidRS;
+			ComHandle<ID3D11RasterizerState, D3DGraphics> wiredRS;
+			ComHandle<ID3D11DepthStencilState, D3DGraphics> depthState2D;
+			ComHandle<ID3D11DepthStencilState, D3DGraphics> depthState3D;
+			ComHandle<ID3D11BlendState, D3DGraphics> blendState;
+			ComHandle<ID3D11SamplerState, D3DGraphics> linearSampler;
+			ComHandle<IDXGIFactory2, D3DGraphics> dxgiFactory;
 
 		protected:
-			inline void setContext(const ComHandle<ID3D11Device1> & device, const ComHandle<ID3D11DeviceContext2> & context)
+			friend_graphics_provider(D3DGraphics);
+			friend class TypedMap<Uniforms::Base, Uniform>;
+
+			D3DGraphics();
+			virtual ~D3DGraphics();
+
+			virtual Handle<Surface> createSurface(UISpace * space) override;
+
+			virtual Handle<VertexLayout> createVertexLayout(const string & fingerprint) override;
+			virtual Handle<VertexBuffer> createVertexBuffer(VertexLayout * vil, const VertexData & data) override;
+			virtual Handle<IndexBuffer> createIndexBuffer(const VertexIndices & indices) override;
+
+			virtual Handle<UniformAdapter> createUniformAdapter(ShaderType shader, int index, size_t size) override;
+
+			virtual void updateBrushState() override;
+			virtual void initFacilities() override;
+
+			template<class Program, class ... A, useif <
+				is_shader_program<Program>::value,
+				can_construct<Handle<ShaderCode>, A>::value...,
+				can_construct<Program, D3DGraphics *, VertexLayout *, ShaderCodeSet *>::value
+				> endif
+			>
+			void setShaderProgram(const string & id, VertexLayout * layout, A &&... args)
 			{
-				this->device = device;
-				this->context = context;
+				shaderPrograms[id] = handle<Program>(this, layout, createCodeSet({handle<ShaderCode>(forward<A>(args))...}));
 			}
+
+			void initDevice();
+			void initShaders();
+
+			D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_NULL;
+			D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
+
+			ComHandle<ID3D11Debug> debug;
 		};
 
 //---------------------------------------------------------------------------
 
 		class D3DImage : public Image
 		{
-			friend class Graphics3D;
+			friend_owned_handle(D3DImage, D3DGraphics);
 
 		public:
-			D3DImage(GraphicContext * ctx, const ImageData & data);
 			virtual ~D3DImage() {}
 
 			virtual void apply() const override;
 			virtual void requestData(ImageData * output) const override;
 
 		protected:
+			D3DImage(D3DGraphics * graphics, const ImageData & data);
+
 			ComHandle<ID3D11SamplerState> _state;
 			ComHandle<ID3D11ShaderResourceView> _handle;
-			GraphicContext * _ctx;
+			D3DGraphics * _ctx;
 		};
-
-		typedef D3DImage D3DTexture;
 
 //---------------------------------------------------------------------------
 
-		class VertexElement : public Shared, public Precached<string, VertexElement>
+		class D3DVertexLayout : public VertexLayout
 		{
-			friend class VertexLayout;
+			friend_owned_handle(D3DVertexLayout, D3DGraphics);
 
 		public:
-			string id;
-			uint size;
+			virtual ~D3DVertexLayout() {}
 
-			static VertexElement pos2;
-			static VertexElement pos3;
-			static VertexElement color3;
-			static VertexElement colorf;
-			static VertexElement secondaryColor3;
-			static VertexElement secondaryColor4;
-			static VertexElement tex;
-			static VertexElement normal;
+			virtual void apply();
+			virtual void accept(const ShaderCode * code);
 
 		protected:
-			VertexElement(const string & id, const char * semantic, uint index, DXGI_FORMAT format, uint size) : Precached<string, VertexElement>(id),
-				id(id), semantic(semantic), index(index), format(format), size(size) {}
+			D3DVertexLayout(D3DGraphics * graphics, const string & fingerprint);
 
-			const char * semantic;
-			uint index;
-			DXGI_FORMAT format;
+			ComHandle<ID3D11InputLayout> handle;
+			D3DGraphics * graphics;
 		};
 
 //---------------------------------------------------------------------------
 
-		class VertexLayout : public Shared, public Cached<string, VertexLayout>
+		class D3DVertexBuffer : public VertexBuffer
 		{
-			typedef Cached<string, VertexLayout> Cache;
+			friend_owned_handle(D3DVertexBuffer, D3DGraphics);
 
 		public:
-			string key;
-			Array<VertexElement> elements;
-			uint stride;
-			vector<D3D11_INPUT_ELEMENT_DESC> layout;
+			virtual ~D3DVertexBuffer() {}
+
+			virtual void apply() const override;
+			virtual void draw(const Mesh * mesh) const override;
 
 		protected:
-			friend_owned_handle(VertexLayout, Cache);
+			D3DVertexBuffer(D3DGraphics * graphics, VertexLayout * vil, const VertexData & vd, D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-			VertexLayout(const string & key) : key(key)
-			{
-				stride = decodeData(key, elements, layout);
-			}
-
-			static uint decodeData(const string & data, Array<VertexElement> & elements, vector<D3D11_INPUT_ELEMENT_DESC> & layout)
-			{
-				uint stride = 0;
-
-				for(const auto & str : split(data))
-				{
-					auto & vie = VertexElement::get(str);
-					elements.push_back(vie);
-					layout.push_back({vie->semantic, vie->index, vie->format, 0, stride, D3D11_INPUT_PER_VERTEX_DATA, 0});
-					stride += vie->size;
-				}
-
-				return stride;
-			}
-		};
-
-//---------------------------------------------------------------------------
-
-		class VertexBuffer : public Shared
-		{
-		public:
-			VertexBuffer(GraphicContext * ctx, const Handle<VertexLayout> & vil, const VertexData & vd, D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-			GraphicContext * ctx;
+			D3DGraphics * graphics;
 			D3D_PRIMITIVE_TOPOLOGY topology;
-			Handle<VertexLayout> vil;
 			ComHandle<ID3D11Buffer> handle;
-			uint size;
 		};
 
-		class IndexBuffer : public Shared
+		class D3DIndexBuffer : public IndexBuffer
 		{
-		public:
-			IndexBuffer(GraphicContext * ctx, const VertexIndices & indices);
+			friend_owned_handle(D3DIndexBuffer, D3DGraphics);
 
-			GraphicContext * ctx;
+		public:
+			virtual ~D3DIndexBuffer() {}
+
+			virtual void apply() const override;
+			virtual void draw(const IndexedMesh * mesh) const override;
+
+		protected:
+			D3DIndexBuffer(D3DGraphics * graphics, const VertexIndices & indices);
+
+			D3DGraphics * graphics;
 			ComHandle<ID3D11Buffer> handle;
-			uint size;
 		};
 
 //---------------------------------------------------------------------------
 		
-		class UniformAdapter : public Rapture::UniformAdapter
+		class D3DUniformAdapter : public UniformAdapter
 		{
-			friend class Graphics3D;
+			friend_owned_handle(D3DUniformAdapter, D3DGraphics);
 
 		public:
-			UniformAdapter(GraphicContext * ctx, ShaderType shader, int index, size_t size);
+			virtual ~D3DUniformAdapter() {}
 
 		protected:
+			D3DUniformAdapter(D3DGraphics * graphics, ShaderType shader, int index, size_t size);
+
 			virtual void update(const void * data) override;
 
 			ComHandle<ID3D11Buffer> buffer;
 			int index;
-			GraphicContext * ctx;
+			D3DGraphics * graphics;
 		};
 
 //---------------------------------------------------------------------------
-
-		class FxTechnique : public Shared
+		class D3DShaderProgram : public ShaderProgram
 		{
-			friend class Graphics3D;
-			friend class VertexBuffer;
-
-			template<ShaderType>
-			friend class Shader;
-
 		public:
-			virtual ~FxTechnique() {}
+			D3DShaderProgram(D3DGraphics * graphics, VertexLayout * vil) : graphics(graphics), vil(vil) {}
 
-			virtual void apply(uint pass = 0) const = 0;
-			
-			const Handle<VertexLayout> & layout() const
-			{
-				return vil;
-			}
-
-		protected:
-			FxTechnique(GraphicContext * ctx, const Handle<VertexLayout> & vil);
-
-			GraphicContext * ctx;
-			Handle<VertexLayout> vil;
-			uint passes;
+			D3DGraphics * graphics;
+			VertexLayout * vil;
 		};
 
-		//---------------------------------------------------------------------------
-
 		template<ShaderType type>
-		class Shader {};
-
-		typedef Shader<ShaderType::Common>		CommonShader;
-		typedef Shader<ShaderType::Vertex>		VertexShader;
-		typedef Shader<ShaderType::Fragment>	FragmentShader;
-		typedef Shader<ShaderType::Pixel>		PixelShader;
+		class D3DShader {};
 
 		enum class ShaderCodeState
 		{
@@ -244,287 +229,62 @@ namespace Rapture
 		};
 
 		template<>
-		class Shader<ShaderType::Common> : public Shared
+		class D3DShader<ShaderType::Common>
 		{
 		public:
-			Shader(GraphicContext * ctx);
-			virtual void apply() const = 0;
+			D3DShader(D3DShaderProgram * program);
 
 		protected:
 			void read(const String & filename, Handle<ShaderCode> & out);
 			void compile(const String & filename, const String & entrance, const String & shaderModel, Handle<ShaderCode> & out);
 		
-			GraphicContext * ctx;
+			D3DShaderProgram * program;
 		};
 
 		template<>
-		class Shader<ShaderType::Vertex> : public CommonShader
+		class D3DShader<ShaderType::Vertex> : public Shader<ShaderType::Vertex>, public D3DShader<ShaderType::Common>
 		{
-			void init(const Handle<FxTechnique> & technique, const Handle<ShaderCode> & code);
+			void init(const Handle<ShaderCode> & code);
 
 		public:
-			Shader(const Handle<FxTechnique> & technique, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
-			Shader(const Handle<FxTechnique> & technique, const Handle<ShaderCode> & code);
+			D3DShader(D3DShaderProgram * program, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
+			D3DShader(D3DShaderProgram * program, const Handle<ShaderCode> & code);
+			virtual ~D3DShader() {}
 
 			virtual void apply() const override;
 
 			ComHandle<ID3D11VertexShader> id;
-			ComHandle<ID3D11InputLayout> layout;
 		};
 
 		template<>
-		class Shader<ShaderType::Pixel> : public CommonShader
+		class D3DShader<ShaderType::Pixel> : public Shader<ShaderType::Pixel>, public D3DShader<ShaderType::Common>
 		{
-			void init(const Handle<FxTechnique> & technique, const Handle<ShaderCode> & code);
+			void init(const Handle<ShaderCode> & code);
 
 		public:
-			Shader(const Handle<FxTechnique> & technique, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
-			Shader(const Handle<FxTechnique> & technique, const Handle<ShaderCode> & code);
+			D3DShader(D3DShaderProgram * program, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
+			D3DShader(D3DShaderProgram * program, const Handle<ShaderCode> & code);
+			virtual ~D3DShader() {}
 
 			virtual void apply() const override;
 
 			ComHandle<ID3D11PixelShader> id;
 		};
 
-		class ShaderProgram : public Shared
-		{
-		public:
-			virtual ~ShaderProgram() {}
-			virtual void apply() const {}
-
-		protected:
-			ShaderProgram() {}
-		};
-
-		template<class T>
-		using is_shader_program = is_base_of<ShaderProgram, T>;
-
-		//---------------------------------------------------------------------------
-
-		class SimpleTechnique : public FxTechnique
-		{
-		public:
-			SimpleTechnique(GraphicContext * ctx, const Handle<VertexLayout> & vil)
-				: FxTechnique(ctx, vil), program() {}
-
-			SimpleTechnique(GraphicContext * ctx, const Handle<VertexLayout> & vil, const Handle<ShaderProgram> & program)
-				: FxTechnique(ctx, vil), program(program) {}
-
-			template<class Program, class ... A, useif <
-				is_shader_program<Program>::value,
-				can_construct<Program, Handle<FxTechnique>, A...>::value
-				> endif
-			>
-			SimpleTechnique(GraphicContext * ctx, const Handle<VertexLayout> & vil, const Type<Program> &, A &&... args)
-				: FxTechnique(ctx, vil), program(handle<Program>(this, forward<A>(args)...)) {}
-
-			virtual ~SimpleTechnique() {}
-
-			void bind(const Handle<ShaderProgram> & program)
-			{
-				this->program = program;
-			}
-
-			virtual void apply(uint pass = 0) const override
-			{
-				program->apply();
-			}
-
-		protected:
-			Handle<ShaderProgram> program;
-		};
-
-		//---------------------------------------------------------------------------
-
-		class Shaders : public Shared
-		{
-			friend class Graphics3D;
-			friend_handle;
-
-		public:
-			const Handle<ShaderCode> & getCode(const string & id, ShaderType type) const
-			{
-				auto i = shaders.find(id);
-
-				if(i == shaders.end())
-					throw Exception("Can't find embedded shader set with id \"", id, "\"");
-
-				auto & set = i->second;
-				auto ci = set->code.find(type);
-
-				if(ci == set->code.end())
-					throw Exception("Embedded shader set with id \"", id, "\" doesn't contain shader of type \"", type, "\"");
-
-				return ci->second;
-			}
-
-			Handle<ShaderCodeSet> & setCode(const string & id, const initializer_list<Handle<ShaderCode>> & codeSet)
-			{
-				auto i = shaders.find(id);
-
-				if(i == shaders.end())
-					i = shaders.insert(i, {id, handle<ShaderCodeSet>()});
-
-				auto & set = i->second;
-
-				for(size_t i = 0; i < codeSet.size(); ++i)
-					set->code.insert({static_cast<ShaderType>(i), *(codeSet.begin() + i)});
-
-				return set;
-			}
-
-			Handle<SimpleTechnique, Shaders> rectangle;
-			Handle<SimpleTechnique, Shaders> ellipse;
-			Handle<SimpleTechnique, Shaders> wired_rectangle;
-			Handle<SimpleTechnique, Shaders> wired_ellipse;
-			Handle<SimpleTechnique, Shaders> figure;
-			Handle<SimpleTechnique, Shaders> image;
-			Handle<SimpleTechnique, Shaders> text;
-
-		protected:
-			Shaders(GraphicContext * ctx);
-
-			template<class ShaderType, class ... A>
-			Handle<SimpleTechnique> setCode(const string & id, const Handle<VertexLayout> & vil, ShaderType type, A &&... codeData)
-			{
-				return handle<SimpleTechnique>(ctx, vil, type, setCode(id, {handle<ShaderCode>(forward<A>(codeData))...}));
-			}
-
-			ShaderMap shaders;
-			GraphicContext * ctx;
-		};
-
-		//---------------------------------------------------------------------------
-
-		class D3DModel : public Model
-		{
-		public:
-			D3DModel(GraphicContext * ctx, const Handle<VertexLayout> & vil, const VertexData & vertexData)
-				: Model(ctx, vertexData, vil->stride), buffer(ctx, vil, vertexData)
-			{
-				setclass(D3DModel);
-			}
-
-			Handle<VertexBuffer> buffer;
-		};
-
-		class D3DIndexedModel : public D3DModel
-		{
-		public:
-			D3DIndexedModel(GraphicContext * ctx, const Handle<VertexLayout> & vil, const VertexData & vertexData, const VertexIndices & indices)
-				: D3DModel(ctx, vil, vertexData), indices(ctx, indices)
-			{
-				setclass(D3DIndexedModel);
-			}
-
-			Handle<IndexBuffer> indices;
-			uint indicesLocation;
-		};
-
-		class D3DFigure : public Figure
-		{
-		public:
-			D3DFigure(GraphicContext * graphics, const FigureData & data);
-
-			Handle<D3DModel> model;
-		};
-
-		//---------------------------------------------------------------------------
-
-		class Graphics3D : public GraphicContext
-		{
-		public:
-			friend inline Handle<Graphics3D> provide();
-
-			virtual void clip(const IntRect & rect) override;
-			virtual void rectangle(const IntRect & rect) override;
-			virtual void ellipse(const IntRect & rect) override;
-			virtual void rectangle(const SqRect & r) override;
-			virtual void ellipse(const SqRect & r) override;
-
-			virtual void draw(const Rapture::Figure * figure, const IntRect & bounds) override;
-			virtual void draw(const Rapture::Figure * figure, const FloatTransform & transform) override;
-
-			virtual void draw(const Rapture::Model * model) override;
-
-			virtual void draw(const Rapture::Image * image, int x, int y) override;
-			virtual void draw(const Rapture::Image * image, int x, int y, int width, int height) override;
-			virtual void draw(const Rapture::Image * image, const IntRect & rect) override;
-			virtual void draw(const Rapture::Image * image, const SqRect & r) override;
-
-			virtual void draw(const Symbol * symbol, int x, int y) override;
-
-			virtual void present() const override;
-
-			virtual void printInfo();
-			virtual void printDebug();
-			virtual void checkForErrors();
-
-			using GraphicContext::bind;
-
-			virtual void bind(const Handle<Rapture::Surface> & surface) override;
-			virtual void bind(const Handle<Rapture::Texture> & texture, uint index) override;
-
-			virtual Handle<Rapture::Image> createImage(const ImageData & data) override;
-			virtual Handle<Rapture::Figure> createFigure(const FigureData & data) override;
-
-			virtual Handle<ShaderCode> getShaderCode(const string & id, ShaderType type) override;
-
-			Handle<D3DModel, Graphics3D> quad;
-			Handle<D3DModel, Graphics3D> texquad;
-
-		protected:
-			friend_handle;
-			friend class D3DModel;
-			friend class TypedMap<Uniforms::Base, Uniform>;
-
-			Graphics3D();
-			virtual ~Graphics3D();
-
-			virtual Handle<Rapture::Surface> createSurface(UISpace * space) override;
-			virtual Handle<Rapture::UniformAdapter> createUniformAdapter(ShaderType shader, int index, size_t size) override;
-
-			virtual void updateBrushState() override;
-
-			void draw(const D3DModel * model);
-
-			void initDevice();
-			void initFacilities();
-			void freeFacilities();
-
-			Handle<VertexShader> vshader = nullptr;
-			Handle<PixelShader> pshader = nullptr;
-			
-			Handle<Shaders> shaders = nullptr;
-
-			Handle<VertexBuffer> vbuffer = nullptr;
-			Handle<IndexBuffer> ibuffer = nullptr;
-
-			Array<Texture> textures;
-
-			D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_NULL;
-			D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
-		};
-
-		inline Handle<Graphics3D> provide()
-		{
-			return {emptiness};
-		}
-
 		//---------------------------------------------------------------------------
 
 		class D3DSurface : public Surface
 		{
-			friend class Graphics3D;
+			friend class D3DGraphics;
 
 		public:
-			D3DSurface(Graphics3D * graphics, const IntSize & size);
+			D3DSurface(D3DGraphics * graphics, const IntSize & size);
 			virtual ~D3DSurface();
 
 			virtual void clear() const;
 
 		protected:
-			Graphics3D * graphics;
+			D3DGraphics * graphics;
 			void createDepthStencil();
 
 			ComHandle<ID3D11DepthStencilView> depthStencilView;
@@ -533,7 +293,7 @@ namespace Rapture
 		class DepthBufferSurface : public D3DSurface
 		{
 		public:
-			DepthBufferSurface(Graphics3D * graphics, const IntSize & size);
+			DepthBufferSurface(D3DGraphics * graphics, const IntSize & size);
 			DepthBufferSurface(const DepthBufferSurface &) = delete;
 			virtual ~DepthBufferSurface() {}
 
@@ -542,10 +302,10 @@ namespace Rapture
 
 		class UISurface : public D3DSurface
 		{
-			friend class Graphics3D;
+			friend class D3DGraphics;
 
 		public:
-			UISurface(Graphics3D * graphics, UISpace * space);
+			UISurface(D3DGraphics * graphics, UISpace * space);
 			UISurface(const UISurface &) = delete;
 			virtual ~UISurface();
 
@@ -574,7 +334,7 @@ namespace Rapture
 		class TextureSurface : public D3DSurface
 		{
 		public:
-			TextureSurface(Graphics3D * graphics, const IntSize & size);
+			TextureSurface(D3DGraphics * graphics, const IntSize & size);
 			virtual ~TextureSurface() {}
 
 			virtual void apply() const override;
@@ -582,22 +342,30 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
-		class VPShaderProgram : public ShaderProgram
+		class VPShaderProgram : public D3DShaderProgram
 		{
 		public:
-			VPShaderProgram(const Handle<FxTechnique> & technique, const string & filename, ShaderCodeState state = ShaderCodeState::Compiled) : vs(technique, filename, state), ps(technique, filename, state) {}
-			VPShaderProgram(const Handle<FxTechnique> & technique, const Handle<ShaderCodeSet> & codeSet) : vs(technique, codeSet->code.at(ShaderType::Vertex)), ps(technique, codeSet->code.at(ShaderType::Pixel)) {}
+			VPShaderProgram(D3DGraphics * graphics, VertexLayout * vil, const string & filename, ShaderCodeState state = ShaderCodeState::Compiled) : D3DShaderProgram(graphics, vil),
+				vs(this, filename, state),
+				ps(this, filename, state)
+			{}
+			
+			VPShaderProgram(D3DGraphics * graphics, VertexLayout * vil, const Handle<ShaderCodeSet> & codeSet) : D3DShaderProgram(graphics, vil),
+				vs(this, codeSet->code.at(ShaderType::Vertex)),
+				ps(this, codeSet->code.at(ShaderType::Pixel))
+			{}
+
 			virtual ~VPShaderProgram() {}
 
 			virtual void apply() const override
 			{
-				vs->apply();
-				ps->apply();
+				graphics->bind(vs);
+				graphics->bind(ps);
 			}
 
 		protected:
-			Handle<VertexShader> vs;
-			Handle<PixelShader> ps;
+			Handle<D3DShader<ShaderType::Vertex>> vs;
+			Handle<D3DShader<ShaderType::Pixel>> ps;
 		};
 	}
 
@@ -630,7 +398,8 @@ namespace Rapture
 
 #ifndef Direct3D
 #define Direct3D Direct3D11
-	using D3DGraphics = Direct3D11::Graphics3D;
+	using namespace Direct3D;
+	using GraphicsProvider = CommonGraphicsProvider<D3DGraphics>;
 #endif
 }
 

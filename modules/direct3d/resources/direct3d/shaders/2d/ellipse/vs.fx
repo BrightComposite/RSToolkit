@@ -26,7 +26,7 @@ VS_OUTPUT main(float2 position : POSITION, float2 texcoord : TEXCOORD)
 	VS_OUTPUT output;
 
 	output.ratio.w = output.ratio.z = max(size.x, size.y);
-	output.ratio.xy = size / output.ratio.zw;
+	output.ratio.xy = output.ratio.zw / size;
 
 	output.position = float4((position * output.ratio.zw + pos) * float2(1.0, viewport.x / viewport.y), depth, 1.0);
 	output.texcoord = texcoord;

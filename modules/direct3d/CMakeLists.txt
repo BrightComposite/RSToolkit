@@ -89,6 +89,16 @@ add_shaders(SHADERS_INPUT SHADERS_OUTPUT ${PROJECT_SOURCE_DIR}
 				vs.fx
 				ps.fx
 			END_SECTION
+			
+			START_SECTION color
+				vs.fx
+				ps.fx
+			END_SECTION
+			
+			START_SECTION texture
+				vs.fx
+				ps.fx
+			END_SECTION
 		END_SECTION
 )
 

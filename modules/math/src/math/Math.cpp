@@ -99,6 +99,13 @@ namespace Rapture
 	template<> const FloatVector  FloatVector ::negativeW = { 0,  0,  0, -1 };
 	template<> const DoubleVector DoubleVector::negativeW = { 0,  0,  0, -1 };
 
+	template<> const FloatVector  & FloatVector::left     = positiveX;
+	template<> const DoubleVector & DoubleVector::left    = positiveX;
+	template<> const FloatVector  & FloatVector::up       = positiveY;
+	template<> const DoubleVector & DoubleVector::up      = positiveY;
+	template<> const FloatVector  & FloatVector::forward  = positiveZ;
+	template<> const DoubleVector & DoubleVector::forward = positiveZ;
+
 	template<> const FloatVector  FloatVector ::zero	  = { 0,  0,  0,  0 };
 	template<> const DoubleVector DoubleVector::zero	  = { 0,  0,  0,  0 };
 	template<> const FloatVector  FloatVector ::one		  = { 1,  1,  1,  1 };

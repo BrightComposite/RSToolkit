@@ -19,9 +19,9 @@ namespace Rapture
 		typedef Intrinsic<T, 4> Intrin;
 		typedef array<T, 2> Row;
 
-		static const Matrix2x2 initial;
-		static const Matrix2x2 negative;
-		static const Matrix2x2 inversemask;
+		static const Matrix2x2 api(math) initial;
+		static const Matrix2x2 api(math) negative;
+		static const Matrix2x2 api(math) inversemask;
 
 		union
 		{
@@ -75,11 +75,46 @@ namespace Rapture
 			return *this;
 		}
 
-		Matrix2x2 & operator += (const Matrix2x2 & mat);
-		Matrix2x2 & operator -= (const Matrix2x2 & mat);
-		Matrix2x2 & operator *= (const Matrix2x2 & mat);
-		Matrix2x2 & operator *= (T val);
-		Matrix2x2 & operator /= (T val);
+		Matrix2x2 & operator += (const Matrix2x2 & mat)
+		{
+			Intrin::add(data, mat.data, data);
+			return *this;
+		}
+
+		Matrix2x2 & operator -= (const Matrix2x2 & mat)
+		{
+			Intrin::sub(data, mat.data, data);
+			return *this;
+		}
+
+		Matrix2x2 & operator *= (const Matrix2x2 & mat)
+		{
+			Intrin::add(
+				Intrin::mul(
+					Intrin::template shuffle<0, 0, 2, 2>(data),
+					Intrin::template shuffle<0, 1, 0, 1>(mat.data)
+				),
+				Intrin::mul(
+					Intrin::template shuffle<1, 1, 3, 3>(data),
+					Intrin::template shuffle<2, 3, 2, 3>(mat.data)
+				),
+				data
+			);
+
+			return *this;
+		}
+
+		Matrix2x2 & operator *= (T val)
+		{
+			Intrin::mul(data, Intrin::fill(val), data);
+			return *this;
+		}
+
+		Matrix2x2 & operator /= (T val)
+		{
+			Intrin::div(data, Intrin::fill(val), data);
+			return *this;
+		}
 
 		const Row & operator [] (size_t row) const
 		{
@@ -161,8 +196,16 @@ namespace Rapture
 			return m[0] * m[3] - m[2] * m[1];
 		}
 
-		Matrix2x2 inverse() const;
-		Matrix2x2 & invert();
+		Matrix2x2 inverse() const
+		{
+			return {Intrin::div(Intrin::mul(Intrin::template shuffle<3, 1, 2, 0>(data), inversemask), Intrin::fill(determinant()))};
+		}
+
+		Matrix2x2 & invert()
+		{
+			Intrin::div(Intrin::mul(Intrin::template shuffle<3, 1, 2, 0>(data), inversemask), Intrin::fill(determinant()), data);
+			return *this;
+		}
 
 		Matrix2x2 & transpose()
 		{
@@ -170,7 +213,10 @@ namespace Rapture
 			return *this;
 		}
 
-		Vector<T> transform(const Vector<T> & v) const;
+		Vector<T> transform(const Vector<T> & v) const
+		{
+			return operator * (*this, v);
+		}
 
         static inline Matrix2x2 rotation(T radians)
 		{
@@ -236,71 +282,6 @@ namespace Rapture
 			v.z,
 			v.w
 		};
-	}
-
-	template<class T>
-	Matrix2x2<T> & Matrix2x2<T>::operator += (const Matrix2x2 & mat)
-	{
-		Intrin::add(data, mat.data, data);
-		return *this;
-	}
-
-	template<class T>
-	Matrix2x2<T> & Matrix2x2<T>::operator -= (const Matrix2x2 & mat)
-	{
-		Intrin::sub(data, mat.data, data);
-		return *this;
-	}
-
-	template<class T>
-	Matrix2x2<T> & Matrix2x2<T>::operator *= (const Matrix2x2 & mat)
-	{
-		Intrin::add(
-			Intrin::mul(
-				Intrin::template shuffle<0, 0, 2, 2>(data),
-				Intrin::template shuffle<0, 1, 0, 1>(mat.data)
-				),
-			Intrin::mul(
-				Intrin::template shuffle<1, 1, 3, 3>(data),
-				Intrin::template shuffle<2, 3, 2, 3>(mat.data)
-				),
-			data
-			);
-
-		return *this;
-	}
-
-	template<class T>
-	Matrix2x2<T> & Matrix2x2<T>::operator *= (T val)
-	{
-		Intrin::mul(data, Intrin::fill(val), data);
-		return *this;
-	}
-
-	template<class T>
-	Matrix2x2<T> & Matrix2x2<T>::operator /= (T val)
-	{
-		Intrin::div(data, Intrin::fill(val), data);
-		return *this;
-	}
-
-	template<class T>
-	inline Vector<T> Matrix2x2<T>::transform(const Vector<T> & v) const
-	{
-		return operator * (*this, v);
-	}
-
-	template<class T>
-	inline Matrix2x2<T> Matrix2x2<T>::inverse() const
-	{
-		return {Intrin::div(Intrin::mul(Intrin::template shuffle<3, 1, 2, 0>(data), inversemask), Intrin::fill(determinant()))};
-	}
-
-	template<class T>
-	inline Matrix2x2<T> & Matrix2x2<T>::invert()
-	{
-		Intrin::div(Intrin::mul(Intrin::template shuffle<3, 1, 2, 0>(data), inversemask), Intrin::fill(determinant()), data);
-		return *this;
 	}
 
 	template<class T>

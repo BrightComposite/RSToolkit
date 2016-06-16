@@ -19,13 +19,13 @@ namespace Rapture
 	public:
 		Snake(Scene * scene, const colorf & color) : DrawableObject(scene)
 		{
-			_color.set(color);
+			_color = color;
 
-			_initialPos.x = static_cast<float>(_scene->widget()->width() / 2);
-			_initialPos.y = static_cast<float>(_scene->widget()->height() / 2);
+			_initialPos.x = static_cast<float>(_scene->widget().width() / 2);
+			_initialPos.y = static_cast<float>(_scene->widget().height() / 2);
 
 			_oldPos = _pos = _initialPos;
-			connect(*_scene->widget(), share(this), &Snake::onWidgetResize);
+			connect(_scene->widget(), this, &Snake::onWidgetResize);
 
 			std::default_random_engine engine(static_cast<uint>(high_resolution_clock::now().time_since_epoch().count()));
 			std::uniform_int_distribution<int> dist(5000000, 20000000);
@@ -35,6 +35,11 @@ namespace Rapture
 				_q[i] = random();
 
 			_timeOffset = random();
+		}
+
+		virtual ~Snake()
+		{
+			disconnect(_scene->widget(), this, &Snake::onWidgetResize);
 		}
 
 	protected:
@@ -48,8 +53,7 @@ namespace Rapture
 
 		virtual void update(long long ticks) override
 		{
-			static const float pi = static_cast<float>(M_PI);
-			auto frequence = 8000 * (ticks + _timeOffset) * pi;
+			auto frequence = 8000 * (ticks + _timeOffset) * fmath::pi;
 
 			FloatPoint offset = {
 				std::sin(frequence / _q[0]),
@@ -75,9 +79,9 @@ namespace Rapture
 			setPos({_initialPos.x + offset.x, _initialPos.y + offset.y, _initialPos.z, _initialPos.w});
 		}
 
-		virtual void draw(Graphics3D * graphics, const IntRect & viewport, float zoom) const override
+		virtual void draw(Graphics3D & graphics, const IntRect & viewport, float zoom) const override
 		{
-			auto dt = hold(graphics->depthTestModeState(), true);
+			auto dt = hold(graphics.depthTestModeState(), true);
 
 			FloatPoint offset(viewport.minPos());
 			const FloatSize s0(_size / 2);
@@ -93,11 +97,11 @@ namespace Rapture
 					auto s2 = s1 + FloatSize {1.0f, 1.0f};
 					auto c0 = _color * ratio;
 
-					graphics->setDepth(1.0f - ratio);
-					graphics->setColor(c0 * FloatVector::half);
-					graphics->ellipse(FloatRect {p.x - s2.x, p.y - s2.y, p.x + s2.x, p.y + s2.y} + offset);
-					graphics->setColor(c0);
-					graphics->ellipse(FloatRect {p.x - s1.x, p.y - s1.y, p.x + s1.x, p.y + s1.y} + offset);
+					//graphics.setDepth(1.0f - ratio);
+					graphics.setColor(c0 * FloatVector::half);
+					graphics.ellipse(FloatRect {p.x - s2.x, p.y - s2.y, p.x + s2.x, p.y + s2.y} + offset);
+					graphics.setColor(c0);
+					graphics.ellipse(FloatRect {p.x - s1.x, p.y - s1.y, p.x + s1.x, p.y + s1.y} + offset);
 
 					ratio += delta;
 				}
@@ -105,11 +109,11 @@ namespace Rapture
 
 			auto s1 = s0 + FloatSize {2.0f, 2.0f};
 
-			graphics->setDepth(0.0f);
-			graphics->setColor(_color * 0.5f);
-			graphics->ellipse(FloatRect {_pos.x - s1.x, _pos.y - s1.y, _pos.x + s1.x, _pos.y + s1.y} + offset);
-			graphics->setColor(_color);
-			graphics->ellipse(FloatRect {_pos.x - s0.x, _pos.y - s0.y, _pos.x + s0.x, _pos.y + s0.y} + offset);
+			//graphics.setDepth(0.0f);
+			graphics.setColor(_color * 0.5f);
+			graphics.ellipse(FloatRect {_pos.x - s1.x, _pos.y - s1.y, _pos.x + s1.x, _pos.y + s1.y} + offset);
+			graphics.setColor(_color);
+			graphics.ellipse(FloatRect {_pos.x - s0.x, _pos.y - s0.y, _pos.x + s0.x, _pos.y + s0.y} + offset);
 		}
 
 		DoubleVector _initialPos;

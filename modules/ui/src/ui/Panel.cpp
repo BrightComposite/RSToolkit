@@ -7,7 +7,9 @@
 
 namespace Rapture
 {
-	implement_reader(Panel, WidgetChangedStateMessage)
+	implement_link(Panel);
+
+	void Panel::read(Handle<WidgetChangedStateMessage> & msg)
 	{
 		_space->invalidate(this);
 	}

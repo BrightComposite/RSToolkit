@@ -52,11 +52,15 @@ namespace Rapture
 			T elements[4];
 		};
 
-		Vector() {}
+		member_cast(v, array<T, 4>);
+		member_cast(data, Data);
+		member_cast(intrinsic, IntrinType);
+
+		Vector() : data(zero.data) {}
 		Vector(const Vector & v) : data(v.data) {}
 		Vector(const Data & data) : data(data) {}
 		Vector(Vector && v) : data(move(v.data)) {}
-		Vector(Data && data) : data(forward<Data>(data)) {}
+		Vector(Data && data) : data(std::forward<Data>(data)) {}
 
 		template<class U, useif <!is_same<T, U>::value> endif>
 		Vector(const Vector<U> & v) : data(intrin_cvt<IntrinType>(v.intrinsic)) {}
@@ -126,12 +130,6 @@ namespace Rapture
 		auto & abs()
 		{
 			Intrin::abs(data, data);
-			return *this;
-		}
-
-		auto & negate()
-		{
-			Intrin::negate(data, data);
 			return *this;
 		}
 
@@ -281,28 +279,44 @@ namespace Rapture
 			return v[index];
 		}
 
-		T length() const
-		{
-			return std::sqrt(lengthSq());
-		}
-
-		T norm() const
-		{
-			return abs().sum();
-		}
-
-		T lengthSq() const
+		T magnitudeSq() const
 		{
 			return dot1(data);
 		}
 
-		Vector & normalize()
+		Vector magnitudeSqVector() const
 		{
-			Intrin::div(data, Intrin::fill(length()));
+			return dot(data);
+		}
+
+		T magnitude() const
+		{
+			return std::sqrt(magnitudeSq());
+		}
+
+		Vector magnitudeVector() const
+		{
+			return Intrin::sqrt(magnitudeSqVector());
+		}
+
+		Vector & normalize() &
+		{
+			Intrin::div(data, magnitudeVector(), data);
 			return *this;
 		}
 
-		inline T maxLength() const
+		Vector && normalize() &&
+		{
+			Intrin::div(data, magnitudeVector(), data);
+			return std::forward<Vector>(*this);
+		}
+
+		Vector normalized() const
+		{
+			return Intrin::div(data, Intrin::fill(magnitude()));
+		}
+
+		inline T max() const
 		{
 			Data v = Intrin::abs(data);
 			return std::max({v.x, v.y, v.z});
@@ -350,7 +364,7 @@ namespace Rapture
 		}
 
 		template<uint Axis, useif <(Axis < 4)> endif>
-		Vector maskAxis() const // set all components of a vector to zero except of one
+		Vector maskAxis() const // set all components of a array_list to zero except of one
 		{
 			return Intrin::bit_and(VectorMaskAxis<T, bitmask<Axis>::value>::get(), data);
 		}
@@ -434,7 +448,7 @@ namespace Rapture
 		}
 
 		template<uint Axis, useif <(Axis < 4)> endif>
-		Vector spreadAxis() const // get a vector filled with a single component of a src vector
+		Vector spreadAxis() const // get a array_list filled with a single component of a src array_list
 		{
 			return shuffle<Axis, Axis, Axis, Axis>();
 		}
@@ -520,49 +534,10 @@ namespace Rapture
 			return *this;
 		}
 
-		operator array<T, 4> & () &
+		Vector & clamp(const Vector<T> & low, const Vector<T> & high)
 		{
-			return v;
-		}
-
-		operator const array<T, 4> & () const &
-		{
-			return v;
-		}
-
-		operator array<T, 4> && () &&
-		{
-			return move(v);
-		}
-
-		operator Data & () &
-		{
-			return data;
-		}
-
-		operator const Data & () const &
-		{
-			return data;
-		}
-
-		operator Data && () &&
-		{
-			return move(data);
-		}
-
-		operator IntrinType & () &
-		{
-			return intrinsic;
-		}
-
-		operator const IntrinType & () const &
-		{
-			return intrinsic;
-		}
-
-		operator IntrinType && () &&
-		{
-			return move(intrinsic);
+			data = Intrin::min(Intrin::max(data, low), high);
+			return *this;
 		}
 
 		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)> endif>
@@ -597,23 +572,27 @@ namespace Rapture
 		{
 			return static_cast<int>(Intrin::sum(Intrin::sub(v1, v2)));
 		}
-		
-		static const Vector zero;		// [  0,  0,  0,  0 ]
-		static const Vector one;		// [  1,  1,  1,  1 ]
-		static const Vector two;		// [  2,  2,  2,  2 ]
-		static const Vector oneXYZ;		// [  1,  1,  1,  0 ]
-		static const Vector twoXYZ;		// [  2,  2,  2,  0 ]
-		static const Vector minusOne;	// [ -1, -1, -1, -1 ]
-		static const Vector half;		// [ .5, .5, .5, .5 ]
 
-		static const Vector positiveX;	// [  1,  0,  0,  0 ]
-		static const Vector positiveY;	// [  0,  1,  0,  0 ]
-		static const Vector positiveZ;	// [  0,  0,  1,  0 ]
-		static const Vector positiveW;	// [  0,  0,  0,  1 ]
-		static const Vector negativeX;	// [ -1,  0,  0,  0 ]
-		static const Vector negativeY;	// [  0, -1,  0,  0 ]
-		static const Vector negativeZ;	// [  0,  0, -1,  0 ]
-		static const Vector negativeW;	// [  0,  0,  0, -1 ]
+		static const Vector api(math) zero;			// [  0,  0,  0,  0 ]
+		static const Vector api(math) one;			// [  1,  1,  1,  1 ]
+		static const Vector api(math) two;			// [  2,  2,  2,  2 ]
+		static const Vector api(math) oneXYZ;		// [  1,  1,  1,  0 ]
+		static const Vector api(math) twoXYZ;		// [  2,  2,  2,  0 ]
+		static const Vector api(math) minusOne;		// [ -1, -1, -1, -1 ]
+		static const Vector api(math) half;			// [ .5, .5, .5, .5 ]
+
+		static const Vector api(math) positiveX;	// [  1,  0,  0,  0 ]
+		static const Vector api(math) positiveY;	// [  0,  1,  0,  0 ]
+		static const Vector api(math) positiveZ;	// [  0,  0,  1,  0 ]
+		static const Vector api(math) positiveW;	// [  0,  0,  0,  1 ]
+		static const Vector api(math) negativeX;	// [ -1,  0,  0,  0 ]
+		static const Vector api(math) negativeY;	// [  0, -1,  0,  0 ]
+		static const Vector api(math) negativeZ;	// [  0,  0, -1,  0 ]
+		static const Vector api(math) negativeW;	// [  0,  0,  0, -1 ]
+
+		static const Vector api(math) & left;
+		static const Vector api(math) & up;
+		static const Vector api(math) & forward;
 	};
 
 	using ByteVector = Vector<byte>;
@@ -621,10 +600,10 @@ namespace Rapture
 	using FloatVector = Vector<float>;
 	using DoubleVector = Vector<double>;
 
-	using bvec = Vector<byte>;
-	using ivec = Vector<int>;
-	using fvec = Vector<float>;
-	using dvec = Vector<double>;
+	using bvec = ByteVector;
+	using ivec = IntVector;
+	using fvec = FloatVector;
+	using dvec = DoubleVector;
 
 	template<class T>
 	struct BasicMath<Vector<T>, false>
@@ -639,6 +618,11 @@ namespace Rapture
 		static inline Vector<T> sqr(const Vector<T> & x)
 		{
 			return Intrin::sqr(x);
+		}
+
+		static inline Vector<T> sqrt(const Vector<T> & x)
+		{
+			return Intrin::sqrt(x);
 		}
 
 		static inline Vector<T> avg(const Vector<T> & x, const Vector<T> & y)
@@ -933,21 +917,21 @@ namespace Rapture
 	}
 
 	template<typename T, typename U, useif <std::is_pod<U>::value> endif>
-	inline Vector<T> operator * (const U & a, const Vector<T> & vec)
+	inline Vector<T> operator * (U a, const Vector<T> & vec)
 	{
-		return Intrinsic<T, 4>::mul(Intrinsic<T, 4>::fill(a), vec.data);
+		return Intrinsic<T, 4>::mul(Intrinsic<T, 4>::fill(static_cast<T>(a)), vec.data);
 	}
 
 	template<typename T, typename U, useif <std::is_pod<U>::value> endif>
-	inline Vector<T> operator / (const U & a, const Vector<T> & vec)
+	inline Vector<T> operator / (U a, const Vector<T> & vec)
 	{
-		return Intrinsic<T, 4>::div(Intrinsic<T, 4>::fill(a), vec.data);
+		return Intrinsic<T, 4>::div(Intrinsic<T, 4>::fill(static_cast<T>(a)), vec.data);
 	}
 
-	template<typename T>
-    inline auto lerp(const Vector<T> & a, const Vector<T> & b, float t)
+	template<typename T, typename U>
+    inline auto lerp(const Vector<T> & a, const Vector<T> & b, U t)
     {
-        return a + t * (b - a);
+        return a + static_cast<T>(t) * (b - a);
     }
 
 	template<typename T>
@@ -963,15 +947,21 @@ namespace Rapture
 	}
 
 	template<typename T>
+	inline auto cross(const Vector<T> & v1, const Vector<T> & v2)
+	{
+		return v1.cross(v2);
+	}
+
+	template<typename T>
 	inline auto mixedProduct(const Vector<T> & a, const Vector<T> & b, const Vector<T> & c)
 	{
-		return dot(a, b.cross(c));
+		return dot(a, cross(b, c));
 	}
 
 	template<typename T>
 	inline bool areCollinear(const Vector<T> & a, const Vector<T> & b, const Vector<T> & c)
 	{
-		return (b - a).cross(c - a).lengthSq() < Math<T>::eps2;
+		return cross(b - a, c - a).magnitudeSq() < Math<T>::eps2;
 	}
 
 	template<typename T>

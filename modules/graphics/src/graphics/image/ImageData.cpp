@@ -73,7 +73,7 @@ namespace Rapture
 	const byte dbpp = dst_bpp;							\
 	size_t bsize = img->width * img->height * dbpp;		\
 	byte * buffer = Memory<byte>::allocate(bsize);		\
-	byte * src_ptr = img->data;							\
+	byte * src_ptr = img->ptr;							\
 	byte * dst_ptr = buffer;
 
 #define iterate_buffer(src_ptr, dst_ptr)		\
@@ -89,7 +89,7 @@ namespace Rapture
 
 #define init_img_ptr(img_bpp, img_ptr)	\
 	const byte bpp = img_bpp;			\
-	byte * img_ptr = img->data;
+	byte * img_ptr = img->ptr;
 
 #define iterate_image(img_ptr)					\
 	for(uint y = 0; y < img->height; ++y)		\

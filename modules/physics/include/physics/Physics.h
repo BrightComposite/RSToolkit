@@ -15,11 +15,11 @@ namespace Rapture
 	{
 		using Base = btCollisionWorld::ContactResultCallback;
 
-		ContactSensorCallback(btRigidBody * body, vector<btVector3> & points)
+		ContactSensorCallback(btRigidBody * body, array_list<btVector3> & points)
 			: Base(), body(body), points(points) {}
 
 		btRigidBody * body;
-		vector<btVector3> & points;
+		array_list<btVector3> & points;
 
 		virtual bool needsCollision(btBroadphaseProxy * proxy) const
 		{

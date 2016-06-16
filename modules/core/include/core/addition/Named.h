@@ -14,7 +14,7 @@ namespace Rapture {
 	class Named;
 	class NamedClass;
 
-	link_class(Named, MetaClass);
+	link_class(core, Named, MetaClass);
 
     class Named
     {
@@ -42,7 +42,7 @@ namespace Rapture {
 			_name = name;
 		}
 
-	protected:
+	private:
 		String _name;
     };
 }

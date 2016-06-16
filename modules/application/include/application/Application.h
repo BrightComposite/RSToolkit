@@ -16,30 +16,35 @@
 
 //---------------------------------------------------------------------------
 
+int api(export) wmain(int argc, wchar_t * argv[]);
+
 namespace Rapture
 {
-	typedef function<int()> EntranceFunction;
-	typedef function<void()> ExitFunction;
+	class Application;
+	struct Entrance;
 
-	wstring getDir(wstring path);
+	using ApplicationArguments = data<wchar_t *>;
+	using EntranceFunction = int(*)();
+	using ExitFunction = void(*)();
 
 	class Application : public Singleton<Application>
 	{
-		friend struct Singleton<Application>;
+		friend int ::wmain(int argc, wchar_t * argv[]);
 
-		friend class Entrance;
-		friend class Exit;
+		friend struct Singleton<Application>;
+		friend struct Entrance;
 
 	public:
-		static void main(int argc, wchar_t * argv[]);
+		static HINSTANCE api(application) getWindowsInstance();
 
-		static HINSTANCE getWindowsInstance();
+		static const wstring api(application) & getRootPath();
+		static const array_list<wstring> api(application) & startupArguments();
 
-		static const wstring & getRootPath();
-		static const vector<wstring> & getStartupArguments();
-		static int getShowCommand();
+		static int api(application) getShowCommand();
 
-	protected:
+	private:
+		static void api(application) main(int argc, wchar_t * argv[]);
+
 		Application() {}
 
 		static void load();
@@ -47,38 +52,21 @@ namespace Rapture
 
 		HINSTANCE hInstance = nullptr;
 		wstring rootPath;
-		vector<wstring> startupArguments;
-		int showCommand;
 
-		vector<Entrance *> entrances;
+		array_list<wstring> args;
+		EntranceFunction entrance = nullptr;
+		int showCommand;
 	};
 
-	class Entrance
+	template struct api(application) Singleton<Application>;
+
+	struct api(application) Entrance
 	{
-	public:
-		Entrance(const EntranceFunction & func, int order = 0) : Entrance(Application::instance(), func, order)
-		{
-			app.entrances.push_back(this);
-			std::sort(app.entrances.begin(), app.entrances.end(), sort);
-		}
+		Entrance(EntranceFunction func);
 
-		Application & app;
-		EntranceFunction enter;
-		int order;
-
-	protected:
-		Entrance(Application & app, const EntranceFunction & func, int order) : app(app), enter(func), order(order) {}
-
-		static bool sort(Entrance * e1, Entrance * e2)
-		{
-			return e1->order < e2->order;
-		}
+		EntranceFunction func;
 	};
 }
-
-//---------------------------------------------------------------------------
-
-#pragma comment(linker, "/ENTRY:wmainCRTStartup")
 
 //---------------------------------------------------------------------------
 #endif

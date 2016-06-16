@@ -15,7 +15,9 @@
 
 namespace Rapture
 {
-	declare_and_link(PhysicalObject, Class<SceneObject>);
+	class PhysicalObject; 
+
+	link_class(physics, PhysicalObject, Class<SceneObject>);
 
 	class MotionState : public btMotionState
 	{
@@ -23,8 +25,8 @@ namespace Rapture
 		MotionState(PhysicalObject * object) : object(object) {}
 		virtual ~MotionState() {}
 
-		virtual void getWorldTransform(btTransform & trans) const override;
-		virtual void setWorldTransform(const btTransform & trans) override;
+		virtual void api(physics) getWorldTransform(btTransform & trans) const override;
+		virtual void api(physics) setWorldTransform(const btTransform & trans) override;
 
 		PhysicalObject * object;
 	};
@@ -56,9 +58,9 @@ namespace Rapture
 			_world->removeRigidBody(_rigidBody);
 		}
 
-		virtual void setMass(double mass);
-		virtual void setLinearVelocity(const DoubleVector & v);
-		DoubleVector getLinearVelocity();
+		virtual void api(physics) setMass(double mass);
+		virtual void api(physics) setLinearVelocity(const DoubleVector & v);
+		DoubleVector api(physics) getLinearVelocity();
 
 		virtual void contactWith(PhysicalObject * obj, const ContactInfo & info) {}
 

@@ -16,6 +16,8 @@
 #define ARCH_X86
 #endif // defined
 
+#define api(module) rapture_##module##_api
+
 #ifndef __min
     #define __min(x, y) (((x) < (y)) ? (x) : (y))
 #endif
@@ -29,6 +31,14 @@
 #else
 #define forceinline inline
 #define __vectorcall
+#endif
+
+#ifdef WIN32
+#define rapture_import_api __declspec(dllimport)
+#define rapture_export_api __declspec(dllexport)
+#else
+#define rapture_import_api
+#define rapture_export_api
 #endif
 
 namespace Rapture
@@ -155,6 +165,31 @@ namespace Rapture
  *	Short for-loop
  */
 #define repeat(var, times) for(int var = 0; var < times; ++var)
+
+#define deny_copy(... /* Class */) \
+	__VA_ARGS__(const __VA_ARGS__ &) = delete; \
+	__VA_ARGS__ & operator = (const __VA_ARGS__ &) = delete
+
+#define member_cast(member, ... /* type */)		\
+	operator __VA_ARGS__ & () &					\
+	{											\
+		return member;							\
+	}											\
+												\
+	operator const __VA_ARGS__ & () const &		\
+	{											\
+		return member;							\
+	}											\
+												\
+	operator __VA_ARGS__ && () &&				\
+	{											\
+		return move(member);					\
+	}											\
+												\
+	operator const __VA_ARGS__ & () &&			\
+	{											\
+		return member;							\
+	}
 
 //---------------------------------------------------------------------------
 #endif

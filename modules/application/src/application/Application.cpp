@@ -11,6 +11,14 @@
 
 namespace Rapture
 {
+	wstring getDir(const wstring & path);
+
+	static array_list<Entrance *> & entrances()
+	{
+		static array_list<Entrance *> e;
+		return e;
+	}
+
 	void Application::main(int argc, wchar_t * argv[])
 	{
 		auto & inst = instance();
@@ -21,17 +29,20 @@ namespace Rapture
 		inst.hInstance = (HINSTANCE)GetModuleHandle(nullptr);
 
 		for(int i = 0; i < argc; ++i)
-			inst.startupArguments.emplace_back(argv[i]);
+			inst.args.push_back(argv[i]);
 
 		STARTUPINFOW info;
 		GetStartupInfoW(&info);
 
 		inst.showCommand = check_flag(STARTF_USESHOWWINDOW, info.dwFlags) ? info.wShowWindow : SW_NORMAL;
-		inst.rootPath = getDir(getDir(Application::getExecutionPath(inst.hInstance)));
+
+		wstring root = getDir(getDir(Application::getExecutionPath(inst.hInstance)));
 
 	#ifdef _WIN64
-		inst.rootPath = getDir(inst.rootPath);
+		root = getDir(root);
 	#endif
+
+		inst.rootPath = {root.c_str(), root.size()};
 		load();
 	}
 
@@ -47,10 +58,10 @@ namespace Rapture
 		return inst.rootPath;
 	}
 
-	const vector<wstring> & Application::getStartupArguments()
+	const array_list<wstring> & Application::startupArguments()
 	{
 		auto & inst = instance();
-		return inst.startupArguments;
+		return inst.args;
 	}
 
 	int Application::getShowCommand()
@@ -61,10 +72,7 @@ namespace Rapture
 
 	void Application::load()
 	{
-		auto & inst = instance();
-
-		for(auto & ent : inst.entrances)
-			ent->enter();
+		instance().entrance();
 	}
 
 	wstring Application::getExecutionPath(HINSTANCE hInstance)
@@ -75,38 +83,16 @@ namespace Rapture
 		return {buffer, wcslen(buffer)};
 	}
 
-	wstring getDir(wstring path)
+	Entrance::Entrance(EntranceFunction func)
+	{
+		if(Application::instance().entrance != nullptr)
+			throw Exception("Can't set multiple entrances!");
+
+		Application::instance().entrance = func;
+	}
+
+	wstring getDir(const wstring & path)
 	{
 		return path.substr(0, path.find_last_of(L"/\\"));
 	}
-}
-
-using namespace Rapture;
-
-#ifdef __MINGW32__
-#ifdef __cplusplus
-	#define C_EXTERN "C"
-#else
-	#define C_EXTERN
-#endif
-
-	extern int _CRT_glob;
-	extern C_EXTERN void __wgetmainargs(int*,wchar_t***,wchar_t***,int,int*);
-
-	int wmain(int argc, wchar_t * argv[]);
-
-	int main()
-	{
-		wchar_t **enpv, **argv;
-		int argc, si = 0;
-		__wgetmainargs(&argc, &argv, &enpv, _CRT_glob, &si);
-
-		return wmain(argc, argv);
-	}
-#endif
-
-int wmain(int argc, wchar_t * argv[])
-{
-	Application::main(argc, argv);
-	return 0;
 }

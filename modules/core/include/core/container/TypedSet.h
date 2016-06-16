@@ -14,23 +14,39 @@
 namespace Rapture
 {
 	template<class Base>
-	struct TypesCounter
+	struct TypeBase
 	{
-		static std::atomic<int> counter;
+		static int nextId()
+		{
+			static std::atomic<int> counter;
+			return ++counter;
+		}
 	};
-
-	template<class Base>
-	std::atomic<int> TypesCounter<Base>::counter;
 
 	template<class T, class Base>
 	struct TypeId
 	{
-		static int get()
+		static int id()
 		{
-			static int id = TypesCounter<Base>::counter++;
-			return id;
+			static int i = TypeBase<Base>::nextId();
+			return i;
 		}
 	};
+
+	template<class Base>
+	struct TypeId<Base, Base>
+	{
+		static int id()
+		{
+			return 0;
+		}
+	};
+
+#define typebase_api(module, ... /* base */) \
+	template struct api(module) TypeBase<__VA_ARGS__>
+
+#define typeid_api(module, ... /* type, base */) \
+	template struct api(module) TypeId<__VA_ARGS__>
 
 	template<class Base, class ... OwnerAttr>
 	class TypedSet
@@ -87,7 +103,7 @@ namespace Rapture
 		template<class T, useif <based_on<T, Base>::value> endif>
 		Handle<T, OwnerAttr...> seek() const
 		{
-			auto i = map.find(TypeId<T, Base>::get());
+			auto i = map.find(TypeId<T, Base>::id());
 
 			if(i == map.end())
 				return nullptr;
@@ -109,7 +125,7 @@ namespace Rapture
 		template<class T>
 		Handle<Base, OwnerAttr...> & place() const
 		{
-			return map[TypeId<T, Base>::get()];
+			return map[TypeId<T, Base>::id()];
 		}
 
 		mutable Map<int, Base, OwnerAttr...> map;

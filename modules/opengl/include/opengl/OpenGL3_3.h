@@ -39,9 +39,9 @@ namespace Rapture
 		class Surface;
 	}
 
-	link_class(OpenGL3_3::GraphicContext, Class<Graphics3D>);
-	link_class(OpenGL3_3::Graphics3D, Class<OpenGL3_3::GraphicContext>);
-	link_class(OpenGL3_3::Mesh, Class<Mesh>);
+	link_class(open_gl3_3, OpenGL3_3::GraphicContext, Class<Graphics3D>);
+	link_class(open_gl3_3, OpenGL3_3::Graphics3D, Class<OpenGL3_3::GraphicContext>);
+	link_class(open_gl3_3, OpenGL3_3::Mesh, Class<Mesh>);
 
 	namespace OpenGL3_3
 	{
@@ -149,10 +149,10 @@ namespace Rapture
 		class VertexBuffer : public Shared
 		{
 		public:
-			VertexBuffer(const Handle<VertexLayout> & vil, const VertexData & vd, uint topology = GL_TRIANGLES);
+			VertexBuffer(const Handle<VertexLayout> & layout, const VertexData & vd, uint topology = GL_TRIANGLES);
 
 			GraphicContext * ctx;
-			Handle<VertexLayout> vil;
+			Handle<VertexLayout> layout;
 			uint handle;
 			uint topology;
 			uint size;
@@ -189,7 +189,7 @@ namespace Rapture
 		class GenericUniform {};
 
 		template<class T>
-		class GenericUniform<T, true> : public Uniform, public StaticIdentifier<GenericUniform<T>>, public Singleton<GenericUniform<T>, ThreadLocalModel>
+		class GenericUniform<T, true> : public Uniform
 		{
 		public:
 			GenericUniform() : Uniform(T::shader, T::index, static_cast<uint>(sizeof(T))) {}
@@ -225,14 +225,14 @@ namespace Rapture
 			
 			const Handle<VertexLayout> & layout() const
 			{
-				return vil;
+				return layout;
 			}
 
 		protected:
-			FxTechnique(const Handle<VertexLayout> & vil);
+			FxTechnique(const Handle<VertexLayout> & layout);
 
 			GraphicContext * ctx;
-			Handle<VertexLayout> vil;
+			Handle<VertexLayout> layout;
 			uint passes;
 		};
 
@@ -246,7 +246,7 @@ namespace Rapture
 		typedef Shader<ShaderType::Fragment>	FragmentShader;
 		typedef Shader<ShaderType::Pixel>		PixelShader;
 
-		typedef RawData<const void> ShaderCode;
+		typedef data<const void> ShaderCode;
 		typedef HashMap<ShaderType, ShaderCode> ShaderCodeSet;
 		typedef HashMap<string, ShaderCodeSet> ShaderMap;
 
@@ -431,8 +431,8 @@ namespace Rapture
 		class Mesh : public Rapture::Mesh
 		{
 		public:
-			Mesh(const GLGraphics * graphics, const Handle<VertexLayout> & vil, const VertexData & vertexData)
-				: Rapture::Mesh(graphics, vertexData, vil->stride), buffer(vil, vertexData)
+			Mesh(const GLGraphics * graphics, const Handle<VertexLayout> & layout, const VertexData & vertexData)
+				: Rapture::Mesh(graphics, vertexData, layout->stride), buffer(layout, vertexData)
 			{
 				setclass(Mesh);
 			}
@@ -551,15 +551,15 @@ namespace Rapture
 		class SimpleTechnique : public FxTechnique
 		{
 		public:
-			SimpleTechnique(const Handle<VertexLayout> & vil)
-				: FxTechnique(vil), program() {}
+			SimpleTechnique(const Handle<VertexLayout> & layout)
+				: FxTechnique(layout), program() {}
 
-			SimpleTechnique(const Handle<VertexLayout> & vil, const Handle<ShaderProgram> & program)
-				: FxTechnique(vil), program(program) {}
+			SimpleTechnique(const Handle<VertexLayout> & layout, const Handle<ShaderProgram> & program)
+				: FxTechnique(layout), program(program) {}
 
 			template<class ShaderProgramType, class ... A, useif <can_construct<ShaderProgramType, Handle<FxTechnique>, A...>::value> endif>
-			SimpleTechnique(const Handle<VertexLayout> & vil, const Type<ShaderProgramType> &, A &&... args)
-				: FxTechnique(vil), program(handle<ShaderProgramType>(this, forward<A>(args)...)) {}
+			SimpleTechnique(const Handle<VertexLayout> & layout, const Type<ShaderProgramType> &, A &&... args)
+				: FxTechnique(layout), program(handle<ShaderProgramType>(this, forward<A>(args)...)) {}
 
 			virtual ~SimpleTechnique() {}
 

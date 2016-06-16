@@ -10,13 +10,12 @@ include(${RAPTURE_ROOT}/tools/project.cmake)
 
 #--------------------------------------------------------
 
-start_module()
-
-require_module(
+start_module(
+	SHARED
 	RaptureImageIO "io"
 )
 
-set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
+add_module_sources(
 	SRC_GROUP include Headers
 		START_SECTION devil
 			DevILImageConverter.h
@@ -28,10 +27,9 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 		END_SECTION
 )
 
-add_library(${PROJECT_NAME} STATIC ${PROJECT_SOURCES})
+end_module()
+
 load_third_party(devil)
 load_third_party(zlib)
-
-end_module()
 
 #--------------------------------------------------------

@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/container/TypedSet.h>
+#include "TypedSet.h"
 
 //---------------------------------------------------------------------------
 
@@ -63,7 +63,7 @@ namespace Rapture
 		template<class T, useif <based_on<T, K>::value> endif>
 		Handle<V, OwnerAttr...> seek() const
 		{
-			auto i = map.find(TypeId<T, K>::get());
+			auto i = map.find(TypeId<T, K>::id());
 
 			if(i == map.end())
 				return nullptr;
@@ -85,7 +85,7 @@ namespace Rapture
 		template<class T>
 		Handle<V, OwnerAttr...> & place() const
 		{
-			return map[TypeId<T, K>::get()];
+			return map[TypeId<T, K>::id()];
 		}
 
 		mutable Map<int, V, OwnerAttr...> map;

@@ -44,23 +44,33 @@ namespace Rapture
 		}
 	};
 
-#define intrinsic_constant(name)	\
-	template<class T>				\
-	struct name						\
-	{								\
-		static const T value;		\
-	};								\
+#define intrinsic_constant(name)				\
+	template<class T>							\
+	struct name									\
+	{											\
+		static const T value;					\
+	};											\
+												\
+	template struct api(core) name<byte>;		\
+	template struct api(core) name<int>;		\
+	template struct api(core) name<int64>;		\
+	template struct api(core) name<float>;		\
+	template struct api(core) name<double>;		\
 
 	intrinsic_constant(IntrinZero);
 	intrinsic_constant(IntrinMax);
 	intrinsic_constant(IntrinSignmask);
 	intrinsic_constant(IntrinNofrac);
 
+	template struct api(core) IntrinData<int, 4>;
+	template struct api(core) IntrinData<float, 4>;
+	template struct api(core) IntrinData<double, 4>;
+
 	/**
 	 *	Integer intrinsics
 	 */
 	template<>
-	struct Intrinsic<int, 4>
+	struct api(core) Intrinsic<int, 4>
 	{
 		static const bool implemented = true;
 
@@ -430,7 +440,7 @@ namespace Rapture
 	 *	Float intrinsics
 	 */
 	template<>
-	struct Intrinsic<float, 4>
+	struct api(core) Intrinsic<float, 4>
 	{
 		static const bool implemented = true;
 
@@ -805,7 +815,7 @@ namespace Rapture
 	 *	Double intrinsics
 	 */
 	template<>
-	struct Intrinsic<double, 4>
+	struct api(core) Intrinsic<double, 4>
 	{
 		static const bool implemented = true;
 
@@ -1185,7 +1195,7 @@ namespace Rapture
 	 *	Double intrinsics
 	 */
 	template<>
-	struct Intrinsic<double, 4>
+	struct api(core) Intrinsic<double, 4>
 	{
 		static const bool implemented = true;
 

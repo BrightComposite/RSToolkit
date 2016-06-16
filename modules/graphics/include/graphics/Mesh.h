@@ -6,7 +6,7 @@
 //---------------------------------------------------------------------------
 
 #include <core/Object.h>
-#include <core/container/RawData.h>
+#include <core/container/Data.h>
 #include "VertexLayout.h"
 
 //---------------------------------------------------------------------------
@@ -17,38 +17,37 @@ namespace Rapture
 	class Mesh;
 	class IndexedMesh;
 
-	class VertexData : public RawData<const void>
+	class VertexData : public data<const void>
 	{
 	public:
-		using RawData<const void>::RawData;
+		using data<const void>::data;
 
-		static VertexData quad;
-		static VertexData texquad;
-		static VertexData cube;
-		static VertexData texcube;
+		static api(graphics) VertexData quad;
+		static api(graphics) VertexData texquad;
+		static api(graphics) VertexData cube;
+		static api(graphics) VertexData texcube;
+		static api(graphics) VertexData colorcube;
 
 		uint start = 0;
 	};
 
-	class VertexIndices : public vector<uint16_t>
+	class VertexIndices : public array_list<uint16_t>
 	{
 	public:
-		using vector<uint16_t>::vector;
+		using array_list<uint16_t>::array_list;
 
-		static VertexIndices cube;
+		static api(graphics) VertexIndices cube;
 	};
-
-	link_class(Mesh, Class<Object>);
 
 	class VertexBuffer : public Shared
 	{
 	public:
-		VertexBuffer(VertexLayout * vil, const VertexData & vd) : vil(vil), verticesCount(static_cast<uint>(vd.size / vil->stride)) {}
+		VertexBuffer(VertexLayout * layout, const VertexData & vd) : layout(layout), verticesCount(static_cast<uint>(vd.size / layout->stride)) {}
 
 		virtual void apply() const = 0;
 		virtual void draw(const Mesh * mesh) const = 0;
 
-		VertexLayout * vil;
+		VertexLayout * layout;
 		uint verticesCount;
 	};
 
@@ -66,9 +65,9 @@ namespace Rapture
 	class Mesh : public Shared
 	{
 	public:
-		Mesh(const Handle<VertexBuffer> & vbuffer, uint stride, uint verticesLocation = 0) : vbuffer(vbuffer), verticesLocation(verticesLocation), stride(stride) {}
+		Mesh(const Handle<VertexBuffer> & vbuffer, uint stride, uint verticesLocation = 0) : vbuffer(vbuffer), stride(stride), verticesLocation(verticesLocation) {}
 
-		virtual void draw(Graphics3D * graphics) const;
+		virtual void api(graphics) draw(Graphics3D * graphics) const;
 
 		Handle<VertexBuffer> vbuffer;
 		uint stride, verticesLocation;
@@ -77,9 +76,9 @@ namespace Rapture
 	class IndexedMesh : public Mesh
 	{
 	public:
-		IndexedMesh(const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, uint stride, uint verticesLocation = 0, uint indeicesLocation = 0) : Mesh(vbuffer, verticesLocation, stride), ibuffer(ibuffer), indicesLocation(indicesLocation) {}
+		IndexedMesh(const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, uint stride, uint verticesLocation = 0, uint indicesLocation = 0) : Mesh(vbuffer, stride, verticesLocation), ibuffer(ibuffer), indicesLocation(indicesLocation) {}
 
-		virtual void draw(Graphics3D * graphics) const override;
+		virtual void api(graphics) draw(Graphics3D * graphics) const override;
 
 		Handle<IndexBuffer> ibuffer;
 		uint indicesLocation;

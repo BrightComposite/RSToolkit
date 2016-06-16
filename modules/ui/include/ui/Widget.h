@@ -20,14 +20,17 @@ namespace Rapture
 	class BasicWidget;
 	class Layer;
 
+	link_class(ui, BasicWidget, Class<Subject>);
+	link_class(ui, Widget, Class<BasicWidget>);
+
 	class BasicWidget : public Subject
 	{
 		friend class Widget;
 
 	public:
-		BasicWidget(Widget * parent, const IntRect & rect);
-		BasicWidget(Widget * parent, const IntPoint & pos, const IntSize & size);
-		BasicWidget(const BasicWidget & w);
+		api(ui) BasicWidget(Widget * parent, const IntRect & rect);
+		api(ui) BasicWidget(Widget * parent, const IntPoint & pos, const IntSize & size);
+		api(ui) BasicWidget(const BasicWidget & w);
 
 		virtual ~BasicWidget() {}
 
@@ -177,17 +180,38 @@ namespace Rapture
 		inline void setOffsets(const IntRect & offsets);
 		inline void setAnchors(const FloatRect & anchors);
 
-		static void calculateRegionRect(IntRect & out, const IntRect & offsets, const FloatRect & anchors, const BasicWidget & parent);
-		static void calculateOffsets(IntRect & out, const BasicWidget & region, const BasicWidget & parent);
+		static void api(ui) calculateRegionRect(IntRect & out, const IntRect & offsets, const FloatRect & anchors, const BasicWidget & parent);
+		static void api(ui) calculateOffsets(IntRect & out, const BasicWidget & region, const BasicWidget & parent);
+
+		virtual void api(ui) read(Handle<KeyDownMessage> & msg) {}
+		virtual void api(ui) read(Handle<CharMessage> & msg) {}
+		virtual void api(ui) read(Handle<KeyUpMessage> & msg) {}
+		virtual void api(ui) read(Handle<MouseUpdateMessage> & msg) {}
+		virtual void api(ui) read(Handle<MouseDownMessage> & msg) {}
+		virtual void api(ui) read(Handle<MouseMoveMessage> & msg) {}
+		virtual void api(ui) read(Handle<MouseUpMessage> & msg) {}
+		virtual void api(ui) read(Handle<MouseClickMessage> & msg) {}
+		virtual void api(ui) read(Handle<MouseDblClickMessage> & msg) {}
+		virtual void api(ui) read(Handle<MouseWheelMessage> & msg) {}
+		virtual void api(ui) read(Handle<MouseEnterMessage> & msg) {}
+		virtual void api(ui) read(Handle<MouseLeaveMessage> & msg) {}
+		virtual void api(ui) read(Handle<WidgetPressMessage> & msg) {}
+		virtual void api(ui) read(Handle<WidgetStopPressMessage> & msg) {}
+		virtual void api(ui) read(Handle<WidgetReleaseMessage> & msg) {}
+		virtual void api(ui) read(Handle<WidgetChangedStateMessage> & msg) {}
+		virtual void api(ui) read(Handle<ChangeFocusOrderMessage> & msg) {}
+		virtual void api(ui) read(Handle<AfterChangeFocusOrderMessage> & msg) {}
+		virtual void api(ui) read(Handle<ChangeDisplayOrderMessage> & msg) {}
+		virtual void api(ui) read(Handle<AfterChangeDisplayOrderMessage> & msg) {}
+		virtual void api(ui) read(Handle<WidgetDrawMessage> & msg) {}
+		virtual void api(ui) read(Handle<WidgetMoveMessage> & msg) {}
+		virtual void api(ui) read(Handle<AfterWidgetMoveMessage> & msg) {}
+		virtual void api(ui) read(Handle<WidgetResizeMessage> & msg) {}
 
 	protected:
-		void changeSize(int width, int height, ModelMask mask);
-		void changePlacement(int left, int top, int right, int bottom, ModelMask mask);
-		void updateAnchors();
-
-		create_empty_readers(BasicWidget,
-			WidgetMessages
-		)
+		void api(ui) changeSize(int width, int height, ModelMask mask);
+		void api(ui) changePlacement(int left, int top, int right, int bottom, ModelMask mask);
+		void api(ui) updateAnchors();
 
 		Widget * _parent;
 
@@ -243,13 +267,13 @@ namespace Rapture
 		MouseButton _buttons = MouseButton::None;
 	};
 
-	class Layer : public Object
+	class Layer : public Shared
 	{
 		friend class Widget;
 
 	public:
-		Layer(Widget * widget, int order = 0);
-		virtual ~Layer();
+		api(ui) Layer(Widget * widget, int order = 0);
+		virtual api(ui) ~Layer();
 
 		virtual void draw(const IntRect & clipRegion) const = 0;
 
@@ -258,7 +282,7 @@ namespace Rapture
 			return _order;
 		}
 
-		void setOrder(int order);
+		void api(ui) setOrder(int order);
 
 		bool operator > (const Layer & layer) const
 		{
@@ -274,6 +298,8 @@ namespace Rapture
 		int _order = 0;
 		Widget * _widget;
 	};
+
+	typebase_api(ui, Layer);
 
 	typedef std::function<void(const Widget *, const IntRect &)> WidgetDrawer;
 
@@ -301,32 +327,42 @@ namespace Rapture
 
 	using DefaultLayer = CustomLayer<0>;
 
+	typeid_api(ui, CustomLayer<0>, Layer);
+	typeid_api(ui, CustomLayer<1>, Layer);
+	typeid_api(ui, CustomLayer<2>, Layer);
+	typeid_api(ui, CustomLayer<3>, Layer);
+	typeid_api(ui, CustomLayer<4>, Layer);
+	typeid_api(ui, CustomLayer<5>, Layer);
+	typeid_api(ui, CustomLayer<6>, Layer);
+	typeid_api(ui, CustomLayer<7>, Layer);
+	typeid_api(ui, CustomLayer<8>, Layer);
+	typeid_api(ui, CustomLayer<9>, Layer);
+
 #define is_widget(T) based_on<T, Widget>::value
-
 #define is_layer(T)  based_on<T, Layer>::value
-
 #define is_drawer(T) (std::is_function<T>::value || Rapture::is_callable<T, const Widget *, const IntRect &>::value)
 
 	class Widget : public BasicWidget
 	{
+		deny_copy(Widget);
+
 		friend class UISpace;
 		friend class Layer;
 
 	public:
-		Widget(Widget * parent);
-		Widget(Widget * parent, const IntRect & region);
-		Widget(UISpace * space);
-		Widget(UISpace * space, const IntRect & region);
-		Widget(const Widget & widget);
-		Widget(const Widget & widget, Widget * parent);
+		api(ui) Widget(Widget * parent);
+		api(ui) Widget(Widget * parent, const IntRect & region);
+		api(ui) Widget(UISpace * space);
+		api(ui) Widget(UISpace * space, const IntRect & region);
+		api(ui) Widget(const Widget & widget, Widget * parent);
 
-		virtual ~Widget();
+		virtual api(ui) ~Widget();
 
 		virtual inline Handle<Widget> clone() const;
 		virtual inline Handle<Widget> clone(Widget * parent) const;
 
-		Handle<Widget> attach(const Handle<Widget> & child);
-		Handle<Widget> detach();
+		Handle<Widget> api(ui) attach(const Handle<Widget> & child);
+		Handle<Widget> api(ui) detach();
 
 		Widget * findWidget(const IntPoint & pt);
 
@@ -366,12 +402,12 @@ namespace Rapture
 			return check_flag(WidgetFlag::Focusable, _flags);
 		}
 
-		bool isPointed() const;
-		bool isFocused() const;
-		bool isPressed() const;
-		bool isPressed(MouseButton button) const;
+		bool api(ui) isPointed() const;
+		bool api(ui) isFocused() const;
+		bool api(ui) isPressed() const;
+		bool api(ui) isPressed(MouseButton button) const;
 
-		MouseButton pressedButtons() const;
+		MouseButton api(ui) pressedButtons() const;
 
 		int displayOrder() const
 		{
@@ -383,8 +419,8 @@ namespace Rapture
 			return _focusOrder;
 		}
 
-		UISpace * space() const;
-		Graphics * graphics() const;
+		UISpace api(ui) * space() const;
+		Graphics api(ui) * graphics() const;
 
 		void show()
 		{
@@ -396,33 +432,40 @@ namespace Rapture
 			setVisibility(false);
 		}
 
-		void focus();
+		void api(ui) focus();
 
-		void setVisibility(bool visible);
-		void setFocusability(bool focusable);
-		void setDisplayOrder(int order);
-		void setFocusOrder(int order);
+		void api(ui) setVisibility(bool visible);
+		void api(ui) setFocusability(bool focusable);
+		void api(ui) setDisplayOrder(int order);
+		void api(ui) setFocusOrder(int order);
 
-		void bringToFront();
-		void sendToBack();
+		void api(ui) bringToFront();
+		void api(ui) sendToBack();
+
+		using BasicWidget::read;
+
+		virtual void api(ui) read(Handle<KeyDownMessage> & msg) override;
+		virtual void api(ui) read(Handle<CharMessage> & msg) override;
+		virtual void api(ui) read(Handle<KeyUpMessage> & msg) override;
+		virtual void api(ui) read(Handle<WidgetResizeMessage> & msg) override;
 
 	protected:
-		Widget(UISpace * space, Widget * parent, const IntRect & region);
+		api(ui) Widget(UISpace * space, Widget * parent, const IntRect & region);
 
-		void draw(Graphics * graphics, const IntRect & clipRegion);
+		void api(ui) draw(Graphics * graphics, const IntRect & clipRegion);
 
-		void forgetParent();
+		void api(ui) forgetParent();
 
-		void removeFocus();
-		void receiveFocus();
+		void api(ui) removeFocus();
+		void api(ui) receiveFocus();
 
 		UISpace * _space;
 
 		TypedSet<Layer> _layers;
 		SubjectSet<BasicWidget> _children;
 
-		vector<Layer *> _layerList;
-		vector<Widget *> _displayList;
+		array_list<Layer *> _layerList;
+		array_list<Widget *> _displayList;
 
 		int _flags = 0;
 		MouseState _mouseState;
@@ -434,14 +477,9 @@ namespace Rapture
 		using FocusSort = MemberSort<Widget, int, &Widget::_focusOrder>;
 
 		bind_messages(Widget, WidgetMessages)
-
-		override_readers(Widget,
-			KeyDownMessage,
-			CharMessage,
-			KeyUpMessage,
-			WidgetResizeMessage
-		)
 	};
+
+	channels_api(ui, Widget, WidgetMessages)
 
 	inline void BasicWidget::setLeft(int value)
 	{
@@ -583,7 +621,7 @@ namespace Rapture
 
 	inline Handle<Widget> Widget::clone() const
 	{
-		return Handle<Widget>(*this);
+		return Handle<Widget>(*this, _parent);
 	}
 
 	inline Handle<Widget> Widget::clone(Widget * parent) const

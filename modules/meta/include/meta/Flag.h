@@ -31,19 +31,19 @@ namespace Rapture
 	template<class F, class S, typename = decltype(declval<S>() | declval<F>())>
 	constexpr auto set_flag(F flag, S & set)
 	{
-		set = static_cast<S>(set | flag);
+		return set = static_cast<S>(set | flag);
 	}
 
 	template<class F, class S, typename = decltype(declval<S>() & ~declval<F>())>
 	constexpr auto clear_flag(F flag, S & set)
 	{
-		set = static_cast<S>(set & ~flag);
+		return set = static_cast<S>(set & ~flag);
 	}
 
 	template<class F, class S, typename = decltype(declval<S>() | declval<F>()), typename = decltype(declval<S>() & ~declval<F>())>
 	constexpr auto change_flag(F flag, S & set, bool state)
 	{
-		set = state ? static_cast<S>(set | flag) : static_cast<S>(set & ~flag);
+		return set = state ? static_cast<S>(set | flag) : static_cast<S>(set & ~flag);
 	}
 
 	template<class F, class S>

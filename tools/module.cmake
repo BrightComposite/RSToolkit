@@ -9,15 +9,15 @@ if(WIN32)
 endif ()
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-	set(PROJECT_ARCHITECTURE x64 CACHE INTERNAL "Project architecture")
+	set(MODULE_ARCH x64 CACHE INTERNAL "Project architecture")
 else()
-	set(PROJECT_ARCHITECTURE x86 CACHE INTERNAL "Project architecture")
+	set(MODULE_ARCH x86 CACHE INTERNAL "Project architecture")
 endif()
 
 #--------------------------------------------------------
 
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-	set(OUTPUT_ROOT ${RAPTURE_ROOT}/build-vs-${PROJECT_ARCHITECTURE} CACHE PATH "Output root")
+	set(OUTPUT_ROOT ${RAPTURE_ROOT}/build-vs-${MODULE_ARCH} CACHE PATH "Output root")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
 	set(OUTPUT_ROOT ${RAPTURE_ROOT}/build-cb CACHE PATH "Output root")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
@@ -26,15 +26,15 @@ endif()
 
 set(MODULES_ROOT ${RAPTURE_ROOT}/modules CACHE PATH "Modules root")
 
-set(BINARY_OUTPUT ${RAPTURE_ROOT}/bin/${PROJECT_ARCHITECTURE} CACHE PATH "Binary output")
-set(LIBRARY_OUTPUT ${RAPTURE_ROOT}/bin/${PROJECT_ARCHITECTURE} CACHE PATH "Library output")
+set(BINARY_OUTPUT ${RAPTURE_ROOT}/bin/${MODULE_ARCH} CACHE PATH "Binary output")
+set(LIBRARY_OUTPUT ${RAPTURE_ROOT}/bin/${MODULE_ARCH} CACHE PATH "Library output")
 set(THIRD_PARTY ${RAPTURE_ROOT}/third-party CACHE PATH "Third-party directory")
 
 function(set_output_dir DIR TYPE)
 	get_filename_component(REAL_DIR ${DIR} REALPATH)
 	set(OUTPUT_DIR CMAKE_${TYPE}_OUTPUT_DIRECTORY)
 
-	set(${OUTPUT_DIR} ${REAL_DIR}/${PROJECT_ARCHITECTURE} CACHE INTERNAL "Cmake ${TYPE} output")
+	set(${OUTPUT_DIR} ${REAL_DIR}/${MODULE_ARCH} CACHE INTERNAL "Cmake ${TYPE} output")
 
 	set(${OUTPUT_DIR}_DEBUG ${${OUTPUT_DIR}}/debug CACHE PATH "Cmake ${TYPE} debug output")
 	set(${OUTPUT_DIR}_RELEASE ${${OUTPUT_DIR}}/release CACHE PATH "Cmake ${TYPE} release output")
@@ -46,9 +46,11 @@ set_output_dir(${RAPTURE_ROOT}/lib ARCHIVE)
 set_output_dir(${RAPTURE_ROOT}/lib LIBRARY)
 set_output_dir(${RAPTURE_ROOT}/bin RUNTIME)
 
-link_directories(${RAPTURE_ROOT}/lib/${PROJECT_ARCHITECTURE})
-link_directories(${RAPTURE_ROOT}/lib/${PROJECT_ARCHITECTURE}/release)
-link_directories(${RAPTURE_ROOT}/lib/${PROJECT_ARCHITECTURE}/debug)
+link_directories(${RAPTURE_ROOT}/lib/${MODULE_ARCH})
+link_directories(${RAPTURE_ROOT}/lib/${MODULE_ARCH}/release)
+link_directories(${RAPTURE_ROOT}/lib/${MODULE_ARCH}/debug)
+
+set(MODULE_TYPES APPLICATION;SHARED;LIBRARY;INLINE CACHE INTERNAL "Module types" FORCE)
 
 if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 	set(GUARD_BLOCKS ${GUARD_BLOCKS};PROJECT_TOOL_GUARD CACHE INTERNAL "Guard blocks" FORCE)
@@ -57,9 +59,25 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 #	Functions
 #--------------------------------------------------------
 
-#	create_project_source function.
+	function(name_upper out name)
+		string(REGEX REPLACE "([a-z])([A-Z])" "\\1_\\2" NAME ${name})
+		string(REGEX REPLACE "[^A-Za-z0-9_]" "_" NAME ${NAME})
+		string(TOUPPER ${NAME} NAME)
 
-	function(create_project_source SRC_ROOT SRC_PATH)
+		set(${out} ${NAME} PARENT_SCOPE)
+	endfunction()
+
+	function(name_lower out name)
+		string(REGEX REPLACE "([a-z])([A-Z])" "\\1_\\2" NAME ${name})
+		string(REGEX REPLACE "[^A-Za-z0-9_]" "_" NAME ${NAME})
+		string(TOLOWER ${NAME} NAME)
+
+		set(${out} ${NAME} PARENT_SCOPE)
+	endfunction()
+
+#	create_source function.
+
+	function(create_source SRC_ROOT SRC_PATH)
 		set(SRC_FULLPATH ${SRC_ROOT}/${SRC_PATH})
 
 		get_filename_component(SRC_DIR  ${SRC_FULLPATH} DIRECTORY)
@@ -73,27 +91,27 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 			file(MAKE_DIRECTORY ${SRC_DIR})
 		endif()
 
-		string(REGEX REPLACE "([A-Z])" "_\\1" FILE_NAME ${filename})
-		string(REGEX REPLACE "^_(.*)$" "\\1" FILE_NAME ${FILE_NAME})
-		string(TOUPPER ${FILE_NAME} FILE_NAME)
+		name_upper(FILE_NAME ${filename})
+		name_upper(PROJECT_NAME_UPPER ${PROJECT_NAME})
+		name_lower(PROJECT_NAME_LOWER ${PROJECT_NAME})
 
-		set(TEMPLATE_FILE ${RAPTURE_ROOT}/templates/template${SRC_EXT})
-		set(TEMPLATE_FILE2 ${RAPTURE_ROOT}/templates/template.${filename}${SRC_EXT})
+		set(TEMPLATE_FILE ${RAPTURE_ROOT}/templates/${filename}${SRC_EXT})
+		set(TEMPLATE_FILE_EXT ${RAPTURE_ROOT}/templates/_${SRC_EXT})
 
 		message(STATUS "Create new source file ${SRC_FULLPATH}...")
 
 		if(EXISTS ${TEMPLATE_FILE})
 			configure_file(${TEMPLATE_FILE} ${SRC_FULLPATH})
-		elseif(EXISTS ${TEMPLATE_FILE2})
-			configure_file(${TEMPLATE_FILE2} ${SRC_FULLPATH})
+		elseif(EXISTS ${TEMPLATE_FILE_EXT})
+			configure_file(${TEMPLATE_FILE_EXT} ${SRC_FULLPATH})
 		else()
 			file(WRITE ${SRC_FULLPATH} "")
 		endif()
 	endfunction()
 
-#	set_project_sources function.
+#	set_module_sources function.
 #	Usage:
-#		set_project_sources(<output list> <root project directory>
+#		set_module_sources(<output list>
 #			SRC_GROUP <subdirectory> <source group section>
 #				START_SECTION <relative path>
 #					[filename...]
@@ -104,7 +122,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 #			]
 #		)
 
-	function(set_project_sources OUT_LIST ROOT_DIR)
+	function(set_module_sources OUT_LIST)
 		set(FULL_SRC_LIST)
 
 		set(SECTION_POS 0)
@@ -115,6 +133,8 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 		set(GROUP_ROOT "")
 		set(GROUP_TYPE "")
 
+		set(ROOT_DIR ${PROJECT_SOURCE_DIR})
+
 		foreach(SRC_ENTRY ${ARGN})
 			if(${SRC_ENTRY} STREQUAL "START_SECTION" OR ${SRC_ENTRY} STREQUAL "END_SECTION" OR ${SRC_ENTRY} STREQUAL "SRC_GROUP") # Check if new section or group is defined here
 
@@ -122,9 +142,9 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 
 				if(${SRC_ENTRY} STREQUAL "START_SECTION")
 					if(${SECTION_POS} GREATER 0)
-						message(FATAL_ERROR "Incorrect usage of 'set_project_sources' function! The new section is defined before the end of the previous section header!")
+						message(FATAL_ERROR "Incorrect usage of 'add_module_sources' function! The new section is defined before the end of the previous section header!")
 					elseif(${GROUP_POS} GREATER 0)
-						message(FATAL_ERROR "Incorrect usage of 'set_project_sources' function! The new section is defined before the end of group header!")
+						message(FATAL_ERROR "Incorrect usage of 'add_module_sources' function! The new section is defined before the end of group header!")
 					endif()
 
 					set(SECTION_POS 1)
@@ -132,11 +152,11 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 
 				elseif(${SRC_ENTRY} STREQUAL "SRC_GROUP")
 					if(${SUBSECTIONS} GREATER 0)
-						message(FATAL_ERROR "Incorrect usage of 'set_project_sources' function! Can't declare next source group inside subsection!")
+						message(FATAL_ERROR "Incorrect usage of 'add_module_sources' function! Can't declare next source group inside subsection!")
 					elseif(${GROUP_POS} GREATER 0)
-						message(FATAL_ERROR "Incorrect usage of 'set_project_sources' function! The new group is defined before the end of the previous group header!")
+						message(FATAL_ERROR "Incorrect usage of 'add_module_sources' function! The new group is defined before the end of the previous group header!")
 					elseif(${SECTION_POS} GREATER 0)
-						message(FATAL_ERROR "Incorrect usage of 'set_project_sources' function! The new group is defined before the end of section header!")
+						message(FATAL_ERROR "Incorrect usage of 'add_module_sources' function! The new group is defined before the end of section header!")
 					endif()
 
 					set(GROUP_POS 1)
@@ -145,7 +165,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 
 				elseif(${SRC_ENTRY} STREQUAL "END_SECTION")
 					if(${SUBSECTIONS} EQUAL 0)
-						message(FATAL_ERROR "Incorrect usage of 'set_project_sources' function! Unexpected end of section!")
+						message(FATAL_ERROR "Incorrect usage of 'add_module_sources' function! Unexpected end of section!")
 					endif()
 
 					list(LENGTH SRC_LIST_${SUBSECTIONS} SRC_COUNT)
@@ -196,7 +216,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 				set(SRC_ROOT ${ROOT_DIR}/${GROUP_ROOT})
 
 				if(NOT EXISTS ${SRC_ROOT}/${NEW_SOURCE})
-					create_project_source(${SRC_ROOT} ${NEW_SOURCE})
+					create_source(${SRC_ROOT} ${NEW_SOURCE})
 				endif()
 
 				set(SRC_LIST_${SUBSECTIONS} ${SRC_LIST_${SUBSECTIONS}} ${SRC_ROOT}/${NEW_SOURCE})
@@ -204,7 +224,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 		endforeach()
 
 		if(${SUBSECTIONS} GREATER 0)
-			message(FATAL_ERROR "Incorrect usage of 'set_project_sources' function! End of section was not found!")
+			message(FATAL_ERROR "Incorrect usage of 'add_module_sources' function! End of section was not found!")
 		endif()
 
 		list(LENGTH SRC_LIST_${SUBSECTIONS} SRC_COUNT)
@@ -224,29 +244,52 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 		set(${OUT_LIST} ${FULL_SRC_LIST} PARENT_SCOPE)
 	endfunction()
 
-#	set_project_include_dirs function.
+#	add_module_sources function.
+#	Usage:
+#		add_module_sources(
+#			SRC_GROUP <subdirectory> <source group section>
+#				START_SECTION <relative path>
+#					[filename...]
+#				END_SECTION
+#				[START_SECTION <relative path> [filename...] END_SECTION ...]
+#			[SRC_GROUP <subdirectory> <source group section>
+#				...
+#			]
+#		)
 
-	function(set_project_include_dirs)
-		target_include_directories(${PROJECT_NAME} PUBLIC ${ARGN})
+	function(add_module_sources)
+		set_module_sources(OUT_LIST ${ARGN})
+		set(${PROJECT_NAME}_SOURCES ${${PROJECT_NAME}_SOURCES};${OUT_LIST} CACHE INTERNAL "${PROJECT_NAME} sources" FORCE)
 	endfunction()
 
-#	start_module function.
+#	add_module_include_dirs function.
 
-	function(start_module)
-		if(NOT ";${GUARD_BLOCKS};" MATCHES ";${PROJECT_NAME}_GUARD;")
-			set(GUARD_BLOCKS ${GUARD_BLOCKS};${PROJECT_NAME}_GUARD CACHE INTERNAL "Guard blocks" FORCE)
-		endif()
+	function(add_module_include_dirs)
+		target_include_directories(${PROJECT_NAME} PUBLIC ${ARGN})
 
-		message("${DEPENDENCIES_LIST_INDENTATION}+ Add module \"${PROJECT_NAME}\"")
-		set(${PROJECT_NAME}_MODULE_DEPENDENCIES CACHE INTERNAL "${PROJECT_NAME} module dependencies" FORCE)
+		set(DIRS ${${PROJECT_NAME}_INCLUDE_DIRS};${ARGN})
+		list(REMOVE_DUPLICATES DIRS)
+		set(${PROJECT_NAME}_INCLUDE_DIRS ${DIRS} CACHE INTERNAL "${PROJECT_NAME} include directories" FORCE)
+	endfunction()
+
+#	add_module_libraries function.
+
+	function(add_module_libraries)
+		foreach(LIB ${ARGN})
+			if(NOT "${${LIB}_MODULE_TYPE}" STREQUAL "INLINE")
+				target_link_libraries(${PROJECT_NAME} PUBLIC ${LIB})
+			else()
+				add_module_include_dirs(${${LIB}_INCLUDE_DIRS})
+			endif()
+		endforeach()
 	endfunction()
 
 #	require_module function.
 
 	function(require_module name path)
-		set(DEPENDENCIES_LIST_INDENTATION_TEMP ${DEPENDENCIES_LIST_INDENTATION})
-		set(DEPENDENCIES_LIST_INDENTATION "${DEPENDENCIES_LIST_INDENTATION}  " CACHE STRING "Dependency list indentation" FORCE)
-		message("${DEPENDENCIES_LIST_INDENTATION}> Depends on \"${name}\"")
+		set(MESSAGES_INDENTATION_TEMP ${MESSAGES_INDENTATION})
+		set(MESSAGES_INDENTATION "${MESSAGES_INDENTATION}  " CACHE STRING "Dependency list indentation" FORCE)
+		message("${MESSAGES_INDENTATION}> Depends on \"${name}\"")
 
 		set(${PROJECT_NAME}_MODULE_DEPENDENCIES ${${PROJECT_NAME}_MODULE_DEPENDENCIES};${name} CACHE INTERNAL "${PROJECT_NAME} module dependencies" FORCE)
 
@@ -254,7 +297,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 			add_subdirectory("${MODULES_ROOT}/${path}" "${OUTPUT_ROOT}/${path}")
 		endif()
 
-		set(DEPENDENCIES_LIST_INDENTATION ${DEPENDENCIES_LIST_INDENTATION_TEMP} CACHE STRING "Dependency list indentation" FORCE)
+		set(MESSAGES_INDENTATION ${MESSAGES_INDENTATION_TEMP} CACHE STRING "Dependency list indentation" FORCE)
 	endfunction()
 
 #	require_modules function.
@@ -272,14 +315,122 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 		endforeach()
 	endfunction()
 
+#	start_module function.
+
+	function(start_module type)
+		if(NOT ";${GUARD_BLOCKS};" MATCHES ";${PROJECT_NAME}_GUARD;")
+			set(GUARD_BLOCKS ${GUARD_BLOCKS};${PROJECT_NAME}_GUARD CACHE INTERNAL "Guard blocks" FORCE)
+		endif()
+
+		message("${MESSAGES_INDENTATION}+ Add module \"${PROJECT_NAME}\"")
+
+		set(${PROJECT_NAME}_SOURCES CACHE INTERNAL "${PROJECT_NAME} sources" FORCE)
+		set(${PROJECT_NAME}_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include CACHE INTERNAL "${PROJECT_NAME} include directories" FORCE)
+		set(${PROJECT_NAME}_MODULE_DEPENDENCIES CACHE INTERNAL "${PROJECT_NAME} module dependencies" FORCE)
+
+		if("${type}" STREQUAL "")
+			message(FATAL_ERROR "Incorrect usage of 'start_module' function! Type of module is not set. List of correct types: (${MODULE_TYPES})")
+		elseif(NOT ";${MODULE_TYPES};" MATCHES ";${type};")
+			message(FATAL_ERROR "Incorrect usage of 'start_module' function! List of correct types: (${MODULE_TYPES}). Provided type is ${type}")
+		endif()
+
+		set(${PROJECT_NAME}_MODULE_TYPE ${type} CACHE STRING "${PROJECT_NAME} module type" FORCE)
+
+		if(NOT "${ARGN}" STREQUAL "")
+			require_modules(${ARGN})
+		endif()
+	endfunction()
+
+#	collect_dependencies function.
+
+	function(collect_dependencies DEPENDENCIES MODULE)
+		if(NOT "${${MODULE}_MODULE_DEPENDENCIES}" STREQUAL "")
+			set(DEPS)
+
+			foreach(DEPENDENCY ${${MODULE}_MODULE_DEPENDENCIES})
+				collect_dependencies(MODULE_DEPS ${DEPENDENCY})
+				list(APPEND DEPS ${MODULE_DEPS})
+			endforeach()
+
+			list(APPEND DEPS ${${MODULE}_MODULE_DEPENDENCIES})
+
+			if(NOT "${DEPS}" STREQUAL "")
+				list(REMOVE_DUPLICATES DEPS)
+				set(${DEPENDENCIES} ${DEPS} PARENT_SCOPE)
+			endif()
+		endif()
+	endfunction()
+
+#	set_module_api_key function.
+
+	function(set_module_api_key key)
+		set(${PROJECT_NAME}_API_KEY ${key} CACHE STRING "${PROJECT_NAME} api key" FORCE)
+	endfunction()
+
+#	set_module_api_export function.
+
+	function(set_module_api_export MODULE)
+		if(NOT "${${MODULE}_API_KEY}" STREQUAL "")
+			set(module rapture_${${MODULE}_API_KEY})
+		else()
+			name_lower(module ${MODULE})
+		endif()
+
+		if(WIN32)
+			add_definitions("-D${module}_api=__declspec(dllexport)")
+		else()
+			add_definitions("-D${module}_api")
+		endif()
+	endfunction()
+
+#	set_module_api_import function.
+
+	function(set_module_api_import MODULE)
+		if(NOT "${${MODULE}_API_KEY}" STREQUAL "")
+			set(module rapture_${${MODULE}_API_KEY})
+		else()
+			name_lower(module ${MODULE})
+		endif()
+
+		if(WIN32)
+			add_definitions("-D${module}_api=__declspec(dllimport)")
+		else()
+			add_definitions("-D${module}_api")
+		endif()
+	endfunction()
+
 #	end_module function.
 
 	function(end_module)
+		if("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "APPLICATION")
+			add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
+		elseif("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "SHARED")
+			add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES})
+		elseif("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "LIBRARY")
+			add_library(${PROJECT_NAME} STATIC ${${PROJECT_NAME}_SOURCES})
+		elseif("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "INLINE")
+			add_library(${PROJECT_NAME} STATIC ${${PROJECT_NAME}_SOURCES})
+		elseif("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "")
+			message(FATAL_ERROR "Module type is not set! Call 'start_module' first!")
+		else()
+			message(FATAL_ERROR "Module type is incorrect! Check the 'start_module' function call")
+		endif()
+
+		set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 		set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 		target_compile_options(${PROJECT_NAME} PRIVATE ${COMPILE_OPTIONS})
 
-		set_project_include_dirs(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/include)
-		target_link_libraries(${PROJECT_NAME} PUBLIC ${${PROJECT_NAME}_MODULE_DEPENDENCIES})
+		add_module_include_dirs(${PROJECT_SOURCE_DIR}/include)
+		add_module_libraries(${${PROJECT_NAME}_MODULE_DEPENDENCIES})
+		set_module_api_export(${PROJECT_NAME})
+
+		collect_dependencies(DEPENDENCIES ${PROJECT_NAME})
+
+		foreach(DEPENDENCY_NAME ${DEPENDENCIES})
+			if("${${DEPENDENCY_NAME}_MODULE_TYPE}" STREQUAL "SHARED")
+				set_module_api_import(${DEPENDENCY_NAME})
+			endif()
+		endforeach()
 	endfunction()
 
 #	setup_file function
@@ -310,18 +461,18 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 		endif()
 
 		if("${ARGV1}" STREQUAL "COMPONENT" AND NOT "${ARGV2}" STREQUAL "")
-			message("${DEPENDENCIES_LIST_INDENTATION}  Depends on ${LIBRARY_PATH}:${ARGV2}")
-			set(PATH_SUFFIX ${ARGV2}/${PROJECT_ARCHITECTURE})
+			message("${MESSAGES_INDENTATION}  Depends on ${LIBRARY_PATH}:${ARGV2}")
+			set(PATH_SUFFIX ${ARGV2}/${MODULE_ARCH})
 		else()
-			message("${DEPENDENCIES_LIST_INDENTATION}  Depends on ${LIBRARY_PATH}")
-			set(PATH_SUFFIX ${PROJECT_ARCHITECTURE})
+			message("${MESSAGES_INDENTATION}  Depends on ${LIBRARY_PATH}")
+			set(PATH_SUFFIX ${MODULE_ARCH})
 		endif()
 
 		set(BINARY_SOURCE ${THIRD_PARTY_DIR}/bin/${PATH_SUFFIX})
 		set(LIBRARY_SOURCE ${THIRD_PARTY_DIR}/lib/${PATH_SUFFIX})
 
-		set(BINARY_DEST ${RAPTURE_ROOT}/bin/${PROJECT_ARCHITECTURE})
-		set(LIBRARY_DEST ${RAPTURE_ROOT}/lib/${PROJECT_ARCHITECTURE})
+		set(BINARY_DEST ${RAPTURE_ROOT}/bin/${MODULE_ARCH})
+		set(LIBRARY_DEST ${RAPTURE_ROOT}/lib/${MODULE_ARCH})
 
 		if(EXISTS ${BINARY_SOURCE})
 			file(GLOB_RECURSE SHARED_LIBS RELATIVE ${BINARY_SOURCE}
@@ -345,13 +496,13 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 			)
 
 			foreach(STATIC_LIB ${STATIC_LIBS})
-				message("${DEPENDENCIES_LIST_INDENTATION}    Found ${STATIC_LIB}")
+				message("${MESSAGES_INDENTATION}    Found ${STATIC_LIB}")
 				setup_file(${STATIC_LIB} ${LIBRARY_SOURCE} ${LIBRARY_DEST})
 			endforeach()
 		endif()
 
 		if(EXISTS ${THIRD_PARTY_DIR}/include)
-			target_include_directories(${PROJECT_NAME} PUBLIC ${THIRD_PARTY_DIR}/include)
+			add_module_include_dirs(${THIRD_PARTY_DIR}/include)
 		endif()
 
 	endfunction()
@@ -376,18 +527,18 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 
 		if("${ARGV1}" STREQUAL "COMPONENT" AND NOT "${ARGV2}" STREQUAL "")
 			set(COMPONENT_NAME ${ARGV2})
-			message("${DEPENDENCIES_LIST_INDENTATION}  Depends on ${LIBRARY_PATH}:${COMPONENT_NAME}")
-			set(PATH_SUFFIX ${COMPONENT_NAME}/${PROJECT_ARCHITECTURE})
+			message("${MESSAGES_INDENTATION}  Depends on ${LIBRARY_PATH}:${COMPONENT_NAME}")
+			set(PATH_SUFFIX ${COMPONENT_NAME}/${MODULE_ARCH})
 		else()
-			message("${DEPENDENCIES_LIST_INDENTATION}  Depends on ${LIBRARY_PATH}")
-			set(PATH_SUFFIX ${PROJECT_ARCHITECTURE})
+			message("${MESSAGES_INDENTATION}  Depends on ${LIBRARY_PATH}")
+			set(PATH_SUFFIX ${MODULE_ARCH})
 		endif()
 
 		set(BINARY_SOURCE ${THIRD_PARTY_DIR}/bin/${PATH_SUFFIX})
 		set(LIBRARY_SOURCE ${THIRD_PARTY_DIR}/lib/${PATH_SUFFIX})
 
-		set(BINARY_DEST ${RAPTURE_ROOT}/bin/${PROJECT_ARCHITECTURE})
-		set(LIBRARY_DEST ${RAPTURE_ROOT}/lib/${PROJECT_ARCHITECTURE})
+		set(BINARY_DEST ${RAPTURE_ROOT}/bin/${MODULE_ARCH})
+		set(LIBRARY_DEST ${RAPTURE_ROOT}/lib/${MODULE_ARCH})
 
 		if(EXISTS ${BINARY_SOURCE})
 			file(GLOB_RECURSE SHARED_LIBS RELATIVE ${BINARY_SOURCE}
@@ -413,7 +564,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 			)
 
 			foreach(STATIC_LIB ${STATIC_LIBS})
-				message("${DEPENDENCIES_LIST_INDENTATION}    Found ${STATIC_LIB}")
+				message("${MESSAGES_INDENTATION}    Found ${STATIC_LIB}")
 				setup_file(${STATIC_LIB} ${LIBRARY_SOURCE} ${LIBRARY_DEST})
 
 				string(REGEX REPLACE "[^a-zA-Z0-9_-]" _ LIBRARY_NAME ${STATIC_LIB})
@@ -440,7 +591,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 		endif()
 
 		if(EXISTS ${THIRD_PARTY_DIR}/include)
-			target_include_directories(${PROJECT_NAME} PUBLIC ${THIRD_PARTY_DIR}/include)
+			add_module_include_dirs(${THIRD_PARTY_DIR}/include)
 		endif()
 	endfunction()
 

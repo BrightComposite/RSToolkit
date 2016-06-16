@@ -24,7 +24,7 @@ namespace Rapture
 		virtual ~Interruption() {}
 	};
 
-	void viewException(const exception & ex);
+	void api(core) viewException(const exception & ex);
 
     class Exception : public runtime_error
     {
@@ -64,8 +64,8 @@ namespace Rapture
 		String data;
     };
 
-	String stdError();
-	String stdError(errno_t err);
+	String api(core) stdError();
+	String api(core) stdError(errno_t err);
 
 	class ErrnoException : public Exception
 	{

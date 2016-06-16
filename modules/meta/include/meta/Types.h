@@ -84,7 +84,7 @@ namespace Rapture
 	template<class T>
 	using clear_t			= remove_ptr_t<decay_t<T>>;
 	template<class T>
-	using remove_cv_ref_t	= remove_cv_t<remove_reference_t<T>>;
+	using remove_cv_ref_t	= typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 
 //---------------------------------------------------------------------------
 

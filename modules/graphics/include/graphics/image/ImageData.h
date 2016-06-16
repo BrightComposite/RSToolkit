@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/container/RawData.h>
+#include <core/container/Data.h>
 #include <core/String.h>
 
 #include <io/FileSystem.h>
@@ -187,8 +187,8 @@ namespace Rapture
 			Base::alloc(width * height * preferredBpp(format));
 		}
 
-		void convert(ImageFormat newFormat);
-		void convert(ImageData * out, ImageFormat newFormat) const;
+		void api(graphics) convert(ImageFormat newFormat);
+		void api(graphics) convert(ImageData * out, ImageFormat newFormat) const;
 
 		uint width = 0, height = 0;
 		ImageFormat format = ImageFormat::unknown;

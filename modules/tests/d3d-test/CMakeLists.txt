@@ -6,20 +6,24 @@ project(RaptureDirect3DTest CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/project.cmake)
+include(${RAPTURE_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-start_module()
-
-require_modules(
+start_module(
+	APPLICATION
     RaptureApplication "application"
 	RaptureDirect3D11  "direct3d"
 	RaptureFreeImage   "freeimage"
 	RaptureFreeType    "freetype"
 )
 
-set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
+add_module_sources(
+	SRC_GROUP src Sources
+		START_SECTION SRC_ROOT
+			matrix-test.h
+		END_SECTION
+		
 	SRC_GROUP src Sources
 		START_SECTION SRC_ROOT
 			d3d-test.cpp
@@ -27,9 +31,8 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 		END_SECTION
 )
 
-add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
-load_third_party(vld)
-
 end_module()
+
+load_third_party(vld)
 
 #--------------------------------------------------------

@@ -6,6 +6,8 @@
 
 namespace Rapture
 {
+	implement_link(Graphics);
+
 	template<class string_t>
 	IntSize Graphics::textSize(Graphics * graphics, const string_t & text)
 	{

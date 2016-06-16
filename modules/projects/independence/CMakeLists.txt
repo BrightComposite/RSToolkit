@@ -6,21 +6,25 @@ project(Independence CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/project.cmake)
+include(${RAPTURE_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-start_module()
-
-require_modules(
+start_module(
+	APPLICATION
     RaptureApplication "application"
 	RaptureScene       "scene"
-	RaptureOpenGL3_3   "opengl"
 	RaptureFreeImage   "freeimage"
 	RaptureFreeType    "freetype"
 )
 
-set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+    require_module(RaptureDirect3D11 "direct3d")
+else()
+    require_module(RaptureOpenGL3_3 "opengl")
+endif()
+
+add_module_sources(
 	SRC_GROUP include Headers
 		START_SECTION art
 			START_SECTION object
@@ -38,9 +42,8 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 		END_SECTION
 )
 
-add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
-load_third_party(vld)
-
 end_module()
+
+load_third_party(vld)
 
 #--------------------------------------------------------

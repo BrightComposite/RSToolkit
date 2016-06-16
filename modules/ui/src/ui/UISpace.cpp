@@ -10,6 +10,8 @@
 
 namespace Rapture
 {
+	implement_link(UISpace);
+
 	static void getWindowClass(WNDCLASSEXW & wcex, const wchar_t * className, WNDPROC wndProc)
 	{
 		auto hInstance = Application::getWindowsInstance();
@@ -84,20 +86,21 @@ namespace Rapture
 		return hWnd;
 	}
 
-	UISpace::UISpace(Graphics * graphics, const IntSize & size, HWND handle) : _handle(handle), _root(), _width(size.x), _height(size.y), _graphics(graphics)
+	UISpace::UISpace(Graphics * graphics, const IntSize & size, HWND handle) : _handle(handle), _width(size.x), _height(size.y), _graphics(graphics)
 	{
 		setclass(UISpace);
 
 		_surface = _graphics->createSurface(this);
 		_graphics->bind(_surface);
 
-		_root.reset(new Widget(this, region()));
+		_root.init(this, region());
 		_focused = _focusList.end();
 	}
 
 	UISpace::~UISpace()
 	{
 		send<UIDestroyMessage>(this);
+		_root = nullptr;
 	}
 
 	void UISpace::invalidate()
@@ -217,7 +220,7 @@ namespace Rapture
 		return *_focused;
 	}
 
-	implement_reader(UISpace, KeyDownMessage)
+	void UISpace::read(Handle<KeyDownMessage> & msg)
 	{
 		Widget * f = focused();
 
@@ -225,7 +228,7 @@ namespace Rapture
 			resend(msg, *f);
 	}
 
-	implement_reader(UISpace, CharMessage)
+	void UISpace::read(Handle<CharMessage> & msg)
 	{
 		Widget * f = focused();
 
@@ -233,7 +236,7 @@ namespace Rapture
 			resend(msg, *f);
 	}
 
-	implement_reader(UISpace, KeyUpMessage)
+	void UISpace::read(Handle<KeyUpMessage> & msg)
 	{
 		Widget * f = focused();
 
@@ -241,8 +244,7 @@ namespace Rapture
 			resend(msg, *f);
 	}
 
-
-	implement_reader(UISpace, MouseDownMessage)
+	void UISpace::read(Handle<MouseDownMessage> & msg)
 	{
 		_mouseState.press(msg->button);
 		send<MouseUpdateMessage>(*this, msg->x, msg->y);
@@ -270,7 +272,7 @@ namespace Rapture
 		}
 	}
 
-	implement_reader(UISpace, MouseUpdateMessage)
+	void UISpace::read(Handle<MouseUpdateMessage> & msg)
 	{
 		MouseButton buttons = MouseButton::None;
 
@@ -346,12 +348,12 @@ namespace Rapture
 		}
 	}
 
-	implement_reader(UISpace, MouseUpMessage)
+	void UISpace::read(Handle<MouseUpMessage> & msg)
 	{
 		send<MouseUpdateMessage>(*this, msg->x, msg->y);
 	}
 
-	implement_reader(UISpace, UIResizeMessage)
+	void UISpace::read(Handle<UIResizeMessage> & msg)
 	{
 		_root->changeSize(_width, _height, ModelMask::FullSize);
 	}

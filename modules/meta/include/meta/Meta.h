@@ -33,6 +33,9 @@ namespace Rapture
 			typedef Empty head;
 			typedef Empty type;
 		};
+
+		template<template<typename...> class Tpl, int I, typename ... T>
+		struct cut_t<I, Tpl<T...>> : cut_t<I, T...> {};
 	}
 
 	/**

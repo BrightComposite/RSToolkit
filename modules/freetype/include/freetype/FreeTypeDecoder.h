@@ -16,16 +16,18 @@ namespace Rapture
 	class FreeTypeDecoder : public FontDecoder, public Singleton<FreeTypeDecoder>
 	{
 	public:
-		FreeTypeDecoder();
-		virtual ~FreeTypeDecoder();
+		api(freetype) FreeTypeDecoder();
+		virtual api(freetype) ~FreeTypeDecoder();
 
-		virtual void decode(Handle<Font> & output, const string & type, const Handle<ByteData> & raw) override;
+		virtual void api(freetype) decode(Handle<Font> & output, const string & type, const Handle<ByteData> & raw) override;
 
 		static void initialize()
 		{
 			FontIO::setDecoder("ttf", gettype(FreeTypeDecoder));
 		}
 	};
+
+	template struct api(freetype) Singleton<FreeTypeDecoder>;
 }
 
 //---------------------------------------------------------------------------

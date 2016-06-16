@@ -9,9 +9,6 @@
 
 namespace Rapture
 {
-	map<string, ImageDecoder *> ImageIO::decoders;
-	map<string, ImageEncoder *> ImageIO::encoders;
-	
 	using std::ifstream;
 	using std::ofstream;
 	using std::ios_base;
@@ -29,7 +26,7 @@ namespace Rapture
 			throw Exception("File ", filepath.string(), " doesn't exist!");
 
 		raw.alloc(static_cast<size_t>(file_size(filepath)));
-		input.read(reinterpret_cast<char *>(raw.data), raw.size);
+		input.read(reinterpret_cast<char *>(raw.ptr), raw.size);
 
 		read(output, get_extension(filepath), &raw);
 	}
@@ -44,7 +41,7 @@ namespace Rapture
 		if(fopen_s(&stream, filepath.string().c_str(), "w+b") != 0)
 			throw ErrnoException();
 
-		fwrite(raw.data, 1, raw.size, stream);
+		fwrite(raw.ptr, 1, raw.size, stream);
 		fclose(stream);
 	}
 }

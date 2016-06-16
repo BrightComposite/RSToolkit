@@ -27,7 +27,7 @@ namespace Rapture
 		(int, type)
 	);
 
-	link_class(Subject, Class<Object, Named>);
+	link_class(core, Subject, Class<Object, Named>);
 
 	class Subject : public Object, public Named, public AutoIdentifier
 	{
@@ -142,7 +142,7 @@ namespace Rapture
 	}
 
 	template<class Dst, class Msg>
-	Handle<Msg> &  resend(Handle<Msg> & message, Dst & dest)
+	Handle<Msg> & resend(Handle<Msg> & message, Dst & dest)
 	{
 		auto * src = message->source;
 		message->source = Subject::universe();

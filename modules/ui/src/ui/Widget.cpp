@@ -7,9 +7,23 @@
 
 namespace Rapture
 {
-	BasicWidget::BasicWidget(Widget * parent, const IntRect & rect) : _relPos(rect.pos()), _absPos(_parent ? _relPos + _parent->_absPos : _relPos), _size(rect.size()), _parent(parent), _offsets(rect) {}
-	BasicWidget::BasicWidget(Widget * parent, const IntPoint & pos, const IntSize & size) : _relPos(pos), _absPos(_parent ? _relPos + _parent->_absPos : _relPos), _size(size), _parent(parent), _offsets(pos, size) {}
-	BasicWidget::BasicWidget(const BasicWidget & w) : _relPos(w._relPos), _absPos(w._absPos), _size(w._size), _parent(w._parent), _offsets(w._offsets), _anchors(w._anchors) {}
+	implement_link(BasicWidget);
+	implement_link(Widget);
+
+	BasicWidget::BasicWidget(Widget * parent, const IntRect & rect) : _relPos(rect.pos()), _absPos(_parent ? _relPos + _parent->_absPos : _relPos), _size(rect.size()), _parent(parent), _offsets(rect)
+	{
+		setclass(BasicWidget);
+	}
+
+	BasicWidget::BasicWidget(Widget * parent, const IntPoint & pos, const IntSize & size) : _relPos(pos), _absPos(_parent ? _relPos + _parent->_absPos : _relPos), _size(size), _parent(parent), _offsets(pos, size)
+	{
+		setclass(BasicWidget);
+	}
+
+	BasicWidget::BasicWidget(const BasicWidget & w) : _relPos(w._relPos), _absPos(w._absPos), _size(w._size), _parent(w._parent), _offsets(w._offsets), _anchors(w._anchors)
+	{
+		setclass(BasicWidget);
+	}
 
 	void BasicWidget::calculateOffsets(IntRect & out, const BasicWidget & region, const BasicWidget & parent)
 	{
@@ -51,16 +65,19 @@ namespace Rapture
 	Widget::Widget(UISpace * space) : Widget(space, space->region()) {}
 	Widget::Widget(Widget * parent, const IntRect & area) : Widget(parent->_space, parent, area) {}
 	Widget::Widget(UISpace * space, const IntRect & area) : Widget(space, space->_root, area) {}
-	Widget::Widget(const Widget & widget) : Widget(widget, nullptr) {}
 
 	Widget::Widget(UISpace * space, Widget * parent, const IntRect & region) : BasicWidget(parent, region), _space(space)
 	{
+		setclass(Widget);
+
 		if(_parent != nullptr)
 			_parent->_children.insert(this);
 	}
 
 	Widget::Widget(const Widget & widget, Widget * parent) : Widget(widget._space, parent, widget)
 	{
+		setclass(Widget);
+
 		_flags = widget._flags;
 
 		if(isFocusable())
@@ -402,7 +419,8 @@ namespace Rapture
 
 	void BasicWidget::changePlacement(int left, int top, int right, int bottom, ModelMask mask)
 	{
-		auto msg = send<WidgetMoveMessage>(*this, left, top, right, bottom, mask);
+		auto w = static_cast<Widget *>(this);
+		auto msg = send<WidgetMoveMessage>(*w, left, top, right, bottom, mask);
 		
 		ModelMask resizeMask = ModelMask(0);
 		IntSize size = _size;
@@ -411,8 +429,8 @@ namespace Rapture
 		{
 			_relPos.x = msg->left;
 			_relPos.y = msg->top;
-			_absPos.x = _relPos.x + _parent->left();
-			_absPos.y = _relPos.y + _parent->top();
+			_absPos.x = _relPos.x + _parent->absLeft();
+			_absPos.y = _relPos.y + _parent->absTop();
 			_size.x = msg->right - _relPos.x;
 			_size.y = msg->bottom - _relPos.y;
 
@@ -428,7 +446,9 @@ namespace Rapture
 			_offsets.bottom = msg->bottom - (int)(_anchors.bottom * _parent->height());
 
 			if(resizeMask != 0)
-				send<WidgetResizeMessage>(*this, width(), height(), resizeMask);
+				send<WidgetResizeMessage>(*w, width(), height(), resizeMask);
+
+			BasicWidget::calculateOffsets(_offsets, *this, *_parent);
 		}
 		else
 		{
@@ -444,10 +464,10 @@ namespace Rapture
 				set_flag(ModelMask::Vertical, resizeMask);
 
 			if(resizeMask != 0)
-				send<WidgetResizeMessage>(*this, width(), height(), resizeMask);
+				send<WidgetResizeMessage>(*w, width(), height(), resizeMask);
 		}
 
-		send<AfterWidgetMoveMessage>(*this, _relPos.x, _relPos.y, _relPos.x + _size.x, _relPos.y + _size.y);
+		send<AfterWidgetMoveMessage>(*w, _relPos.x, _relPos.y, _relPos.x + _size.x, _relPos.y + _size.y);
 	}
 
 	void BasicWidget::updateAnchors()
@@ -473,7 +493,6 @@ namespace Rapture
 			set_flag(ModelMask::Bottom, mask);
 
 		changePlacement(newRegion.left, newRegion.top, newRegion.right, newRegion.bottom, mask);
-		BasicWidget::calculateOffsets(_offsets, *this, *_parent);
 	}
 
 	Widget * Widget::findWidget(const IntPoint & pt)
@@ -490,25 +509,25 @@ namespace Rapture
 		return this;
 	}
 
-	implement_reader(Widget, KeyDownMessage)
+	void Widget::read(Handle<KeyDownMessage> & msg)
 	{
 		if(_parent != nullptr)
 			resend(msg, *_parent);
 	}
 
-	implement_reader(Widget, CharMessage)
+	void Widget::read(Handle<CharMessage> & msg)
 	{
 		if(_parent != nullptr)
 			resend(msg, *_parent);
 	}
 
-	implement_reader(Widget, KeyUpMessage)
+	void Widget::read(Handle<KeyUpMessage> & msg)
 	{
 		if(_parent != nullptr)
 			resend(msg, *_parent);
 	}
 
-	implement_reader(Widget, WidgetResizeMessage)
+	void Widget::read(Handle<WidgetResizeMessage> & msg)
 	{
 		for(auto & _child : _children)
 			_child->updateAnchors();

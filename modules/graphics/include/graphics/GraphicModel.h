@@ -38,7 +38,7 @@ namespace Rapture
 			transform = forward<FloatTransform>(t);
 		}
 
-		virtual void draw(int pass = 0) const;
+		virtual void api(graphics) draw(int pass = 0) const;
 
 	protected:
 		Graphics3D * graphics;
@@ -50,7 +50,7 @@ namespace Rapture
 	class Figure3D : public Figure
 	{
 	public:
-		Figure3D(Graphics3D * graphics, const FigureData & data);
+		api(graphics) Figure3D(Graphics3D * graphics, const FigureData & data);
 
 		virtual void draw() const override
 		{

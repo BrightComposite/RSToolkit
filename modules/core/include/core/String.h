@@ -6,6 +6,7 @@
 //---------------------------------------------------------------------------
 
 #include <core/Object.h>
+#include <core/container/Data.h>
 #include <core/container/List.h>
 
 #include <stdarg.h>
@@ -29,14 +30,14 @@ namespace Rapture
 	class String;
 	class WideString;
 
-	string  narrow(const wstring & wide);
-	string  narrow(const wstring & wide, const locale & loc);
+	string  api(core) narrow(const wstring & wide);
+	string  api(core) narrow(const wstring & wide, const locale & loc);
 
-	wstring widen(const string & narrow);
-	wstring widen(const string & narrow, const locale & loc);
+	wstring api(core) widen(const string & narrow);
+	wstring api(core) widen(const string & narrow, const locale & loc);
 
-	void print(String & target, const Object & obj);
-	void print(WideString & target, const Object & obj);
+	void api(core) print(String & target, const Object & obj);
+	void api(core) print(WideString & target, const Object & obj);
 
 	template<class T>
 	struct can_str_print;
@@ -47,8 +48,8 @@ namespace Rapture
 	template<class ... T>
 	struct can_wstring_assemble;
 
-	link_class(String, Class<Object>);
-	link_class(WideString, Class<Object>);
+	link_class(core, String, Class<Object>);
+	link_class(core, WideString, Class<Object>);
 
 	class String : public string, public Object
 	{
@@ -1010,11 +1011,11 @@ namespace Rapture
 	typedef list<string> StringList;
 	typedef list<wstring> WideStringList;
 
-	StringList split(const string & text, const char * sep = " \t");
-	StringList splitOnLines(const string & text, size_t lineLength, bool separateWords = true);
+	StringList api(core) split(const string & text, const char * sep = " \t");
+	StringList api(core) splitOnLines(const string & text, size_t lineLength, bool separateWords = true);
 
-	WideStringList split(const wstring & text, const wchar_t * sep = L" \t");
-	WideStringList splitOnLines(const wstring & text, size_t lineLength, bool separateWords = true);
+	WideStringList api(core) split(const wstring & text, const wchar_t * sep = L" \t");
+	WideStringList api(core) splitOnLines(const wstring & text, size_t lineLength, bool separateWords = true);
 
 	inline String operator + (const char * s, const String & string)
 	{
@@ -1046,24 +1047,24 @@ namespace Rapture
 	template<class ... T>
 	struct can_wstring_assemble : is_true<can_construct<WideString, T>::value...> {};
 
-	byte	toByte(const char * s);
-	char	toChar(const char * s);
-	wchar_t	toWideChar(const char * s);
-	double	toDouble(const char * s);
-	float	toFloat(const char * s);
-	int		toInt(const char * s);
-	long	toLong(const char * s);
+	byte	api(core) toByte(const char * s);
+	char	api(core) toChar(const char * s);
+	wchar_t	api(core) toWideChar(const char * s);
+	double	api(core) toDouble(const char * s);
+	float	api(core) toFloat(const char * s);
+	int		api(core) toInt(const char * s);
+	long	api(core) toLong(const char * s);
 
-	byte	toByte(const wchar_t * s);
-	char	toChar(const wchar_t * s);
-	wchar_t	toWideChar(const wchar_t * s);
-	double	toDouble(const wchar_t * s);
-	float	toFloat(const wchar_t * s);
-	int		toInt(const wchar_t * s);
-	long	toLong(const wchar_t * s);
+	byte	api(core) toByte(const wchar_t * s);
+	char	api(core) toChar(const wchar_t * s);
+	wchar_t	api(core) toWideChar(const wchar_t * s);
+	double	api(core) toDouble(const wchar_t * s);
+	float	api(core) toFloat(const wchar_t * s);
+	int		api(core) toInt(const wchar_t * s);
+	long	api(core) toLong(const wchar_t * s);
 
-	String operator "" _s(const char * s, size_t unitsCount);
-	WideString operator "" _s(const wchar_t * s, size_t unitsCount);
+	String api(core) operator "" _s(const char * s, size_t unitsCount);
+	WideString api(core) operator "" _s(const wchar_t * s, size_t unitsCount);
 
 	template<class Ch>
 	struct GetStringType {};
@@ -1136,10 +1137,6 @@ namespace Rapture
 	{
 		return ostr << static_cast<const wstring &>(str);
 	}
-}
-
-namespace std
-{
 }
 
 //---------------------------------------------------------------------------

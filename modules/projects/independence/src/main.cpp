@@ -1,6 +1,5 @@
 //---------------------------------------------------------------------------
 
-#include <application/Application.h>
 #include <ui/Window.h>
 #include <ui/Panel.h>
 
@@ -12,6 +11,8 @@
 
 #include <art/object/Snake.h>
 #include <utils/FpsCounter.h>
+
+#include <application/Starter.h>
 
 //---------------------------------------------------------------------------
 
@@ -25,7 +26,7 @@ namespace Rapture
 
 		auto graphics = GraphicsProvider::provide();
 
-		graphics->setClearColor({0.0f, 0.0f, 0.0f});
+		graphics->setClearColor(0.0f, 0.0f, 0.0f);
 
 		Handle<Window> window(graphics, 0, 0, 1024, 758);
 		Handle<BackgroundWidget> back(window);
@@ -141,14 +142,14 @@ namespace Rapture
 		};
 
 		for(auto & c : colors)
-			scene->append<Snake>(c);
+			handle<Snake>(scene, c);
 
-		dest_connect(*window, UISpace, KeyDownMessage)
+		subscribe_on(UISpace, KeyDownMessage, *window)
 		{
 			switch(msg->key)
 			{
 				case VK_ESCAPE:
-					dest.close();
+					static_cast<Window &>(dest).close();
 					break;
 			}
 		};
@@ -165,9 +166,7 @@ namespace Rapture
 			
 			counter->next();
 			window->invalidate(fps_panel);
-			
-			scene->invalidate();
-			window->validate();
+			scene->render();
 
 			return 0;
 		});

@@ -18,7 +18,7 @@ struct VS_OUTPUT
 {
 	float4 position : SV_POSITION;
 	float2 texcoord : TEXCOORD;
-	float4 ratio : NORMAL;
+	float4 ratio    : COLOR;
 };
 
 VS_OUTPUT main(float2 position : POSITION, float2 texcoord : TEXCOORD)

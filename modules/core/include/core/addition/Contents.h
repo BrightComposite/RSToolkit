@@ -36,7 +36,10 @@ namespace Rapture
 	using contents_types = typename Internals::Contents<T>::types;
 
 	template<class T, class ... A>
-	struct can_construct_contents : are_convertible<Types<A...>, contents_types<T>> {};
+	struct can_construct_contents : bool_type<
+		are_convertible<Types<A...>, contents_types<T>>::value ||
+		(sizeof...(A) == 0 && can_construct<Internals::Contents<T>>::value)
+	> {};
 
 	template<class T>
 	struct alignas(alignof(Internals::Contents<T>)) Contents : Internals::Contents<T>

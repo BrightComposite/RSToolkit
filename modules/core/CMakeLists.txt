@@ -6,13 +6,16 @@ project(RaptureCore CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/project.cmake)
+include(${RAPTURE_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-start_module()
+start_module(
+	SHARED
+	RaptureMeta "meta"
+)
 
-set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
+add_module_sources(
 	SRC_GROUP include Headers
 		START_SECTION core
 			Class.h
@@ -47,10 +50,10 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 			START_SECTION container
 				Array.h
                 Container.h
+				Data.h
 				List.h
 				Map.h
 				Queue.h
-				RawData.h
 				Set.h
 				Stack.h
 				StaticMap.h
@@ -84,22 +87,9 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 			END_SECTION
 		END_SECTION
 
-		START_SECTION meta
-			Adapt.h
-			Bitmask.h
-			BoolTypes.h
-			Flag.h
-			Inheritance.h
-			Macro.h
-			Meta.h
-			Preprocessor.h
-			Sfinae.h
-			Types.h
-			UseIf.h
-		END_SECTION
-
 	SRC_GROUP src Sources
 		START_SECTION core
+			Core.cpp
 			Exception.cpp
 			String.cpp
 
@@ -112,11 +102,6 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 			END_SECTION
 		END_SECTION
 )
-
-#--------------------------------------------------------
-
-add_library(${PROJECT_NAME} STATIC ${PROJECT_SOURCES})
-load_third_party(boost COMPONENT preprocessor)
 
 end_module()
 

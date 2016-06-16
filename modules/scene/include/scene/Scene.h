@@ -26,17 +26,19 @@ namespace Rapture
 
 	using ticks_t = long long;
 
-	link_class(Scene, Class<Object>);
-	link_class(SceneObject, Class<Object>);
-	link_class(Drawable, Class<>);
-	link_class(DrawableObject, Class<SceneObject, Drawable>);
+	link_class(scene, Scene, Class<Object>);
+	link_class(scene, SceneObject, Class<Object>);
+	link_class(scene, Drawable, Class<>);
+	link_class(scene, DrawableObject, Class<SceneObject, Drawable>);
 
 	class SceneObject : public Object
 	{
 		friend class Scene;
 
+		deny_copy(SceneObject);
+
 	public:
-		SceneObject(Scene * scene, const DoubleVector & pos = DoubleVector::positiveW);
+		api(scene) SceneObject(Scene * scene, const DoubleVector & pos = DoubleVector::positiveW);
 		virtual ~SceneObject() {}
 
 		Scene * scene() const
@@ -65,16 +67,20 @@ namespace Rapture
 	{
 		friend class Scene;
 
+		deny_copy(Drawable);
+
 	public:
-		Drawable(Scene * scene);
+		api(scene) Drawable(Scene * scene);
 		virtual ~Drawable() {}
 
 	protected:
-		virtual void draw(Graphics3D * graphics, const IntRect & viewport, float zoom) const = 0;
+		virtual void draw(Graphics3D & graphics, const IntRect & viewport, float zoom) const = 0;
 	};
 
 	class DrawableObject : public SceneObject, public Drawable
 	{
+		deny_copy(DrawableObject);
+
 	public:
 		DrawableObject(Scene * scene) : SceneObject(scene), Drawable(scene)
 		{
@@ -89,6 +95,8 @@ namespace Rapture
 		friend class Drawable;
 		friend class SceneObject;
 		friend class Widget;
+
+		deny_copy(Scene);
 
 	protected:
 		class SceneLayer : public Layer
@@ -109,96 +117,71 @@ namespace Rapture
 		typedef time_point<clock> time_marker;
 
 	public:
-		Scene(Handle<Widget> widget, const string & name = "unknown") : Scene(name)
+		enum class ProjectionMode
+		{
+			Ortho,
+			Perspective
+		};
+
+		Scene(Widget * widget, const string & name = "unknown scene") : Scene(name)
 		{
 			if(widget->graphics() notkindof (Graphics3D))
 				throw Exception("Widget for the scene must support 3D graphics!");
 
 			_widget = widget;
-			widget->append<SceneLayer>(this);
+			_widget->append<SceneLayer>(this);
+			connect(*_widget, this, &Scene::onWidgetResize);
 
 			_firstTick = _lastTick = clock::now();
 			_ticks = 0;
 
-			updateViewport();
+			setOrtho();
 		}
 
 		virtual ~Scene()
 		{
+			disconnect(*_widget, this, &Scene::onWidgetResize);
+
 			for(auto & obj : _objects)
 				obj->_scene = nullptr;
 		}
 
-		Graphics3D * graphics() const
+		Graphics3D & graphics() const
 		{
-			return static_cast<Graphics3D *>(_widget->graphics());
+			return *static_cast<Graphics3D *>(_widget->graphics());
 		}
 
-		Widget * widget() const
+		Widget & widget() const
 		{
-			return _widget;
+			return *_widget;
 		}
 
-		UISpace * space() const
+		UISpace & space() const
 		{
-			return _widget->space();
-		}
-
-		Camera * camera() const
-		{
-			return _camera;
+			return *_widget->space();
 		}
 
 		void invalidate() const
 		{
-			space()->invalidate(_widget);
+			space().invalidate(_widget);
 		}
 
 		void render() const
 		{
-			space()->invalidate(_widget);
-			space()->validate();
+			space().invalidate(_widget);
+			space().validate();
 		}
 
-		void attach(Handle<SceneObject> obj);
-		void detach(SceneObject * obj);
+		void api(scene) attach(Handle<SceneObject> obj);
+		void api(scene) detach(SceneObject * obj);
 
-		void setProjection(const fmat & projection)
-		{
-			graphics()->updateUniform<Uniforms::Projection>(projection);
-		}
+		void api(scene) setOrtho();
+		void api(scene) setPerspective();
+		void api(scene) setZoom(float zoom);
+		void api(scene) setFieldOfView(float fov);
 
-		void setProjection(fmat && projection)
-		{
-			graphics()->updateUniform<Uniforms::Projection>(forward<fmat>(projection));
-		}
-
-		void setZoom(float zoom)
-		{
-			_zoom = zoom;
-			updateViewport();
-		}
-
-		void setTickLength(milliseconds length)
-		{
-			_tickLength = length;
-			_firstTick = _lastTick - (_tickLength * _ticks);
-		}
-
-		void update()
-		{
-			if(clock::now() - _lastTick > _tickLength)
-			{
-				_lastTick = clock::now();
-				ticks_t ticks = (_lastTick - _firstTick) / _tickLength;
-
-				for(; _ticks < ticks; ++_ticks)
-				{
-					for(auto & obj : _objects)
-						obj->update(_ticks);
-				}
-			}
-		}
+		void api(scene) setTickLength(milliseconds length);
+		void api(scene) update();
 
 	protected:
 		Scene(const string & name) : Named(name)
@@ -206,25 +189,22 @@ namespace Rapture
 			setclass(Scene);
 		}
 
-		void draw(Graphics3D * graphics, const IntRect & viewport) const
+		void draw(Graphics3D & graphics, const IntRect & viewport) const
 		{
 			for(auto & drawable : _drawables)
 				drawable->draw(graphics, viewport, _zoom);
 		}
 
-		void updateViewport()
-		{
-			float invzoom = 1 / _zoom;
-			float aspect = _widget->viewport().ratio() * invzoom;
-			setProjection(fmat::ortho(-invzoom, invzoom, -aspect, aspect, -invzoom, invzoom));
-		}
+		void api(scene) onWidgetResize(Handle<WidgetResizeMessage> & msg, Widget & w);
+		void api(scene) setProjection(fmat && projection);
 
 		Widget * _widget;
 		Array<SceneObject> _objects;
-		vector<Drawable *> _drawables;
+		array_list<Drawable *> _drawables;
 
-		Handle<Camera> _camera;
 		float _zoom = 0.01f;
+		float _fov = 90.0f;
+		ProjectionMode _projectionMode = ProjectionMode::Ortho;
 
 		milliseconds _tickLength = 1ms;
 		time_marker _lastTick;

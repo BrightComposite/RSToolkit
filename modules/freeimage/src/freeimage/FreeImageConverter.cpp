@@ -59,7 +59,7 @@ namespace Rapture
 		if(internal_format == FIF_UNKNOWN)
 			throw ImageConversionException("Image conversion error: format \"", type, "\" is unknown");
 
-		FIMEMORY * mem = FreeImage_OpenMemory(raw->data, static_cast<unsigned long>(raw->size));
+		FIMEMORY * mem = FreeImage_OpenMemory(raw->ptr, static_cast<unsigned long>(raw->size));
 
 		if(!mem)
 			throw ImageConversionException("Can't open memory for image");
@@ -81,7 +81,7 @@ namespace Rapture
 		output->format = preferredFormat(bpp);
 		output->alloc();
 
-		FreeImage_ConvertToRawBits(output->data, bmp, output->width * bpp, bpp * 8, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK, TRUE);
+		FreeImage_ConvertToRawBits(output->ptr, bmp, output->width * bpp, bpp * 8, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK, TRUE);
 	}
 
 	void FreeImageConverter::encode(OwnedByteData * output, const string & type, const ImageData * image)

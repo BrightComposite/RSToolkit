@@ -1,12 +1,15 @@
 //---------------------------------------------------------------------------
 
-#include <physics/PhysicalObject.h>
+#include <physics/PlaneObject.h>
 #include <physics/Physics.h>
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
+	implement_link(PhysicalObject);
+	implement_link(PlaneObject);
+
 	void MotionState::getWorldTransform(btTransform & trans) const
 	{
 		trans.setRotation(object->_rot.elements);

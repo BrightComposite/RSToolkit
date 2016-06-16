@@ -11,8 +11,10 @@ function(escape_regular OUT_STR STR)
 endfunction()
 
 if(WIN32)
-	function(add_shaders OUT_SHADERS_LIST OUT_INCLUDES_LIST ROOT_DIR RES_DIR RES_GROUP INC_DIR INC_GROUP SHADERS_ROOT)
-		set_project_sources(OWN_SHADERS_LIST ${ROOT_DIR}
+	function(add_shaders RES_DIR RES_GROUP INC_DIR INC_GROUP SHADERS_ROOT)
+		set(ROOT_DIR ${PROJECT_SOURCE_DIR})
+
+		set_module_sources(OUT_SHADERS_LIST
 			SRC_GROUP ${RES_DIR} ${RES_GROUP}
 				START_SECTION ${SHADERS_ROOT}
 					${ARGN}
@@ -26,7 +28,7 @@ if(WIN32)
 			list(APPEND INCLUDE_ENTRIES ${inc_entry})
 		endforeach()
 
-		foreach(shader ${OWN_SHADERS_LIST})
+		foreach(shader ${OUT_SHADERS_LIST})
 			get_filename_component(FileName ${shader} NAME_WE)
 			get_filename_component(FileDir ${shader} DIRECTORY)
 
@@ -65,23 +67,20 @@ if(WIN32)
 				)
 		endforeach()
 
-		set_project_sources(OWN_INCLUDES_LIST ${ROOT_DIR}
+		add_module_sources(OUT_INCLUDES_LIST
 			SRC_GROUP ${INC_DIR} ${INC_GROUP}
 				START_SECTION ${SHADERS_ROOT}
 					${INCLUDE_ENTRIES}
 				END_SECTION
 		)
 
-		set(${OUT_SHADERS_LIST} ${OWN_SHADERS_LIST} PARENT_SCOPE)
-		set(${OUT_INCLUDES_LIST} ${OWN_INCLUDES_LIST} PARENT_SCOPE)
+		set(${PROJECT_NAME}_SOURCES ${${PROJECT_NAME}_SOURCES};${OUT_SHADERS_LIST} CACHE INTERNAL "${PROJECT_NAME} sources" FORCE)
 	endfunction()
 else()
-	function(add_shaders OUT_SHADERS_LIST OUT_INCLUDES_LIST ROOT_DIR RES_DIR RES_GROUP INC_DIR INC_GROUP SHADERS_ROOT)
-		set_project_sources(OWN_SHADERS_LIST ${ROOT_DIR}
+	function(add_shaders RES_DIR RES_GROUP INC_DIR INC_GROUP SHADERS_ROOT)
+		add_module_sources(OUT_SHADERS_LIST
 			SRC_GROUP ${RES_DIR} ${RES_GROUP}
 				${ARGN}
 		)
-
-		set(${OUT_SHADERS_LIST} ${OWN_SHADERS_LIST} PARENT_SCOPE)
 	endfunction()
 endif()

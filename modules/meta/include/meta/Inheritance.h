@@ -58,7 +58,7 @@ namespace Rapture
 		template<class ... A,								\
 			useif <can_construct<Base, A...>::value> endif	\
 		>													\
-		Name(A &&... args) : Base(forward<A>(args)...) {}	\
+		Name(A &&... a) : Base(std::forward<A>(a)...) {}	\
 															\
 		inherit_ops((Name, Base), OPS_ALL)					\
 	}

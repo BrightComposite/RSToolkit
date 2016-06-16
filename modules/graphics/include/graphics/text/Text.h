@@ -13,7 +13,7 @@
 
 namespace Rapture
 {
-	class Text //: public _____
+	class Text
 	{
 	public:
 		Text(String contents) {}

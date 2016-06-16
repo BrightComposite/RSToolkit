@@ -9,6 +9,8 @@
 
 namespace Rapture
 {
+	implement_link(Window);
+
 	Window::Window(Graphics * graphics, const IntRect & rect, const WideString & caption) : UISpace(graphics, rect.size(), createWindowHandle(rect, caption, L"RaptureWindowClass", wndProc))
 	{
 		setclass(Window);
@@ -28,7 +30,7 @@ namespace Rapture
 
 		registerHotkey(HOTKEY_FULLSCREEN, VK_RETURN, MOD_ALT);
 
-		dest_connect(*this, UISpace, HotkeyMessage)
+		subscribe_on(UISpace, HotkeyMessage, *this)
 		{
 			auto window = static_cast<Window *>(&dest);
 
@@ -41,8 +43,6 @@ namespace Rapture
 		};
 	}
 
-	Window::~Window() {}
-
 	LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		PAINTSTRUCT ps;
@@ -53,7 +53,8 @@ namespace Rapture
 		if(window == nullptr)
 			return DefWindowProcW(hWnd, message, wParam, lParam);
 
-		Widget & root = *window->_root.get();
+		Window & w = *window;
+		Widget & root = *w._root;
 
 		switch(message)
 		{
@@ -66,23 +67,23 @@ namespace Rapture
 
 			case WM_CLOSE:
 			{
-				window->_isClosed = true;
-				send<WindowCloseMessage>(*window);
+				w._isClosed = true;
+				send<WindowCloseMessage>(w);
 				DestroyWindow(hWnd);
 				break;
 			}
 
 			case WM_DESTROY:
 			{
-				KillTimer(hWnd, window->_timer);
+				KillTimer(hWnd, w._timer);
 				PostQuitMessage(0);
 				break;
 			}
 
 			case WM_ACTIVATE:
 			{
-				if(LOWORD(wParam) == 0 && !window->_isClosed)
-					window->setFullscreen(false);
+				if(LOWORD(wParam) == 0 && !w._isClosed)
+					w.setFullscreen(false);
 
 				break;
 			}
@@ -95,73 +96,73 @@ namespace Rapture
 					case VK_TAB:
 					{
 						if(hi_bit_mask::state(GetKeyState(VK_SHIFT)))
-							window->focusPrevious();
+							w.focusPrevious();
 						else
-							window->focusNext();
+							w.focusNext();
 
 						break;
 					}
 				}
 
-				send<KeyDownMessage>(*window, (int)wParam, (int)(lParam & 0xFFFF), (get_bit<30>(lParam) == 0), (get_bit<24>(lParam) != 0));
+				send<KeyDownMessage>(w, (int)wParam, (int)(lParam & 0xFFFF), (get_bit<30>(lParam) == 0), (get_bit<24>(lParam) != 0));
 				break;
 			}
 
 			case WM_CHAR:
 			{
-				send<CharMessage>(*window, (int)wParam, (int)(lParam & 0xFFFF), (get_bit<30>(lParam) == 0), (get_bit<24>(lParam) != 0));
+				send<CharMessage>(w, (int)wParam, (int)(lParam & 0xFFFF), (get_bit<30>(lParam) == 0), (get_bit<24>(lParam) != 0));
 				break;
 			}
 
 			case WM_HOTKEY:
 			{
-				send<HotkeyMessage>(*window, (int)wParam);
+				send<HotkeyMessage>(w, (int)wParam);
 				break;
 			}
 
 			case WM_KEYUP:
 			case WM_SYSKEYUP:
 			{
-				send<KeyUpMessage>(*window, (int)wParam, (int)(lParam & 0xFFFF), (get_bit<30>(lParam) == 0), (get_bit<24>(lParam) != 0));
+				send<KeyUpMessage>(w, (int)wParam, (int)(lParam & 0xFFFF), (get_bit<30>(lParam) == 0), (get_bit<24>(lParam) != 0));
 				break;
 			}
 
 			case WM_LBUTTONDOWN:
 			{
-				send<MouseDownMessage>(*window, MouseButton::Left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
+				send<MouseDownMessage>(w, MouseButton::Left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
 			case WM_MBUTTONDOWN:
 			{
-				send<MouseDownMessage>(*window, MouseButton::Middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
+				send<MouseDownMessage>(w, MouseButton::Middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
 			case WM_RBUTTONDOWN:
 			{
-				send<MouseDownMessage>(*window, MouseButton::Right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
+				send<MouseDownMessage>(w, MouseButton::Right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
 			case WM_LBUTTONUP:
 			{
-				window->_mouseState.unpress(MouseButton::Left);
-				send<MouseUpMessage>(*window, MouseButton::Left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
+				w._mouseState.unpress(MouseButton::Left);
+				send<MouseUpMessage>(w, MouseButton::Left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
 			case WM_MBUTTONUP:
 			{
-				window->_mouseState.unpress(MouseButton::Middle);
-				send<MouseUpMessage>(*window, MouseButton::Middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
+				w._mouseState.unpress(MouseButton::Middle);
+				send<MouseUpMessage>(w, MouseButton::Middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
 			case WM_RBUTTONUP:
 			{
-				window->_mouseState.unpress(MouseButton::Right);
-				send<MouseUpMessage>(*window, MouseButton::Right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
+				w._mouseState.unpress(MouseButton::Right);
+				send<MouseUpMessage>(w, MouseButton::Right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
@@ -195,57 +196,57 @@ namespace Rapture
 				GetCursorPos(&pt);
 				ScreenToClient(hWnd, &pt);
 
-				send<MouseUpdateMessage>(*window, pt.x, pt.y);
+				send<MouseUpdateMessage>(w, pt.x, pt.y);
 				break;
 			}
 
 			case WM_WINDOWPOSCHANGED:
 			{
-				if(!window->_isShown)
+				if(!w._isShown)
 					break;
 
 				WINDOWPOS & pos = *(WINDOWPOS *)lParam;
-				window->_outerRegion.setPlacement(pos.x, pos.y, pos.cx, pos.cy);
+				w._outerRegion.setPlacement(pos.x, pos.y, pos.cx, pos.cy);
 
 				RectAdapter a;
-				GetClientRect(window->_handle, &a.rect);
+				GetClientRect(w._handle, &a.rect);
 
 				WINDOWPLACEMENT wp;
 				GetWindowPlacement(hWnd, &wp);
 
-				if(wp.showCmd == SW_SHOWNORMAL || window->_width != a.width() || window->_height != a.height())
+				if(wp.showCmd == SW_SHOWNORMAL || w._width != a.width() || w._height != a.height())
 				{
-					window->_width = a.width();
-					window->_height = a.height();
+					w._width = a.width();
+					w._height = a.height();
 
-					send<UIResizeMessage>(*window, window->_width, window->_height);
+					send<UIResizeMessage>(w, w._width, w._height);
 				}
 
 				if(check_flag(SWP_HIDEWINDOW, pos.flags))
 				{
-					window->_state = WindowState::Hidden;
+					w._state = WindowState::Hidden;
 					break;
 				}
 
 				switch(wp.showCmd)
 				{
 				case SW_HIDE:
-					window->_state = WindowState::Hidden;
+					w._state = WindowState::Hidden;
 					break;
 
 				case SW_MAXIMIZE:
-					window->_state = WindowState::Maximized;
+					w._state = WindowState::Maximized;
 					break;
 
 				case SW_MINIMIZE:
 				case SW_SHOWMINIMIZED:
 				case SW_SHOWMINNOACTIVE:
-					window->_state = WindowState::Minimized;
+					w._state = WindowState::Minimized;
 					break;
 
 				case SW_RESTORE:
 				case SW_SHOWNORMAL:
-					window->_state = WindowState::Normal;
+					w._state = WindowState::Normal;
 					break;
 
 				case SW_SHOW:

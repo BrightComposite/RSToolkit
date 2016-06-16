@@ -25,6 +25,9 @@ namespace Rapture
 	template <> const float  IntrinSignmask<float>	::value = *reinterpret_cast<const float *>(&IntrinSignmask<int>::value);
 	template <> const double IntrinSignmask<double>	::value = *reinterpret_cast<const double *>(&IntrinSignmask<int64>::value);
 
+	template <> const byte	 IntrinNofrac<byte>		::value = 0;
+	template <> const int	 IntrinNofrac<int>		::value = 0;
+	template <> const int64	 IntrinNofrac<int64>	::value = 0;
 	template <> const float  IntrinNofrac<float>	::value = 8388608.0f; // float(0x80'0000)
 	template <> const double IntrinNofrac<double>	::value = 36028797018963968.0; // double(0x80'0000'0000'0000)
 

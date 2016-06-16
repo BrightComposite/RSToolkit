@@ -50,12 +50,12 @@ namespace Rapture
 		virtual ~ImageConversionException() {}
 	};
 
-	class ImageIO
+	class ImageIO : public Singleton<ImageIO>
 	{
 	public:
 		static void read(ImageData * output, const string & type, const ByteData * raw)
 		{
-			auto & decoder = decoders[type];
+			auto & decoder = instance().decoders[type];
 
 			if(decoder == nullptr)
 				throw ImageConversionException("Can't read image data of type ", type);
@@ -65,7 +65,7 @@ namespace Rapture
 
 		static void write(OwnedByteData * output, const string & type, const ImageData * image)
 		{
-			auto & encoder = encoders[type];
+			auto & encoder = instance().encoders[type];
 
 			if(encoder == nullptr)
 				throw ImageConversionException("Can't write image data of type ", type);
@@ -73,17 +73,17 @@ namespace Rapture
 			encoder->encode(output, type, image);
 		}
 
-		static void load(ImageData * output, const path & filepath);
-		static void save(const path & filepath, const ImageData * image);
+		static void api(graphics) load(ImageData * output, const path & filepath);
+		static void api(graphics) save(const path & filepath, const ImageData * image);
 
 		static ImageDecoder * getDecoder(const string & type)
 		{
-			return decoders[type];
+			return instance().decoders[type];
 		}
 
 		static ImageEncoder * getEncoder(const string & type)
 		{
-			return encoders[type];
+			return instance().encoders[type];
 		}
 
 		template<class Decoder, useif <
@@ -93,7 +93,7 @@ namespace Rapture
 		>
 		static void setDecoder(const string & type, Type<Decoder> = {})
 		{
-			decoders[type] = &Decoder::instance();
+			instance().decoders[type] = &Decoder::instance();
 		}
 
 		template<class Encoder, useif <
@@ -103,7 +103,7 @@ namespace Rapture
 		>
 		static void setEncoder(const string & type, Type<Encoder> = {})
 		{
-			encoders[type] = &Encoder::instance();
+			instance().encoders[type] = &Encoder::instance();
 		}
 
 		template<class Converter, useif <
@@ -114,14 +114,17 @@ namespace Rapture
 		>
 		static void setConverter(const string & type, Type<Converter> = {})
 		{
-			decoders[type] = &Converter::instance();
-			encoders[type] = &Converter::instance();
+			auto & inst = instance();
+			inst.decoders[type] = &Converter::instance();
+			inst.encoders[type] = &Converter::instance();
 		}
 		
 	protected:
-		static map<string, ImageDecoder *> decoders;
-		static map<string, ImageEncoder *> encoders;
+		map<string, ImageDecoder *> decoders;
+		map<string, ImageEncoder *> encoders;
 	};
+
+	template struct api(graphics) Singleton<ImageIO>;
 }
 
 //---------------------------------------------------------------------------

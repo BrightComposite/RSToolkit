@@ -11,19 +11,29 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace std
 {
-	using std::vector;
-
-	template<typename T, class ... OwnerAttr>
-	class Array : public vector<Handle<T, OwnerAttr...>>
+	template<class T, class A = allocator<T>>
+	struct array_list : vector<T, A>
 	{
 	public:
-		using vector<Handle<T, OwnerAttr...>>::vector;
+		using vector<T, A>::vector;
+	};
+}
+
+namespace Rapture
+{
+	using std::array_list;
+
+	template<typename T, class ... OwnerAttr>
+	class Array : public array_list<Handle<T, OwnerAttr...>>
+	{
+	public:
+		using array_list<Handle<T, OwnerAttr...>>::array_list;
 	};
 
 	template<typename T>
-	void sort(vector<T> & v)
+	void sort(array_list<T> & v)
 	{
 		std::sort(v.begin(), v.end());
 	}
@@ -32,7 +42,7 @@ namespace Rapture
 		is_callable<Pred, const T &, const T &>::value
 		> endif
 	>
-	void sort(vector<T> & v)
+	void sort(array_list<T> & v)
 	{
 		std::sort(v.begin(), v.end(), Pred());
 	}
@@ -41,7 +51,7 @@ namespace Rapture
 		is_callable<Pred, const T &, const T &>::value
 		> endif
 	>
-	void sort(vector<T> & v, Pred pred)
+	void sort(array_list<T> & v, Pred pred)
 	{
 		std::sort(v.begin(), v.end(), pred);
 	}

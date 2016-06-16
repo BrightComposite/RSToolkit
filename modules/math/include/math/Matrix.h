@@ -52,6 +52,11 @@ namespace Rapture
 			array<Pair, 8>		pairs;
 		};
 
+		member_cast(m, array<T, 16>);
+		member_cast(rows, array<Row, 4>);
+		member_cast(data, array<Data, 4>);
+		member_cast(a, array<array<T, 4>, 4>);
+
 		Matrix() : x {Vector<T>::positiveX}, y {Vector<T>::positiveY}, z {Vector<T>::positiveZ}, w {Vector<T>::positiveW} {}
 		Matrix(const Matrix & matrix) : x {matrix.x}, y {matrix.y}, z {matrix.z}, w {matrix.w} {}
 		Matrix(Matrix && matrix) : m {move(matrix.m)} {}
@@ -142,9 +147,9 @@ namespace Rapture
 			return *this;
 		}
 
-		Matrix & operator *= (const Matrix & m2)
+		Matrix & operator *= (const Matrix & matrix)
 		{
-			return *this = operator * (*this, m2);
+			return *this = operator * (*this, matrix);
 		}
 
 		Matrix & operator *= (T value)
@@ -202,79 +207,31 @@ namespace Rapture
 			return a[row][column];
 		}
 
-		operator array<T, 16> & () &
-		{
-			return m;
-		}
-
-		operator const array<T, 16> & () const &
-		{
-			return m;
-		}
-
-		operator array<T, 16> && () &&
-		{
-			return move(m);
-		}
-
-		operator array<Vector<T>, 4> & () &
-		{
-			return rows;
-		}
-
-		operator const array<Vector<T>, 4> & () const &
-		{
-			return rows;
-		}
-
-		operator array<Vector<T>, 4> && () &&
-		{
-			return move(rows);
-		}
-
-		operator array<array<T, 4>, 4> & () &
-		{
-			return a;
-		}
-
-		operator const array<array<T, 4>, 4> & () const &
-		{
-			return a;
-		}
-
-		operator array<array<T, 4>, 4> && () &&
-		{
-			return move(a);
-		}
-
-		operator array<Data, 4> & () &
-		{
-			return data;
-		}
-
-		operator const array<Data, 4> & () const &
-		{
-			return data;
-		}
-
-		operator array<Data, 4> && () &&
-		{
-			return move(data);
-		}
-
         inline T norm() const;
 		inline Vector<T> determinant() const;
 
-		Matrix & invert()
+		Matrix & invert() &
 		{
 			getInverse(*this);
 			return *this;
 		}
 
-		Matrix & transpose()
+		Matrix && invert() &&
+		{
+			getInverse(*this);
+			return forward<Matrix>(*this);
+		}
+
+		Matrix & transpose() &
 		{
 			getTransposition(*this);
 			return *this;
+		}
+
+		Matrix && transpose() &&
+		{
+			getTransposition(*this);
+			return forward<Matrix>(*this);
 		}
 
 		Matrix inverse() const
@@ -296,6 +253,8 @@ namespace Rapture
 
 		inline Vector<T> transformPoint(const Vector<T> & b) const;
 		inline Vector<T> transformDirection(const Vector<T> & b) const;
+
+		inline Matrix & apply(const Matrix<T> & m);
 
 		inline Matrix & scale(const Vector<T> & s);
 		inline Matrix & scale(const T s);
@@ -324,6 +283,7 @@ namespace Rapture
 		static inline Matrix perspective(T fov, T aspect, T z0, T z1);
 		static inline Matrix frustum(T x0, T x1, T y0, T y1, T z0, T z1);
 		static inline Matrix lookAt(const Vector<T> & position, const Vector<T> & center, const Vector<T> & up);
+		static inline Matrix lookTo(const Vector<T> & position, const Vector<T> & direction, const Vector<T> & up);
     };
 
 	using FloatMatrix = Matrix<float>;
@@ -344,13 +304,13 @@ namespace Rapture
 	}
 
 	template<class T>
-	inline Matrix<T> operator * (const Matrix<T> & m1, const Matrix<T> & m2)
+	inline Matrix<T> operator * (const Matrix<T> & a, const Matrix<T> & b)
 	{
 		return {
-			m2[0] * m1[0].spreadX() + m2[1] * m1[0].spreadY() + m2[2] * m1[0].spreadZ() + m2[3] * m1[0].spreadW(),
-			m2[0] * m1[1].spreadX() + m2[1] * m1[1].spreadY() + m2[2] * m1[1].spreadZ() + m2[3] * m1[1].spreadW(),
-			m2[0] * m1[2].spreadX() + m2[1] * m1[2].spreadY() + m2[2] * m1[2].spreadZ() + m2[3] * m1[2].spreadW(),
-			m2[0] * m1[3].spreadX() + m2[1] * m1[3].spreadY() + m2[2] * m1[3].spreadZ() + m2[3] * m1[3].spreadW()
+			a[0] * b[0].spreadX() + a[1] * b[0].spreadY() + a[2] * b[0].spreadZ() + a[3] * b[0].spreadW(),
+			a[0] * b[1].spreadX() + a[1] * b[1].spreadY() + a[2] * b[1].spreadZ() + a[3] * b[1].spreadW(),
+			a[0] * b[2].spreadX() + a[1] * b[2].spreadY() + a[2] * b[2].spreadZ() + a[3] * b[2].spreadW(),
+			a[0] * b[3].spreadX() + a[1] * b[3].spreadY() + a[2] * b[3].spreadZ() + a[3] * b[3].spreadW()
 		};
 	}
 
@@ -375,7 +335,7 @@ namespace Rapture
 	template<class T>
 	inline T Matrix<T>::norm() const
 	{
-		return std::max({v[0].norm(), v[1].norm(), v[2].norm(), v[3].norm()});
+		return std::max({v[0].max(), v[1].max(), v[2].max(), v[3].max()});
 	}
 
 	template<class T>
@@ -491,81 +451,87 @@ namespace Rapture
 	}
 
 	template<class T>
+	inline Matrix<T> & Matrix<T>::apply(const Matrix<T> & m)
+	{
+		return *this *= m;
+	}
+
+	template<class T>
 	inline Matrix<T> & Matrix<T>::scale(const Vector<T> & s)
 	{
-		return *this *= scaling(s);
+		return apply(scaling(s));
 	}
 
 	template<class T>
 	inline Matrix<T> & Matrix<T>::scale(const T s)
 	{
-		return *this *= scaling({s});
+		return apply(scaling({s}));
 	}
 
 	template<class T>
 	inline Matrix<T> & Matrix<T>::rotateX(T angle)
 	{
-		return *this *= rotationX(angle);
+		return apply(rotationX(angle));
 	}
 
 	template<class T>
 	inline Matrix<T> & Matrix<T>::rotateY(T angle)
 	{
-		return *this *= rotationY(angle);
+		return apply(rotationY(angle));
 	}
 
 	template<class T>
 	inline Matrix<T> & Matrix<T>::rotateZ(T angle)
 	{
-		return *this *= rotationZ(angle);
+		return apply(rotationZ(angle));
 	}
 
 	template<class T>
 	inline Matrix<T> & Matrix<T>::rotate(const Vector<T> & axis, T angle)
 	{
-		return *this *= rotation(axis, angle);
+		return apply(rotation(axis, angle));
 	}
 
 	template<class T>
 	inline Matrix<T> & Matrix<T>::rotate(const Vector<T> & v)
 	{
-		return *this *= rotation(v);
+		return apply(rotation(v));
 	}
 
 	template<class T>
 	inline Matrix<T> & Matrix<T>::mirrorX()
 	{
-		return *this *= {
+		return apply({
 			Vector<T>::negativeX,
 			Vector<T>::positiveY,
 			Vector<T>::positiveZ
-		};
+		});
 	}
 
 	template<class T>
 	inline Matrix<T> & Matrix<T>::mirrorY()
 	{
-		return *this *= {
+		return apply({
 			Vector<T>::positiveX,
 			Vector<T>::negativeY,
 			Vector<T>::positiveZ
-		};
+		});
 	}
 
 	template<class T>
 	inline Matrix<T> & Matrix<T>::mirrorZ()
 	{
-		return *this *= {
+		return apply({
 			Vector<T>::positiveX,
 			Vector<T>::positiveY,
 			Vector<T>::negativeZ
-		};
+		});
 	}
 
 	template<class T>
 	Matrix<T> & Matrix<T>::translate(const Vector<T> & v)
 	{
-		return *this *= translation(v);
+		return apply(translation(v));
 	}
 
 	template<class T>
@@ -641,7 +607,7 @@ namespace Rapture
 		return {
 			y.template shuffle<3, 3, 0, 0>() * z,						//  cy * cz,			   | cy * sz,				| sy,	  | 0
 			x.template shuffle<3, 3, 2, 2>() * mz + x.spreadX() * yz,	// -cx * sz + sx * sy * cz | cx * cz + sx * sy * sz |-sx * cy |	0
-			x.template shuffle<0, 0, 2, 2>() * mz - x.spreadW() * yz		// -sx * sz - cx * sy * cz | sx * cz - cx * sy * sz | cx * cy | 0
+			x.template shuffle<0, 0, 2, 2>() * mz - x.spreadW() * yz	// -sx * sz - cx * sy * cz | sx * cz - cx * sy * sz | cx * cy | 0
 		};
 	}
 
@@ -668,8 +634,8 @@ namespace Rapture
 	{
 		static const Vector<T> q { 2,  2, -2, 0 };
 
-		Vector<T> max { x1, y1, z1,  1 };
-		Vector<T> min { x0, y0, z0, -1 };
+		Vector<T> max { x1, y1, z0,  1 };
+		Vector<T> min { x0, y0, z1, -1 };
 
 		Vector<T> k = (max - min).inverse();
 		Vector<T> t = k * (max + min);
@@ -686,7 +652,7 @@ namespace Rapture
 	inline Matrix<T> Matrix<T>::perspective(T fov, T aspect, T z0, T z1)
 	{
 		const T f = 1 / std::tan(Math<T>::dtor(fov) / 2);
-		const T delta = z0 - z1;
+		const T delta = z1 - z0;
 		const Vector<T> v = {f / aspect, f, (z1 + z0) / delta, (2 * z1 * z0) / delta};
 
 		return {
@@ -700,13 +666,13 @@ namespace Rapture
 	template<class T>
 	inline Matrix<T> Matrix<T>::frustum(T x0, T x1, T y0, T y1, T z0, T z1)
 	{
-		const T n = 2 * z0;
-		const Vector<T> v {1 / (x1 - x0), 1 / (y1 - y0), 1 / (z0 - z1), 0};
+		const T n = 2 * z1;
+		const Vector<T> v {1 / (x1 - x0), 1 / (y1 - y0), 1 / (z1 - z0), 0};
 
 		return {
-			v.spreadX() * Vector<T>{ n, 0, x1 + x0,   0       },
-			v.spreadY() * Vector<T>{ 0, n, y1   + y0, 0       },
-			v.spreadZ() * Vector<T>{ 0, 0, z0  + z1,    n * z1 },
+			v.spreadX() * Vector<T>{ n, 0, x1 + x0, 0      },
+			v.spreadY() * Vector<T>{ 0, n, y1 + y0, 0      },
+			v.spreadZ() * Vector<T>{ 0, 0, z1 + z0, n * z0 },
 			Vector<T>::negativeZ
 		};
 	}
@@ -714,9 +680,23 @@ namespace Rapture
 	template<class T>
 	inline Matrix<T> Matrix<T>::lookAt(const Vector<T> & position, const Vector<T> & center, const Vector<T> & up)
 	{
-		Vector<T> f = (position - center).normalize();
-		Vector<T> s = (up.cross(f)).normalize();
-		Vector<T> u = (f.cross(s)).normalize();
+		const Vector<T> f = (center - position).normalize();
+		const Vector<T> s = (up.cross(f)).normalize();
+		const Vector<T> u = (f.cross(s)).normalize();
+
+		return {
+			s.template blend<0, 0, 0, 1>(-s.dot(position)),
+			u.template blend<0, 0, 0, 1>(-u.dot(position)),
+			f.template blend<0, 0, 0, 1>(-f.dot(position))
+		};
+	}
+
+	template<class T>
+	inline Matrix<T> Matrix<T>::lookTo(const Vector<T> & position, const Vector<T> & direction, const Vector<T> & up)
+	{
+		const Vector<T> f = direction;
+		const Vector<T> s = (up.cross(f)).normalize();
+		const Vector<T> u = (f.cross(s)).normalize();
 
 		return {
 			s.template blend<0, 0, 0, 1>(-s.dot(position)),

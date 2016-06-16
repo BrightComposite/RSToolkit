@@ -12,7 +12,7 @@
 #include <core/Handle.h>
 #include <core/Subject.h>
 #include <core/addition/State.h>
-#include <core/container/RawData.h>
+#include <core/container/Data.h>
 #include <core/container/Stack.h>
 
 #include <math/Rect.h>
@@ -68,13 +68,13 @@ namespace Rapture
 	class FigureData : public Shared
 	{
 	public:
-		FigureData(const vector<FloatPoint> & points) : points(points)
+		FigureData(const array_list<FloatPoint> & points) : points(points)
 		{
 			if(points.size() < 3)
 				throw Exception("A number of points should be greater than 3 to construct a figure");
 		}
 
-		vector<FloatPoint> points;
+		array_list<FloatPoint> points;
 	};
 
 	class Figure : public Shared
@@ -85,10 +85,12 @@ namespace Rapture
 		virtual void draw() const = 0;
 	};
 
-	link_class(Graphics, Class<Subject>);
+	link_class(graphics, Graphics, Class<Subject>);
 
 	class Graphics : public Subject
 	{
+		deny_copy(Graphics);
+
 		friend class UISpace;
 
 	public:
@@ -290,10 +292,10 @@ namespace Rapture
 		virtual void updateBrushState() {}
 
 		template<class string_t>
-		static void draw(Graphics * graphics, const string_t & text, int x, int y);
+		api(graphics) static void draw(Graphics * graphics, const string_t & text, int x, int y);
 
 		template<class string_t>
-		static IntSize textSize(Graphics * graphics, const string_t & text);
+		api(graphics) static IntSize textSize(Graphics * graphics, const string_t & text);
 
 		Handle<Surface> _surface;
 		Handle<Font> _font;

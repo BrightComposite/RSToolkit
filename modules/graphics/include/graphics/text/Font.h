@@ -37,8 +37,8 @@ namespace Rapture
 		friend class Graphics;
 
 	public:
-		Symbol(const SymbolData & data);
-		Symbol(Graphics * graphics, const SymbolData & data);
+		api(graphics) Symbol(const SymbolData & data);
+		api(graphics) Symbol(Graphics * graphics, const SymbolData & data);
 		virtual ~Symbol() {}
 
 		int left() const
@@ -84,9 +84,9 @@ namespace Rapture
 		Font() {}
 		virtual ~Font() {}
 
-		void getSymbol(Handle<Symbol> & output, Graphics * graphics, int size, wchar_t character) const;
+		void api(graphics) getSymbol(Handle<Symbol> & output, Graphics * graphics, int size, wchar_t character) const;
 
-		static Handle<Font> load(const path & filepath);
+		static Handle<Font> api(graphics) load(const path & filepath);
 
 	protected:
 		virtual Handle<Symbol> & findSymbol(Graphics * graphics, int size, wchar_t character) const = 0;
@@ -161,6 +161,8 @@ namespace Rapture
 	protected:
 		Map<string, FontFamily> _cache;
 	};
+
+	template struct api(graphics) Singleton<FontCache>;
 }
 
 //---------------------------------------------------------------------------

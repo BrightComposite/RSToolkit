@@ -17,15 +17,21 @@ namespace Rapture
 	class Camera : public Shared
 	{
 	public:
-		Camera(Scene * scene) {}
+		Camera(Scene * scene) : _scene(scene) {}
 
-		void update();
+		void api(scene) update();
+
+		void api(scene) move(fvec offset);
+		void api(scene) move(float x, float y, float z);
+		void api(scene) moveX(float x);
+		void api(scene) moveY(float y);
+		void api(scene) moveZ(float z);
 
 		fvec  position;
-		fquat rotation;
+		fquat direction;
 
 	protected:
-		Scene * scene;
+		Scene * _scene;
 	};
 }
 

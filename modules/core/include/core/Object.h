@@ -14,7 +14,7 @@ namespace Rapture
 {
 #define setclass(...) this->_class = getclass(__VA_ARGS__)
 
-	link_class(Object, MetaClass);
+	link_class(core, Object, MetaClass);
 
 	class Object : public Shared
     {

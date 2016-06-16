@@ -57,6 +57,7 @@ namespace Rapture
 	struct Shared : protected DefaultAllocator
 	{
 		template<class ...> friend class Handle;
+		template<class ...> friend class UniqueHandle;
 		template<class>		friend struct PointerDeleter;
 
 	protected:
@@ -471,7 +472,7 @@ namespace Rapture
 
 		Handle(const Handle & h) : _shared(h._shared) { keep(); }
 		Handle(Handle && h) : _shared(h._shared) { h._shared = nullptr; }
-        ~Handle() { release(); }
+		~Handle() { release(); }
 
 		bool isNull() const
 		{

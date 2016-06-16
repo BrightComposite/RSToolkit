@@ -40,7 +40,7 @@ namespace std
 
 namespace Rapture
 {
-	subclass(ShaderCode, RawData<const void>);
+	subclass(ShaderCode, data<const void>);
 
 	struct ShaderCodeSet : Shared
 	{

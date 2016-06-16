@@ -12,7 +12,7 @@ namespace Rapture
 {
 	void viewException(const exception & ex)
 	{
-		MessageBoxA(0, ex.what(), "Exception", MB_ICONERROR);
+		//MessageBoxA(0, ex.what(), "Exception", MB_ICONERROR);
 	}
 
 	String stdError()

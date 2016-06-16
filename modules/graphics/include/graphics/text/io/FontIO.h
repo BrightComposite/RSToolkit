@@ -32,12 +32,12 @@ namespace Rapture
 		virtual ~FontDecodingException() {}
 	};
 
-	class FontIO
+	class FontIO : public Singleton<FontIO>
 	{
 	public:
 		static void read(Handle<Font> & output, const string & type, const Handle<ByteData> & raw)
 		{
-			auto & decoder = decoders[type];
+			auto & decoder = instance().decoders[type];
 
 			if(decoder == nullptr)
 				throw FontDecodingException("Can't read font of type ", type);
@@ -49,7 +49,7 @@ namespace Rapture
 
 		static FontDecoder * getDecoder(const string & type)
 		{
-			return decoders[type];
+			return instance().decoders[type];
 		}
 
 		template<class Decoder, useif <
@@ -59,12 +59,14 @@ namespace Rapture
 		>
 		static void setDecoder(const string & type, Type<Decoder> = {})
 		{
-			decoders[type] = &Decoder::instance();
+			instance().decoders[type] = &Decoder::instance();
 		}
 
 	protected:
-		static map<string, FontDecoder *> decoders;
+		map<string, FontDecoder *> decoders;
 	};
+
+	template struct api(graphics) Singleton<FontIO>;
 }
 
 //---------------------------------------------------------------------------

@@ -38,8 +38,8 @@ namespace Rapture
 		virtual void apply() const = 0;
 		virtual void requestData(ImageData * output) const = 0;
 
-		static Handle<Image> load(Graphics * graphics, const path & filepath);
-		static void save(const path & filepath, const Image * image);
+		static Handle<Image> api(graphics) load(Graphics * graphics, const path & filepath);
+		static void api(graphics) save(const path & filepath, const Image * image);
 
 	protected:
 		uint _width, _height;

@@ -10,18 +10,17 @@ set(RAPTURE_TOOLS ${RAPTURE_ROOT}/tools)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/project.cmake)
+include(${RAPTURE_TOOLS}/module.cmake)
 include(${RAPTURE_TOOLS}/shaders.cmake)
 
 #--------------------------------------------------------
 
-start_module()
-
-require_modules(
+start_module(
+	SHARED
 	RaptureUI "ui"
 )
 
-set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
+add_module_sources(
 	SRC_GROUP include Headers
 		START_SECTION graphics
 			Provider.h
@@ -37,9 +36,8 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 		END_SECTION
 )
 
-add_library(${PROJECT_NAME} STATIC ${PROJECT_SOURCES} ${SHADERS_INPUT} ${SHADERS_OUTPUT})
-load_third_party(opengl3_3)
-
 end_module()
+
+load_third_party(opengl3_3)
 
 #--------------------------------------------------------

@@ -26,6 +26,9 @@
 #include <direct3d/shaders/3d/color/vs.inc>
 #include <direct3d/shaders/3d/color/ps.inc>
 
+#include <direct3d/shaders/3d/multicolor/vs.inc>
+#include <direct3d/shaders/3d/multicolor/ps.inc>
+
 #include <direct3d/shaders/3d/texture/vs.inc>
 #include <direct3d/shaders/3d/texture/ps.inc>
 
@@ -41,6 +44,7 @@ namespace Rapture
 			auto p2t = getVertexLayout("p2 t");
 			auto p3  = getVertexLayout("p3");
 			auto p3t = getVertexLayout("p3 t");
+			auto p3c4 = getVertexLayout("p3 c4");
 
 			setShaderProgram<VPShaderProgram>("2d/rect",		  p2,  shader_code_2d_rect_vs,			shader_code_2d_rect_ps);
 			setShaderProgram<VPShaderProgram>("2d/ellipse",	      p2t, shader_code_2d_ellipse_vs,		shader_code_2d_ellipse_ps);
@@ -51,6 +55,7 @@ namespace Rapture
 			setShaderProgram<VPShaderProgram>("2d/text",		  p2t, shader_code_2d_text_vs,			shader_code_2d_text_ps);
 
 			setShaderProgram<VPShaderProgram>("3d/color",		  p3,  shader_code_3d_color_vs,			shader_code_3d_color_ps);
+			setShaderProgram<VPShaderProgram>("3d/multicolor",	  p3c4, shader_code_3d_multicolor_vs,	shader_code_3d_multicolor_ps);
 			setShaderProgram<VPShaderProgram>("3d/texture",		  p3t, shader_code_3d_texture_vs,		shader_code_3d_texture_ps);
 		}
 	}

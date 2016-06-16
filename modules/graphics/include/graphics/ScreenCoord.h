@@ -98,7 +98,7 @@ namespace Rapture
 		IntSize _size;
 	};
 
-	struct ScreenCoord
+	struct api(graphics) ScreenCoord
 	{
 		static void toRel(const IntRect & rectAbs, const IntSize & viewport, FloatPoint & posRel, FloatSize & sizeRel);
 		static void toRel(const IntRect & rectAbs, const IntSize & viewport, FloatRect & rectRel);

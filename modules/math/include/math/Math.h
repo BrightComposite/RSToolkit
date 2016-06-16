@@ -27,32 +27,32 @@ namespace Rapture
 	template<class T>
 	struct MathConstants
 	{
-		static const T one;
-		static const T pi;
-		static const T pi2;
-		static const T half_pi;
-		static const T half_pi3;
-		static const T inv_pi;
-		static const T inv_pi2;
-		static const T degree180;
-		static const T degree360;
-		static const T eps;
-		static const T eps2;
-		static const T eps3;
-		static const T infinity;
+		static const T api(math) one;
+		static const T api(math) pi;
+		static const T api(math) pi2;
+		static const T api(math) half_pi;
+		static const T api(math) half_pi3;
+		static const T api(math) inv_pi;
+		static const T api(math) inv_pi2;
+		static const T api(math) degree180;
+		static const T api(math) degree360;
+		static const T api(math) eps;
+		static const T api(math) eps2;
+		static const T api(math) eps3;
+		static const T api(math) infinity;
 
-		static const T degreetorad;
-		static const T radtodegree;
+		static const T api(math) degreetorad;
+		static const T api(math) radtodegree;
 	};
 
 	template<class T>
 	struct MathCoefficients
 	{
-		static const T sin[];
-		static const T cos[];
-		static const T tan[];
+		static const T api(math) sin[];
+		static const T api(math) cos[];
+		/*static const T tan[];
 		static const T arc[];
-		static const T atan[];
+		static const T atan[];*/
 	};
 
 	template<class T>
@@ -72,6 +72,11 @@ namespace Rapture
 		static inline T sqr(const T & x)
 		{
 			return x * x;
+		}
+
+		static inline T sqrt(const T & x)
+		{
+			return std::sqrt(x);
 		}
 
 		static inline T avg(const T & x, const T & y)
@@ -110,6 +115,11 @@ namespace Rapture
 		static inline T sqr(const T & x)
 		{
 			return x * x;
+		}
+
+		static inline T sqrt(const T & x)
+		{
+			return static_cast<T>(std::sqrt(x));
 		}
 
 		static inline T avg(const T & x, const T & y)
@@ -257,6 +267,9 @@ namespace Rapture
 
 	using FloatMath = Math<float>;
 	using DoubleMath = Math<double>;
+
+	using fmath = FloatMath;
+	using dmath = DoubleMath;
 
 	enum class RelativePosition
 	{

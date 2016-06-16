@@ -6,18 +6,17 @@ project(RaptureGraphics CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/project.cmake)
+include(${RAPTURE_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-start_module()
-
-require_modules(
+start_module(
+	SHARED
 	RaptureMath "math"
 	RaptureIO "io"
 )
 
-set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
+add_module_sources(
 	SRC_GROUP include Headers
 		START_SECTION graphics
 			Color.h
@@ -72,8 +71,6 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 			END_SECTION
 		END_SECTION
 )
-
-add_library(${PROJECT_NAME} STATIC ${PROJECT_SOURCES})
 
 end_module()
 

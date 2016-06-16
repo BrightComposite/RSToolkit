@@ -33,8 +33,7 @@ namespace Rapture
 		using Internals::Message<Msg>::Message;											\
 	};																					\
 																						\
-	type_getter(macrowrap(DestGetter<T, Msg>), T, pp_cat(DestOf, Msg), Empty);			\
-	type_getter(macrowrap(ReaderGetter<T, Msg>), T, pp_cat(ReaderOf, Msg), Empty)
+	type_getter(macrowrap(DestGetter<T, Msg>), T, pp_cat(DestOf, Msg), Empty);
 
 	template<class Dst, typename Msg>
 	struct DestGetter
@@ -43,16 +42,7 @@ namespace Rapture
 	};
 
 	template<class Dst, typename Msg>
-	struct ReaderGetter
-	{
-		typedef Dst type;
-	};
-
-	template<class Dst, typename Msg>
 	using message_dst_t = typename DestGetter<Dst, Msg>::type;
-
-	template<class Dst, typename Msg>
-	using reader_t = typename ReaderGetter<Dst, Msg>::type;
 }
 
 //---------------------------------------------------------------------------

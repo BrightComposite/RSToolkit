@@ -94,9 +94,11 @@ namespace Rapture
 
 		ThreadLoop & operator = (const ThreadLoop &) = delete;
 
-		vector<Iteration> iterations;
+		array_list<Iteration> iterations;
 		bool active = false;
 	};
+
+	template struct api(application) Singleton<ThreadLoop, ThreadLocalModel>;
 }
 
 //---------------------------------------------------------------------------

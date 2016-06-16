@@ -44,8 +44,8 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	static Subject a("SomeSubject");
-	static String str("SomeString");
-	static auto shstr = share(str);
+	static String s("SomeString");
+	static auto shstr = share(s);
 
 	static time_point<hrc> start;
 	static nanoseconds elapsed;
@@ -54,7 +54,7 @@ namespace Rapture
 
 //---------------------------------------------------------------------------
 
-	static Entrance open([]()
+	static Entrance first([]()
 	{
 		testSubjects();
 		testHandles();
@@ -88,40 +88,6 @@ namespace Rapture
 	static void receiver(Handle<DummyMessage> & msg, DummySubject & dst)
 	{
 
-	}
-
-	static void testHandlesSafety()
-	{
-		Handle<Object> h = handle<Object>();
-
-		for(register int i = 0; i < 20; ++i)
-		{
-			Array<Object> oa;
-
-			auto add = [&h, &oa]()
-			{
-				oa.push_back(h);
-			};
-
-			auto rm = [&oa]()
-			{
-				if(!oa.empty())
-					oa.pop_back();
-			};
-
-			vector<std::thread> v;
-
-			for(register int i = 0; i < 5; ++i)
-			{
-				v.emplace_back(add);
-				v.emplace_back(rm);
-			}
-
-			for(auto & th : v)
-				th.join();
-
-			cout << "Refs: " << h.refs() << endl;
-		}
 	}
 
 	static void testHandles()
@@ -172,7 +138,7 @@ namespace Rapture
 
 		start = hrc::now();
 
-		global_connect(DummySubject, DummyMessage)
+		subscribe_on(DummySubject, DummyMessage)
 		{
 
 		};
@@ -182,7 +148,7 @@ namespace Rapture
 
 		start = hrc::now();
 
-		dest_connect(dummy, DummySubject, DummyMessage)
+		subscribe_on(DummySubject, DummyMessage, dummy)
 		{
 		
 		};
@@ -226,6 +192,40 @@ namespace Rapture
 		elapsed = hrc::now() - start;
 		cout << "Immediate message delivery time (" << times << " times): " << elapsed.count() << " ns" << endl;
 		*/
+	}
+
+	static void testHandlesSafety()
+	{
+		Handle<Object> h = handle<Object>();
+
+		for(register int i = 0; i < 20; ++i)
+		{
+			Array<Object> oa;
+
+			auto add = [&h, &oa]()
+			{
+				oa.push_back(h);
+			};
+
+			auto rm = [&oa]()
+			{
+				if(!oa.empty())
+					oa.pop_back();
+			};
+
+			array_list<std::thread> v;
+
+			for(register int i = 0; i < 5; ++i)
+			{
+				v.emplace_back(add);
+				v.emplace_back(rm);
+			}
+
+			for(auto & th : v)
+				th.join();
+
+			cout << "Refs: " << h.refs() << endl;
+		}
 	}
 
 //---------------------------------------------------------------------------

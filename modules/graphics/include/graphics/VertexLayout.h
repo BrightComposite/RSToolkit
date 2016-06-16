@@ -17,30 +17,41 @@
 namespace Rapture
 {
 	class ShaderCode;
+	class VertexElement;
 
 	class VertexElement : public Shared, public Precached<string, VertexElement>
 	{
 		friend class VertexLayout;
 
 	public:
+		enum Type : int
+		{
+			Position = 0,
+			Color    = 1,
+			Normal   = 2,
+			Texcoord = 3
+		};
+
 		string id;
-		const char * semantic;
+		Type type;
 		uint index;
 		uint units;
 
-		static VertexElement pos2;
-		static VertexElement pos3;
-		static VertexElement color3;
-		static VertexElement colorf;
-		static VertexElement secondaryColor3;
-		static VertexElement secondaryColor4;
-		static VertexElement tex;
-		static VertexElement normal;
+		static VertexElement api(graphics) pos2;
+		static VertexElement api(graphics) pos3;
+		static VertexElement api(graphics) color3;
+		static VertexElement api(graphics) colorf;
+		static VertexElement api(graphics) secondaryColor3;
+		static VertexElement api(graphics) secondaryColor4;
+		static VertexElement api(graphics) tex;
+		static VertexElement api(graphics) normal;
 
 	protected:
-		VertexElement(const string & id, const char * semantic, uint index, uint units) : Precached<string, VertexElement>(id),
-			id(id), semantic(semantic), index(index), units(units) {}
+		VertexElement(const string & id, Type type, uint index, uint units) : Precached<string, VertexElement>(id),
+			id(id), type(type), index(index), units(units) {}
 	};
+
+	template class api(graphics) Precached<string, VertexElement>;
 
 //---------------------------------------------------------------------------
 
@@ -61,7 +72,7 @@ namespace Rapture
 		virtual void accept(const ShaderCode *) {}
 
 		string fingerprint;
-		vector<VertexElement *> elements;
+		array_list<VertexElement *> elements;
 		uint stride;
 	};
 }

@@ -61,7 +61,7 @@ namespace Rapture
 
 	protected:
 		virtual void addInfo(String &, const Object &) const {}
-		friend void print(String &, const Object &);
+		friend void api(core) print(String &, const Object &);
 	};
 
 	template<class T>
@@ -70,19 +70,13 @@ namespace Rapture
 		typedef MetaClass Class;
 	};
 
-#define getclass(...)	   ClassInstance<__VA_ARGS__>::instance()
+#define getclass(...)	   (&ClassInstance<__VA_ARGS__>::instance)
 #define classname(...)	   getclass(__VA_ARGS__)->name()
 
 #define instanceof(...)  ->instanceOf(getclass(__VA_ARGS__))
 #define kindof(...)		 ->kindOf(getclass(__VA_ARGS__))
 #define notinstanceof(...) instanceof(__VA_ARGS__) == false
 #define notkindof(...)     kindof(__VA_ARGS__) == false
-
-	template<class Class>
-	const MetaClass * getClass()
-	{
-		return ClassInstance<Class>::instance();
-	}
 
 	struct KindOfClass
 	{
@@ -131,20 +125,15 @@ namespace Rapture
 		}
 	};
 
-#define link_class(cl, /* class */...)		\
-	template<>								\
-	struct ClassInstance<cl>				\
-	{										\
-		typedef __VA_ARGS__ Class;			\
-		static const MetaClass * instance()	\
-		{									\
-			static const Class meta(#cl);	\
-			return &meta;					\
-		}									\
+#define link_class(module, cl, /* class */...)		\
+	template<>										\
+	struct ClassInstance<cl>						\
+	{												\
+		static __VA_ARGS__ api(module) instance;	\
 	}
 
-#define declare_and_link(cl, /* Class */...)		\
-	class cl; link_class(cl, __VA_ARGS__)
+#define implement_link(...)							\
+	decltype(ClassInstance<__VA_ARGS__>::instance) ClassInstance<__VA_ARGS__>::instance(#__VA_ARGS__)
 }
 
 //---------------------------------------------------------------------------

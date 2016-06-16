@@ -34,6 +34,9 @@ namespace Rapture
 			Vector<T> v;
 		};
 
+		member_cast(q, array<T, 4>);
+		member_cast(data, Data);
+
 		Quaternion() : data {Vector<T>::positiveW} {}
 		Quaternion(const Quaternion & q) : data {q.data} {}
 		Quaternion(T x, T y, T z, T w) : q {x, y, z, w} {}
@@ -43,7 +46,11 @@ namespace Rapture
 			fromEuler({x, y, z});
 		}
 
+		Quaternion(const Vector<T> & v) : v {v} {}
+		Quaternion(Vector<T> && v) : v {std::forward<Vector<T>>(v)} {}
+
 		Quaternion(const Data & data) : data {data} {}
+		Quaternion(Data && data) : data {std::forward<Data>(data)} {}
 
 		template<class U, useif <!is_same<T, U>::value> endif>
 		Quaternion(const Quaternion<U> & q) : v(q.v) {}
@@ -108,9 +115,30 @@ namespace Rapture
 			return *this;
 		}
 
-		Quaternion negation()
+		Quaternion negation() const
 		{
 			return Intrin::negate(data);
+		}
+
+		Quaternion & conjugate()
+		{
+			v = v.negate<1, 1, 1, 0>();
+			return *this;
+		}
+
+		Quaternion conjugation() const
+		{
+			return v.negate<1, 1, 1, 0>();
+		}
+
+		Quaternion & invert()
+		{
+			return conjugate().downscale(norm());
+		}
+
+		Quaternion inverse() const
+		{
+			return conjugation().downscale(norm());
 		}
 
 		Quaternion & operator += (const Quaternion & q)
@@ -124,30 +152,72 @@ namespace Rapture
 			v -= q.v;
 			return *this;
 		}
-
-		Quaternion & operator *= (const Quaternion & q)
+		
+		Quaternion & rotateBy(const Quaternion & q)
 		{
-			return *this = *this * q;
+			return *this = q * *this;
 		}
 
-		Vector<T> applyTo(const Vector<T> & v)
+		Vector<T> applyTo(const Vector<T> & d) const
 		{
-			return *this * Quaternion(v) * negation();
+			/*const auto xyz = v.clearW();
+			const auto t = 2 * cross(xyz, d);
+			return d + w * t + cross(xyz, t);
+			*/
+			return std::move((*this * Quaternion(d) * inverse()).v);
+		}
+
+		Vector<T> left() const
+		{
+			return applyTo(Vector<T>::left);
+		}
+
+		Vector<T> up() const
+		{
+			return applyTo(Vector<T>::up);
+		}
+
+		Vector<T> forward() const
+		{
+			return applyTo(Vector<T>::forward);
+		}
+
+		Quaternion & rotate(const Vector<T> & axis, T angle)
+		{
+			return rotateBy({axis, angle});
 		}
 
 		Quaternion & rotateX(T angle)
 		{
-			return *this *= fquat(fvec::positiveX, angle);
+			return rotate(Vector<T>::positiveX, angle);
 		}
 
 		Quaternion & rotateY(T angle)
 		{
-			return *this *= fquat(fvec::positiveY, angle);
+			return rotate(Vector<T>::positiveY, angle);
 		}
 
 		Quaternion & rotateZ(T angle)
 		{
-			return *this *= fquat(fvec::positiveZ, angle);
+			return rotate(Vector<T>::positiveZ, angle);
+		}
+
+		Quaternion & scale(T s)
+		{
+			v *= s;
+			return *this;
+		}
+
+		Quaternion & downscale(T s) &
+		{
+			v /= s;
+			return *this;
+		}
+
+		Quaternion && downscale(T s) &&
+		{
+			v /= s;
+			return std::forward<Quaternion>(*this);
 		}
 
 		T & operator [] (size_t index)
@@ -160,34 +230,14 @@ namespace Rapture
 			return q[index];
 		}
 
-		operator array<T, 4> & () &
+		T norm() const
 		{
-			return q;
+			return v.sqr().sum();  
 		}
 
-		operator const array<T, 4> & () const &
+		T magnitude() const
 		{
-			return q;
-		}
-
-		operator array<T, 4> && () &&
-		{
-			return move(q);
-		}
-
-		operator Data & () &
-		{
-			return data;
-		}
-
-		operator const Data & () const &
-		{
-			return data;
-		}
-
-		operator Data && () &&
-		{
-			return move(data);
+			return Math<T>::sqrt(norm());  
 		}
 
 		Quaternion & fromEuler(const Vector<T> & angles)
@@ -207,28 +257,28 @@ namespace Rapture
 
 		Matrix<T> toMatrix() const
 		{
-			Vector<T> vs = v.sqr();
-			Vector<T> v0 = v.template shuffle<1, 2, 0, 3>() * v.template shuffle<2, 0, 1, 3>();
-			vs = -(vs.template shuffle<1, 2, 0, 3>() + vs.template shuffle<2, 0, 1, 3>());
-			Vector<T> v1 = v * v.spreadW().template negate<1, 0, 0, 0>();
+			Vector<T> s = -v.sqr();
+			s = s.template shuffle<1, 2, 0, 3>() + s.template shuffle<2, 0, 1, 3>();
+			Vector<T> a = v.template shuffle<1, 2, 0, 3>() * v.template shuffle<2, 0, 1, 3>();
+			Vector<T> b = v * v.spreadW().template negate<1, 0, 0, 0>();
 
 			return {
-				Vector<T>::positiveX + Vector<T>::twoXYZ * vs.template blend<0, 1, 1, 0>((v0 + v1.template negate<0, 0, 1, 0>()).template shuffle<2, 2, 1, 1>()), // 1.0f - 2.0f * (y * y + z * z), 2.0f * (x * y - w * z), 2.0f * (x * z + w * y), 0.0f
-				Vector<T>::positiveY + Vector<T>::twoXYZ * vs.template blend<1, 0, 1, 0>((v0 + v1).template shuffle<2, 2, 0, 0>()), // 2.0f * (x * y + w * z), 1.0f - 2.0f * (x * x + z * z), 2.0f * (y * z - w * x), 0.0f
-				Vector<T>::positiveZ + Vector<T>::twoXYZ * (v0 - v1).template shuffle<1, 0, 2, 3>(vs) // 2.0f * (x * z - w * y), 2.0f * (y * z + w * x), 1.0f - 2.0f * (x * x + y * y), 0.0f
+				Vector<T>::positiveX + Vector<T>::twoXYZ * s.template blend<0, 1, 1, 0>((a + b.template negate<0, 0, 1, 0>()).template shuffle<2, 2, 1, 1>()), // 1.0f - 2.0f * (y * y + z * z), 2.0f * (x * y - w * z), 2.0f * (x * z + w * y), 0.0f
+				Vector<T>::positiveY + Vector<T>::twoXYZ * s.template blend<1, 0, 1, 0>((a + b).template shuffle<2, 2, 0, 0>()), // 2.0f * (x * y + w * z), 1.0f - 2.0f * (x * x + z * z), 2.0f * (y * z - w * x), 0.0f
+				Vector<T>::positiveZ + Vector<T>::twoXYZ * (a - b).template shuffle<1, 0, 2, 3>(s) // 2.0f * (x * z - w * y), 2.0f * (y * z + w * x), 1.0f - 2.0f * (x * x + y * y), 0.0f
 			};
 		}
 
 		void toMatrix(Matrix<T> & m) const
 		{
-			Vector<T> vs = v.sqr();
-			Vector<T> v0 = v.template shuffle<1, 2, 0, 3>() * v.template shuffle<2, 0, 1, 3>();
-			vs = -(vs.template shuffle<1, 2, 0, 3>() + vs.template shuffle<2, 0, 1, 3>());
-			Vector<T> v1 = v * v.spreadW().template negate<1, 0, 0, 0>();
+			Vector<T> s = -v.sqr();
+			s = s.template shuffle<1, 2, 0, 3>() + s.template shuffle<2, 0, 1, 3>();
+			Vector<T> a = v.template shuffle<1, 2, 0, 3>() * v.template shuffle<2, 0, 1, 3>();
+			Vector<T> b = v * v.spreadW().template negate<1, 0, 0, 0>();
 
-			m[0] = Vector<T>::positiveX + Vector<T>::twoXYZ * vs.template blend<0, 1, 1, 0>((v0 + v1.template negate<0, 0, 1, 0>()).template shuffle<2, 2, 1, 1>()); // 1.0f - 2.0f * (y * y + z * z), 2.0f * (x * y - w * z), 2.0f * (x * z + w * y), 0.0f
-			m[1] = Vector<T>::positiveY + Vector<T>::twoXYZ * vs.template blend<1, 0, 1, 0>((v0 + v1).template shuffle<2, 2, 0, 0>()); // 2.0f * (x * y + w * z), 1.0f - 2.0f * (x * x + z * z), 2.0f * (y * z - w * x), 0.0f
-			m[2] = Vector<T>::positiveZ + Vector<T>::twoXYZ * (v0 - v1).template shuffle<1, 0, 2, 3>(vs); // 2.0f * (x * z - w * y), 2.0f * (y * z + w * x), 1.0f - 2.0f * (x * x + y * y), 0.0f
+			m[0] = Vector<T>::positiveX + Vector<T>::twoXYZ * s.template blend<0, 1, 1, 0>((a + b.template negate<0, 0, 1, 0>()).template shuffle<2, 2, 1, 1>()); // 1.0f - 2.0f * (y * y + z * z), 2.0f * (x * y - w * z), 2.0f * (x * z + w * y), 0.0f
+			m[1] = Vector<T>::positiveY + Vector<T>::twoXYZ * s.template blend<1, 0, 1, 0>((a + b).template shuffle<2, 2, 0, 0>()); // 2.0f * (x * y + w * z), 1.0f - 2.0f * (x * x + z * z), 2.0f * (y * z - w * x), 0.0f
+			m[2] = Vector<T>::positiveZ + Vector<T>::twoXYZ * (a - b).template shuffle<1, 0, 2, 3>(s); // 2.0f * (x * z - w * y), 2.0f * (y * z + w * x), 1.0f - 2.0f * (x * x + y * y), 0.0f
 			m[3] = Vector<T>::positiveW;
 		}
 	};
@@ -237,6 +287,9 @@ namespace Rapture
 	using DoubleQuaternion = Quaternion<double>;
 	using fquat = Quaternion<float>;
 	using dquat = Quaternion<double>;
+
+	template<class T>
+	using Rotation = Quaternion<T>;
 
 	template<class T>
 	Quaternion<T> operator + (const Quaternion<T> & q1, const Quaternion<T> & q2)
@@ -251,25 +304,23 @@ namespace Rapture
 	}
 
 	template<class T>
-	Quaternion<T> operator * (const Quaternion<T> & q1, const Quaternion<T> & q2)
-	{
-		//q1.y * q2.z - q1.z * q2.y + q1.w * q2.x + q1.x * q2.w,
-		//q1.z * q2.x - q1.x * q2.z + q1.w * q2.y + q1.y * q2.w,
-		//q1.x * q2.y - q1.y * q2.x + q1.w * q2.z + q1.z * q2.w,
-		//q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z
+	Quaternion<T> operator * (const Quaternion<T> & q2, const Quaternion<T> & q1)
+	{ 
+		//q2.w*q1.x + q2.x*q1.w + q2.y*q1.z - q2.z*q1.y                        
+		//q2.w*q1.y + q2.y*q1.w + q2.z*q1.x - q2.x*q1.z
+		//q2.w*q1.z + q2.z*q1.w + q2.x*q1.y - q2.y*q1.x
+		//q2.w*q1.w - q2.x*q1.x - q2.y*q1.y - q2.z*q1.z
 
 		const Vector<T> & v1 = q1.v;
 		const Vector<T> & v2 = q2.v;
-		const Vector<T> v3 = v2.template negate<0, 1, 1, 0>();
 
 		return {
-			v1.template shuffle<1, 2, 0, 3>() * v2.template shuffle<2, 0, 1, 3>() -
-			v1.template shuffle<2, 0, 1, 0>() * v2.template shuffle<1, 2, 0, 0>() +
-			v1.template shuffle<3, 3, 3, 1>() * v3.template shuffle<0, 1, 2, 1>() +
-			v1.template shuffle<0, 1, 2, 2>() * v3.template shuffle<3, 3, 3, 2>()
+			v2.spreadW() * v1 +
+			v2.template shuffle<0, 1, 2, 0>() * v1.template shuffle<3, 3, 3, 0>().negateW() +
+			v2.template shuffle<1, 2, 0, 1>() * v1.template shuffle<2, 0, 1, 1>().negateW() -
+			v2.template shuffle<2, 0, 1, 2>() * v1.template shuffle<1, 2, 0, 2>()
 		};
 	}
-
 }
 
 //---------------------------------------------------------------------------

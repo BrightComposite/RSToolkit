@@ -6,26 +6,24 @@ project(RaptureCoreTest CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/project.cmake)
+include(${RAPTURE_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-start_module()
-
-require_modules(
+start_module(
+	APPLICATION
     RaptureApplication "application"
 )
 
-set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
+add_module_sources(
 	SRC_GROUP src Sources
 		START_SECTION SRC_ROOT
 			core-test.cpp
 		END_SECTION
 )
 
-add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
-load_third_party(vld)
-
 end_module()
+
+load_third_party(vld)
 
 #--------------------------------------------------------

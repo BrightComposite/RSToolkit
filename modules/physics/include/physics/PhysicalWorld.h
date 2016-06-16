@@ -28,6 +28,8 @@ namespace Rapture
 
 	class PhysicalWorld : public Object, public btDiscreteDynamicsWorld
 	{
+		deny_copy(PhysicalWorld);
+
 	public:
 		PhysicalWorld(btDispatcher * dispatcher, btBroadphaseInterface * broadphase, btConstraintSolver * solver, btCollisionConfiguration * config) : btDiscreteDynamicsWorld(dispatcher, broadphase, solver, config)
 		{
@@ -42,7 +44,7 @@ namespace Rapture
 		using btDiscreteDynamicsWorld::operator new[];
 		using btDiscreteDynamicsWorld::operator delete[];
 
-		static void update(btDynamicsWorld * world, btScalar timeStep);
+		static void api(physics) update(btDynamicsWorld * world, btScalar timeStep);
 	};
 }
 

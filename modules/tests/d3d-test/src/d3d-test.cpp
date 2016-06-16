@@ -30,6 +30,9 @@
 
 #include <vld.h>
 
+#include "matrix-test.h"
+#include <application/Starter.h>
+
 //---------------------------------------------------------------------------
 
 namespace Rapture
@@ -82,15 +85,13 @@ namespace Rapture
 			Handle<BackgroundWidget> back(window);
 			back->setName("Background");
 
-			has_reader<UISpace, MouseDownMessage>::value;
-
 			graphics->setClearColor(1.0f, 1.0f, 1.0f);
 
 		#define HOTKEY_FULLSCREEN 0x20
 
 			window->registerHotkey(HOTKEY_FULLSCREEN, VK_RETURN, MOD_ALT);
 
-			dest_connect(*window, UISpace, HotkeyMessage)
+			subscribe_on(UISpace, HotkeyMessage, *window)
 			{
 				auto window = static_cast<Window *>(&dest);
 
@@ -102,7 +103,7 @@ namespace Rapture
 				}
 			};
 
-			global_connect(Widget, MouseDownMessage)
+			subscribe_on(Widget, MouseDownMessage)
 			{
 				switch(msg->button)
 				{
@@ -112,7 +113,7 @@ namespace Rapture
 				}
 			};
 
-			dest_connect(*window, UISpace, KeyUpMessage)
+			subscribe_on(UISpace, KeyUpMessage, *window)
 			{
 				auto window = static_cast<Window *>(&dest);
 
@@ -170,7 +171,7 @@ namespace Rapture
 				g->rectangle(inner);
 			};
 
-			std::vector<IntRect> rects = {
+			std::array_list<IntRect> rects = {
 				{10, 10, 30, 30},
 				{40, 10, 60, 30},
 				{10, 40, 30, 60},
@@ -312,11 +313,12 @@ namespace Rapture
 
 	static int load()
 	{
+		matrixTest();
 		Handle<Thread> th(loadWindow);
 		return 0;
 	}
 
-	static Entrance open(load, 1);
+	static Entrance open(load);
 
 	static int render(Handle<Window> & window)
 	{
@@ -335,7 +337,7 @@ namespace Rapture
 			lastSecond = hrc::now();
 		}
 
-		//window->invalidate();
+		window->invalidate();
 		window->validate();
 		++frames;
 

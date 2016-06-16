@@ -34,8 +34,9 @@ add_subdirectory(tests/d3d-test)
 endif()
 
 add_subdirectory(tests/ui-test)
+add_subdirectory(tests/small-test)
 
 add_subdirectory(projects/independence)
-add_subdirectory(projects/InTheMoonlight)
+add_subdirectory(projects/BasicGame)
 
 #--------------------------------------------------------

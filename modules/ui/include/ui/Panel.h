@@ -11,12 +11,17 @@
 
 namespace Rapture
 {
+	class Panel;
+
+	link_class(ui, Panel, Class<Widget>);
+
 	class Panel : public Widget
 	{
 	public:
 		Panel(Widget * parent) : Panel(parent, *parent) {}
 		Panel(Widget * parent, const IntRect & region) : Widget(parent, region)
 		{
+			setclass(Panel);
 			setVisibility(true);
 		}
 
@@ -27,7 +32,8 @@ namespace Rapture
 			return true;
 		}
 
-		override_reader(Panel, WidgetChangedStateMessage);
+		using Widget::read;
+		virtual void api(ui) read(Handle<WidgetChangedStateMessage> & msg) override;
 	};
 }
 

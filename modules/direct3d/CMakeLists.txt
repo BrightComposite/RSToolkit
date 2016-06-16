@@ -10,18 +10,17 @@ set(RAPTURE_TOOLS ${RAPTURE_ROOT}/tools)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/project.cmake)
+include(${RAPTURE_TOOLS}/module.cmake)
 include(${RAPTURE_TOOLS}/shaders.cmake)
 
 #--------------------------------------------------------
 
-start_module()
-
-require_modules(
+start_module(
+	SHARED
 	RaptureUI "ui"
 )
 
-set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
+add_module_sources(
 	SRC_GROUP include Headers
 		START_SECTION direct3d
 			Direct3D11.h
@@ -41,7 +40,7 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 		END_SECTION
 )
 
-add_shaders(SHADERS_INPUT SHADERS_OUTPUT ${PROJECT_SOURCE_DIR}
+add_shaders(
 	resources Resources
 	include Includes
 	direct3d/shaders
@@ -89,12 +88,17 @@ add_shaders(SHADERS_INPUT SHADERS_OUTPUT ${PROJECT_SOURCE_DIR}
 				vs.fx
 				ps.fx
 			END_SECTION
-			
+
 			START_SECTION color
 				vs.fx
 				ps.fx
 			END_SECTION
-			
+
+			START_SECTION multicolor
+				vs.fx
+				ps.fx
+			END_SECTION
+
 			START_SECTION texture
 				vs.fx
 				ps.fx
@@ -102,9 +106,8 @@ add_shaders(SHADERS_INPUT SHADERS_OUTPUT ${PROJECT_SOURCE_DIR}
 		END_SECTION
 )
 
-add_library(${PROJECT_NAME} STATIC ${PROJECT_SOURCES} ${SHADERS_INPUT} ${SHADERS_OUTPUT})
-load_third_party(direct3d11)
-
 end_module()
+
+load_third_party(direct3d11)
 
 #--------------------------------------------------------

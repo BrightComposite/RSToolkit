@@ -10,8 +10,7 @@
 #include <core/action/Action.h>
 #include <core/action/Thread.h>
 
-#include <graphics/Config.h>
-#include GRAPHICS_INCLUDE
+#include <graphics/Provider.h>
 
 #include <freeimage/FreeImageConverter.h>
 
@@ -52,7 +51,7 @@ namespace Rapture
 		Handle<BackgroundWidget> back(window);
 		back->setName("Background");
 
-		graphics->setClearColor({1.0f, 1.0f, 1.0f});
+		graphics->setClearColor(1.0f, 1.0f, 1.0f);
 
 		window->setCaption(L"Rapture::UI test");
 
@@ -60,26 +59,26 @@ namespace Rapture
 
 		window->registerHotkey(HOTKEY_FULLSCREEN, VK_RETURN, MOD_ALT);
 
-		dest_connect(*window, UISpace, HotkeyMessage)
+		subscribe_on(UISpace, HotkeyMessage, *window)
 		{
-			auto window = static_cast<Window *>(&dest);
+			auto & window = static_cast<Window &>(dest);
 
 			switch(msg->id)
 			{
 				case HOTKEY_FULLSCREEN:
-					window->toggleFullscreen();
+					window.toggleFullscreen();
 					break;
 			}
 		};
 
-		dest_connect(*window, UISpace, KeyUpMessage)
+		subscribe_on(UISpace, KeyUpMessage, *window)
 		{
-			auto window = static_cast<Window *>(&dest);
+			auto & window = static_cast<Window &>(dest);
 
 			switch(msg->key)
 			{
 				case VK_ESCAPE:
-					window->close();
+					window.close();
 					break;
 			}
 		};

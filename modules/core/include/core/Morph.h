@@ -12,7 +12,9 @@
 
 namespace Rapture
 {
-	link_class(Morph, Class<Object>);
+	class Morph;
+
+	link_class(core, Morph, Class<Object>);
 
 	class Morph : public Object
 	{

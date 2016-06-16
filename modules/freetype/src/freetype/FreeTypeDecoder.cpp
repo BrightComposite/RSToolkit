@@ -19,7 +19,7 @@ namespace Rapture
 	public:
 		FreeTypeFont(const string & type, const Handle<ByteData> & raw) : FreeTypeFont(raw)
 		{
-			if(FT_New_Memory_Face(ft, raw->data, static_cast<FT_Long>(raw->size), 0, &face) != 0)
+			if(FT_New_Memory_Face(ft, raw->ptr, static_cast<FT_Long>(raw->size), 0, &face) != 0)
 				throw FontDecodingException("Can't read font of type \"", type, "\"");
 		}
 
@@ -93,24 +93,7 @@ namespace Rapture
 
 		virtual Handle<Symbol> & findSymbol(Graphics * graphics, int size, wchar_t character) const override
 		{
-			auto size_map_i = _cache.find(graphics);
-
-			if(size_map_i == _cache.end())
-				size_map_i = _cache.insert(size_map_i, {graphics, {}});
-
-			auto & size_map = size_map_i->second;
-			auto symbols_i = size_map.find(size);
-
-			if(symbols_i == size_map.end())
-				symbols_i = size_map.insert(symbols_i, {size, {}});
-
-			auto & symbols = symbols_i->second;
-			auto i = symbols.find(character);
-
-			if(i == symbols.end())
-				i = symbols.insert(i, {character, nullptr});
-
-			return i->second;
+			return _cache[graphics][size][character];
 		}
 
 		Handle<ByteData> data;

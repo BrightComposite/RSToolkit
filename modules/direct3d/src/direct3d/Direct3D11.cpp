@@ -15,6 +15,8 @@ namespace Rapture
 #define DEBUG_DX
 #endif
 
+	implement_link(Direct3D::D3DGraphics);
+
 	namespace Direct3D
 	{
 		using namespace DirectX;
@@ -65,6 +67,13 @@ namespace Rapture
 			_depthTestMode = handle<DepthTestState>(this);
 		}
 
+		Debug::~Debug()
+		{
+		#ifdef DEBUG_DX
+			handle->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+		#endif
+		}
+
 		D3DGraphics::~D3DGraphics()
 		{
 			if(context != nullptr)
@@ -74,10 +83,6 @@ namespace Rapture
 
 				context->ClearState();
 			}
-
-		#ifdef DEBUG_DX
-			debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
-		#endif
 		}
 
 		void D3DGraphics::initDevice()
@@ -126,7 +131,7 @@ namespace Rapture
 			context = ncontext;
 
 		#ifdef DEBUG_DX
-			debug = device;
+			debug.handle = device;
 		#endif
 
 			D3D11_RASTERIZER_DESC rd;
@@ -146,6 +151,7 @@ namespace Rapture
 			device->CreateRasterizerState(&rd, &solidRS);
 
 			rd.FillMode = D3D11_FILL_MODE::D3D11_FILL_WIREFRAME;
+			rd.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE;
 
 			device->CreateRasterizerState(&rd, &wiredRS);
 			context->RSSetState(solidRS);
@@ -214,7 +220,6 @@ namespace Rapture
 		{
 			initShaders();
 			Graphics3D::initFacilities();
-			updateBrushState();
 		}
 
 		void D3DGraphics::printInfo() {}
@@ -231,9 +236,9 @@ namespace Rapture
 			return Handle<D3DVertexLayout, D3DGraphics>(this, fingerprint);
 		}
 
-		Handle<VertexBuffer> D3DGraphics::createVertexBuffer(VertexLayout * vil, const VertexData & data)
+		Handle<VertexBuffer> D3DGraphics::createVertexBuffer(VertexLayout * layout, const VertexData & data)
 		{
-			return Handle<D3DVertexBuffer, D3DGraphics>(this, vil, data);
+			return Handle<D3DVertexBuffer, D3DGraphics>(this, layout, data);
 		}
 
 		Handle<IndexBuffer> D3DGraphics::createIndexBuffer(const VertexIndices & indices)
@@ -241,9 +246,9 @@ namespace Rapture
 			return Handle<D3DIndexBuffer, D3DGraphics>(this, indices);
 		}
 
-		Handle<UniformAdapter> D3DGraphics::createUniformAdapter(ShaderType shader, int index, size_t size)
+		UniqueHandle<UniformAdapter> D3DGraphics::createUniformAdapter(ShaderType shader, int index, size_t size)
 		{
-			return Handle<D3DUniformAdapter, D3DGraphics>(this, shader, index, size);
+			return UniqueHandle<D3DUniformAdapter, D3DGraphics>(this, shader, index, size);
 		}
 
 		Handle<Surface> D3DGraphics::createSurface(UISpace * space)
@@ -255,11 +260,6 @@ namespace Rapture
 			connect(*space, s, &UISurface::onUIDestroy);
 
 			return s;
-		}
-
-		void D3DGraphics::updateBrushState()
-		{
-			updateUniform<Uniforms::BrushOptions>(color(), lineWidth());
 		}
 
 		void D3DGraphics::present() const
@@ -287,9 +287,6 @@ namespace Rapture
 
 		void D3DVertexLayout::accept(const ShaderCode * code)
 		{
-			if(handle != nullptr)
-				return;
-
 			static const DXGI_FORMAT formats[] = {
 				DXGI_FORMAT_UNKNOWN,
 				DXGI_FORMAT_R32_FLOAT,
@@ -298,24 +295,34 @@ namespace Rapture
 				DXGI_FORMAT_R32G32B32A32_FLOAT
 			};
 
-			vector<D3D11_INPUT_ELEMENT_DESC> descs;
+			static const char * semantics[] = {
+				"POSITION",
+				"COLOR",
+				"NORMAL",
+				"TEXCOORD"
+			};
+
+			if(handle != nullptr)
+				return;
+
+			array_list<D3D11_INPUT_ELEMENT_DESC> descs;
 			uint stride = 0;
 
 			for(auto * vie : elements)
 			{
-				descs.push_back({vie->semantic, vie->index, formats[vie->units], 0, stride, D3D11_INPUT_PER_VERTEX_DATA, 0});
+				descs.push_back({semantics[vie->type], vie->index, formats[vie->units], 0, stride, D3D11_INPUT_PER_VERTEX_DATA, 0});
 				stride += vie->units * sizeof(float);
 			}
 
 			com_assert(
-				graphics->device->CreateInputLayout(descs.data(), static_cast<uint>(descs.size()), code->data, code->size, &handle),
-				"Can't create vertex input layout for shader"
+				graphics->device->CreateInputLayout(descs.data(), static_cast<uint>(descs.size()), code->ptr, code->size, &handle),
+				"Can't create vertex input layout for shader, layout fingerprint is \"", this->fingerprint, "\""
 			);
 		}
 
-		D3DVertexBuffer::D3DVertexBuffer(D3DGraphics * graphics, VertexLayout * vil, const VertexData & vd, D3D_PRIMITIVE_TOPOLOGY topology) : VertexBuffer(vil, vd), graphics(graphics), topology(topology)
+		D3DVertexBuffer::D3DVertexBuffer(D3DGraphics * graphics, VertexLayout * layout, const VertexData & vd, D3D_PRIMITIVE_TOPOLOGY topology) : VertexBuffer(layout, vd), graphics(graphics), topology(topology)
 		{
-			if(vd.size % vil->stride != 0)
+			if(vd.size % layout->stride != 0)
 				throw Exception("Size of vertex buffer doesn't matches its vertex input layout");
 
 			D3D11_BUFFER_DESC bd;
@@ -327,17 +334,17 @@ namespace Rapture
 
 			D3D11_SUBRESOURCE_DATA sdata;
 			ZeroMemory(&sdata, sizeof(sdata));
-			sdata.pSysMem = vd.data;
+			sdata.pSysMem = vd.ptr;
 
 			com_assert(
 				graphics->device->CreateBuffer(&bd, &sdata, &handle),
 				"Can't create vertex buffer!"
-				);
+			);
 		}
 
 		void D3DVertexBuffer::apply() const
 		{
-			uint stride = vil->stride;
+			uint stride = layout->stride;
 			uint offset = 0;
 
 			graphics->context->IASetVertexBuffers(0, 1, &handle, &stride, &offset);
@@ -366,7 +373,7 @@ namespace Rapture
 			com_assert(
 				graphics->device->CreateBuffer(&bd, &sdata, &handle),
 				"Can't create index buffer!"
-				);
+			);
 		}
 
 		void D3DIndexBuffer::apply() const
@@ -388,7 +395,7 @@ namespace Rapture
 			com_assert(
 				D3DReadFileToBlob(widen(filename).c_str(), &code),
 				"Can't read shader from file: ", filename
-				);
+			);
 
 			out.init(code->GetBufferPointer(), code->GetBufferSize());
 		}
@@ -439,7 +446,7 @@ namespace Rapture
 
 		void D3DShader<ShaderType::Vertex>::apply() const
 		{
-			program->vil->apply();
+			program->layout->apply();
 			program->graphics->context->VSSetShader(id, nullptr, 0);
 		}
 
@@ -448,11 +455,11 @@ namespace Rapture
 			HRESULT hr = S_OK;
 
 			com_assert(
-				program->graphics->device->CreateVertexShader(code->data, code->size, nullptr, &id),
+				program->graphics->device->CreateVertexShader(code->ptr, code->size, nullptr, &id),
 				"Can't create vertex shader!"
-				);
+			);
 
-			program->vil->accept(code);
+			program->layout->accept(code);
 		}
 
 		D3DShader<ShaderType::Pixel>::D3DShader(D3DShaderProgram * program, const String & path, ShaderCodeState state) : D3DShader<ShaderType::Common>(program)
@@ -490,9 +497,9 @@ namespace Rapture
 		void D3DShader<ShaderType::Pixel>::init(const Handle<ShaderCode> & code)
 		{
 			com_assert(
-				program->graphics->device->CreatePixelShader(code->data, code->size, nullptr, &id),
+				program->graphics->device->CreatePixelShader(code->ptr, code->size, nullptr, &id),
 				"Can't create pixel shader!"
-				);
+			);
 		}
 
 		D3DImage::D3DImage(D3DGraphics * graphics, const ImageData & data) : Image(graphics, data), _ctx(graphics)
@@ -541,17 +548,17 @@ namespace Rapture
 			D3D11_SUBRESOURCE_DATA texInitData;
 			ZeroMemory(&texInitData, sizeof(D3D11_SUBRESOURCE_DATA));
 
-			texInitData.pSysMem = newData->data;
+			texInitData.pSysMem = newData->ptr;
 			texInitData.SysMemPitch = _width * preferredBpp(_format);
 			texInitData.SysMemSlicePitch = texInitData.SysMemPitch;
 
 			com_assert(
 				graphics->device->CreateTexture2D(&texDesc, &texInitData, &tex)
-				);
+			);
 
 			com_assert(
 				graphics->device->CreateShaderResourceView(tex, nullptr, &_handle)
-				);
+			);
 
 			D3D11_SAMPLER_DESC sampDesc;
 			ZeroMemory(&sampDesc, sizeof(sampDesc));
@@ -565,7 +572,7 @@ namespace Rapture
 
 			com_assert(
 				graphics->device->CreateSamplerState(&sampDesc, &_state)
-				);
+			);
 		}
 
 		void D3DImage::apply() const
@@ -596,14 +603,14 @@ namespace Rapture
 
 			com_assert(
 				_ctx->device->CreateTexture2D(&texDesc, nullptr, &texture)
-				);
+			);
 
 			_ctx->context->CopyResource(texture, ownTexture);
 
 			D3D11_MAPPED_SUBRESOURCE resource;
 			com_assert(
 				_ctx->context->Map(texture, 0, D3D11_MAP_READ, 0, &resource)
-				);
+			);
 
 			output->width = _width;
 			output->height = _height;
@@ -614,7 +621,7 @@ namespace Rapture
 			output->alloc();
 
 			uint8_t * src = static_cast<uint8_t *>(resource.pData);
-			uint8_t * dst = output->data;
+			uint8_t * dst = output->ptr;
 
 			for(uint y = 0; y < output->height; ++y, src += resource.RowPitch, dst += pitch)
 				memcpy(dst, src, pitch);
@@ -661,7 +668,7 @@ namespace Rapture
 
 					com_assert(
 						swapChain->GetContainingOutput(&output)
-						);
+					);
 
 					output->FindClosestMatchingMode(&md, &md, graphics->device);
 					//findPreferredMode(output, md);
@@ -683,7 +690,7 @@ namespace Rapture
 
 			com_assert(
 				graphics->dxgiFactory->CreateSwapChain(graphics->device, &sd, &sc)
-				);
+			);
 
 			swapChain = sc;
 			createRenderTarget();
@@ -711,11 +718,11 @@ namespace Rapture
 
 				com_assert(
 					swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), buffer.pointer())
-					);
+				);
 
 				com_assert(
 					graphics->device->CreateRenderTargetView(buffer, nullptr, &renderTargetView)
-					);
+				);
 			}
 
 		#ifdef USE_3D
@@ -778,7 +785,7 @@ namespace Rapture
 
 			com_assert(
 				swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), buffer.pointer())
-				);
+			);
 
 			ComHandle<ID3D11Texture2D> texture;
 			D3D11_TEXTURE2D_DESC texDesc;
@@ -790,14 +797,14 @@ namespace Rapture
 
 			com_assert(
 				graphics->device->CreateTexture2D(&texDesc, nullptr, &texture)
-				);
+			);
 
 			graphics->context->CopyResource(texture, buffer);
 
 			D3D11_MAPPED_SUBRESOURCE resource;
 			com_assert(
 				graphics->context->Map(texture, 0, D3D11_MAP_READ, 0, &resource)
-				);
+			);
 
 			output->width = texDesc.Width;
 			output->height = texDesc.Height;
@@ -807,7 +814,7 @@ namespace Rapture
 			output->alloc();
 
 			uint8_t * src = static_cast<uint8_t *>(resource.pData);
-			uint8_t * dst = output->data;
+			uint8_t * dst = output->ptr;
 
 			for(uint y = 0; y < output->height; ++y, src += resource.RowPitch, dst += pitch)
 				memcpy(dst, src, pitch);
@@ -830,13 +837,13 @@ namespace Rapture
 				return;
 
 			viewport.set(msg->width, msg->height);
-			graphics->updateUniform<Uniforms::Viewport>(FloatSize{viewport.size()});
+			graphics->updateUniform<Uniforms::Viewport>(FloatSize {viewport.size()});
 
 			releaseRenderTarget();
 
 			com_assert(
 				swapChain->ResizeBuffers(0, viewport.width(), viewport.height(), DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH)
-				);
+			);
 
 			createRenderTarget();
 
@@ -908,7 +915,7 @@ namespace Rapture
 
 			com_assert(
 				graphics->device->CreateTexture2D(&descDepth, NULL, &depthStencil)
-				);
+			);
 
 			D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
 			ZeroMemory(&descDSV, sizeof(descDSV));
@@ -918,7 +925,7 @@ namespace Rapture
 
 			com_assert(
 				graphics->device->CreateDepthStencilView(depthStencil, &descDSV, &depthStencilView), "Can't create depth stencil view"
-				);
+			);
 		}
 
 		D3DUniformAdapter::D3DUniformAdapter(D3DGraphics * graphics, ShaderType shader, int index, size_t size) : graphics(graphics), index(index)
@@ -933,7 +940,7 @@ namespace Rapture
 
 			com_assert(
 				graphics->device->CreateBuffer(&bd, NULL, &buffer), "Can't create uniform buffer"
-				);
+			);
 
 			switch(shader)
 			{

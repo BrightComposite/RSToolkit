@@ -75,8 +75,6 @@ namespace Rapture
 			right(static_cast<T>(pt.begin()[0] + sz.begin()[0])),
 			bottom(static_cast<T>(pt.begin()[1] + sz.begin()[1])) {}
 
-		virtual ~Rect() {}
-
         bool isEmpty()
         {
             return width() <= 0 || height() <= 0;

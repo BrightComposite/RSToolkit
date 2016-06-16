@@ -29,7 +29,7 @@ namespace Rapture
 		None
 	};
 
-	link_class(Window, Class<UISpace>);
+	link_class(ui, Window, Class<UISpace>);
 
 	class Window : public UISpace
 	{
@@ -37,9 +37,9 @@ namespace Rapture
 		Window(Graphics * graphics, long left, long top, long width, long height, const WideString & caption = L"") : Window(graphics, IntRect {left, top, left + width, top + height}, caption) {}
 		Window(Graphics * graphics, long width, long height, const WideString & caption = L"") : Window(graphics, IntSize {width, height}, caption) {}
 		Window(Graphics * graphics, const IntSize & size, const WideString & caption = L"") : Window(graphics, IntRect {0, 0, size.x, size.y}, caption) {}
-		Window(Graphics * graphics, const IntRect & rect, const WideString & caption = L"");
+		api(ui) Window(Graphics * graphics, const IntRect & rect, const WideString & caption = L"");
 
-		virtual ~Window();
+		virtual ~Window() {}
 
 		long outerWidth() const
 		{
@@ -61,33 +61,33 @@ namespace Rapture
 			return _outerRegion;
 		}
 
-		void centralize();
+		api(ui) void centralize();
 
-		virtual void registerHotkey(int id, int key, int modifiers = 0) override;
-		virtual void unregisterHotkey(int id) override;
+		virtual void api(ui) registerHotkey(int id, int key, int modifiers = 0) override;
+		virtual void api(ui) unregisterHotkey(int id) override;
 
 		bool isFullscreen() const
 		{
 			return _fullscreen;
 		}
 
-		void setFullscreen(bool fullscreen);
-		void toggleFullscreen();
+		void api(ui) setFullscreen(bool fullscreen);
+		void api(ui) toggleFullscreen();
 
-		void setState(WindowState state);
+		void api(ui) setState(WindowState state);
 
-		void show();
-		void hide();
-		void minimize();
-		void maximize();
-		void restore();
+		void api(ui) show();
+		void api(ui) hide();
+		void api(ui) minimize();
+		void api(ui) maximize();
+		void api(ui) restore();
 
 		BorderStyle borderStyle() const
 		{
 			return _borderStyle;
 		}
 
-		void setBorderStyle(BorderStyle style);
+		void api(ui) setBorderStyle(BorderStyle style);
 
 		bool isVisible() const
 		{
@@ -99,17 +99,17 @@ namespace Rapture
 			return _state;
 		}
 
-		void setCaption(const WideString & caption);
-		WideString getCaption();
+		void api(ui) setCaption(const WideString & caption);
+		WideString api(ui) getCaption();
 
-		void close();
+		void api(ui) close();
 
 	protected:
-		void makeFullscreen();
-		void restoreSize();
-		void applyBorderStyle();
+		void api(ui) makeFullscreen();
+		void api(ui) restoreSize();
+		void api(ui) applyBorderStyle();
 
-		friend LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+		friend LRESULT api(ui) CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 		bool _isShown = false;
 
@@ -125,6 +125,8 @@ namespace Rapture
 
 		bind_messages(Window, WindowMessages);
 	};
+
+	channels_api(ui, Window, WindowMessages)
 
 	inline bool IsKeyPressed(int v_key)
 	{

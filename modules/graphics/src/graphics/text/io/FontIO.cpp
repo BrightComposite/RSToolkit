@@ -8,8 +8,6 @@
 
 namespace Rapture
 {
-	map<string, FontDecoder *> FontIO::decoders;
-
 	using std::ifstream;
 	using std::ios_base;
 
@@ -29,7 +27,7 @@ namespace Rapture
 		ifstream input(pth.string(), ios_base::binary);
 
 		raw->alloc(static_cast<size_t>(file_size(pth)));
-		input.read(reinterpret_cast<char *>(raw->data), raw->size);
+		input.read(reinterpret_cast<char *>(raw->ptr), raw->size);
 
 		read(output, get_extension(pth), raw);
 	}

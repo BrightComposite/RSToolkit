@@ -39,7 +39,7 @@ namespace Rapture
 			}
 		}
 
-		mutable T * _object;
+		T * _object;
 
 		inline ComHandle & operator = (const ComHandle & com)
 		{
@@ -59,7 +59,7 @@ namespace Rapture
 			return *this;
 		}
 
-		inline ComHandle & operator = (const T * & obj)
+		inline ComHandle & operator = (const T * obj)
 		{
 			release();
 			_object = obj;
@@ -83,6 +83,11 @@ namespace Rapture
 			return *this;
 		}
 
+		inline ComHandle(T * obj) : _object(obj)
+		{
+			keep();
+		}
+
 	public:
 		inline ComHandle() : _object(nullptr) {}
 
@@ -102,11 +107,6 @@ namespace Rapture
 			com.queryInterface(*this);
 		}
 
-		inline ComHandle(T * obj) : _object(obj)
-		{
-			keep();
-		}
-
 		virtual ~ComHandle()
 		{
 			release();
@@ -114,12 +114,12 @@ namespace Rapture
 
 		bool operator == (const ComHandle & com) const
 		{
-			return (com._object == nullptr) ? (_object == nullptr) : com._object == _object;
+			return com._object == _object;
 		}
 
 		bool operator == (const T * object) const
 		{
-			return (object == nullptr) ? (_object == nullptr) : object == _object;
+			return object == _object;
 		}
 
 		bool operator == (nullptr_t) const
@@ -148,12 +148,22 @@ namespace Rapture
 			return _object;
 		}
 
-		inline T ** operator & () const
+		inline T ** operator & ()
 		{
 			return &_object;
 		}
 
-		inline void ** pointer() const
+		inline T * const * operator & () const
+		{
+			return &_object;
+		}
+
+		inline void ** pointer()
+		{
+			return reinterpret_cast<void **>(&_object);
+		}
+
+		inline void * const * pointer() const
 		{
 			return reinterpret_cast<void **>(&_object);
 		}
@@ -202,7 +212,7 @@ namespace Rapture
 			return *this;
 		}
 
-		inline ComHandle & operator = (const T * & obj)
+		inline ComHandle & operator = (const T * obj)
 		{
 			Base::operator = (obj);
 			return *this;

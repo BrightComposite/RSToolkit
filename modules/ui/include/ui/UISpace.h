@@ -11,15 +11,19 @@
 
 namespace Rapture
 {
-	declare_and_link(UISpace, Class<Subject>);
+	class UISpace; 
+
+	link_class(ui, UISpace, Class<Subject>);
 
 	class UISpace : public Subject
 	{
+		deny_copy(UISpace);
+
 		friend class Widget;
 
 	public:
-		UISpace(Graphics * graphics, const IntSize & size, HWND handle);
-		virtual ~UISpace();
+		api(ui) UISpace(Graphics * graphics, const IntSize & size, HWND handle);
+		virtual api(ui) ~UISpace();
 
 		HWND handle() const
 		{
@@ -46,7 +50,7 @@ namespace Rapture
 			return {0, 0, _width, _height};
 		}
 
-		const UniquePtr<Widget> & root() const
+		const UniqueHandle<Widget> & root() const
 		{
 			return _root;
 		}
@@ -64,17 +68,17 @@ namespace Rapture
 		/**
 		 *	Marks the whole window for update.
 		 */
-		void invalidate();
+		void api(ui) invalidate();
 
 		/**
 		 *	Marks a region of window for update.
 		 */
-		void invalidate(const Widget * w);
+		void api(ui) invalidate(const Widget * w);
 
 		/**
 		 *	Redraws parts of the window which are marked for update.
 		 */
-		void validate();
+		void api(ui) validate();
 
 		void update()
 		{
@@ -82,8 +86,16 @@ namespace Rapture
 			validate();
 		}
 
-		virtual void registerHotkey(int id, int key, int modifiers = 0) {}
-		virtual void unregisterHotkey(int id) {}
+		virtual void api(ui) registerHotkey(int id, int key, int modifiers = 0) {}
+		virtual void api(ui) unregisterHotkey(int id) {}
+
+		virtual void api(ui) read(Handle<KeyDownMessage> & msg);
+		virtual void api(ui) read(Handle<CharMessage> & msg);
+		virtual void api(ui) read(Handle<KeyUpMessage> & msg);
+		virtual void api(ui) read(Handle<MouseDownMessage> & msg);
+		virtual void api(ui) read(Handle<MouseUpdateMessage> & msg);
+		virtual void api(ui) read(Handle<MouseUpMessage> & msg);
+		virtual void api(ui) read(Handle<UIResizeMessage> & msg);
 
 	protected:
 		bind_messages(UISpace,
@@ -95,16 +107,6 @@ namespace Rapture
 			MouseUpMessage,
 			HotkeyMessage,
 			UIMessages
-		)
-
-		create_readers(UISpace,
-			KeyDownMessage,
-			CharMessage,
-			KeyUpMessage,
-			MouseDownMessage,
-			MouseUpdateMessage,
-			MouseUpMessage,
-			UIResizeMessage
 		)
 
 		Widget * focused() const;
@@ -124,14 +126,25 @@ namespace Rapture
 		set<pair<MouseButton, Widget *>> _pressedList;
 		MouseState _mouseState;
 
-		UniquePtr<Widget> _root;
+		UniqueHandle<Widget> _root;
 		Handle<Surface> _surface = nullptr;
 		Graphics * _graphics;
-		vector<IntRect> _invalids;
+		array_list<IntRect> _invalids;
 
 		bool _fullscreen = false;
 		bool _isClosed = false;
 	};
+
+	channels_api(ui, UISpace,
+		KeyDownMessage,
+		CharMessage,
+		KeyUpMessage,
+		MouseDownMessage,
+		MouseUpdateMessage,
+		MouseUpMessage,
+		HotkeyMessage,
+		UIMessages
+	)
 
 	struct KeyMap
 	{

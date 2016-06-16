@@ -23,6 +23,8 @@ namespace Rapture
 		struct Base {};
 	}
 
+	typebase_api(graphics, Uniforms::Base);
+
 #define uniform_class(name, shader_index, shader_type, components)		\
 	namespace Uniforms													\
 	{																	\
@@ -34,6 +36,7 @@ namespace Rapture
 	}																	\
 																		\
 	aligned_contents(Uniforms::name, 16, components)					\
+	typeid_api(graphics, Uniforms::name, Uniforms::Base)
 
 	uniform_class
 	(
@@ -106,10 +109,10 @@ namespace Rapture
 	protected:
 		friend_owned_handle(Uniform, Graphics3D);
 
-		Uniform(const Handle<UniformAdapter> & adapter) : _adapter(adapter) {}
+		Uniform(UniqueHandle<UniformAdapter> && adapter) : _adapter(forward<UniqueHandle<UniformAdapter>>(adapter)) {}
 		Uniform(Uniform && uniform) : _adapter(move(uniform._adapter)) {}
 
-		Handle<UniformAdapter> _adapter;
+		UniqueHandle<UniformAdapter> _adapter;
 	};
 
 	using UniformMap = TypedMap<Uniforms::Base, Uniform, Graphics3D>;

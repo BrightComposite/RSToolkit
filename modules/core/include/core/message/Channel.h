@@ -25,8 +25,10 @@ namespace Rapture
 
 	struct BasicReceivers : Shared {};
 
+	typebase_api(core, BasicReceivers);
+
 	template<class Dst, class Msg>
-	using ReceiversList = vector<Receiver<Dst, Msg>>;
+	using ReceiversList = array_list<Receiver<Dst, Msg>>;
 
 	using ReceiversSet = TypedSet<BasicReceivers>;
 
@@ -86,7 +88,7 @@ namespace Rapture
 	{
 		using MsgDst    = message_dst_t<Dst, Msg>;
 		using RealDst   = conditional_t<is_same<MsgDst, Empty>::value, Dst, MsgDst>;
-		using ReaderDst	= reader_t<Dst, Msg>;
+		using ReaderDst = conditional_t<has_reader<Dst, Msg>::value, Dst, Empty>;
 
 		using Connector   = MessageConnector<RealDst, Msg>;
 		using Broadcaster = MessageBroadcaster<MsgDst, Msg>;
@@ -96,7 +98,7 @@ namespace Rapture
 		{
 			Broadcaster::broadcast(message, dest);
 
-			auto & r = Connector::instance().receivers();
+			auto & r = Connector::globalReceivers();
 
 			if(r.size() > 0)
 			{
@@ -113,38 +115,45 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	template<class Dst, typename Msg>
-	struct MessageConnector<Dst, Msg, false> : Singleton<MessageConnector<Dst, Msg, false>>
+	struct ReceiversWrapper
 	{
-		using Base = Singleton<MessageConnector<Dst, Msg, false>>;
+		ReceiversList<Dst, Msg> & receivers;
+
+		size_t operator += (const Receiver<Dst, Msg> & receiver)
+		{
+			receivers.push_back(receiver);
+			return receiver.id;
+		}
+
+		size_t operator += (Receiver<Dst, Msg> && receiver)
+		{
+			receivers.push_back(forward<Receiver<Dst, Msg>>(receiver));
+			return receiver.id;
+		}
+	};
+
+//---------------------------------------------------------------------------
+
+	template<class Dst, typename Msg>
+	struct MessageConnector<Dst, Msg, false>
+	{
 		using Rcvr = Receiver<Dst, Msg>;
 
 		static size_t connect(const Rcvr & receiver)
 		{
-			receivers().push_back(receiver);
+			globalReceivers().push_back(receiver);
 			return receiver.id;
 		}
 
 		static size_t connect(Rcvr && receiver)
 		{
-			receivers().push_back(forward<Rcvr>(receiver));
-			return receiver.id;
-		}
-
-		size_t operator += (const Rcvr & receiver)
-		{
-			_receivers.contents.push_back(receiver);
-			return receiver.id;
-		}
-
-		size_t operator += (Rcvr && receiver)
-		{
-			_receivers.contents.push_back(forward<Rcvr>(receiver));
+			globalReceivers().push_back(forward<Rcvr>(receiver));
 			return receiver.id;
 		}
 
 		static void disconnect(const Rcvr & receiver)
 		{
-			auto & r = receivers();
+			auto & r = globalReceivers();
 
 			for(auto i = r.begin(); i != r.end(); ++i)
 			{
@@ -158,7 +167,7 @@ namespace Rapture
 
 		static void disconnect(size_t id, size_t additional)
 		{
-			auto & r = receivers();
+			auto & r = globalReceivers();
 
 			for(auto i = r.begin(); i != r.end(); ++i)
 			{
@@ -172,7 +181,7 @@ namespace Rapture
 
 		static void disconnect(size_t id)
 		{
-			auto & r = receivers();
+			auto & r = globalReceivers();
 
 			for(auto i = r.begin(); i != r.end(); ++i)
 			{
@@ -181,25 +190,28 @@ namespace Rapture
 			}
 		}
 
-		template<class R, class ... Owner>
-		static void disconnect(const Handle<R, Owner...> & rcvr)
+		template<class R>
+		static void disconnect(const R * rcvr)
 		{
-			auto & r = receivers();
+			auto & r = globalReceivers();
 
 			for(auto i = r.begin(); i != r.end(); ++i)
 			{
-				if(i->id == reinterpret_cast<size_t>(static_cast<const void *>(static_cast<const R *>(rcvr))))
+				if(i->id == reinterpret_cast<size_t>(static_cast<const void *>(rcvr)))
 					i = r.erase(i);
 			}
 		}
 
-		static ReceiversList<Dst, Msg> & receivers()
+		static ReceiversWrapper<Dst, Msg> receivers()
 		{
-			return Base::instance()._receivers.contents;
+			return {globalReceivers()};
 		}
 
-	protected:
-		Receivers<Dst, Msg> _receivers;
+		static ReceiversList<Dst, Msg> & globalReceivers()
+		{
+			static ReceiversList<Dst, Msg> r;
+			return r;
+		}
 	};
 
 	template<class Dst, typename Msg>
@@ -209,25 +221,9 @@ namespace Rapture
 		using Rcvr = Receiver<Dst, Msg>;
 		using Rcvrs = Receivers<Dst, Msg>;
 
-		struct ReceiversWrapper
-		{
-			ReceiversList<Dst, Msg> & receivers;
-
-			size_t operator += (const Rcvr & receiver)
-			{
-				receivers.push_back(receiver);
-				return receiver.id;
-			}
-
-			size_t operator += (Rcvr && receiver)
-			{
-				receivers.push_back(forward<Rcvr>(receiver));
-				return receiver.id;
-			}
-		};
-
 		using Base::connect;
 		using Base::disconnect;
+		using Base::receivers;
 
 		static size_t connect(Dst & dest, const Rcvr & receiver)
 		{
@@ -241,7 +237,7 @@ namespace Rapture
 			return receiver.id;
 		}
 
-		static ReceiversWrapper receivers(Dst & dest)
+		static ReceiversWrapper<Dst, Msg> receivers(Dst & dest)
 		{
 			return {Rcvrs::requireFrom(dest)};
 		}
@@ -252,13 +248,11 @@ namespace Rapture
 
 			if(local != nullptr && local->size() > 0)
 				for(auto i = local->begin(); i != local->end(); ++i)
-				{
 					if(*i == receiver)
 					{
 						local->erase(i);
 						break;
 					}
-				}
 		}
 
 		static void disconnect(Dst & dest, size_t id, size_t additional)
@@ -267,13 +261,11 @@ namespace Rapture
 
 			if(local != nullptr && local->size() > 0)
 				for(auto i = local->begin(); i != local->end(); ++i)
-				{
 					if(i->id == id && i->additional == additional)
 					{
 						local->erase(i);
 						break;
 					}
-				}
 		}
 
 		static void disconnect(Dst & dest, size_t id)
@@ -282,23 +274,19 @@ namespace Rapture
 
 			if(local != nullptr && local->size() > 0)
 				for(auto i = local->begin(); i != local->end(); ++i)
-				{
 					if(i->id == id)
 						i = local->erase(i);
-				}
 		}
 
-		template<class R, class ... Owner>
-		static void disconnect(Dst & dest, const Handle<R, Owner...> & rcvr)
+		template<class R>
+		static void disconnect(Dst & dest, const R * rcvr)
 		{
 			auto * local = Receivers<Dst, Msg>::seek(dest);
 
 			if(local != nullptr && local->size() > 0)
 				for(auto i = local->begin(); i != local->end(); ++i)
-				{
-					if(i->id == reinterpret_cast<size_t>(static_cast<const void *>(static_cast<const R *>(rcvr))))
+					if(i->id == reinterpret_cast<size_t>(static_cast<const void *>(rcvr)))
 						i = local->erase(i);
-				}
 		}
 	};
 
@@ -552,6 +540,12 @@ namespace Rapture
 		Channel<Dst, Msg>::disconnect(Receiver<Dst, Msg>(receiver, callback, key));
 	}
 
+	template<class Dst, typename Msg, class Rcvr>
+	void disconnect(const Rcvr * receiver)
+	{
+		Channel<Dst, Msg>::disconnect(receiver);
+	}
+
 	template<class Dst, typename Msg, class Rcvr, class ... RcvrOwner>
 	void disconnect(const Handle<Rcvr, RcvrOwner...> & receiver, void(__thiscall Rcvr::*callback)(Handle<Msg> &, Dst &), size_t key = 0)
 	{
@@ -567,7 +561,7 @@ namespace Rapture
 	template<class Dst, typename Msg, class Rcvr, class ... RcvrOwner>
 	void disconnect(const Handle<Rcvr, RcvrOwner...> & receiver)
 	{
-		Channel<Dst, Msg>::disconnect(receiver);
+		Channel<Dst, Msg>::disconnect(static_cast<const Rcvr *>(receiver));
 	}
 
 	//---------------------------------------------------------------------------
@@ -637,6 +631,15 @@ namespace Rapture
 		Channel<Dst, Msg>::disconnect(dest, Receiver<Dst, Msg>(receiver, callback, key));
 	}
 
+	template<class Dst, typename Msg, class RealDst, class Rcvr, useif <
+		is_dest<RealDst, Msg>::value && based_on<RealDst, Dst>::value
+		> endif
+	>
+	void disconnect(RealDst & dest, const Rcvr * receiver)
+	{
+		Channel<Dst, Msg>::disconnect(dest, receiver);
+	}
+
 	template<class Dst, typename Msg, class RealDst, class Rcvr, class ... RcvrOwner, useif <
 		is_dest<RealDst, Msg>::value && based_on<RealDst, Dst>::value
 		> endif
@@ -661,102 +664,51 @@ namespace Rapture
 	>
 	void disconnect(RealDst & dest, const Handle<Rcvr, RcvrOwner...> & receiver)
 	{
-		Channel<Dst, Msg>::disconnect(dest, receiver);
+		Channel<Dst, Msg>::disconnect(dest, static_cast<const Rcvr *>(receiver));
 	}
 
 //---------------------------------------------------------------------------
 
-#define dest_connect(realDst, Dst, Msg) Channel<Dst, Msg>::receivers(realDst) += (msg_callback<Dst, Msg>)[](Handle<Msg> & msg, Dst & dest)
-#define global_connect(Dst, Msg) Channel<Dst, Msg>::instance() += (msg_callback<Dst, Msg>)[](Handle<Msg> & msg, Dst & dest)
+#define subscribe_on(Dst, Msg, ... /*Real dst*/) Channel<Dst, Msg>::receivers(__VA_ARGS__) += (msg_callback<Dst, Msg>)[](Handle<Msg> & msg, Dst & dest)
 
 //---------------------------------------------------------------------------
 
-#define declare_receivers() 						\
-	template<class, typename>						\
-	friend struct Rapture::Receivers;				\
-	Rapture::ReceiversSet receiversMap;				\
+#define declare_receivers() 					\
+	template<class, typename>					\
+	friend struct Rapture::Receivers;			\
+	Rapture::ReceiversSet receiversMap;			\
 
 #define set_message_dest(Dst, Msg) using pp_cat(DestOf, Msg) = Dst;
-#define set_message_reader(Dst, Msg) using pp_cat(ReaderOf, Msg) = Dst;
 
-#define bind_message(Dst, Msg)						\
-	template<class, typename>						\
-	friend struct Rapture::Receivers;				\
-	template<class, typename>						\
-	friend struct Rapture::DestGetter;				\
-													\
-	set_message_dest(Dst, Msg)						\
+#define bind_message(Dst, Msg)					\
+	template<class, typename>					\
+	friend struct Rapture::Receivers;			\
+	template<class, typename>					\
+	friend struct Rapture::DestGetter;			\
+												\
+	set_message_dest(Dst, Msg)					\
 
 #define op_bind_message(s, Dst, Msg) set_message_dest(Dst, Msg)
 
-#define bind_messages(Dst, ... /* Messages */)		\
-	template<class, typename>						\
-	friend struct Rapture::Receivers;				\
-	template<class, typename>						\
-	friend struct Rapture::DestGetter;				\
-													\
-	pp_seq_foreach(op_bind_message, Dst,			\
-		pp_tuple_to_seq((__VA_ARGS__))				\
-		)											\
+#define bind_messages(Dst, ... /* Messages */)	\
+	template<class, typename>					\
+	friend struct Rapture::Receivers;			\
+	template<class, typename>					\
+	friend struct Rapture::DestGetter;			\
+												\
+	pp_seq_foreach(op_bind_message, Dst,		\
+		pp_tuple_to_seq((__VA_ARGS__))			\
+		)										\
 
-#define create_custom_reader(Dst, Msg, msg)			\
-	friend_sfinae(has_read_method);					\
-													\
-	template<class, typename>						\
-	friend struct Rapture::MessageTransmitter;		\
-	template<class, typename>						\
-	friend struct Rapture::ReaderGetter;			\
-													\
-	set_message_reader(Dst, Msg)					\
-													\
-	virtual void read(Rapture::Handle<Msg> & msg)	\
+#define op_channel_api(s, data, Msg)			\
+	template struct pp_tuple_extract(0, data) MessageConnector<pp_tuple_extract(1, data), Msg>; \
+	template struct pp_tuple_extract(0, data) TypeId<Receivers<pp_tuple_extract(1, data), Msg>, BasicReceivers>;
 
-#define create_reader(Dst, Msg)						\
-	create_custom_reader(Msg, msg)									
+#define channels_api(module, Dst, ... /* Messages */)	\
+	pp_seq_foreach(op_channel_api, (api(module), Dst),	\
+		pp_tuple_to_seq((__VA_ARGS__))					\
+		)												\
 
-#define op_create_reader(s, Dst, Msg) virtual void read(Rapture::Handle<Msg> &); set_message_reader(Dst, Msg)
-#define op_create_empty_reader(s, Dst, Msg) virtual void read(Rapture::Handle<Msg> &) {} set_message_reader(Dst, Msg)
-
-#define create_readers_func(Dst, op, seq)			\
-	friend_sfinae(has_read_method);					\
-													\
-	template<class, typename>						\
-	friend struct Rapture::MessageTransmitter;		\
-	template<class, typename>						\
-	friend struct Rapture::ReaderGetter;			\
-													\
-	pp_seq_foreach(op, Dst, seq)					\
-
-#define create_readers(Dst, ...)					\
-	create_readers_func(Dst, op_create_reader,		\
-		pp_tuple_to_seq((__VA_ARGS__))				\
-		)											\
-
-#define create_empty_readers(Dst, ...)				\
-	create_readers_func(Dst, op_create_empty_reader,\
-		pp_tuple_to_seq((__VA_ARGS__))				\
-		)											\
-
-#define override_custom_reader(Dst, Msg, msg)		\
-	template<class, typename>						\
-	friend struct Rapture::ReaderGetter;			\
-													\
-	set_message_reader(Dst, Msg)					\
-													\
-	virtual void read(Rapture::Handle<Msg> & msg) override					
-
-#define override_reader(Dst, Msg)						\
-	override_custom_reader(Dst, Msg, msg)									
-
-#define op_override_reader(s, Dst, Msg) override_reader(Dst, Msg); 
-
-#define override_readers(Dst, ...)					\
-	create_readers_func(Dst, op_override_reader,	\
-		pp_tuple_to_seq((__VA_ARGS__))				\
-		)											\
-
-#define implement_custom_reader(Dst, Msg, msg)	void Dst::read(Handle<Msg> & msg)
-#define implement_reader(Dst, Msg)	implement_custom_reader(Dst, Msg, msg)
 }
 
 //---------------------------------------------------------------------------

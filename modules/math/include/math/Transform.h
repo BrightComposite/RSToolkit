@@ -9,15 +9,16 @@
 
 #include "Vector.h"
 #include "Quaternion.h"
+#include "Rect.h"
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	template <typename T>
+	template<typename T>
 	subclass(Translation, Vector<T>);
 
-	template <typename T>
+	template<typename T>
 	subclass(Scaling, Vector<T>);
 
 	using FloatTranslation = Translation<float>;
@@ -31,173 +32,138 @@ namespace Rapture
 	{
 	public:
 		Transform() {}
-		Transform(const Transform & t) : matrix(t.matrix) {}
-		Transform(Transform && t) : matrix(move(t.matrix)) {}
-		Transform(const Matrix<T> & m) : matrix(m) {}
-		Transform(Matrix<T> && m) : matrix(forward<Matrix<T>>(m)) {}
+		Transform(const Transform & t) : _matrix(t._matrix) {}
+		Transform(Transform && t) : _matrix(move(t._matrix)) {}
+		Transform(const Matrix<T> & m) : _matrix(m) {}
+		Transform(Matrix<T> && m) : _matrix(forward<Matrix<T>>(m)) {}
 
-		Transform(const Vector<T> & p)
+		Transform(const Vector<T> & p) : _matrix(Matrix<T>::translation(p)) {}
+		Transform(const Scaling<T> & s) : _matrix(Matrix<T>::scaling(s)) {}
+		Transform(const Quaternion<T> & r) { r.toMatrix(_matrix); }
+
+		Transform(const Vector<T> & p, const Quaternion<T> & r) : Transform(r)
 		{
-			matrix.w = p.template blend<0, 0, 0, 1>(matrix.w);
+			_matrix
+				.translate(p);
 		}
-
-		Transform(const Translation<T> & p) : Transform(static_cast<const Vector<T> &>(p)) {}
-
-		Transform(const Scaling<T> & s)
-		{
-			matrix.x = s.maskX();
-			matrix.y = s.maskY();
-			matrix.z = s.maskZ();
-		}
-
-		Transform(const Quaternion<T> & r)
-		{
-			matrix = r.toMatrix().transpose();
-		}
-
-		Transform(const Vector<T> & p, const Quaternion<T> & r)
-		{
-			matrix = r.toMatrix().transpose();
-			matrix.w = p.template blend<0, 0, 0, 1>(matrix.w);
-		}
-
-		Transform(const Translation<T> & p, const Quaternion<T> & r) : Transform(static_cast<const Vector<T> &>(p), r) {}
 
 		Transform(const Vector<T> & p, const Vector<T> & s)
 		{
-			matrix.x = s.maskX();
-			matrix.y = s.maskY();
-			matrix.z = s.maskZ();
-			matrix.w = p.template blend<0, 0, 0, 1>(matrix.w);
+			_matrix
+				.translate(p)
+				.scale(s);
 		}
-
-		Transform(const Translation<T> & p, const Scaling<T> & s) : Transform(static_cast<const Vector<T> &>(p), s) {}
 
 		Transform(const Vector<T> & p, const Quaternion<T> & r, const Vector<T> & s)
 		{
-			matrix = r.toMatrix().transpose();
-			matrix.x *= s;
-			matrix.y *= s;
-			matrix.z *= s;
-			matrix.w = p.template blend<0, 0, 0, 1>(matrix.w);
+			_matrix
+				.scale(s)
+				.apply(r.toMatrix())
+				.translate(p);
 		}
 
+		Transform(const Translation<T> & p) : Transform(static_cast<const Vector<T> &>(p)) {}
+		Transform(const Translation<T> & p, const Quaternion<T> & r) : Transform(static_cast<const Vector<T> &>(p), r) {}
+		Transform(const Translation<T> & p, const Scaling<T> & s) : Transform(static_cast<const Vector<T> &>(p), s) {}
 		Transform(const Translation<T> & p, const Quaternion<T> & r, const Scaling<T> & s) : Transform(static_cast<const Vector<T> &>(p), r, static_cast<const Vector<T> &>(s)) {}
 
 		Transform(const Point<T> & p)
 		{
-			matrix(3, 0) = p.x;
-			matrix(3, 1) = p.y;
+			_matrix(0, 3) = p.x;
+			_matrix(1, 3) = p.y;
 		}
 
 		Transform(const Size<T> & s)
 		{
-			matrix(0, 0) = s.x;
-			matrix(1, 1) = s.y;
+			_matrix.scale({s.x, s.y, 1.0f});
 		}
 
 		Transform(const Point<T> & p, const Size<T> & s)
 		{
-			matrix(0, 0) = s.x;
-			matrix(1, 1) = s.y;
-			matrix(3, 0) = p.x;
-			matrix(3, 1) = p.y;
+			_matrix(3, 0) = p.x;
+			_matrix(3, 1) = p.y;
+			_matrix.scale({s.x, s.y, 1.0f});
 		}
 
 		Transform(const Point<T> & p, const Size<T> & s, T depth)
 		{
-			matrix(0, 0) = s.x;
-			matrix(1, 1) = s.y;
-			matrix(3, 0) = p.x;
-			matrix(3, 1) = p.y;
-			matrix(3, 2) = depth;
+			_matrix(3, 0) = p.x;
+			_matrix(3, 1) = p.y;
+			_matrix(3, 2) = depth;
+			_matrix.scale({s.x, s.y, 1.0f});
 		}
 
 		Transform & operator = (const Transform & t)
 		{
-			matrix = t.matrix;
+			_matrix = t._matrix;
 			return *this;
 		}
 
 		Transform & operator = (Transform && t)
 		{
-			matrix = move(t.matrix);
+			_matrix = move(t._matrix);
 			return *this;
 		}
 
 		Transform & operator = (const Matrix<T> & m)
 		{
-			matrix = m;
+			_matrix = m;
 			return *this;
 		}
 
 		Transform & operator = (Matrix<T> && m)
 		{
-			matrix = forward<Matrix<T>>(m);
+			_matrix = forward<Matrix<T>>(m);
 			return *this;
 		}
 
-		void apply(const Matrix<T> & mat)
+		Matrix<T> output() const
 		{
-			matrix = mat.transposition() * matrix;
+			return _matrix.transposition();
 		}
 
 		void apply(const Transform & t)
 		{
-			matrix = t.matrix * matrix;
-		}
-
-		void applyTo(Matrix<T> & mat) const
-		{
-			mat.transpose();
-			mat *= matrix;
+			_matrix *= t._matrix;
 		}
 
 		void applyTo(Transform & t) const
 		{
-			t.matrix *= matrix;
+			t._matrix *= _matrix;
 		}
 
 		Transform & operator *= (const Transform & t)
 		{
-			matrix *= t.matrix;
+			_matrix *= t.matrix;
 			return *this;
 		}
 
-		Transform & operator *= (const Scaling<T> & s)
+		Transform & translate(const Vector<T> & s)
 		{
-			matrix *= Matrix<T>::scaling(s);
+			_matrix.translate(s);
 			return *this;
 		}
 
-		operator Matrix<T> & () &
+		Transform & rotate(const Quaternion<T> & q)
 		{
-			return matrix;
+			_matrix *= q.toMatrix();
+			return *this;
 		}
 
-		operator const Matrix<T> & () const &
+		Transform & scale(const Vector<T> & s)
 		{
-			return matrix;
+			_matrix.scale(s);
+			return *this;
 		}
 
-		operator Matrix<T> && () &&
-		{
-			return move(matrix);
-		}
-
-		Matrix<T> matrix;
+	protected:
+		Matrix<T> _matrix;
 	};
 
 	template<class T>
 	Transform<T> operator * (const Transform<T> & t1, const Transform<T> & t2)
 	{
-		return t1.matrix * t2.matrix;
-	}
-
-	template<class T>
-	Transform<T> operator * (const Transform<T> & t, const Scaling<T> & s)
-	{
-		return t.matrix * Matrix<T>::scaling(s);
+		return t1._matrix * t2._matrix;
 	}
 
 	using FloatTransform = Transform<float>;

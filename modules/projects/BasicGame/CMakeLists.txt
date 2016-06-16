@@ -1,18 +1,17 @@
 #--------------------------------------------------------
-#	InTheMoonlight
+#	Rapture Basic Game
 #--------------------------------------------------------
 
-project(InTheMoonlight CXX)
-
-#--------------------------------------------------------
-
-include(${RAPTURE_TOOLS}/project.cmake)
+project(BasicGame CXX)
 
 #--------------------------------------------------------
 
-start_module()
+include(${RAPTURE_TOOLS}/module.cmake)
 
-require_modules(
+#--------------------------------------------------------
+
+start_module(
+	APPLICATION
     RaptureApplication "application"
     RapturePhysics     "physics"
 	RaptureFreeImage   "freeimage"
@@ -25,7 +24,9 @@ else()
     require_module(RaptureOpenGL3_3 "opengl")
 endif()
 
-set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
+set_module_api_key(basicgame)
+
+add_module_sources(
 	SRC_GROUP include Headers
 		START_SECTION game
 			Game.h
@@ -35,7 +36,6 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 			END_SECTION
 
 			START_SECTION object
-				BigEyeObject.h
 				PlayerObject.h
 			END_SECTION
 		END_SECTION
@@ -46,9 +46,8 @@ set_project_sources(PROJECT_SOURCES ${PROJECT_SOURCE_DIR}
 		END_SECTION
 )
 
-add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
-load_third_party(vld)
-
 end_module()
+
+load_third_party(vld)
 
 #--------------------------------------------------------

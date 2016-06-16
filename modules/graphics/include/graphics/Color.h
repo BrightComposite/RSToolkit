@@ -80,11 +80,11 @@ namespace Rapture
 	{
 		using T = color_data_t<datatype>;
 
-		ColorBase() : vector {} {}
-		ColorBase(const ColorBase & color) : vector {color.vector} {}
-		ColorBase(ColorBase && color) : vector {move(color.vector)} {}
-		ColorBase(const Vector<T> & vec) : vector {vec} {}
-		ColorBase(Vector<T> && vec) : vector {forward<Vector<T>>(vec)} {}
+		ColorBase() : array_list {} {}
+		ColorBase(const ColorBase & color) : array_list {color.array_list} {}
+		ColorBase(ColorBase && color) : array_list {move(color.array_list)} {}
+		ColorBase(const Vector<T> & vec) : array_list {vec} {}
+		ColorBase(Vector<T> && vec) : array_list {forward<Vector<T>>(vec)} {}
 		ColorBase(const array<T, 4> & data) : data {data} {}
 		ColorBase(array<T, 4> && data) : data {forward<array<T, 4>>(data)} {}
 		ColorBase(T r, T g, T b, T a) : r(r), g(g), b(b), a(a) {}
@@ -92,7 +92,7 @@ namespace Rapture
 		union
 		{
 			array<T, 4> data;
-			Vector<T> vector;
+			Vector<T> array_list;
 
 			struct
 			{
@@ -106,11 +106,11 @@ namespace Rapture
 	{
 		using T = color_data_t<datatype>;
 
-		ColorBase() : vector {} {}
-		ColorBase(const ColorBase & color) : vector {color.vector} {}
-		ColorBase(ColorBase && color) : vector {move(color.vector)} {}
-		ColorBase(const Vector<T> & vec) : vector {vec} {}
-		ColorBase(Vector<T> && vec) : vector {forward<Vector<T>>(vec)} {}
+		ColorBase() : array_list {} {}
+		ColorBase(const ColorBase & color) : array_list {color.array_list} {}
+		ColorBase(ColorBase && color) : array_list {move(color.array_list)} {}
+		ColorBase(const Vector<T> & vec) : array_list {vec} {}
+		ColorBase(Vector<T> && vec) : array_list {forward<Vector<T>>(vec)} {}
 		ColorBase(const array<T, 4> & data) : data {data} {}
 		ColorBase(array<T, 4> && data) : data {forward<array<T, 4>>(data)} {}
 		ColorBase(T h, T s, T v, T a) : h(h), s(s), v(v), a(a) {}
@@ -118,7 +118,7 @@ namespace Rapture
 		union
 		{
 			array<T, 4> data;
-			Vector<T> vector;
+			Vector<T> array_list;
 
 			struct
 			{
@@ -134,8 +134,11 @@ namespace Rapture
 		using Base = ColorBase<datatype, format>;
 		using Traits = ColorTraits<datatype>;
 
+		member_cast(this->data, array<T, 4>);
+		member_cast(this->array_list, Vector<T>);
+
 		Color() : Base {Traits::default_color()} {}
-		Color(const Color & color) : Base {color.vector} {}
+		Color(const Color & color) : Base {color.array_list} {}
 
 		template<class ... A, selectif(0) <sizeof...(A) == 3, std::is_convertible<A, T>::value...> endif>
 		Color(A &&... args) : Base {adapt<T, A>(forward<A>(args))..., Traits::alpha()} {}
@@ -155,18 +158,18 @@ namespace Rapture
 
 		Color & operator = (const Color & color)
 		{
-			vector = color.vector;
+			array_list = color.array_list;
 			return *this;
 		}
 
 		bool operator == (const Color & color) const
 		{
-			return vector == color.vector;
+			return array_list == color.array_list;
 		}
 
 		bool operator != (const Color & color) const
 		{
-			return vector != color.vector;
+			return array_list != color.array_list;
 		}
 
 		T & operator [] (int index)
@@ -187,36 +190,6 @@ namespace Rapture
 		const T & operator [] (size_t index) const
 		{
 			return this->data[index];
-		}
-
-		operator Vector<T> & () &
-		{
-			return this->vector;
-		}
-
-		operator const Vector<T> & () const &
-		{
-			return this->vector;
-		}
-
-		operator Vector<T> && () &&
-		{
-			return move(this->vector);
-		}
-
-		operator array<T, 4> & () &
-		{
-			return this->data;
-		}
-
-		operator const array<T, 4> & () const &
-		{
-			return this->data;
-		}
-
-		operator array<T, 4> && () &&
-		{
-			return move(this->data);
 		}
 	};
 
@@ -278,7 +251,7 @@ namespace Rapture
 		template<ColorFormat format>
 		static inline void cast(Color<ColorType::Float, format> & out, const Color<ColorType::Byte, format> & in)
 		{
-			out.vector = FloatVector(in.vector) / 255.0f;
+			out.array_list = FloatVector(in.array_list) / 255.0f;
 		}
 	};
 
@@ -288,7 +261,7 @@ namespace Rapture
 		template<ColorFormat format>
 		static inline void cast(Color<ColorType::Byte, format> & out, const Color<ColorType::Float, format> & in)
 		{
-			out.vector = ByteVector(in.vector * 255.0f);
+			out.array_list = ByteVector(in.array_list * 255.0f);
 		}
 	};
 

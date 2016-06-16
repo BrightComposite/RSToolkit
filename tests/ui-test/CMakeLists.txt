@@ -1,8 +1,8 @@
 #--------------------------------------------------------
-#	Rapture Basic Game
+#	Rapture UI Test
 #--------------------------------------------------------
 
-project(BasicGame CXX)
+project(RaptureUITest CXX)
 
 #--------------------------------------------------------
 
@@ -13,7 +13,6 @@ include(${RAPTURE_TOOLS}/module.cmake)
 start_module(
 	APPLICATION
     RaptureApplication "application"
-    RapturePhysics     "physics"
 	RaptureFreeImage   "freeimage"
 	RaptureFreeType    "freetype"
 )
@@ -24,25 +23,12 @@ else()
     require_module(RaptureOpenGL3_3 "opengl")
 endif()
 
-set_module_api_key(basicgame)
+set_module_folder(tests)
 
 add_module_sources(
-	SRC_GROUP include Headers
-		START_SECTION game
-			Game.h
-
-			START_SECTION entity
-				PlayerEntity.h
-			END_SECTION
-
-			START_SECTION object
-				PlayerObject.h
-			END_SECTION
-		END_SECTION
-
 	SRC_GROUP src Sources
-		START_SECTION game
-			Game.cpp
+		START_SECTION SRC_ROOT
+			ui-test.cpp
 		END_SECTION
 )
 

@@ -15,6 +15,8 @@ start_module(
 	RaptureMath "math"
 )
 
+set_module_folder(modules)
+
 if(WIN32)
 add_module_sources(
 	SRC_GROUP include Headers
@@ -33,8 +35,6 @@ add_module_sources(
 elseif(UNIX)
 
 endif()
-
-#--------------------------------------------------------
 
 end_module()
 

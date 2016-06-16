@@ -67,7 +67,7 @@ if(WIN32)
 				)
 		endforeach()
 
-		add_module_sources(OUT_INCLUDES_LIST
+		add_module_sources(
 			SRC_GROUP ${INC_DIR} ${INC_GROUP}
 				START_SECTION ${SHADERS_ROOT}
 					${INCLUDE_ENTRIES}

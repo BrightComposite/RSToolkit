@@ -12,6 +12,8 @@ include(${RAPTURE_TOOLS}/module.cmake)
 
 start_module(INLINE)
 
+set_module_folder(modules)
+
 add_module_sources(
 	SRC_GROUP include Headers
 		START_SECTION meta

@@ -15,6 +15,8 @@ start_module(
     RaptureCore "core"
 )
 
+set_module_folder(tests)
+
 add_module_sources(
 	SRC_GROUP src Sources
 		START_SECTION SRC_ROOT

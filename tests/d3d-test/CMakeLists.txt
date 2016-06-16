@@ -1,8 +1,8 @@
 #--------------------------------------------------------
-#	Rapture UI Test
+#	Rapture Direct3D Test
 #--------------------------------------------------------
 
-project(RaptureUITest CXX)
+project(RaptureDirect3DTest CXX)
 
 #--------------------------------------------------------
 
@@ -13,20 +13,23 @@ include(${RAPTURE_TOOLS}/module.cmake)
 start_module(
 	APPLICATION
     RaptureApplication "application"
+	RaptureDirect3D11  "direct3d"
 	RaptureFreeImage   "freeimage"
 	RaptureFreeType    "freetype"
 )
 
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-    require_module(RaptureDirect3D11 "direct3d")
-else()
-    require_module(RaptureOpenGL3_3 "opengl")
-endif()
+set_module_folder(tests)
 
 add_module_sources(
 	SRC_GROUP src Sources
 		START_SECTION SRC_ROOT
-			ui-test.cpp
+			matrix-test.h
+		END_SECTION
+
+	SRC_GROUP src Sources
+		START_SECTION SRC_ROOT
+			d3d-test.cpp
+			second.cpp
 		END_SECTION
 )
 

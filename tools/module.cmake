@@ -284,6 +284,12 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 		endforeach()
 	endfunction()
 
+#	add_module function.
+
+	function(add_module path root)
+		add_subdirectory("${root}${path}" "${OUTPUT_ROOT}/${path}")
+	endfunction()
+
 #	require_module function.
 
 	function(require_module name path)
@@ -361,6 +367,12 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 		endif()
 	endfunction()
 
+#	set_module_folder function
+
+	function(set_module_folder folder)
+		set(${PROJECT_NAME}_FOLDER ${folder} CACHE STRING "${PROJECT_NAME} folder" FORCE)
+	endfunction()
+
 #	set_module_api_key function.
 
 	function(set_module_api_key key)
@@ -418,6 +430,11 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 
 		set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 		set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+		if(NOT "${${PROJECT_NAME}_FOLDER}" STREQUAL "")
+			set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${${PROJECT_NAME}_FOLDER})
+		endif()
+
 		target_compile_options(${PROJECT_NAME} PRIVATE ${COMPILE_OPTIONS})
 
 		add_module_include_dirs(${PROJECT_SOURCE_DIR}/include)
@@ -594,5 +611,4 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
 			add_module_include_dirs(${THIRD_PARTY_DIR}/include)
 		endif()
 	endfunction()
-
 endif()

@@ -17,6 +17,11 @@ get_filename_component(RAPTURE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/.. ABSOLUTE)
 set(RAPTURE_ROOT ${RAPTURE_ROOT} CACHE PATH "Rapture state engine root directory")
 set(RAPTURE_TOOLS ${RAPTURE_ROOT}/tools CACHE PATH "Rapture tools directory")
 
+include(${RAPTURE_TOOLS}/module.cmake)
+
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "")
+
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
     add_compile_options(/arch:AVX2)
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
@@ -27,16 +32,16 @@ endif()
 
 add_definitions(-DUSE_AVX)
 
-add_subdirectory(tests/core-test)
+add_module(tests/core-test ../)
 
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-add_subdirectory(tests/d3d-test)
+    add_module(tests/d3d-test ../)
 endif()
 
-add_subdirectory(tests/ui-test)
-add_subdirectory(tests/small-test)
+add_module(tests/ui-test ../)
+add_module(tests/small-test ../)
 
-add_subdirectory(projects/independence)
-add_subdirectory(projects/BasicGame)
+add_module(projects/independence ../)
+add_module(projects/BasicGame ../)
 
 #--------------------------------------------------------

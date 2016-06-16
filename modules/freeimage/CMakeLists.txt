@@ -15,6 +15,7 @@ start_module(
 	RaptureGraphics "graphics"
 )
 
+set_module_folder(modules)
 set_module_api_key(freeimage)
 
 add_module_sources(

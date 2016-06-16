@@ -30,6 +30,8 @@
 
 #include <vld.h>
 
+#include <application/Starter.h>
+
 //---------------------------------------------------------------------------
 
 namespace Rapture

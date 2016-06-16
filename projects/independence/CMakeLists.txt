@@ -24,6 +24,8 @@ else()
     require_module(RaptureOpenGL3_3 "opengl")
 endif()
 
+set_module_folder(projects)
+
 add_module_sources(
 	SRC_GROUP include Headers
 		START_SECTION art

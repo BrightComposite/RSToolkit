@@ -5,12 +5,35 @@
 
 //---------------------------------------------------------------------------
 
-#include <physics/PhysicalObject.h>
+#include <scene/Scene.h>
+#include <physics/PhysicalWorld.h>
+
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
+	template<>
+	struct Cast<btVector3, fvec>
+	{
+		static inline void cast(fvec & out, const btVector3 & in)
+		{
+			out.set(in);
+			out[3] = 1.0;
+		}
+	};
+
+	template<>
+	struct Cast<btQuaternion, fquat>
+	{
+		static inline void cast(fquat & out, const btQuaternion & in)
+		{
+			out.set(in);
+		}
+	};
+
 	struct ContactSensorCallback : public btCollisionWorld::ContactResultCallback
 	{
 		using Base = btCollisionWorld::ContactResultCallback;
@@ -48,23 +71,61 @@ namespace Rapture
 		}
 	};
 
-	template<>
-	struct Cast<btVector3, dvec>
+	class Physical; 
+
+	link_class(physics, Physical, Class<>);
+
+	class MotionState : public btMotionState
 	{
-		static inline void cast(dvec & out, const btVector3 & in)
-		{
-			out.set(in);
-			out[3] = 1.0;
-		}
+	public:
+		MotionState(Physical * physical) : physical(physical) {}
+		virtual ~MotionState() {}
+
+		virtual void api(physics) getWorldTransform(btTransform & trans) const override;
+		virtual void api(physics) setWorldTransform(const btTransform & trans) override;
+
+		Physical * physical;
 	};
 
-	template<>
-	struct Cast<btQuaternion, DoubleQuaternion>
+	class Physical : public Object
 	{
-		static inline void cast(DoubleQuaternion & out, const btQuaternion & in)
+		friend class MotionState;
+
+	public:
+		Physical(SceneObject * object, PhysicalWorld * world, btCollisionShape * shape, float mass = 0.0) : _object(object), _shape(shape), _world(world)
 		{
-			out.set(in);
+			setclass(Physical);
+			_motionState = new MotionState(this);
+
+			btVector3 inertia;
+			_shape->calculateLocalInertia(mass, inertia);
+
+			btRigidBody::btRigidBodyConstructionInfo info(mass, _motionState, _shape, inertia);
+			info.m_restitution = 0.66f;
+			info.m_friction = 0.8f;
+
+			_rigidBody = new btRigidBody(info);
+			_rigidBody->setUserPointer(this);
+			_world->addRigidBody(_rigidBody);
 		}
+
+		virtual ~Physical()
+		{
+			_world->removeRigidBody(_rigidBody);
+		}
+
+		virtual void api(physics) setMass(float mass);
+		virtual void api(physics) setLinearVelocity(const fvec & v);
+		fvec api(physics) getLinearVelocity();
+
+		virtual void contactWith(Physical * physical, const ContactInfo & info) {}
+
+	protected:
+		SceneObject * _object;
+		PhysicalWorld * _world;
+		UniqueHandle<btCollisionShape> _shape;
+		UniqueHandle<btRigidBody> _rigidBody;
+		UniqueHandle<btMotionState> _motionState;
 	};
 }
 

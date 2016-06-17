@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 
 #include <scene/Scene.h>
+#include <scene/Camera.h>
 
 //---------------------------------------------------------------------------
 
@@ -9,9 +10,10 @@ namespace Rapture
 	implement_link(Scene);
 	implement_link(SceneObject);
 	implement_link(Drawable);
-	implement_link(DrawableObject);
+	implement_link(WorldObject);
+	implement_link(OrientedObject);
 
-	SceneObject::SceneObject(Scene * scene, const DoubleVector & pos) : _scene(scene), _pos(pos)
+	SceneObject::SceneObject(Scene * scene) : _scene(scene)
 	{
 		setclass(SceneObject);
 		scene->_objects.emplace_back(this);
@@ -20,6 +22,70 @@ namespace Rapture
 	Drawable::Drawable(Scene * scene)
 	{
 		scene->_drawables.push_back(this);
+	}
+
+	Scene::Scene(Widget * widget, const string & name) : Scene(name)
+	{
+		if(widget->graphics() notkindof (Graphics3D))
+			throw Exception("Widget for the scene must support 3D graphics!");
+
+		_widget = widget;
+		_widget->append<SceneLayer>(this);
+		connect(*_widget, this, &Scene::onWidgetResize);
+
+		_firstTick = _lastTick = clock::now();
+		_ticks = 0;
+	}
+
+	Scene::Scene(const string & name) : Named(name)
+	{
+		setclass(Scene);
+	}
+
+	Scene::~Scene()
+	{
+		disconnect(*_widget, this, &Scene::onWidgetResize);
+	}
+
+	Graphics3D & Scene::graphics() const
+	{
+		return *static_cast<Graphics3D *>(_widget->graphics());
+	}
+
+	Widget & Scene::widget() const
+	{
+		return *_widget;
+	}
+
+	UISpace & Scene::space() const
+	{
+		return *_widget->space();
+	}
+
+	Viewport Scene::viewport() const
+	{
+		return _widget->viewport();
+	}
+
+	Camera * Scene::camera() const
+	{
+		return _camera;
+	}
+
+	void Scene::invalidate() const
+	{
+		space().invalidate(_widget);
+	}
+
+	void Scene::render() const
+	{
+		space().invalidate(_widget);
+		space().validate();
+	}
+
+	void Scene::setCamera(Camera * camera)
+	{
+		_camera = camera;
 	}
 
 	void Scene::attach(Handle<SceneObject> obj)
@@ -67,49 +133,56 @@ namespace Rapture
 		}
 	}
 
-	void Scene::setOrtho()
+	void Camera::setProjectionMode(ProjectionMode mode)
 	{
-		_projectionMode = ProjectionMode::Ortho;
+		if(_projectionMode == mode)
+			return;
 
-		float aspect = _widget->viewport().ratio();
-		setProjection(fmat::ortho(-1.0f, 1.0f, -aspect, aspect, 0.0f, 10.0f / _zoom));
+		_projectionMode = mode;
+		updateProjection();
 	}
 
-	void Scene::setPerspective()
+	void Camera::updateProjection()
 	{
-		_projectionMode = ProjectionMode::Perspective;
-		setProjection(fmat::perspective(_fov, _widget->viewport().ratio(), 0.01f, 10 / _zoom));
+		float aspect = _scene->viewport().ratio();
+		float z = 1.0f / _zoom;
+
+		switch(_projectionMode)
+		{
+			case ProjectionMode::Ortho:
+			{
+				_scene->graphics().updateUniform<Uniforms::Projection>(fmat::orthot(-1.0f / aspect, 1.0f / aspect, -1.0f, 1.0f, -z, z));
+				break;
+			}
+
+			case ProjectionMode::Perspective:
+			{
+				_scene->graphics().updateUniform<Uniforms::Projection>(fmat::perspectivet(_fov, aspect, 0.01f, 2 * z));
+				break;
+			}
+		}
+	}
+
+	void Camera::setZoom(float zoom)
+	{
+		_zoom = zoom;
+	}
+
+	void Camera::setFieldOfView(float fov)
+	{
+		_fov = fov;
 	}
 
 	void Scene::onWidgetResize(Handle<WidgetResizeMessage> & msg, Widget & w)
 	{
-		if(_projectionMode == ProjectionMode::Ortho)
-			setOrtho();
-		else
-			setPerspective();
+		if(_camera)
+			_camera->updateProjection();
 	}
 
-	void Scene::setProjection(fmat && projection)
+	void Scene::draw(Graphics3D & graphics, const IntRect & viewport) const
 	{
-		graphics().updateUniform<Uniforms::Projection>(forward<fmat>(projection));
-	}
-
-	void Scene::setZoom(float zoom)
-	{
-		_zoom = zoom;
-
-		if(_projectionMode == ProjectionMode::Ortho)
-			setOrtho();
-		else
-			setPerspective();
-	}
-
-	void Scene::setFieldOfView(float fov)
-	{
-		_fov = fov;
-
-		if(_projectionMode == ProjectionMode::Perspective)
-			setPerspective();
+		for(auto & drawable : _drawables)
+			drawable->draw(graphics, viewport, _camera ? _camera->zoom() : 0.0f);
 	}
 
 	void Scene::setTickLength(milliseconds length)
@@ -135,31 +208,6 @@ namespace Rapture
 
 	void Camera::update()
 	{
-		_scene->graphics().updateUniform<Uniforms::View>(fmat::lookTo(position, direction.forward(), fvec::up));
-	}
-
-	void Camera::move(fvec offset)
-	{
-		position += direction.applyTo(offset);
-	}
-
-	void Camera::move(float x, float y, float z)
-	{
-		position += direction.applyTo({x, y, z});
-	}
-
-	void Camera::moveX(float x)
-	{
-		position += direction.applyTo({x, 0, 0});
-	}
-
-	void Camera::moveY(float y)
-	{
-		position += direction.applyTo({0, y, 0});
-	}
-
-	void Camera::moveZ(float z)
-	{
-		position += direction.applyTo({0, 0, z});
+		_scene->graphics().updateUniform<Uniforms::View>(fmat::lookTo(_pos, _dir.forward(), fvec::up).transpose());
 	}
 }

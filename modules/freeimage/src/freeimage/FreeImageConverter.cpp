@@ -103,7 +103,7 @@ namespace Rapture
 		byte * data;
 
 		{
-			Handle<ImageData> buffer(emptiness);
+			Handle<ImageData> buffer(nothing);
 			bpp = preferredBpp(image->format);
 
 			if(internal_format == FIF_JPEG || bpp < 4)

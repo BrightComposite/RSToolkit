@@ -97,16 +97,16 @@ namespace Rapture
 		graphics->updateUniform<Uniforms::Model>(getTransform().output());
 
 		technique->apply(pass);
-		graphics->draw(mesh);
+		mesh->draw();
 	}
 
-	void Mesh::draw(Graphics3D * graphics) const
+	void Mesh::draw() const
 	{
 		graphics->bind(vbuffer);
 		vbuffer->draw(this);
 	}
 
-	void IndexedMesh::draw(Graphics3D * graphics) const
+	void IndexedMesh::draw() const
 	{
 		graphics->bind(vbuffer);
 		graphics->bind(ibuffer);
@@ -190,7 +190,7 @@ namespace Rapture
 		else
 			techniques2d.wired_rectangle->apply();
 
-		draw(meshes.quad);
+		meshes.quad->draw();
 	}
 
 	void Graphics3D::ellipse(const IntRect & rect)
@@ -204,7 +204,7 @@ namespace Rapture
 		else
 			techniques2d.wired_ellipse->apply();
 
-		draw(meshes.texquad);
+		meshes.texquad->draw();
 	}
 
 	void Graphics3D::rectangle(const SqRect & rect)
@@ -218,7 +218,7 @@ namespace Rapture
 		else
 			techniques2d.wired_rectangle->apply();
 
-		draw(meshes.texquad);
+		meshes.quad->draw();
 	}
 
 	void Graphics3D::ellipse(const SqRect & rect)
@@ -233,7 +233,7 @@ namespace Rapture
 		else
 			techniques2d.wired_ellipse->apply();
 
-		draw(meshes.texquad);
+		meshes.texquad->draw();
 	}
 
 	void Graphics3D::draw(const Figure * figure, const IntRect & bounds)
@@ -276,7 +276,7 @@ namespace Rapture
 		updateAreaUniform(rect);
 
 		techniques2d.image->apply();
-		draw(meshes.texquad);
+		meshes.texquad->draw();
 	}
 
 	void Graphics3D::draw(const Image * image, const SqRect & rect)
@@ -288,7 +288,7 @@ namespace Rapture
 		updateAreaUniform(rect);
 
 		techniques2d.image->apply();
-		draw(meshes.texquad);
+		meshes.texquad->draw();
 	}
 
 	void Graphics3D::draw(const Symbol * symbol, int x, int y)
@@ -306,12 +306,7 @@ namespace Rapture
 		updateAreaUniform(IntRect({x + symbol->left(), y + symbol->top()}, {image->width(), image->height()}));
 
 		techniques2d.text->apply();
-		draw(meshes.texquad);
-	}
-
-	void Graphics3D::draw(const Mesh * mesh)
-	{
-		mesh->draw(this);
+		meshes.texquad->draw();
 	}
 
 	const Handle<ShaderCode> & Graphics3D::getShaderCode(const string & id, ShaderType type) const
@@ -347,18 +342,18 @@ namespace Rapture
 
 	Handle<Mesh> Graphics3D::createMesh(VertexLayout * layout, const VertexData & data)
 	{
-		return Handle<Mesh>(createVertexBuffer(layout, data), layout->stride, data.start);
+		return Handle<Mesh>(this, createVertexBuffer(layout, data), layout->stride, data.start);
 	}
 
 	Handle<Mesh> Graphics3D::createMesh(const string & fingerprint, const VertexData & data)
 	{
 		auto layout = getVertexLayout(fingerprint);
-		return Handle<Mesh>(createVertexBuffer(layout, data), layout->stride, data.start);
+		return Handle<Mesh>(this, createVertexBuffer(layout, data), layout->stride, data.start);
 	}
 
 	Handle<IndexedMesh> Graphics3D::createIndexedMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, uint indicesLocation)
 	{
-		return Handle<IndexedMesh>(createVertexBuffer(layout, data), createIndexBuffer(indices), layout->stride, data.start, indicesLocation);
+		return Handle<IndexedMesh>(this, createVertexBuffer(layout, data), createIndexBuffer(indices), layout->stride, data.start, indicesLocation);
 	}
 
 	void Graphics3D::initFacilities()

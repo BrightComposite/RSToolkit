@@ -13,18 +13,17 @@ namespace Rapture
 {
 	class PlaneObject; 
 
-	link_class(physics, PlaneObject, Class<PhysicalObject>);
+	link_class(physics, PlaneObject, Class<Physical>);
 
-	class PlaneObject : public PhysicalObject
+	class PlaneObject : public Physical
 	{
 	public:
-		PlaneObject(Scene * scene, PhysicalWorld * world, double level) :
-			PhysicalObject
+		PlaneObject(Scene * scene, PhysicalWorld * world, float level) :
+			Physical
 			(
-				scene,
+				handle<OrientedObject>(scene, fvec{0.0f, level, 0.0f}),
 				world,
-				new btStaticPlaneShape({0, 1, 0}, 0),
-				{0.0, level, 0.0}
+				new btStaticPlaneShape({0, 1, 0}, 0)
 			)
 		{
 			setclass(PlaneObject);

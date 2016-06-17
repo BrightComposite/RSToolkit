@@ -8,30 +8,56 @@
 #include <math/Vector.h>
 #include <math/Quaternion.h>
 
+#include "Scene.h"
+
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	class Scene;
+	enum class ProjectionMode
+	{
+		Ortho,
+		Perspective
+	};
 
-	class Camera : public Shared
+	class Camera : public OrientedObject
 	{
 	public:
-		Camera(Scene * scene) : _scene(scene) {}
+		Camera(Scene * scene) : OrientedObject(scene)
+		{
+			if(scene->camera() == nullptr)
+				scene->setCamera(this);
+
+			updateProjection();
+		}
+
+		float zoom() const
+		{
+			return _zoom;
+		}
+
+		float fieldOfView() const
+		{
+			return _fov;
+		}
+
+		ProjectionMode projectionMode() const
+		{
+			return _projectionMode;
+		}
+
+		void api(scene) setProjectionMode(ProjectionMode mode);
+
+		void api(scene) setZoom(float zoom);
+		void api(scene) setFieldOfView(float fov);
+		void api(scene) updateProjection();
 
 		void api(scene) update();
 
-		void api(scene) move(fvec offset);
-		void api(scene) move(float x, float y, float z);
-		void api(scene) moveX(float x);
-		void api(scene) moveY(float y);
-		void api(scene) moveZ(float z);
-
-		fvec  position;
-		fquat direction;
-
 	protected:
-		Scene * _scene;
+		float _zoom = 0.01f;
+		float _fov = 90.0f;
+		ProjectionMode _projectionMode = ProjectionMode::Ortho;
 	};
 }
 

@@ -10,8 +10,6 @@
 
 #include <chrono>
 
-#include "Camera.h"
-
 //---------------------------------------------------------------------------
 
 namespace Rapture
@@ -19,7 +17,10 @@ namespace Rapture
 	class Scene;
 	class SceneObject;
 	class Drawable;
-	class DrawableObject;
+	class WorldObject;
+	class OrientedObject;
+
+	class Camera;
 
 	using namespace std::chrono;
 	using namespace std::chrono_literals;
@@ -29,7 +30,8 @@ namespace Rapture
 	link_class(scene, Scene, Class<Object>);
 	link_class(scene, SceneObject, Class<Object>);
 	link_class(scene, Drawable, Class<>);
-	link_class(scene, DrawableObject, Class<SceneObject, Drawable>);
+	link_class(scene, WorldObject, Class<SceneObject>);
+	link_class(scene, OrientedObject, Class<WorldObject>);
 
 	class SceneObject : public Object
 	{
@@ -38,7 +40,7 @@ namespace Rapture
 		deny_copy(SceneObject);
 
 	public:
-		api(scene) SceneObject(Scene * scene, const DoubleVector & pos = DoubleVector::positiveW);
+		api(scene) SceneObject(Scene * scene);
 		virtual ~SceneObject() {}
 
 		Scene * scene() const
@@ -46,20 +48,64 @@ namespace Rapture
 			return _scene;
 		}
 
-		const DoubleVector & pos() const
+		virtual const fvec & position() const
 		{
-			return _pos;
+			return fvec::default;
 		}
 
-		virtual void setPos(const DoubleVector & pos)
+		virtual const fquat & direction() const
 		{
-			_pos = pos;
+			return fquat::default;
+		}
+
+		virtual void setPosition(const fvec & pos) {}
+		virtual void setDirection(const fquat & dir) {}
+		virtual void move(const fvec & offset) {}
+		virtual void rotate(const fquat & rot) {}
+
+		void move(float x, float y, float z)
+		{
+			move({x, y, z});
+		}
+
+		void moveX(float x)
+		{
+			move({x, 0, 0});
+		}
+
+		void moveY(float y)
+		{
+			move({0, y, 0});
+		}
+
+		void moveZ(float z)
+		{
+			move({0, 0, z});
+		}
+
+		void rotate(const fvec & axis, float angle)
+		{
+			rotate({axis, angle});
+		}
+
+		void rotateX(float angle)
+		{
+			rotate(fvec::positiveX, angle);
+		}
+
+		void rotateY(float angle)
+		{
+			rotate(fvec::positiveY, angle);
+		}
+
+		void rotateZ(float angle)
+		{
+			rotate(fvec::positiveZ, angle);
 		}
 
 	protected:
 		virtual void update(ticks_t ticks) {}
 
-		DoubleTranslation _pos;
 		Scene * _scene;
 	};
 
@@ -77,17 +123,71 @@ namespace Rapture
 		virtual void draw(Graphics3D & graphics, const IntRect & viewport, float zoom) const = 0;
 	};
 
-	class DrawableObject : public SceneObject, public Drawable
+	class WorldObject : public SceneObject
 	{
-		deny_copy(DrawableObject);
+		deny_copy(WorldObject);
 
 	public:
-		DrawableObject(Scene * scene) : SceneObject(scene), Drawable(scene)
+		WorldObject(Scene * scene, const fvec & pos = fvec::default) : SceneObject(scene), _pos(pos)
 		{
-			setclass(DrawableObject);
+			setclass(WorldObject);
 		}
 
-		virtual ~DrawableObject() {}
+		virtual ~WorldObject() {}
+
+		virtual const fvec & position() const override
+		{
+			return _pos;
+		}
+
+		virtual void setPosition(const fvec & pos) override
+		{
+			_pos = pos;
+		}
+
+		virtual void move(const fvec & offset) override
+		{
+			_pos += offset;
+		}
+
+	protected:
+		fvec _pos;
+	};
+
+	class OrientedObject : public WorldObject
+	{
+		deny_copy(OrientedObject);
+
+	public:
+		OrientedObject(Scene * scene, const fvec & pos = fvec::default, const fquat & dir = fquat()) : WorldObject(scene, pos), _dir(dir)
+		{
+			setclass(OrientedObject);
+		}
+
+		virtual ~OrientedObject() {}
+
+		virtual const fquat & direction() const override
+		{
+			return _dir;
+		}
+
+		virtual void setDirection(const fquat & dir) override
+		{
+			_dir = dir;
+		}
+
+		virtual void move(const fvec & offset) override
+		{
+			_pos += _dir.applyTo(offset);
+		}
+
+		virtual void rotate(const fquat & rot) override
+		{
+			_dir.rotateBy(rot);
+		}
+
+	protected:
+		fquat _dir;
 	};
 
 	class Scene : public Object, public Named
@@ -117,94 +217,36 @@ namespace Rapture
 		typedef time_point<clock> time_marker;
 
 	public:
-		enum class ProjectionMode
-		{
-			Ortho,
-			Perspective
-		};
+		api(scene) Scene(Widget * widget, const string & name = "unknown scene");
+		virtual api(scene) ~Scene();
 
-		Scene(Widget * widget, const string & name = "unknown scene") : Scene(name)
-		{
-			if(widget->graphics() notkindof (Graphics3D))
-				throw Exception("Widget for the scene must support 3D graphics!");
+		Graphics3D api(scene) & graphics() const;
+		Widget     api(scene) & widget()   const;
+		UISpace    api(scene) & space()    const;
+		Camera     api(scene) * camera()   const;
+		Viewport   api(scene)   viewport() const;
 
-			_widget = widget;
-			_widget->append<SceneLayer>(this);
-			connect(*_widget, this, &Scene::onWidgetResize);
+		void api(scene) setCamera(Camera * camera);
 
-			_firstTick = _lastTick = clock::now();
-			_ticks = 0;
-
-			setOrtho();
-		}
-
-		virtual ~Scene()
-		{
-			disconnect(*_widget, this, &Scene::onWidgetResize);
-
-			for(auto & obj : _objects)
-				obj->_scene = nullptr;
-		}
-
-		Graphics3D & graphics() const
-		{
-			return *static_cast<Graphics3D *>(_widget->graphics());
-		}
-
-		Widget & widget() const
-		{
-			return *_widget;
-		}
-
-		UISpace & space() const
-		{
-			return *_widget->space();
-		}
-
-		void invalidate() const
-		{
-			space().invalidate(_widget);
-		}
-
-		void render() const
-		{
-			space().invalidate(_widget);
-			space().validate();
-		}
+		void api(scene) invalidate() const;
+		void api(scene) render() const;
 
 		void api(scene) attach(Handle<SceneObject> obj);
 		void api(scene) detach(SceneObject * obj);
-
-		void api(scene) setOrtho();
-		void api(scene) setPerspective();
-		void api(scene) setZoom(float zoom);
-		void api(scene) setFieldOfView(float fov);
 
 		void api(scene) setTickLength(milliseconds length);
 		void api(scene) update();
 
 	protected:
-		Scene(const string & name) : Named(name)
-		{
-			setclass(Scene);
-		}
+		api(scene) Scene(const string & name);
 
-		void draw(Graphics3D & graphics, const IntRect & viewport) const
-		{
-			for(auto & drawable : _drawables)
-				drawable->draw(graphics, viewport, _zoom);
-		}
-
+		void api(scene) draw(Graphics3D & graphics, const IntRect & viewport) const;
 		void api(scene) onWidgetResize(Handle<WidgetResizeMessage> & msg, Widget & w);
-		void api(scene) setProjection(fmat && projection);
 
-		Widget * _widget;
+		Camera * _camera = nullptr;
+		Widget * _widget = nullptr;
 		Array<SceneObject> _objects;
 		array_list<Drawable *> _drawables;
-
-		float _zoom = 0.01f;
-		float _fov = 90.0f;
-		ProjectionMode _projectionMode = ProjectionMode::Ortho;
 
 		milliseconds _tickLength = 1ms;
 		time_marker _lastTick;
@@ -215,7 +257,6 @@ namespace Rapture
 
 	class SceneProvider
 	{
-
 		Map<string, Scene> _scenes;
 	};
 }

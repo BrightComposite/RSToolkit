@@ -78,7 +78,6 @@ namespace Rapture
 		virtual void api(graphics) draw(const Image * image, const IntRect & rect) override final;
 		virtual void api(graphics) draw(const Image * image, const SqRect & rect) override final;
 		virtual void api(graphics) draw(const Symbol * symbol, int x, int y) override final;
-		void api(graphics) draw(const Mesh * mesh);
 
 		VertexLayout api(graphics) * Graphics3D::getVertexLayout(const string & fingerprint);
 		const Handle<ShaderCode> api(graphics) & getShaderCode(const string & id, ShaderType type) const;
@@ -146,7 +145,7 @@ namespace Rapture
 
 		static Handle<ShaderCodeSet> createCodeSet(const initializer_list<Handle<ShaderCode>> & list)
 		{
-			Handle<ShaderCodeSet> set(emptiness);
+			Handle<ShaderCodeSet> set(nothing);
 
 			for(size_t i = 0; i < list.size(); ++i)
 				set->code.insert({static_cast<ShaderType>(i), *(list.begin() + i)});

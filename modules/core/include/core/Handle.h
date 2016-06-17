@@ -240,7 +240,7 @@ namespace Rapture
 		Handle(Handle<U, A...> && h) : Base(forward<Handle<U, A...>>(h)) {}
 
 		template<class U = T, useif <can_construct<U>::value> endif>
-		Handle(Empty) : Base(emptiness) {}
+		Handle(Empty) : Base(nothing) {}
 
 		template<class ... A, selectif(0) <can_construct<T, A...>::value, (sizeof...(A) > 0)> endif>
 		explicit Handle(A &&... args) : Base(forward<A>(args)...) {}
@@ -561,7 +561,7 @@ namespace Rapture
 		Handle(Handle<U, A...> && h) : Base(forward<Handle<U, A...>>(h)) {}
 
 		template<useif <can_construct<T>::value> endif>
-		Handle(Empty) : Base(emptiness) {}
+		Handle(Empty) : Base(nothing) {}
 
 		template<class ... A, selectif(0) <can_construct<T, A...>::value && (sizeof...(A) > 0)> endif>
 		explicit Handle(A &&... args) : Base(forward<A>(args)...) {}
@@ -895,7 +895,7 @@ namespace Rapture
 	class SharedIdentifier : public EmptyHandle
 	{
 	public:
-		SharedIdentifier() : EmptyHandle(emptiness) {}
+		SharedIdentifier() : EmptyHandle(nothing) {}
 	};
 }
 
@@ -941,7 +941,7 @@ namespace Rapture
 		UniqueHandle(UniqueHandle<U, A...> && h) : Base(forward<UniqueHandle<U, A...>>(h)) {}
 
 		template<class U = T, useif <can_construct<U>::value> endif>
-		UniqueHandle(Empty) : Base(emptiness) {}
+		UniqueHandle(Empty) : Base(nothing) {}
 
 		template<class ... A, selectif(0) <can_construct<T, A...>::value && (sizeof...(A) > 0)> endif>
 		explicit UniqueHandle(A && ... args) : Base(forward<A>(args)...) {}
@@ -1241,7 +1241,7 @@ namespace Rapture
 	{
 		static Handle<T, Owner> initialize()
 		{
-			return {emptiness};
+			return {nothing};
 		}
 	};
 

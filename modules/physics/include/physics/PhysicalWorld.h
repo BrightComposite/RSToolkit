@@ -17,13 +17,13 @@
 
 namespace Rapture
 {
-	class PhysicalObject;
+	class Physical;
 
 	struct ContactInfo
 	{
-		dvec normal;
-		dvec pos;
-		double force;
+		fvec normal;
+		fvec pos;
+		float force;
 	};
 
 	class PhysicalWorld : public Object, public btDiscreteDynamicsWorld
@@ -34,7 +34,7 @@ namespace Rapture
 		PhysicalWorld(btDispatcher * dispatcher, btBroadphaseInterface * broadphase, btConstraintSolver * solver, btCollisionConfiguration * config) : btDiscreteDynamicsWorld(dispatcher, broadphase, solver, config)
 		{
 			setInternalTickCallback(PhysicalWorld::update, this);
-			setGravity({0.0, -10.0, 0.0});
+			setGravity({0.0f, -10.0f, 0.0f});
 		}
 
 	protected:

@@ -593,6 +593,7 @@ namespace Rapture
 		static const Vector api(math) & left;
 		static const Vector api(math) & up;
 		static const Vector api(math) & forward;
+		static const Vector api(math) & default;
 	};
 
 	using ByteVector = Vector<byte>;

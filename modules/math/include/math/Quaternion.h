@@ -17,8 +17,10 @@ namespace Rapture
 	template<typename T>
 	struct alignas(sizeof(T) * 4) Quaternion
 	{
-		typedef intrin_data<T, 4> Data;
-		typedef Intrinsic<T, 4> Intrin;
+		using Data = intrin_data<T, 4>;
+		using IntrinType = typename Data::type;
+		using Intrin = Intrinsic<T, 4>;
+		using VectorType = Vector<T>;
 
 		union
 		{
@@ -31,13 +33,15 @@ namespace Rapture
 
 			array<T, 4> q;
 			T elements[4];
-			Vector<T> v;
+			VectorType v;
+			IntrinType intrinsic;
 		};
 
 		member_cast(q, array<T, 4>);
 		member_cast(data, Data);
+		member_cast(intrinsic, IntrinType);
 
-		Quaternion() : data {Vector<T>::positiveW} {}
+		Quaternion() : data {VectorType::default} {}
 		Quaternion(const Quaternion & q) : data {q.data} {}
 		Quaternion(T x, T y, T z, T w) : q {x, y, z, w} {}
 
@@ -46,8 +50,8 @@ namespace Rapture
 			fromEuler({x, y, z});
 		}
 
-		Quaternion(const Vector<T> & v) : v {v} {}
-		Quaternion(Vector<T> && v) : v {std::forward<Vector<T>>(v)} {}
+		Quaternion(const VectorType & v) : v {v} {}
+		Quaternion(VectorType && v) : v {std::forward<VectorType>(v)} {}
 
 		Quaternion(const Data & data) : data {data} {}
 		Quaternion(Data && data) : data {std::forward<Data>(data)} {}
@@ -61,7 +65,7 @@ namespace Rapture
 			Cast<U, Quaternion>::cast(*this, v);
 		}
 
-		Quaternion(const Vector<T> & axis, T angle) : Quaternion(VectorMath<T>::trigon(angle * 0.5f).template shuffle<0, 0, 0, 1>() * axis.template blend<0, 0, 0, 1>(Vector<T>::positiveW)) {}
+		Quaternion(const VectorType & axis, T angle) : Quaternion(VectorMath<T>::trigon(angle * 0.5f).template shuffle<0, 0, 0, 1>() * axis.template blend<0, 0, 0, 1>(VectorType::default)) {}
 		//																											[ s  s  s  c ]						[ x  y  z  1 ]
 
 		Quaternion & operator = (const Quaternion & q)
@@ -158,48 +162,48 @@ namespace Rapture
 			return *this = q * *this;
 		}
 
-		Vector<T> applyTo(const Vector<T> & d) const
+		VectorType applyTo(const VectorType & d) const
 		{
-			/*const auto xyz = v.clearW();
+			const auto xyz = v.clearW();
 			const auto t = 2 * cross(xyz, d);
 			return d + w * t + cross(xyz, t);
-			*/
-			return std::move((*this * Quaternion(d) * inverse()).v);
+
+			//return std::move((*this * Quaternion(d) * inverse()).v);
 		}
 
-		Vector<T> left() const
+		VectorType left() const
 		{
-			return applyTo(Vector<T>::left);
+			return applyTo(VectorType::left);
 		}
 
-		Vector<T> up() const
+		VectorType up() const
 		{
-			return applyTo(Vector<T>::up);
+			return applyTo(VectorType::up);
 		}
 
-		Vector<T> forward() const
+		VectorType forward() const
 		{
-			return applyTo(Vector<T>::forward);
+			return applyTo(VectorType::forward);
 		}
 
-		Quaternion & rotate(const Vector<T> & axis, T angle)
+		Quaternion & rotate(const VectorType & axis, T angle)
 		{
 			return rotateBy({axis, angle});
 		}
 
 		Quaternion & rotateX(T angle)
 		{
-			return rotate(Vector<T>::positiveX, angle);
+			return rotate(VectorType::positiveX, angle);
 		}
 
 		Quaternion & rotateY(T angle)
 		{
-			return rotate(Vector<T>::positiveY, angle);
+			return rotate(VectorType::positiveY, angle);
 		}
 
 		Quaternion & rotateZ(T angle)
 		{
-			return rotate(Vector<T>::positiveZ, angle);
+			return rotate(VectorType::positiveZ, angle);
 		}
 
 		Quaternion & scale(T s)
@@ -240,11 +244,11 @@ namespace Rapture
 			return Math<T>::sqrt(norm());  
 		}
 
-		Quaternion & fromEuler(const Vector<T> & angles)
+		Quaternion & fromEuler(const VectorType & angles)
 		{
-			auto halfs = angles * Vector<T>::half;
+			auto halfs = angles * VectorType::half;
 
-			Vector<T> sine, cosine;
+			VectorType sine, cosine;
 			VectorMath<T>::sincos(halfs, sine, cosine);
 
 			auto r = sine.template shuffle<0, 0, 0, 0>(cosine);
@@ -257,30 +261,33 @@ namespace Rapture
 
 		Matrix<T> toMatrix() const
 		{
-			Vector<T> s = -v.sqr();
+			VectorType s = -v.sqr();
 			s = s.template shuffle<1, 2, 0, 3>() + s.template shuffle<2, 0, 1, 3>();
-			Vector<T> a = v.template shuffle<1, 2, 0, 3>() * v.template shuffle<2, 0, 1, 3>();
-			Vector<T> b = v * v.spreadW().template negate<1, 0, 0, 0>();
+			VectorType a = v.template shuffle<1, 2, 0, 3>() * v.template shuffle<2, 0, 1, 3>();
+			VectorType b = v * v.spreadW().template negate<1, 0, 0, 0>();
 
 			return {
-				Vector<T>::positiveX + Vector<T>::twoXYZ * s.template blend<0, 1, 1, 0>((a + b.template negate<0, 0, 1, 0>()).template shuffle<2, 2, 1, 1>()), // 1.0f - 2.0f * (y * y + z * z), 2.0f * (x * y - w * z), 2.0f * (x * z + w * y), 0.0f
-				Vector<T>::positiveY + Vector<T>::twoXYZ * s.template blend<1, 0, 1, 0>((a + b).template shuffle<2, 2, 0, 0>()), // 2.0f * (x * y + w * z), 1.0f - 2.0f * (x * x + z * z), 2.0f * (y * z - w * x), 0.0f
-				Vector<T>::positiveZ + Vector<T>::twoXYZ * (a - b).template shuffle<1, 0, 2, 3>(s) // 2.0f * (x * z - w * y), 2.0f * (y * z + w * x), 1.0f - 2.0f * (x * x + y * y), 0.0f
+				VectorType::positiveX + VectorType::twoXYZ * s.template blend<0, 1, 1, 0>((a + b.template negate<0, 0, 1, 0>()).template shuffle<2, 2, 1, 1>()),	// 1.0f - 2.0f * (y * y + z * z),	2.0f * (x * y - w * z),			2.0f * (x * z + w * y),			0.0f
+				VectorType::positiveY + VectorType::twoXYZ * s.template blend<1, 0, 1, 0>((a + b).template shuffle<2, 2, 0, 0>()),									// 2.0f * (x * y + w * z),			1.0f - 2.0f * (x * x + z * z),	2.0f * (y * z - w * x),			0.0f
+				VectorType::positiveZ + VectorType::twoXYZ * (a - b).template shuffle<1, 0, 2, 3>(s),																// 2.0f * (x * z - w * y),			2.0f * (y * z + w * x),			1.0f - 2.0f * (x * x + y * y),	0.0f
+				VectorType::positiveW
 			};
 		}
 
 		void toMatrix(Matrix<T> & m) const
 		{
-			Vector<T> s = -v.sqr();
+			VectorType s = -v.sqr();
 			s = s.template shuffle<1, 2, 0, 3>() + s.template shuffle<2, 0, 1, 3>();
-			Vector<T> a = v.template shuffle<1, 2, 0, 3>() * v.template shuffle<2, 0, 1, 3>();
-			Vector<T> b = v * v.spreadW().template negate<1, 0, 0, 0>();
+			VectorType a = v.template shuffle<1, 2, 0, 3>() * v.template shuffle<2, 0, 1, 3>();
+			VectorType b = v * v.spreadW().template negate<1, 0, 0, 0>();
 
-			m[0] = Vector<T>::positiveX + Vector<T>::twoXYZ * s.template blend<0, 1, 1, 0>((a + b.template negate<0, 0, 1, 0>()).template shuffle<2, 2, 1, 1>()); // 1.0f - 2.0f * (y * y + z * z), 2.0f * (x * y - w * z), 2.0f * (x * z + w * y), 0.0f
-			m[1] = Vector<T>::positiveY + Vector<T>::twoXYZ * s.template blend<1, 0, 1, 0>((a + b).template shuffle<2, 2, 0, 0>()); // 2.0f * (x * y + w * z), 1.0f - 2.0f * (x * x + z * z), 2.0f * (y * z - w * x), 0.0f
-			m[2] = Vector<T>::positiveZ + Vector<T>::twoXYZ * (a - b).template shuffle<1, 0, 2, 3>(s); // 2.0f * (x * z - w * y), 2.0f * (y * z + w * x), 1.0f - 2.0f * (x * x + y * y), 0.0f
-			m[3] = Vector<T>::positiveW;
+			m[0] = VectorType::positiveX + VectorType::twoXYZ * s.template blend<0, 1, 1, 0>((a + b.template negate<0, 0, 1, 0>()).template shuffle<2, 2, 1, 1>()); // 1.0f - 2.0f * (y * y + z * z),	2.0f * (x * y - w * z),			2.0f * (x * z + w * y),			0.0f
+			m[1] = VectorType::positiveY + VectorType::twoXYZ * s.template blend<1, 0, 1, 0>((a + b).template shuffle<2, 2, 0, 0>());								// 2.0f * (x * y + w * z),			1.0f - 2.0f * (x * x + z * z),	2.0f * (y * z - w * x),			0.0f
+			m[2] = VectorType::positiveZ + VectorType::twoXYZ * (a - b).template shuffle<1, 0, 2, 3>(s);															// 2.0f * (x * z - w * y),			2.0f * (y * z + w * x),			1.0f - 2.0f * (x * x + y * y),	0.0f
+			m[3] = VectorType::positiveW;
 		}
+
+		static const Quaternion api(math) default;
 	};
 
 	using FloatQuaternion = Quaternion<float>;

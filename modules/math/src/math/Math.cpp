@@ -1,6 +1,8 @@
 //---------------------------------------------------------------------------
 
+#include <math\Vector.h>
 #include <math\Matrix.h>
+#include <math\Quaternion.h>
 
 //---------------------------------------------------------------------------
 
@@ -105,6 +107,8 @@ namespace Rapture
 	template<> const DoubleVector & DoubleVector::up      = positiveY;
 	template<> const FloatVector  & FloatVector::forward  = positiveZ;
 	template<> const DoubleVector & DoubleVector::forward = positiveZ;
+	template<> const FloatVector  & FloatVector::default  = positiveW;
+	template<> const DoubleVector & DoubleVector::default = positiveW;
 
 	template<> const FloatVector  FloatVector ::zero	  = { 0,  0,  0,  0 };
 	template<> const DoubleVector DoubleVector::zero	  = { 0,  0,  0,  0 };
@@ -195,4 +199,7 @@ namespace Rapture
 		 1, -1,
 		-1,  1
 	};
+
+	template<> const Quaternion<float>  Quaternion<float> ::default;
+	template<> const Quaternion<double> Quaternion<double>::default;
 }

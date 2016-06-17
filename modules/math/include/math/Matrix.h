@@ -280,7 +280,9 @@ namespace Rapture
         static inline Matrix translation(const Vector<T> & t);
 
 		static inline Matrix ortho(T x0, T x1, T y0, T y1, T z0, T z1);
+		static inline Matrix orthot(T x0, T x1, T y0, T y1, T z0, T z1);
 		static inline Matrix perspective(T fov, T aspect, T z0, T z1);
+		static inline Matrix perspectivet(T fov, T aspect, T z0, T z1);
 		static inline Matrix frustum(T x0, T x1, T y0, T y1, T z0, T z1);
 		static inline Matrix lookAt(const Vector<T> & position, const Vector<T> & center, const Vector<T> & up);
 		static inline Matrix lookTo(const Vector<T> & position, const Vector<T> & direction, const Vector<T> & up);
@@ -632,19 +634,36 @@ namespace Rapture
 	template<class T>
 	inline Matrix<T> Matrix<T>::ortho(T x0, T x1, T y0, T y1, T z0, T z1)
 	{
-		static const Vector<T> q { 2,  2, -2, 0 };
+		const Vector<T> max { x1, y1, z1, 1 };
+		const Vector<T> min { x0, y0, z0, 0 };
 
-		Vector<T> max { x1, y1, z0,  1 };
-		Vector<T> min { x0, y0, z1, -1 };
-
-		Vector<T> k = (max - min).inverse();
-		Vector<T> t = k * (max + min);
-		Vector<T> s = k * q;
+		Vector<T> d = (max - min).inverse();
+		const Vector<T> t = -(max + min) * d;
+		d *= Vector<T>::two;
 
 		return {
-			s.template shuffle<0, 3, 3, 0>(t),
-			s.template shuffle<3, 1, 3, 1>(t),
-			t.template shuffle<3, 3, 3, 2>().template blend<0, 0, 1, 0>(s)
+			d.maskX().blend<0, 0, 0, 1>(t.spreadX()),	// 2/w |  0  |  0  | -(x0+x1)/w
+			d.maskY().blend<0, 0, 0, 1>(t.spreadY()),	//  0  | 2/h |  0  | -(y0+y1)/h
+			d.maskZ().blend<0, 0, 0, 1>(t.spreadZ()),	//  0  |  0  | 2/l | -(z0+z1)/l
+			Vector<T>::positiveW						//  0  |  0  |  0  |    1
+		};
+	}
+
+	template<class T>
+	inline Matrix<T> Matrix<T>::orthot(T x0, T x1, T y0, T y1, T z0, T z1)
+	{
+		const Vector<T> max { x1, y1, z1, 1 };
+		const Vector<T> min { x0, y0, z0, 0 };
+
+		Vector<T> d = (max - min).inverse();
+		const Vector<T> t = -(max + min) * d;
+		d *= Vector<T>::two;
+
+		return {
+			d.maskX(),									//    2/w    |     0     |     0    | 0
+			d.maskY(),									//     0     |    2/h    |     0    | 0
+			d.maskZ(),									//     0     |     0     |    2/l   | 0
+			t.blend<0, 0, 0, 1>(Vector<T>::positiveW)	//-(x0+x1)/w |-(y0+y1)/h |-(z0+z1)/l| 1
 		};
 	}
 
@@ -652,14 +671,29 @@ namespace Rapture
 	inline Matrix<T> Matrix<T>::perspective(T fov, T aspect, T z0, T z1)
 	{
 		const T f = 1 / std::tan(Math<T>::dtor(fov) / 2);
-		const T delta = z1 - z0;
-		const Vector<T> v = {f / aspect, f, (z1 + z0) / delta, (2 * z1 * z0) / delta};
+		const T z = z1 / (z1 - z0);
+		const Vector<T> v = {f * aspect, f, z, -z0 * z};
 
 		return {
-			v.maskX(),
-			v.maskY(),
-			v.template mask<0, 0, 1, 1>(),
-			Vector<T>::negativeZ
+			v.maskX(),				// f/a | 0 | 0 |  0
+			v.maskY(),				//  0  | f | 0 |  0
+			v.mask<0, 0, 1, 1>(),	//  0  | 0 | z |-z0*z
+			Vector<T>::positiveZ	//  0  | 0 | 1 |  0
+		};
+	}
+
+	template<class T>
+	inline Matrix<T> Matrix<T>::perspectivet(T fov, T aspect, T z0, T z1)
+	{
+		const T f = 1 / std::tan(Math<T>::dtor(fov) / 2);
+		const T z = z1 / (z1 - z0);
+		const Vector<T> v = {f * aspect, f, z, -z0 * z};
+
+		return {
+			v.maskX(),									// f*a | 0 |  0  | 0
+			v.maskY(),									//  0  | f |  0  | 0
+			v.blend<1, 1, 0, 1>(Vector<T>::positiveW),	//  0  | 0 |  z  | 1
+			v.spreadW().maskZ(),						//  0  | 0 |-z0*z| 0
 		};
 	}
 

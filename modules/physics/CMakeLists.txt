@@ -22,14 +22,12 @@ add_module_sources(
 		START_SECTION physics
 			Physics.h
 			PhysicalWorld.h
-			PhysicalObject.h
 			PlaneObject.h
 		END_SECTION
 
 	SRC_GROUP src Sources
 		START_SECTION physics
-			PhysicalWorld.cpp
-			PhysicalObject.cpp
+			Physics.cpp
 		END_SECTION
 )
 

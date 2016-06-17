@@ -3,14 +3,12 @@
 *
 !data/
 !modules/
-!projects/
 !templates/
 !tests/
 !tools/
 !third-party/
 !data/**/*
 !modules/**/*
-!projects/**/*
 !templates/**/*
 !tests/**/*
 !tools/**/*

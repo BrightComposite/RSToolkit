@@ -102,7 +102,7 @@ namespace Rapture
 	 */
 	class Empty {};
 
-	static Empty emptiness;
+	static Empty nothing;
 
 //---------------------------------------------------------------------------
 

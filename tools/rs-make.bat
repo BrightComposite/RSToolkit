@@ -55,7 +55,7 @@ if %build_vs_86% EQU "1" (
 	echo =================================================================
 	cmake -E make_directory build-vs-x86
 	cd "build-vs-x86"
-	cmake -G "Visual Studio 14 2015" ../modules
+	cmake -G "Visual Studio 14 2015" %here%../modules
 	cd ..
 )
 
@@ -65,7 +65,7 @@ if %build_vs_64% EQU "1"  (
 	echo =================================================================
 	cmake -E make_directory build-vs-x64
 	cd "build-vs-x64"
-	cmake -G "Visual Studio 14 2015 Win64" ../modules
+	cmake -G "Visual Studio 14 2015 Win64" %here%../modules
 	cd ..
 )
 
@@ -77,7 +77,7 @@ if %build_cb% EQU "1"  (
 	cd "build-cb"
 	set CC=x86_64-w64-mingw32-gcc
 	set CXX=x86_64-w64-mingw32-g++
-	cmake -G "CodeBlocks - MinGW Makefiles" ../modules
+	cmake -G "CodeBlocks - MinGW Makefiles" %here%../modules
 	cd ..
 )
 
@@ -89,7 +89,7 @@ if %build_qt% EQU "1"  (
 	cd "build-qt"
 	set CC=x86_64-w64-mingw32-gcc
 	set CXX=x86_64-w64-mingw32-g++
-	cmake -G "Ninja" ../modules
+	cmake -G "Ninja" %here%../modules
 	cd ..
 )
 
@@ -100,7 +100,7 @@ if %build_clang% EQU "1"  (
 	cmake -E make_directory build-clang
 	cd "build-clang"
 	set CXX=cl
-	cmake -G "Ninja" ../modules
+	cmake -G "Ninja" %here%../modules
 	cd ..
 )
 

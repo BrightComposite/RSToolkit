@@ -338,7 +338,7 @@ namespace Rapture
 	{
 		static inline Handle<G, CommonGraphicsProvider<G>> provide()
 		{
-			Handle<G, CommonGraphicsProvider<G>> graphics(emptiness);
+			Handle<G, CommonGraphicsProvider<G>> graphics(nothing);
 			graphics->initFacilities();
 			return graphics;
 		}

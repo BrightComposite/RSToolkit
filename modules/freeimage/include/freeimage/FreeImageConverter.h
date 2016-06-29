@@ -19,8 +19,8 @@ namespace Rapture
 		api(freeimage) FreeImageConverter();
 		virtual api(freeimage) ~FreeImageConverter();
 
-		virtual void api(freeimage) decode(ImageData * output, const string & type, const ByteData * raw) override;
-		virtual void api(freeimage) encode(OwnedByteData * output, const string & type, const ImageData * image) override;
+		virtual api(freeimage) void decode(ImageData * output, const string & type, const ByteData * raw) override;
+		virtual api(freeimage) void encode(OwnedByteData * output, const string & type, const ImageData * image) override;
 
 		static void initialize()
 		{

@@ -80,11 +80,11 @@ namespace Rapture
 	{
 		using T = color_data_t<datatype>;
 
-		ColorBase() : array_list {} {}
-		ColorBase(const ColorBase & color) : array_list {color.array_list} {}
-		ColorBase(ColorBase && color) : array_list {move(color.array_list)} {}
-		ColorBase(const Vector<T> & vec) : array_list {vec} {}
-		ColorBase(Vector<T> && vec) : array_list {forward<Vector<T>>(vec)} {}
+		ColorBase() : vector {} {}
+		ColorBase(const ColorBase & color) : vector {color.vector} {}
+		ColorBase(ColorBase && color) : vector {move(color.vector)} {}
+		ColorBase(const Vector<T> & vec) : vector {vec} {}
+		ColorBase(Vector<T> && vec) : vector {forward<Vector<T>>(vec)} {}
 		ColorBase(const array<T, 4> & data) : data {data} {}
 		ColorBase(array<T, 4> && data) : data {forward<array<T, 4>>(data)} {}
 		ColorBase(T r, T g, T b, T a) : r(r), g(g), b(b), a(a) {}
@@ -92,7 +92,8 @@ namespace Rapture
 		union
 		{
 			array<T, 4> data;
-			Vector<T> array_list;
+			T m[4];
+			Vector<T> vector;
 
 			struct
 			{
@@ -106,11 +107,11 @@ namespace Rapture
 	{
 		using T = color_data_t<datatype>;
 
-		ColorBase() : array_list {} {}
-		ColorBase(const ColorBase & color) : array_list {color.array_list} {}
-		ColorBase(ColorBase && color) : array_list {move(color.array_list)} {}
-		ColorBase(const Vector<T> & vec) : array_list {vec} {}
-		ColorBase(Vector<T> && vec) : array_list {forward<Vector<T>>(vec)} {}
+		ColorBase() : vector {} {}
+		ColorBase(const ColorBase & color) : vector {color.vector} {}
+		ColorBase(ColorBase && color) : vector {move(color.vector)} {}
+		ColorBase(const Vector<T> & vec) : vector {vec} {}
+		ColorBase(Vector<T> && vec) : vector {forward<Vector<T>>(vec)} {}
 		ColorBase(const array<T, 4> & data) : data {data} {}
 		ColorBase(array<T, 4> && data) : data {forward<array<T, 4>>(data)} {}
 		ColorBase(T h, T s, T v, T a) : h(h), s(s), v(v), a(a) {}
@@ -118,7 +119,8 @@ namespace Rapture
 		union
 		{
 			array<T, 4> data;
-			Vector<T> array_list;
+			T m[4];
+			Vector<T> vector;
 
 			struct
 			{
@@ -128,48 +130,49 @@ namespace Rapture
 	};
 
 	template<ColorType datatype, ColorFormat format>
-	struct Color : ColorBase<datatype, format>
+	struct GenericColor : ColorBase<datatype, format>
 	{
 		using T = color_data_t<datatype>;
 		using Base = ColorBase<datatype, format>;
 		using Traits = ColorTraits<datatype>;
 
+		member_cast(this->m, array_t<T, 4>);
 		member_cast(this->data, array<T, 4>);
-		member_cast(this->array_list, Vector<T>);
+		member_cast(this->vector, Vector<T>);
 
-		Color() : Base {Traits::default_color()} {}
-		Color(const Color & color) : Base {color.array_list} {}
+		GenericColor() : Base {Traits::default_color()} {}
+		GenericColor(const GenericColor & color) : Base {color.vector} {}
 
 		template<class ... A, selectif(0) <sizeof...(A) == 3, std::is_convertible<A, T>::value...> endif>
-		Color(A &&... args) : Base {adapt<T, A>(forward<A>(args))..., Traits::alpha()} {}
+		GenericColor(A &&... args) : Base {adapt<T, A>(forward<A>(args))..., Traits::alpha()} {}
 
 		template<class ... A, selectif(1) <sizeof...(A) == 4, std::is_convertible<A, T>::value...> endif>
-		Color(A &&... args) : Base {adapt<T, A>(forward<A>(args))...} {}
+		GenericColor(A &&... args) : Base {adapt<T, A>(forward<A>(args))...} {}
 
-		Color(const T(&color)[4]) : Base {color} {}
-		Color(const T(&color)[3]) : Base {color[0], color[1], color[2], Traits::alpha()} {}
-		Color(const Vector<T> & color) : Base {color} {}
+		GenericColor(const T(&color)[4]) : Base {color} {}
+		GenericColor(const T(&color)[3]) : Base {color[0], color[1], color[2], Traits::alpha()} {}
+		GenericColor(const Vector<T> & color) : Base {color} {}
 
 		template<ColorType d, ColorFormat f, useif <d != datatype || f != format> endif>
-		Color(const Color<d, f> & color)
+		GenericColor(const GenericColor<d, f> & color)
 		{
-			Cast<Color<d, f>, Color>::cast(*this, color);
+			Cast<GenericColor<d, f>, GenericColor>::cast(*this, color);
 		}
 
-		Color & operator = (const Color & color)
+		GenericColor & operator = (const GenericColor & color)
 		{
-			array_list = color.array_list;
+			vector = color.vector;
 			return *this;
 		}
 
-		bool operator == (const Color & color) const
+		bool operator == (const GenericColor & color) const
 		{
-			return array_list == color.array_list;
+			return vector == color.vector;
 		}
 
-		bool operator != (const Color & color) const
+		bool operator != (const GenericColor & color) const
 		{
-			return array_list != color.array_list;
+			return vector != color.vector;
 		}
 
 		T & operator [] (int index)
@@ -193,43 +196,43 @@ namespace Rapture
 		}
 	};
 
-	using color  = Color<ColorType::Float, ColorFormat::rgb>;
-	using colorf = Color<ColorType::Float, ColorFormat::rgb>;
-	using colorb = Color<ColorType::Byte,  ColorFormat::rgb>;
-	using rgb	 = Color<ColorType::Byte,  ColorFormat::rgb>;
-	using hsv	 = Color<ColorType::Float, ColorFormat::hsv>;
+	using Color  = GenericColor<ColorType::Float, ColorFormat::rgb>;
+	using colorf = GenericColor<ColorType::Float, ColorFormat::rgb>;
+	using colorb = GenericColor<ColorType::Byte,  ColorFormat::rgb>;
+	using rgb	 = GenericColor<ColorType::Byte,  ColorFormat::rgb>;
+	using hsv	 = GenericColor<ColorType::Float, ColorFormat::hsv>;
 
 	template<class T>
 	struct is_color : false_type {};
 
 	template<ColorType d, ColorFormat f>
-	struct is_color<Color<d, f>> : true_type {};
+	struct is_color<GenericColor<d, f>> : true_type {};
 
 	template<ColorType inType, ColorFormat inFormat, ColorType outType, ColorFormat outFormat>
-	struct Cast<Color<inType, inFormat>, Color<outType, outFormat>>
+	struct Cast<GenericColor<inType, inFormat>, GenericColor<outType, outFormat>>
 	{
 		template<ColorType In = inType, ColorType Out = outType, useif <In == Out> endif, useif <inFormat == outFormat> endif>
-		static inline void cast(Color<outType, outFormat> & out, const Color<inType, inFormat> & in)
+		static inline void cast(GenericColor<outType, outFormat> & out, const GenericColor<inType, inFormat> & in)
 		{
 			out = in;
 		}
 
 		template<ColorType In = inType, ColorType Out = outType, useif <In == Out> endif, skipif <inFormat == outFormat> endif>
-		static inline void cast(Color<outType, outFormat> & out, const Color<inType, inFormat> & in)
+		static inline void cast(GenericColor<outType, outFormat> & out, const GenericColor<inType, inFormat> & in)
 		{
 			ColorFormatCast<inFormat, outFormat>::cast(out, in);
 		}
 
 		template<ColorType In = inType, ColorType Out = outType, skipif <In == Out> endif, useif <inFormat == outFormat> endif>
-		static inline void cast(Color<outType, outFormat> & out, const Color<inType, inFormat> & in)
+		static inline void cast(GenericColor<outType, outFormat> & out, const GenericColor<inType, inFormat> & in)
 		{
 			ColorDataCast<inType, outType>::cast(out, in);
 		}
 
 		template<ColorType In = inType, ColorType Out = outType, skipif <In == Out> endif, skipif <inFormat == outFormat> endif>
-		static inline void cast(Color<outType, outFormat> & out, const Color<inType, inFormat> & in)
+		static inline void cast(GenericColor<outType, outFormat> & out, const GenericColor<inType, inFormat> & in)
 		{
-			Color<outType, inFormat> temp;
+			GenericColor<outType, inFormat> temp;
 			ColorDataCast<inType, outType>::cast(temp, in);
 			ColorFormatCast<inFormat, outFormat>::cast(out, temp);
 		}
@@ -239,7 +242,7 @@ namespace Rapture
 	struct ColorDataCast<datatype, datatype>
 	{
 		template<ColorFormat format>
-		static inline void cast(Color<datatype, format> & out, const Color<datatype, format> & in)
+		static inline void cast(GenericColor<datatype, format> & out, const GenericColor<datatype, format> & in)
 		{
 			out = in;
 		}
@@ -249,9 +252,9 @@ namespace Rapture
 	struct ColorDataCast<ColorType::Byte, ColorType::Float>
 	{
 		template<ColorFormat format>
-		static inline void cast(Color<ColorType::Float, format> & out, const Color<ColorType::Byte, format> & in)
+		static inline void cast(GenericColor<ColorType::Float, format> & out, const GenericColor<ColorType::Byte, format> & in)
 		{
-			out.array_list = FloatVector(in.array_list) / 255.0f;
+			out.vector = FloatVector(in.vector) / 255.0f;
 		}
 	};
 
@@ -259,9 +262,9 @@ namespace Rapture
 	struct ColorDataCast<ColorType::Float, ColorType::Byte>
 	{
 		template<ColorFormat format>
-		static inline void cast(Color<ColorType::Byte, format> & out, const Color<ColorType::Float, format> & in)
+		static inline void cast(GenericColor<ColorType::Byte, format> & out, const GenericColor<ColorType::Float, format> & in)
 		{
-			out.array_list = ByteVector(in.array_list * 255.0f);
+			out.vector = ByteVector(in.vector * 255.0f);
 		}
 	};
 
@@ -269,7 +272,7 @@ namespace Rapture
 	struct ColorFormatCast<format, format>
 	{
 		template<ColorType datatype>
-		static inline void cast(Color<datatype, format> & out, const Color<datatype, format> & in)
+		static inline void cast(GenericColor<datatype, format> & out, const GenericColor<datatype, format> & in)
 		{
 			out = in;
 		}
@@ -278,7 +281,7 @@ namespace Rapture
 	template<>
 	struct ColorFormatCast<ColorFormat::rgb, ColorFormat::hsv>
 	{
-		static inline void cast(Color<ColorType::Byte, ColorFormat::hsv> & out, const Color<ColorType::Byte, ColorFormat::rgb> & color)
+		static inline void cast(GenericColor<ColorType::Byte, ColorFormat::hsv> & out, const GenericColor<ColorType::Byte, ColorFormat::rgb> & color)
 		{
 			static const int first[]  = {1, 2, 0};
 			static const int second[] = {2, 0, 1};
@@ -297,7 +300,7 @@ namespace Rapture
 			out.s = byte(delta * 255 / out.v);
 		}
 
-		static inline void cast(Color<ColorType::Float, ColorFormat::hsv> & out, const Color<ColorType::Float, ColorFormat::rgb> & color)
+		static inline void cast(GenericColor<ColorType::Float, ColorFormat::hsv> & out, const GenericColor<ColorType::Float, ColorFormat::rgb> & color)
 		{
 			static const int first[]  = {1, 2, 0};
 			static const int second[] = {2, 0, 1};
@@ -320,7 +323,7 @@ namespace Rapture
 	template<>
 	struct ColorFormatCast<ColorFormat::hsv, ColorFormat::rgb>
 	{
-		static inline void cast(Color<ColorType::Byte, ColorFormat::rgb> & out,const Color<ColorType::Byte, ColorFormat::hsv> & color)
+		static inline void cast(GenericColor<ColorType::Byte, ColorFormat::rgb> & out,const GenericColor<ColorType::Byte, ColorFormat::hsv> & color)
 		{
 			static const int cc[] = {0, 1, 1, 2, 2, 0};
 			static const int xx[] = {1, 0, 2, 1, 0, 2};
@@ -342,7 +345,7 @@ namespace Rapture
 			out.a = color.a;
 		}
 
-		static inline void cast(Color<ColorType::Float, ColorFormat::rgb> & out, const Color<ColorType::Float, ColorFormat::hsv> & color)
+		static inline void cast(GenericColor<ColorType::Float, ColorFormat::rgb> & out, const GenericColor<ColorType::Float, ColorFormat::hsv> & color)
 		{
 			static const int cc[] = {0, 1, 1, 2, 2, 0};
 			static const int xx[] = {1, 0, 2, 1, 0, 2};

@@ -16,13 +16,13 @@ namespace Rapture
 	template<class Container, useif <is_iterable<Container>::value> endif>
 	typename Container::iterator erase(Container & container, int pos)
 	{
-		return container.erase(container.begin() + pos);
+		return container.erase(std::next(container.begin(), pos));
 	}
 
 	template<class Container, typename T, useif <is_iterable<Container>::value> endif>
 	typename Container::iterator erase(Container & container, const T & value)
 	{
-		return container.erase(std::remove(container.begin(), container.end(), value), container.end());
+		return container.erase(std::remove(container.begin(), container.end(), value), container.end()); //move all values equal to the 'value' to the end of the 'container', then erase the end
 	}
 
 	template<class T, class A, A T::*member>

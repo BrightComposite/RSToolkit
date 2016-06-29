@@ -38,7 +38,7 @@ namespace Rapture
 			transform = forward<FloatTransform>(t);
 		}
 
-		virtual void api(graphics) draw(int pass = 0) const;
+		virtual api(graphics) void draw(int pass = 0) const;
 
 	protected:
 		Graphics3D * graphics;

@@ -19,9 +19,9 @@ namespace Rapture
 		typedef Intrinsic<T, 4> Intrin;
 		typedef array<T, 2> Row;
 
-		static const Matrix2x2 api(math) initial;
-		static const Matrix2x2 api(math) negative;
-		static const Matrix2x2 api(math) inversemask;
+		static api(math) const Matrix2x2 initial;
+		static api(math) const Matrix2x2 negative;
+		static api(math) const Matrix2x2 inversemask;
 
 		union
 		{

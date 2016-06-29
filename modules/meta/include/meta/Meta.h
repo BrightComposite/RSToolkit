@@ -183,7 +183,7 @@ namespace Rapture
 			foreach_t<T...>::template iterate<Functor>(forward<A>(args)...);
 		}
 	};
-
+	
 	/**
 	 *	@brief
 	 *  Iterates through the tuple types with the Functor.
@@ -202,7 +202,7 @@ namespace Rapture
 	};
 
 	template<class From, class To>
-	struct Cast : false_type {};
+	struct Cast {};
 
 	sfinae_checker(can_cast, (class From, class To), (From, To),
 		decltype(Cast<From, To>::cast(declval<To>(), declval<From>()))

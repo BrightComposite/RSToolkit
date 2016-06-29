@@ -6,7 +6,7 @@
 //---------------------------------------------------------------------------
 
 #include <core/Handle.h>
-#include <core/container/Array.h>
+#include <core/container/ArrayList.h>
 
 //---------------------------------------------------------------------------
 
@@ -18,6 +18,11 @@ namespace Rapture
 	class data : public Shared
 	{
 	public:
+		using iterator = T *;
+		using reverse_iterator = T *;
+		using const_iterator = const T *;
+		using const_reverse_iterator = const T *;
+
 		data() : ptr(nullptr), size(0) {}
 		data(const data & rd) : ptr(rd.ptr), size(rd.size) {}
 		data(T *&& ptr, size_t size) : ptr(ptr), size(size) { ptr = nullptr; }
@@ -43,6 +48,56 @@ namespace Rapture
 			ptr = nullptr;
 		}
 
+		T & operator [] (int index)
+		{
+			return ptr[index];
+		}
+
+		const T & operator [] (int index) const
+		{
+			return ptr[index];
+		}
+
+		iterator begin()
+		{
+			return ptr;
+		}
+
+		iterator end()
+		{
+			return ptr + size;
+		}
+
+		reverse_iterator rbegin()
+		{
+			return ptr + size;
+		}
+
+		reverse_iterator rend()
+		{
+			return ptr;
+		}
+
+		const_iterator cbegin() const
+		{
+			return ptr;
+		}
+
+		const_iterator cend() const
+		{
+			return ptr + size;
+		}
+
+		const_reverse_iterator crbegin() const
+		{
+			return ptr + size;
+		}
+
+		const_reverse_iterator crend() const
+		{
+			return ptr;
+		}
+
 		T * ptr;
 		size_t size;
 	};
@@ -51,6 +106,9 @@ namespace Rapture
 	class data<const T> : public Shared
 	{
 	public:
+		using const_iterator = const T *;
+		using const_reverse_iterator = const T *;
+
 		data() : ptr(nullptr), size(0) {}
 		data(const data & rd) : ptr(rd.ptr), size(rd.size) {}
 		data(const data<T> & rd) : ptr(rd.ptr), size(rd.size) {}
@@ -69,6 +127,31 @@ namespace Rapture
 			return *this;
 		}
 
+		const T & operator [] (int index) const
+		{
+			return ptr[index];
+		}
+
+		const_iterator cbegin() const
+		{
+			return ptr;
+		}
+
+		const_iterator cend() const
+		{
+			return ptr + size;
+		}
+
+		const_reverse_iterator crbegin() const
+		{
+			return ptr + size;
+		}
+
+		const_reverse_iterator crend() const
+		{
+			return ptr;
+		}
+
 		const T * ptr;
 		size_t size;
 	};
@@ -82,6 +165,7 @@ namespace Rapture
 		owned_data() : Base() {}
 		owned_data(const Base & rd) : Base(Memory<T>::copy(rd.ptr, rd.size), rd.size) {}
 		owned_data(const owned_data & rd) : Base(Memory<T>::copy(rd.ptr, rd.size), rd.size) {}
+		owned_data(size_t size) : Base(Memory<T>::allocate(size), size) {}
 		owned_data(const T * ptr, size_t size) : Base(Memory<T>::copy(ptr, size), size) {}
 		owned_data(const array_list<T> & v) : Base(Memory<T>::copy(v.data(), v.size()), v.size()) {}
 		template<size_t N>
@@ -257,12 +341,13 @@ namespace Rapture
 		owned_data(const data<T> & rd) : Base(Memory<T>::copy(rd.ptr, rd.size), rd.size) {}
 		template<class T>
 		owned_data(const owned_data<T> & rd) : Base(Memory<T>::copy(rd.ptr, rd.size), rd.size) {}
+		owned_data(size_t size) : Base(Memory<void>::allocate(size), size) {}
 		template<class T>
-		owned_data(const T * ptr, size_t size) : Base(Memory<T>::copy(ptr, size), size) {}
+		owned_data(const T * ptr, size_t size) : Base(Memory<T>::copy(ptr, size), size * sizeof(T)) {}
 		template<class T>
-		owned_data(const array_list<T> & v) : Base(Memory<T>::copy(v.data(), v.size()), v.size()) {}
+		owned_data(const array_list<T> & v) : Base(Memory<T>::copy(v.data(), v.size()), v.size() * sizeof(T)) {}
 		template<class T, size_t N>
-		owned_data(const T(&ptr)[N]) : Base(Memory<T>::copy(ptr, N), N) {}
+		owned_data(const T(&ptr)[N]) : Base(Memory<T>::copy(ptr, N), N * sizeof(T)) {}
 
 		owned_data(owned_data && rd) : Base(rd.ptr, rd.size)
 		{
@@ -327,7 +412,7 @@ namespace Rapture
 		{
 			Memory<void>::free(this->ptr);
 			this->ptr = Memory<T>::copy(ptr, N);
-			this->size = N;
+			this->size = N * sizeof(T);
 		}
 
 		void set(void *&& ptr, size_t size)

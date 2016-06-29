@@ -14,6 +14,8 @@ namespace Rapture
 {
 	struct RectAdapter
 	{
+		deny_copy(RectAdapter);
+
 		RectAdapter() : rect {0, 0, 0, 0} {}
 		RectAdapter(const RECT & r) : rect (r) {}
 		RectAdapter(RECT && r) : rect (forward<RECT>(r)) {}
@@ -72,6 +74,16 @@ namespace Rapture
 		long height() const
 		{
 			return rect.bottom - rect.top;
+		}
+
+		RECT * operator & ()
+		{
+			return &rect;
+		}
+
+		const RECT * operator & () const
+		{
+			return &rect;
 		}
 
 		RECT rect;

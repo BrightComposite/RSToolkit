@@ -228,7 +228,7 @@ namespace Rapture
 
 		Handle<Image> D3DGraphics::createImage(const ImageData & data)
 		{
-			return Handle<D3DImage, D3DGraphics>(this, data);
+			return Handle<D3DImage>(this, data);
 		}
 
 		Handle<VertexLayout> D3DGraphics::createVertexLayout(const string & fingerprint)
@@ -253,13 +253,12 @@ namespace Rapture
 
 		Handle<Surface> D3DGraphics::createSurface(UISpace * space)
 		{
-			Handle<UISurface, D3DGraphics> s(this, space);
+			return Handle<UISurface>(this, space);
+		}
 
-			connect(*space, s, &UISurface::onUIResize);
-			connect(*space, s, &UISurface::onUIFullscreen);
-			connect(*space, s, &UISurface::onUIDestroy);
-
-			return s;
+		Handle<Surface> D3DGraphics::createSurface(const IntSize & size, Handle<Image> & image)
+		{
+			return Handle<TextureSurface>(this, size, image);
 		}
 
 		void D3DGraphics::present() const
@@ -502,9 +501,57 @@ namespace Rapture
 			);
 		}
 
+		D3DImage::D3DImage(D3DGraphics * graphics, uint width, uint height) : Image(graphics, width, height, ImageFormat::bgra), _ctx(graphics)
+		{
+			D3D11_TEXTURE2D_DESC texDesc;
+			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+
+			ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
+			ZeroMemory(&srvDesc, sizeof(srvDesc));
+
+			texDesc.Width = _width;
+			texDesc.Height = _height;
+			texDesc.ArraySize = 1;
+			texDesc.MipLevels = 1;
+			texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+			texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			texDesc.SampleDesc.Count = 1;
+			texDesc.SampleDesc.Quality = 0;
+			texDesc.Usage = D3D11_USAGE_DEFAULT;
+			texDesc.CPUAccessFlags = 0;
+			texDesc.MiscFlags = 0;
+
+			com_assert(
+				graphics->device->CreateTexture2D(&texDesc, nullptr, &_handle)
+			);
+
+			srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+			srvDesc.Texture2D.MostDetailedMip = 0;
+			srvDesc.Texture2D.MipLevels = 1;
+
+			com_assert(
+				graphics->device->CreateShaderResourceView(_handle, &srvDesc, &_resource)
+			);
+
+			D3D11_SAMPLER_DESC sampDesc;
+			ZeroMemory(&sampDesc, sizeof(sampDesc));
+			sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+			sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+			sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+			sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+			sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+			sampDesc.MinLOD = 0;
+			sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+			com_assert(
+				graphics->device->CreateSamplerState(&sampDesc, &_state)
+			);
+		}
+
 		D3DImage::D3DImage(D3DGraphics * graphics, const ImageData & data) : Image(graphics, data), _ctx(graphics)
 		{
-			ComHandle<ID3D11Texture2D> tex;
+			_format = data.format;
 
 			D3D11_TEXTURE2D_DESC texDesc;
 			ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
@@ -520,8 +567,6 @@ namespace Rapture
 			texDesc.Usage = D3D11_USAGE_DEFAULT;
 			texDesc.CPUAccessFlags = 0;
 			texDesc.MiscFlags = 0;
-
-			_format = data.format;
 
 			switch(_format)
 			{
@@ -553,11 +598,11 @@ namespace Rapture
 			texInitData.SysMemSlicePitch = texInitData.SysMemPitch;
 
 			com_assert(
-				graphics->device->CreateTexture2D(&texDesc, &texInitData, &tex)
+				graphics->device->CreateTexture2D(&texDesc, &texInitData, &_handle)
 			);
 
 			com_assert(
-				graphics->device->CreateShaderResourceView(tex, nullptr, &_handle)
+				graphics->device->CreateShaderResourceView(_handle, nullptr, &_resource)
 			);
 
 			D3D11_SAMPLER_DESC sampDesc;
@@ -577,7 +622,7 @@ namespace Rapture
 
 		void D3DImage::apply() const
 		{
-			_ctx->context->PSSetShaderResources(0, 1, &_handle);
+			_ctx->context->PSSetShaderResources(0, 1, &_resource);
 			_ctx->context->PSSetSamplers(0, 1, &_state);
 		}
 
@@ -592,10 +637,7 @@ namespace Rapture
 			ComHandle<ID3D11Resource> res;
 			ComHandle<ID3D11Texture2D> ownTexture;
 
-			_handle->GetResource(&res);
-			ownTexture = res;
-
-			ownTexture->GetDesc(&texDesc);
+			_handle->GetDesc(&texDesc);
 
 			texDesc.BindFlags = 0;
 			texDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
@@ -605,7 +647,7 @@ namespace Rapture
 				_ctx->device->CreateTexture2D(&texDesc, nullptr, &texture)
 			);
 
-			_ctx->context->CopyResource(texture, ownTexture);
+			_ctx->context->CopyResource(texture, _handle);
 
 			D3D11_MAPPED_SUBRESOURCE resource;
 			com_assert(
@@ -629,15 +671,22 @@ namespace Rapture
 			_ctx->context->Unmap(texture, 0);
 		}
 
-	#define USE_3D
-
-		UISurface::UISurface(D3DGraphics * graphics, UISpace * space) : D3DSurface(graphics, space->size()), space(space)
+		UISurface::UISurface(D3DGraphics * graphics, UISpace * space) : D3DSurface(graphics, space->size()), _space(space)
 		{
 			createSwapChain(false);
-			ZeroMemory(&presentParams, sizeof(presentParams));
+			ZeroMemory(&_presentParams, sizeof(_presentParams));
+
+			connect(*_space, this, &UISurface::onUIResize);
+			connect(*_space, this, &UISurface::onUIFullscreen);
+			connect(*_space, this, &UISurface::onUIDestroy);
 		}
 
-		UISurface::~UISurface() {}
+		UISurface::~UISurface()
+		{
+			disconnect(*_space, this, &UISurface::onUIResize);
+			disconnect(*_space, this, &UISurface::onUIFullscreen);
+			disconnect(*_space, this, &UISurface::onUIDestroy);
+		}
 
 		void UISurface::createSwapChain(bool fullscreen)
 		{
@@ -650,8 +699,8 @@ namespace Rapture
 
 			auto & md = sd.BufferDesc;
 
-			md.Width = viewport.width();
-			md.Height = viewport.height();
+			md.Width = _space->width();
+			md.Height = _space->height();
 			md.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
 			if(fullscreen)
@@ -660,28 +709,28 @@ namespace Rapture
 				md.RefreshRate.Denominator = 1;
 			}
 
-			if(swapChain != nullptr)
+			if(_swapChain != nullptr)
 			{
 				if(fullscreen)
 				{
 					ComHandle<IDXGIOutput> output;
 
 					com_assert(
-						swapChain->GetContainingOutput(&output)
+						_swapChain->GetContainingOutput(&output)
 					);
 
-					output->FindClosestMatchingMode(&md, &md, graphics->device);
+					output->FindClosestMatchingMode(&md, &md, _graphics->device);
 					//findPreferredMode(output, md);
 				}
 				else
-					swapChain->SetFullscreenState(FALSE, nullptr);
+					_swapChain->SetFullscreenState(FALSE, nullptr);
 
-				swapChain = nullptr;
+				_swapChain = nullptr;
 			}
 
 			sd.BufferCount = 1;
 			sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-			sd.OutputWindow = space->handle();
+			sd.OutputWindow = _space->handle();
 			sd.SampleDesc.Count = 1;
 			sd.SampleDesc.Quality = 0;
 			sd.Windowed = TRUE;
@@ -689,14 +738,14 @@ namespace Rapture
 			//sd.SwapEffect = DXGI_SWAP_EFFECT::DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
 
 			com_assert(
-				graphics->dxgiFactory->CreateSwapChain(graphics->device, &sd, &sc)
+				_graphics->dxgiFactory->CreateSwapChain(_graphics->device, &sd, &sc)
 			);
 
-			swapChain = sc;
+			_swapChain = sc;
 			createRenderTarget();
 
 			if(fullscreen)
-				swapChain->SetFullscreenState(TRUE, nullptr);
+				_swapChain->SetFullscreenState(TRUE, nullptr);
 		}
 
 		void UISurface::createRenderTarget()
@@ -704,42 +753,42 @@ namespace Rapture
 			createDepthStencil();
 
 			D3D11_VIEWPORT vp;
-			vp.Width = static_cast<float>(viewport.width());
-			vp.Height = static_cast<float>(viewport.height());
+			vp.Width = static_cast<float>(_space->width());
+			vp.Height = static_cast<float>(_space->height());
 			vp.MinDepth = 0.0f;
 			vp.MaxDepth = 1.0f;
 			vp.TopLeftX = 0;
 			vp.TopLeftY = 0;
 
-			graphics->context->RSSetViewports(1, &vp);
+			_graphics->context->RSSetViewports(1, &vp);
 
 			{
 				ComHandle<ID3D11Texture2D> buffer;
 
 				com_assert(
-					swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), buffer.pointer())
+					_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), buffer.pointer())
 				);
 
 				com_assert(
-					graphics->device->CreateRenderTargetView(buffer, nullptr, &renderTargetView)
+					_graphics->device->CreateRenderTargetView(buffer, nullptr, &_renderView)
 				);
 			}
 
-		#ifdef USE_3D
-			graphics->context->OMSetRenderTargets(1, &renderTargetView, nullptr);
-		#else
-			graphics->context->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
-		#endif
+			_graphics->context->OMSetRenderTargets(1, &_renderView, _depthStencilView);
 		}
 
 		void UISurface::releaseRenderTarget()
 		{
-			if(renderTargetView != nullptr || depthStencilView != nullptr)
+			if(_renderView != nullptr || _depthStencilView != nullptr)
 			{
-				graphics->context->OMSetRenderTargets(0, 0, 0);
-				graphics->context->Flush();
-				renderTargetView = nullptr;
-				depthStencilView = nullptr;
+				if(_graphics->surface() == this)
+				{
+					_graphics->context->OMSetRenderTargets(0, 0, 0);
+					_graphics->context->Flush();
+				}
+
+				_renderView = nullptr;
+				_depthStencilView = nullptr;
 			}
 		}
 
@@ -748,14 +797,11 @@ namespace Rapture
 			uint num;
 			output->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, 0, &num, nullptr);
 
-			auto descs = Memory<DXGI_MODE_DESC>::allocate(num);
+			owned_data<DXGI_MODE_DESC> descs(num);
+			output->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, 0, &num, descs.ptr);
 
-			output->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, 0, &num, descs);
-
-			for(uint i = 0; i < num; ++i)
+			for(auto & desc : descs)
 			{
-				auto & desc = descs[i];
-
 				if(desc.RefreshRate.Numerator / desc.RefreshRate.Denominator > 50)
 				{
 					if(desc.Width >= mode.Width || desc.Height >= mode.Height)
@@ -765,14 +811,12 @@ namespace Rapture
 					}
 				}
 			}
-
-			Memory<DXGI_MODE_DESC>::free(descs);
 		}
 
 		void UISurface::present() const
 		{
-			swapChain->Present(0, 0);
-			//graphics->context->DiscardView(renderTargetView);
+			_swapChain->Present(0, 0);
+			//_graphics->context->DiscardView(_renderView);
 			apply();
 		}
 
@@ -784,7 +828,7 @@ namespace Rapture
 			ComHandle<ID3D11Texture2D> buffer;
 
 			com_assert(
-				swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), buffer.pointer())
+				_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), buffer.pointer())
 			);
 
 			ComHandle<ID3D11Texture2D> texture;
@@ -796,14 +840,14 @@ namespace Rapture
 			texDesc.Usage = D3D11_USAGE_STAGING;
 
 			com_assert(
-				graphics->device->CreateTexture2D(&texDesc, nullptr, &texture)
+				_graphics->device->CreateTexture2D(&texDesc, nullptr, &texture)
 			);
 
-			graphics->context->CopyResource(texture, buffer);
+			_graphics->context->CopyResource(texture, buffer);
 
 			D3D11_MAPPED_SUBRESOURCE resource;
 			com_assert(
-				graphics->context->Map(texture, 0, D3D11_MAP_READ, 0, &resource)
+				_graphics->context->Map(texture, 0, D3D11_MAP_READ, 0, &resource)
 			);
 
 			output->width = texDesc.Width;
@@ -819,16 +863,23 @@ namespace Rapture
 			for(uint y = 0; y < output->height; ++y, src += resource.RowPitch, dst += pitch)
 				memcpy(dst, src, pitch);
 
-			graphics->context->Unmap(texture, 0);
+			_graphics->context->Unmap(texture, 0);
+		}
+
+		void UISurface::resize()
+		{
+			releaseRenderTarget();
+
+			com_assert(
+				_swapChain->ResizeBuffers(0, _space->width(), _space->height(), DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH)
+			);
+
+			createRenderTarget();
 		}
 
 		void UISurface::apply() const
 		{
-		#ifdef USE_3D
-			graphics->context->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
-		#else
-			graphics->context->OMSetRenderTargets(1, &renderTargetView, nullptr);
-		#endif
+			_graphics->context->OMSetRenderTargets(1, &_renderView, _depthStencilView);
 		}
 
 		void UISurface::onUIResize(Handle<UIResizeMessage> & msg, UISpace & space)
@@ -836,16 +887,8 @@ namespace Rapture
 			if(msg->width == 0 || msg->height == 0)
 				return;
 
-			viewport.set(msg->width, msg->height);
-			graphics->updateUniform<Uniforms::Viewport>(FloatSize {viewport.size()});
-
-			releaseRenderTarget();
-
-			com_assert(
-				swapChain->ResizeBuffers(0, viewport.width(), viewport.height(), DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH)
-			);
-
-			createRenderTarget();
+			setSize({msg->width, msg->height});
+			_graphics->updateUniform<Uniforms::Viewport>(FloatSize {size()});
 
 			space.invalidate();
 		}
@@ -857,42 +900,70 @@ namespace Rapture
 
 		void UISurface::onUIDestroy(Handle<UIDestroyMessage> & msg, UISpace & space)
 		{
-			swapChain->SetFullscreenState(FALSE, nullptr);
+			_swapChain->SetFullscreenState(FALSE, nullptr);
 		}
 
-		DepthBufferSurface::DepthBufferSurface(D3DGraphics * graphics, const IntSize & size) : D3DSurface(graphics, size)
+		DepthSurface::DepthSurface(D3DGraphics * graphics, const IntSize & size) : D3DSurface(graphics, size)
 		{
 			createDepthStencil();
 		}
 
-		void DepthBufferSurface::apply() const
+		void DepthSurface::apply() const
 		{
-		#ifdef USE_3D
-			graphics->context->OMSetRenderTargets(1, nullptr, depthStencilView);
-		#else
-			graphics->context->OMSetRenderTargets(1, nullptr, nullptr);
-		#endif
+			_graphics->context->OMSetRenderTargets(1, nullptr, _depthStencilView);
 		}
 
-		TextureSurface::TextureSurface(D3DGraphics * graphics, const IntSize & size) : D3DSurface(graphics, size)
-		{}
+		void DepthSurface::clear() const
+		{
+			_graphics->context->ClearDepthStencilView(_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+		}
+
+		TextureSurface::TextureSurface(D3DGraphics * graphics, const IntSize & size, Handle<Image> & image) : D3DSurface(graphics, size), _texture(graphics, size.x, size.y)
+		{
+			D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+			ZeroMemory(&rtvDesc, sizeof(rtvDesc));
+
+			rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+			rtvDesc.Texture2D.MipSlice = 0;
+
+			com_assert(
+				_graphics->device->CreateRenderTargetView(_texture->_handle, &rtvDesc, &_renderView)
+			);
+
+			createDepthStencil();
+		}
 
 		void TextureSurface::apply() const
-		{}
+		{
+			_graphics->context->OMSetRenderTargets(1, &_renderView, _depthStencilView);
+		}
 
-		D3DSurface::D3DSurface(D3DGraphics * graphics, const IntSize & size) : Surface(size), graphics(graphics) {}
+		void TextureSurface::clear() const
+		{
+			_graphics->context->ClearRenderTargetView(_renderView, _graphics->clearColor());
+			_graphics->context->ClearDepthStencilView(_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+		}
 
+		void TextureSurface::requestData(ImageData * data) const
+		{
+			_texture->requestData(data);
+		}
+
+		D3DSurface::D3DSurface(D3DGraphics * graphics, const IntSize & size) : Surface(size), _graphics(graphics) {}
 		D3DSurface::~D3DSurface() {}
 
 		void D3DSurface::clear() const
 		{
-			auto cs = hold(graphics->colorState(), graphics->clearColor());
-			graphics->rectangle(graphics->clipRect());
+			auto cs = hold(_graphics->colorState(), _graphics->clearColor());
+			_graphics->rectangle(_graphics->clipRect());
 
-			//graphics->context->ClearRenderTargetView(renderTargetView, clearColor);
-		#ifdef USE_3D
-			graphics->context->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
-		#endif
+			_graphics->context->ClearDepthStencilView(_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+		}
+
+		void D3DSurface::present() const
+		{
+			
 		}
 
 		void D3DSurface::createDepthStencil()
@@ -901,8 +972,8 @@ namespace Rapture
 
 			D3D11_TEXTURE2D_DESC descDepth;
 			ZeroMemory(&descDepth, sizeof(descDepth));
-			descDepth.Width = viewport.width();
-			descDepth.Height = viewport.height();
+			descDepth.Width = width();
+			descDepth.Height = height();
 			descDepth.MipLevels = 1;
 			descDepth.ArraySize = 1;
 			descDepth.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -914,7 +985,7 @@ namespace Rapture
 			descDepth.MiscFlags = 0;
 
 			com_assert(
-				graphics->device->CreateTexture2D(&descDepth, NULL, &depthStencil)
+				_graphics->device->CreateTexture2D(&descDepth, NULL, &depthStencil)
 			);
 
 			D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
@@ -924,7 +995,7 @@ namespace Rapture
 			descDSV.Texture2D.MipSlice = 0;
 
 			com_assert(
-				graphics->device->CreateDepthStencilView(depthStencil, &descDSV, &depthStencilView), "Can't create depth stencil view"
+				_graphics->device->CreateDepthStencilView(depthStencil, &descDSV, &_depthStencilView), "Can't create depth stencil view"
 			);
 		}
 

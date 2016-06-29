@@ -1,31 +1,19 @@
 //---------------------------------------------------------------------------
 
-#ifndef TEXT_H
-#define TEXT_H
+#ifndef GENERIC_COLOR_H
+#define GENERIC_COLOR_H
 
 //---------------------------------------------------------------------------
 
-#include <core/String.h>
-
-#include <graphics/Graphics.h>
+//#include <_____>
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	class Text
+	class GenericColor
 	{
 	public:
-		Text(String contents) {}
-		virtual ~Text() {}
-
-		virtual void setContents(String contents)
-		{
-			this->contents = contents;
-		}
-
-	protected:
-		String contents;
 	};
 }
 

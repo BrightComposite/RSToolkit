@@ -1,10 +1,13 @@
 //---------------------------------------------------------------------------
 
-#include <core/String.h>
-#include <core/Subject.h>
-#include <core/container/Array.h>
-#include <core/container/Map.h>
 #include <meta/Inheritance.h>
+
+#include <core/String.h>
+#include <core/container/ArrayList.h>
+#include <core/container/Map.h>
+
+#include <message/Subject.h>
+
 #include <application/Application.h>
 #include <iostream>
 #include <chrono>
@@ -202,7 +205,7 @@ namespace Rapture
 
 		for(register int i = 0; i < 20; ++i)
 		{
-			Array<Object> oa;
+			ArrayList<Object> oa;
 
 			auto add = [&h, &oa]()
 			{

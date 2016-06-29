@@ -61,7 +61,7 @@ namespace Rapture
 
 	protected:
 		virtual void addInfo(String &, const Object &) const {}
-		friend void api(core) print(String &, const Object &);
+		friend api(core) void print(String &, const Object &);
 	};
 
 	template<class T>

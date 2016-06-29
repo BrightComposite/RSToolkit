@@ -187,8 +187,8 @@ namespace Rapture
 			Base::alloc(width * height * preferredBpp(format));
 		}
 
-		void api(graphics) convert(ImageFormat newFormat);
-		void api(graphics) convert(ImageData * out, ImageFormat newFormat) const;
+		api(graphics) void convert(ImageFormat newFormat);
+		api(graphics) void convert(ImageData * out, ImageFormat newFormat) const;
 
 		uint width = 0, height = 0;
 		ImageFormat format = ImageFormat::unknown;

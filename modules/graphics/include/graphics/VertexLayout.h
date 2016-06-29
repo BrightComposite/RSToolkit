@@ -27,7 +27,7 @@ namespace Rapture
 		enum Type : int
 		{
 			Position = 0,
-			Color    = 1,
+			GenericColor    = 1,
 			Normal   = 2,
 			Texcoord = 3
 		};
@@ -37,14 +37,14 @@ namespace Rapture
 		uint index;
 		uint units;
 
-		static VertexElement api(graphics) pos2;
-		static VertexElement api(graphics) pos3;
-		static VertexElement api(graphics) color3;
-		static VertexElement api(graphics) colorf;
-		static VertexElement api(graphics) secondaryColor3;
-		static VertexElement api(graphics) secondaryColor4;
-		static VertexElement api(graphics) tex;
-		static VertexElement api(graphics) normal;
+		static api(graphics) VertexElement pos2;
+		static api(graphics) VertexElement pos3;
+		static api(graphics) VertexElement color3;
+		static api(graphics) VertexElement Color;
+		static api(graphics) VertexElement secondaryColor3;
+		static api(graphics) VertexElement secondaryColor4;
+		static api(graphics) VertexElement tex;
+		static api(graphics) VertexElement normal;
 
 	protected:
 		VertexElement(const string & id, Type type, uint index, uint units) : Precached<string, VertexElement>(id),

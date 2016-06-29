@@ -29,7 +29,11 @@ namespace Rapture
 		Viewport(int width, int height) : _size(width, height), _ratio(float(height) / float(width)), _invratio(float(width) / float(height)) {}
 		Viewport(const IntSize & size) : _size(size), _ratio(float(size.y) / float(size.x)), _invratio(float(size.x) / float(size.y)) {}
 
-		inherit_ops((Viewport, IntSize), OPS_ALL)
+		Viewport & operator = (const IntSize & size)
+		{
+			set(size);
+			return *this;
+		}
 
 		operator const IntSize & () const
 		{
@@ -70,6 +74,12 @@ namespace Rapture
 		{
 			_size.x = x;
 			_size.y = y;
+			updateRatio();
+		}
+
+		void set(const IntSize & size)
+		{
+			_size = size;
 			updateRatio();
 		}
 

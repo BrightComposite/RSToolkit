@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
-#include <graphics/text/Font.h>
-#include <graphics/text/io/FontIO.h>
+#include <graphics/font/Font.h>
+#include <graphics/font/io/FontIO.h>
 
 #include <graphics/Graphics.h>
 

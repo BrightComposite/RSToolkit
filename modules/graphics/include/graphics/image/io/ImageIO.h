@@ -7,7 +7,7 @@
 
 #include <graphics/image/ImageData.h>
 #include <core/container/Map.h>
-#include <core/addition/HandleSingleton.h>
+#include <core/addition/Singleton.h>
 #include <core/String.h>
 #include <core/Exception.h>
 
@@ -50,6 +50,20 @@ namespace Rapture
 		virtual ~ImageConversionException() {}
 	};
 
+	class ImageReadException : public ImageConversionException
+	{
+	public:
+		ImageReadException(const string & type) : ImageConversionException("Can't read image data of type ", type) {}
+		virtual ~ImageReadException() {}
+	};
+
+	class ImageWriteException : public ImageConversionException
+	{
+	public:
+		ImageWriteException(const string & type) : ImageConversionException("Can't write image data of type ", type) {}
+		virtual ~ImageWriteException() {}
+	};
+
 	class ImageIO : public Singleton<ImageIO>
 	{
 	public:
@@ -58,7 +72,7 @@ namespace Rapture
 			auto & decoder = instance().decoders[type];
 
 			if(decoder == nullptr)
-				throw ImageConversionException("Can't read image data of type ", type);
+				throw ImageReadException(type);
 
 			decoder->decode(output, type, raw);
 		}
@@ -68,13 +82,13 @@ namespace Rapture
 			auto & encoder = instance().encoders[type];
 
 			if(encoder == nullptr)
-				throw ImageConversionException("Can't write image data of type ", type);
+				throw ImageWriteException(type);
 
 			encoder->encode(output, type, image);
 		}
 
-		static void api(graphics) load(ImageData * output, const path & filepath);
-		static void api(graphics) save(const path & filepath, const ImageData * image);
+		static api(graphics) void load(ImageData * output, const path & filepath);
+		static api(graphics) void save(const path & filepath, const ImageData * image);
 
 		static ImageDecoder * getDecoder(const string & type)
 		{
@@ -124,7 +138,7 @@ namespace Rapture
 		map<string, ImageEncoder *> encoders;
 	};
 
-	template struct api(graphics) Singleton<ImageIO>;
+	api_struct(graphics, Singleton<ImageIO>);
 }
 
 //---------------------------------------------------------------------------

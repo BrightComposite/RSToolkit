@@ -34,7 +34,7 @@ int wmain(int argc, wchar_t * argv[])
 	using namespace Rapture;
 
 #ifdef WIN32
-	ShowWindow(GetConsoleWindow(), SW_HIDE);
+	//ShowWindow(GetConsoleWindow(), SW_HIDE);
 #endif
 
 	Application::main(argc, argv);

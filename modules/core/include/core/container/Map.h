@@ -17,33 +17,35 @@ namespace Rapture
 {
 	using std::map;
 	using std::unordered_map;
+	using std::multimap;
+	using std::unordered_multimap;
 
-	template<class K, class V, class ... OwnerAttr>
-	class HashMap : public unordered_map<K, Handle<V, OwnerAttr...>>
+	template<class K, class V, class ... Owner>
+	class HashMap : public unordered_map<K, Handle<V, Owner...>>
 	{
 	public:
-		using unordered_map<K, Handle<V, OwnerAttr...>>::unordered_map;
+		using unordered_map<K, Handle<V, Owner...>>::unordered_map;
 	};
 
-	template<class K, class V, class Hasher, class ... OwnerAttr>
-	class CustomHashMap : public unordered_map<K, Handle<V, OwnerAttr...>, Hasher>
+	template<class K, class V, class Hasher, class ... Owner>
+	class CustomHashMap : public unordered_map<K, Handle<V, Owner...>, Hasher>
 	{
 	public:
-		using unordered_map<K, Handle<V, OwnerAttr...>, Hasher>::unordered_map;
+		using unordered_map<K, Handle<V, Owner...>, Hasher>::unordered_map;
 	};
 
-	template<class K, class V, class ... OwnerAttr>
-	class Map : public map<K, Handle<V, OwnerAttr...>>
+	template<class K, class V, class ... Owner>
+	class Map : public map<K, Handle<V, Owner...>>
 	{
 	public:
-		using map<K, Handle<V, OwnerAttr...>>::map;
+		using map<K, Handle<V, Owner...>>::map;
 	};
 
-	template<class K, class V, class Hasher, class ... OwnerAttr>
-	class CustomMap : public map<K, Handle<V, OwnerAttr...>, Hasher>
+	template<class K, class V, class Hasher, class ... Owner>
+	class CustomMap : public map<K, Handle<V, Owner...>, Hasher>
 	{
 	public:
-		using map<K, Handle<V, OwnerAttr...>, Hasher>::map;
+		using map<K, Handle<V, Owner...>, Hasher>::map;
 	};
 }
 

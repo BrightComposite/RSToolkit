@@ -188,7 +188,7 @@ namespace Rapture
 	struct is_handle;
 
 	template<class T, class H>
-	struct is_same_handle;
+	struct is_handle_of;
 
 	template<class T, class ... A>
 	struct is_handle_init;
@@ -343,11 +343,11 @@ namespace Rapture
 
 		template<class U = T, useif <can_construct<U>::value> endif>
 		Handle(Empty) : _shared(new SharedType()) {}
-
-		template<class U, class ... A, useif <based_on<U, T>::value && !is_const<U>::value> endif>
-		Handle(const Handle<U, A...> & h) : _shared(CastType::cast(h._shared)) { keep(); }
-		template<class U, class ... A, useif <based_on<U, T>::value && !is_const<U>::value> endif>
-		Handle(Handle<U, A...> && h) : _shared(CastType::cast(h._shared)) { h._shared = nullptr; }
+		
+		template<class U, class ... O, useif <based_on<U, T>::value, !is_const<U>::value> endif, skipif <same_types<Owner, Types<O...>>::value> endif>
+		Handle(const Handle<U, O...> & h) : _shared(CastType::cast(h._shared)) { keep(); }
+		template<class U, class ... O, useif <based_on<U, T>::value, !is_const<U>::value> endif, skipif <same_types<Owner, Types<O...>>::value> endif>
+		Handle(Handle<U, O...> && h) : _shared(CastType::cast(h._shared)) { h._shared = nullptr; }
 
 		template<class ... A, selectif(0) <can_construct<T, A...>::value, (sizeof...(A) > 0)> endif>
 		explicit Handle(A &&... args) : _shared(new SharedType(forward<A>(args)...)) {}
@@ -377,32 +377,8 @@ namespace Rapture
 			}
 		}
 
-		Handle & operator = (const Handle & h)
-		{
-			if(this == &h)
-				return *this;
-
-			release();
-			_shared = h._shared;
-			keep();
-
-			return *this;
-		}
-
-		Handle & operator = (Handle && h)
-		{
-			if(this == &h)
-				return *this;
-
-			release();
-			_shared = h._shared;
-			h._shared = nullptr;
-
-			return *this;
-		}
-
-		template<class U, class ... A, useif <not_same_types<tuple<T, Owner>, tuple<U, A...>>::value && based_on<U, T>::value && !is_const<U>::value> endif>
-		Handle & operator = (const Handle<U, A...> & h)
+		template<class U, class ... O, useif <based_on<U, T>::value, !is_const<U>::value> endif, skipif <same_types<Owner, Types<O...>>::value> endif>
+		Handle & operator = (const Handle<U, O...> & h)
 		{
 			if(void_ptr(this) == void_ptr(&h))
 				return *this;
@@ -414,8 +390,8 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class U, class ... A, useif <not_same_types<tuple<T, Owner>, tuple<U, A...>>::value && based_on<U, T>::value && !is_const<U>::value> endif>
-		Handle & operator = (Handle<U, A...> && h)
+		template<class U, class ... O, useif <based_on<U, T>::value, !is_const<U>::value> endif, skipif <same_types<Owner, Types<O...>>::value> endif>
+		Handle & operator = (Handle<U, O...> && h)
 		{
 			if(void_ptr(this) == void_ptr(&h))
 				return *this;
@@ -472,6 +448,12 @@ namespace Rapture
 
 		Handle(const Handle & h) : _shared(h._shared) { keep(); }
 		Handle(Handle && h) : _shared(h._shared) { h._shared = nullptr; }
+
+		template<class U, useif <based_on<U, T>::value, not_same_type<U, T>::value, !is_const<U>::value> endif>
+		Handle(const Handle<U, Owner> & h) : _shared(CastType::cast(h._shared)) { keep(); }
+		template<class U, useif <based_on<U, T>::value, not_same_type<U, T>::value, !is_const<U>::value> endif>
+		Handle(Handle<U, Owner> && h) : _shared(CastType::cast(h._shared)) { h._shared = nullptr; }
+
 		~Handle() { release(); }
 
 		bool isNull() const
@@ -479,8 +461,58 @@ namespace Rapture
 			return _shared == nullptr;
 		}
 
-		template<class U>
-		bool operator == (const Handle<U> & h) const
+		Handle & operator = (const Handle & h)
+		{
+			if(this == &h)
+				return *this;
+
+			release();
+			_shared = h._shared;
+			keep();
+
+			return *this;
+		}
+
+		Handle & operator = (Handle && h)
+		{
+			if(this == &h)
+				return *this;
+
+			release();
+			_shared = h._shared;
+			h._shared = nullptr;
+
+			return *this;
+		}
+
+		template<class U, useif <based_on<U, T>::value, not_same_type<U, T>::value, !is_const<U>::value> endif>
+		Handle & operator = (const Handle<U, Owner> & h)
+		{
+			if(void_ptr(this) == void_ptr(&h))
+				return *this;
+
+			release();
+			_shared = CastType::cast(h._shared);
+			keep();
+
+			return *this;
+		}
+
+		template<class U, useif <based_on<U, T>::value, not_same_type<U, T>::value, !is_const<U>::value> endif>
+		Handle & operator = (Handle<U, Owner> && h)
+		{
+			if(void_ptr(this) == void_ptr(&h))
+				return *this;
+
+			release();
+			_shared = CastType::cast(h._shared);
+			h._shared = nullptr;
+
+			return *this;
+		}
+
+		template<class U, class ... A>
+		bool operator == (const Handle<U, A...> & h) const
 		{
 			return _shared == h._shared;
 		}
@@ -913,7 +945,7 @@ namespace Rapture
 	struct is_uhandle;
 
 	template<class T, class H>
-	struct is_same_uhandle;
+	struct is_uhandle_of;
 
 	template<class T, class ... A>
 	struct is_uhandle_init;
@@ -1262,13 +1294,13 @@ namespace Rapture
 		struct is_same_handle1 : false_type {};
 
 		template<class T, class ... A>
-		struct is_same_handle1<T, Handle<T, A...>> : true_type {};
+		struct is_same_handle1<Handle<T, A...>, T> : true_type {};
 
 		template<class T, class U>
 		struct is_same_handle0 : false_type {};
 
 		template<class T, class U, class ... A>
-		struct is_same_handle0<T, Handle<U, A...>> : is_same_handle1<T, Handle<decay_t<U>, A...>> {};
+		struct is_same_handle0<Handle<U, A...>, T> : is_same_handle1<Handle<decay_t<U>, A...>, T> {};
 
 		template<class T>
 		struct is_uhandle0 : false_type {};
@@ -1280,26 +1312,26 @@ namespace Rapture
 		struct is_same_uhandle1 : false_type {};
 
 		template<class T, class ... A>
-		struct is_same_uhandle1<T, Handle<T, A...>> : true_type {};
+		struct is_same_uhandle1<Handle<T, A...>, T> : true_type {};
 
 		template<class T, class U>
 		struct is_same_uhandle0 : false_type {};
 
 		template<class T, class U, class ... A>
-		struct is_same_uhandle0<T, Handle<U, A...>> : is_same_uhandle1<T, Handle<decay_t<U>, A...>> {};
+		struct is_same_uhandle0<Handle<U, A...>, T> : is_same_uhandle1<Handle<decay_t<U>, A...>, T> {};
 	}
 
 	template<class T>
 	struct is_handle : Internals::is_handle0<decay_t<T>> {};
 
-	template<class T, class H>
-	struct is_same_handle : Internals::is_same_handle0<T, decay_t<H>> {};
+	template<class H, class T>
+	struct is_handle_of : Internals::is_same_handle0<decay_t<H>, T> {};
 
 	template<class T>
 	struct is_uhandle : Internals::is_uhandle0<decay_t<T>> {};
 
-	template<class T, class H>
-	struct is_same_uhandle : Internals::is_same_uhandle0<T, decay_t<H>> {};
+	template<class H, class T>
+	struct is_uhandle_of : Internals::is_same_uhandle0<decay_t<H>, T> {};
 
 	template<class T, class ... A>
 	struct is_handle_init
@@ -1309,7 +1341,7 @@ namespace Rapture
 		static const bool value =
 			sizeof...(A) == 1 && (
 			(based_on<FirstType, typename SharedCast<T>::SharedType>::value && std::is_pointer<FirstType>::value) ||
-			is_same_handle<T, FirstType>::value ||
+			is_handle_of<FirstType, T>::value ||
 			same_type<FirstType, nullptr_t>::value ||
 			same_type<FirstType, Empty>::value
 			);
@@ -1323,7 +1355,7 @@ namespace Rapture
 		static const bool value =
 			sizeof...(A) == 1 && (
 			(based_on<FirstType, T>::value && std::is_pointer<FirstType>::value) ||
-			is_same_uhandle<T, FirstType>::value ||
+			is_uhandle_of<FirstType, T>::value ||
 			same_type<FirstType, nullptr_t>::value ||
 			same_type<FirstType, Empty>::value
 			);

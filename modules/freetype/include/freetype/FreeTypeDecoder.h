@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <graphics/text/io/FontIO.h>
+#include <graphics/font/io/FontIO.h>
 #include <core/container/Map.h>
 #include <core/String.h>
 
@@ -19,7 +19,7 @@ namespace Rapture
 		api(freetype) FreeTypeDecoder();
 		virtual api(freetype) ~FreeTypeDecoder();
 
-		virtual void api(freetype) decode(Handle<Font> & output, const string & type, const Handle<ByteData> & raw) override;
+		virtual api(freetype) void decode(Handle<Font> & output, const string & type, const Handle<ByteData> & raw) override;
 
 		static void initialize()
 		{

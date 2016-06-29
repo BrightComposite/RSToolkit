@@ -11,7 +11,7 @@
 
 namespace Rapture
 {
-	int api(platform) processWindowMessage();
+	api(platform) int processWindowMessage();
 }
 
 //---------------------------------------------------------------------------

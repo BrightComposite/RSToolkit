@@ -6,7 +6,7 @@
 //---------------------------------------------------------------------------
 
 #include <core/container/Stack.h>
-#include <core/container/Array.h>
+#include <core/container/ArrayList.h>
 
 //---------------------------------------------------------------------------
 

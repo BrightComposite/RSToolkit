@@ -6,6 +6,7 @@
 //---------------------------------------------------------------------------
 
 #include "Widget.h"
+#include "Cursor.h"
 
 //---------------------------------------------------------------------------
 
@@ -65,20 +66,27 @@ namespace Rapture
 			return _surface;
 		}
 
+		api(ui) Cursor * cursor() const
+		{
+			return _cursor;
+		}
+
+		api(ui) void setCursor(Cursor * cursor);
+
 		/**
 		 *	Marks the whole window for update.
 		 */
-		void api(ui) invalidate();
+		api(ui) void invalidate();
 
 		/**
 		 *	Marks a region of window for update.
 		 */
-		void api(ui) invalidate(const Widget * w);
+		api(ui) void invalidate(const Widget * w);
 
 		/**
 		 *	Redraws parts of the window which are marked for update.
 		 */
-		void api(ui) validate();
+		api(ui) void validate();
 
 		void update()
 		{
@@ -86,16 +94,20 @@ namespace Rapture
 			validate();
 		}
 
-		virtual void api(ui) registerHotkey(int id, int key, int modifiers = 0) {}
-		virtual void api(ui) unregisterHotkey(int id) {}
+		api(ui) void getCursorPos(IntPoint & pt) const;
+		api(ui) void setCursorPos(const IntPoint & pt);
+		api(ui) void clipCursor(const IntRect & region);
 
-		virtual void api(ui) read(Handle<KeyDownMessage> & msg);
-		virtual void api(ui) read(Handle<CharMessage> & msg);
-		virtual void api(ui) read(Handle<KeyUpMessage> & msg);
-		virtual void api(ui) read(Handle<MouseDownMessage> & msg);
-		virtual void api(ui) read(Handle<MouseUpdateMessage> & msg);
-		virtual void api(ui) read(Handle<MouseUpMessage> & msg);
-		virtual void api(ui) read(Handle<UIResizeMessage> & msg);
+		virtual api(ui) void registerHotkey(int id, int key, int modifiers = 0) {}
+		virtual api(ui) void unregisterHotkey(int id) {}
+
+		virtual api(ui) void read(Handle<KeyDownMessage> & msg);
+		virtual api(ui) void read(Handle<CharMessage> & msg);
+		virtual api(ui) void read(Handle<KeyUpMessage> & msg);
+		virtual api(ui) void read(Handle<MouseDownMessage> & msg);
+		virtual api(ui) void read(Handle<MouseUpdateMessage> & msg);
+		virtual api(ui) void read(Handle<MouseUpMessage> & msg);
+		virtual api(ui) void read(Handle<UIResizeMessage> & msg);
 
 	protected:
 		bind_messages(UISpace,
@@ -126,10 +138,12 @@ namespace Rapture
 		set<pair<MouseButton, Widget *>> _pressedList;
 		MouseState _mouseState;
 
-		UniqueHandle<Widget> _root;
+		UniqueHandle<Widget> _root = nullptr;
 		Handle<Surface> _surface = nullptr;
-		Graphics * _graphics;
+		Graphics * _graphics = nullptr;
 		array_list<IntRect> _invalids;
+
+		Cursor * _cursor = nullptr;
 
 		bool _fullscreen = false;
 		bool _isClosed = false;
@@ -142,7 +156,6 @@ namespace Rapture
 		MouseDownMessage,
 		MouseUpdateMessage,
 		MouseUpMessage,
-		HotkeyMessage,
 		UIMessages
 	)
 

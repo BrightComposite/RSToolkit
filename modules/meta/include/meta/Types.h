@@ -142,6 +142,9 @@ namespace Rapture
 	using ssize_t = std::make_signed_t<size_t>;
 #endif // ssize_t
 
+	template<class T, size_t N>
+	using array_t = T[N];
+
 //---------------------------------------------------------------------------
 
 	typedef array<byte, 2>	byte2;

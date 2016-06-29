@@ -5,9 +5,10 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/Subject.h>
-#include <core/container/Array.h>
-#include <core/container/TypedSet.h>
+#include <core/container/ArrayList.h>
+#include <core/Component.h>
+
+#include <message/Subject.h>
 
 #include <graphics/Graphics.h>
 #include "WidgetMessages.h"
@@ -180,38 +181,38 @@ namespace Rapture
 		inline void setOffsets(const IntRect & offsets);
 		inline void setAnchors(const FloatRect & anchors);
 
-		static void api(ui) calculateRegionRect(IntRect & out, const IntRect & offsets, const FloatRect & anchors, const BasicWidget & parent);
-		static void api(ui) calculateOffsets(IntRect & out, const BasicWidget & region, const BasicWidget & parent);
+		static api(ui) void calculateRegionRect(IntRect & out, const IntRect & offsets, const FloatRect & anchors, const BasicWidget & parent);
+		static api(ui) void calculateOffsets(IntRect & out, const BasicWidget & region, const BasicWidget & parent);
 
-		virtual void api(ui) read(Handle<KeyDownMessage> & msg) {}
-		virtual void api(ui) read(Handle<CharMessage> & msg) {}
-		virtual void api(ui) read(Handle<KeyUpMessage> & msg) {}
-		virtual void api(ui) read(Handle<MouseUpdateMessage> & msg) {}
-		virtual void api(ui) read(Handle<MouseDownMessage> & msg) {}
-		virtual void api(ui) read(Handle<MouseMoveMessage> & msg) {}
-		virtual void api(ui) read(Handle<MouseUpMessage> & msg) {}
-		virtual void api(ui) read(Handle<MouseClickMessage> & msg) {}
-		virtual void api(ui) read(Handle<MouseDblClickMessage> & msg) {}
-		virtual void api(ui) read(Handle<MouseWheelMessage> & msg) {}
-		virtual void api(ui) read(Handle<MouseEnterMessage> & msg) {}
-		virtual void api(ui) read(Handle<MouseLeaveMessage> & msg) {}
-		virtual void api(ui) read(Handle<WidgetPressMessage> & msg) {}
-		virtual void api(ui) read(Handle<WidgetStopPressMessage> & msg) {}
-		virtual void api(ui) read(Handle<WidgetReleaseMessage> & msg) {}
-		virtual void api(ui) read(Handle<WidgetChangedStateMessage> & msg) {}
-		virtual void api(ui) read(Handle<ChangeFocusOrderMessage> & msg) {}
-		virtual void api(ui) read(Handle<AfterChangeFocusOrderMessage> & msg) {}
-		virtual void api(ui) read(Handle<ChangeDisplayOrderMessage> & msg) {}
-		virtual void api(ui) read(Handle<AfterChangeDisplayOrderMessage> & msg) {}
-		virtual void api(ui) read(Handle<WidgetDrawMessage> & msg) {}
-		virtual void api(ui) read(Handle<WidgetMoveMessage> & msg) {}
-		virtual void api(ui) read(Handle<AfterWidgetMoveMessage> & msg) {}
-		virtual void api(ui) read(Handle<WidgetResizeMessage> & msg) {}
+		virtual api(ui) void read(Handle<KeyDownMessage> & msg) {}
+		virtual api(ui) void read(Handle<CharMessage> & msg) {}
+		virtual api(ui) void read(Handle<KeyUpMessage> & msg) {}
+		virtual api(ui) void read(Handle<MouseUpdateMessage> & msg) {}
+		virtual api(ui) void read(Handle<MouseDownMessage> & msg) {}
+		virtual api(ui) void read(Handle<MouseMoveMessage> & msg) {}
+		virtual api(ui) void read(Handle<MouseUpMessage> & msg) {}
+		virtual api(ui) void read(Handle<MouseClickMessage> & msg) {}
+		virtual api(ui) void read(Handle<MouseDblClickMessage> & msg) {}
+		virtual api(ui) void read(Handle<MouseWheelMessage> & msg) {}
+		virtual api(ui) void read(Handle<MouseEnterMessage> & msg) {}
+		virtual api(ui) void read(Handle<MouseLeaveMessage> & msg) {}
+		virtual api(ui) void read(Handle<WidgetPressMessage> & msg) {}
+		virtual api(ui) void read(Handle<WidgetStopPressMessage> & msg) {}
+		virtual api(ui) void read(Handle<WidgetReleaseMessage> & msg) {}
+		virtual api(ui) void read(Handle<WidgetChangedStateMessage> & msg) {}
+		virtual api(ui) void read(Handle<ChangeFocusOrderMessage> & msg) {}
+		virtual api(ui) void read(Handle<AfterChangeFocusOrderMessage> & msg) {}
+		virtual api(ui) void read(Handle<ChangeDisplayOrderMessage> & msg) {}
+		virtual api(ui) void read(Handle<AfterChangeDisplayOrderMessage> & msg) {}
+		virtual api(ui) void read(Handle<WidgetDrawMessage> & msg) {}
+		virtual api(ui) void read(Handle<WidgetMoveMessage> & msg) {}
+		virtual api(ui) void read(Handle<AfterWidgetMoveMessage> & msg) {}
+		virtual api(ui) void read(Handle<WidgetResizeMessage> & msg) {}
 
 	protected:
-		void api(ui) changeSize(int width, int height, ModelMask mask);
-		void api(ui) changePlacement(int left, int top, int right, int bottom, ModelMask mask);
-		void api(ui) updateAnchors();
+		api(ui) void changeSize(int width, int height, ModelMask mask);
+		api(ui) void changePlacement(int left, int top, int right, int bottom, ModelMask mask);
+		api(ui) void updateAnchors();
 
 		Widget * _parent;
 
@@ -267,80 +268,67 @@ namespace Rapture
 		MouseButton _buttons = MouseButton::None;
 	};
 
+	class WidgetComponent : public Component
+	{
+		morph_base(WidgetComponent);
+
+	public:
+		WidgetComponent(Widget * widget) : _widget(widget) {}
+		virtual ~WidgetComponent() {}
+
+	protected:
+		Widget * _widget;
+	};
+
+	create_morph_pool(ui, WidgetComponent);
+
 	class Layer : public Shared
 	{
 		friend class Widget;
 
 	public:
-		api(ui) Layer(Widget * widget, int order = 0);
-		virtual api(ui) ~Layer();
-
-		virtual void draw(const IntRect & clipRegion) const = 0;
+		Layer(Widget * widget, int order = 0) : _order(order) {}
+		virtual ~Layer() {}
 
 		int order() const
 		{
 			return _order;
 		}
 
-		void api(ui) setOrder(int order);
-
-		bool operator > (const Layer & layer) const
-		{
-			return _order > layer._order;
-		}
-
-		bool operator < (const Layer & layer) const
-		{
-			return _order < layer._order;
-		}
-
 	protected:
-		int _order = 0;
-		Widget * _widget;
-	};
+		virtual void draw() const = 0;
 
-	typebase_api(ui, Layer);
+		int _order;
+
+		using Sorter = MemberSort<Layer, int, &Layer::_order>;
+	};
 
 	typedef std::function<void(const Widget *, const IntRect &)> WidgetDrawer;
 
-	template<int ID>
 	class CustomLayer : public Layer
 	{
 	public:
-		CustomLayer(Widget * widget, int order = 0) : Layer(widget, order), drawer(nullptr) {}
-		CustomLayer(Widget * widget, const WidgetDrawer & drawer, int order = 0) : Layer(widget, order), drawer(drawer) {}
-
-		void set(const WidgetDrawer & drawer)
-		{
-			this->drawer = drawer;
-		}
-
-		virtual void draw(const IntRect & clipRegion) const override
-		{
-			if(drawer)
-				drawer(_widget, clipRegion);
-		}
+		CustomLayer(Widget * widget, const WidgetDrawer & drawer, int order = 0) : Layer(widget, order), _widget(widget), drawer(drawer) {}
+		virtual ~CustomLayer() {}
 
 	protected:
+		virtual api(ui) void draw() const override;
+
+		const Widget * _widget;
 		WidgetDrawer drawer;
 	};
 
-	using DefaultLayer = CustomLayer<0>;
+	template<class T>
+	using is_widget = based_on<T, Widget>;
 
-	typeid_api(ui, CustomLayer<0>, Layer);
-	typeid_api(ui, CustomLayer<1>, Layer);
-	typeid_api(ui, CustomLayer<2>, Layer);
-	typeid_api(ui, CustomLayer<3>, Layer);
-	typeid_api(ui, CustomLayer<4>, Layer);
-	typeid_api(ui, CustomLayer<5>, Layer);
-	typeid_api(ui, CustomLayer<6>, Layer);
-	typeid_api(ui, CustomLayer<7>, Layer);
-	typeid_api(ui, CustomLayer<8>, Layer);
-	typeid_api(ui, CustomLayer<9>, Layer);
+	template<class T>
+	using is_layer = based_on<T, Layer>;
 
-#define is_widget(T) based_on<T, Widget>::value
-#define is_layer(T)  based_on<T, Layer>::value
-#define is_drawer(T) (std::is_function<T>::value || Rapture::is_callable<T, const Widget *, const IntRect &>::value)
+	template<class T>
+	using is_widget_component = based_on<T, WidgetComponent>;
+
+	template<class T>
+	using is_widget_drawer = bool_type<std::is_function<T>::value || Rapture::is_callable<T, const Widget *, const IntRect &>::value>;
 
 	class Widget : public BasicWidget
 	{
@@ -361,30 +349,35 @@ namespace Rapture
 		virtual inline Handle<Widget> clone() const;
 		virtual inline Handle<Widget> clone(Widget * parent) const;
 
-		Handle<Widget> api(ui) attach(const Handle<Widget> & child);
-		Handle<Widget> api(ui) detach();
+		api(ui) Handle<Widget> attach(const Handle<Widget> & child);
+		api(ui) void detach(Widget * child);
 
-		Widget * findWidget(const IntPoint & pt);
+		api(ui) Widget * findAt(const IntPoint & pt);
 
-		template<class WidgetClass, typename ... A, selectif(0) <is_widget(WidgetClass), can_construct<WidgetClass, Widget *, A...>::value> endif>
-		inline Handle<WidgetClass> append(A && ... args);
+		template<class WidgetClass, typename ... A, selectif(0) <is_widget<WidgetClass>::value, can_construct<WidgetClass, Widget *, A...>::value> endif>
+		inline Handle<WidgetClass> append(A && ...);
+		template<class LayerClass, typename ... A, selectif(1) <is_layer<LayerClass>::value, can_construct<LayerClass, Widget *, A...>::value> endif>
+		inline Handle<LayerClass> append(A && ...);
+		template<class Component, typename ... A, selectif(2) <is_widget_component<Component>::value, can_construct<Component,  Widget *, A...>::value> endif>
+		inline Handle<Component> append(A && ...);
 
-		template<class LayerClass,  typename ... A, selectif(1) <is_layer(LayerClass), can_construct<LayerClass,  Widget *, A...>::value> endif>
-		inline Handle<LayerClass> append(A && ... args);
+		template<class Component, useif <is_widget_component<Component>::value> endif>
+		inline Handle<Component> & init(Handle<Component> & component);
+		template<class Component, useif <is_widget_component<Component>::value> endif>
+		inline Handle<Component> require();
+		template<class Component, class LinkComponent, useif <is_widget_component<Component>::value, is_widget_component<LinkComponent>::value> endif>
+		inline Handle<Component> link(LinkComponent *);
+		template<class Component, useif <is_widget_component<Component>::value> endif>
+		inline Handle<Component> seek();
+		template<class Component, useif <is_widget_component<Component>::value> endif>
+		inline void detach();
 
-		template<class LayerClass, useif <is_layer(LayerClass)> endif>
-		inline Handle<LayerClass> layer();
+		inline void setLayerOrder(Layer * layer, int order);
+		template<class Drawer, useif <is_widget_drawer<Drawer>::value> endif>
+		inline Handle<CustomLayer> attach(const Drawer & drawer, int order = 0);
+		inline void detach(Layer * layer);
 
-		template<class Drawer, useif <is_drawer(Drawer)> endif>
-		inline Handle<DefaultLayer> attach(const Drawer & drawer, int order = 0);
-
-		template<int Id, class Drawer, useif <is_drawer(Drawer)> endif>
-		inline Handle<CustomLayer<Id>> attach(const Drawer & drawer, int order = 0);
-
-		inline Widget & operator += (const Handle<Widget> & child);
-		inline Widget & operator -= (Handle<Widget> & child);
-
-		template<class Drawer, useif <is_drawer(Drawer)> endif>
+		template<class Drawer, useif <is_widget_drawer<Drawer>::value> endif>
 		inline Widget & operator << (const Drawer & drawer);
 
 		virtual bool isDisplayable() const
@@ -402,12 +395,12 @@ namespace Rapture
 			return check_flag(WidgetFlag::Focusable, _flags);
 		}
 
-		bool api(ui) isPointed() const;
-		bool api(ui) isFocused() const;
-		bool api(ui) isPressed() const;
-		bool api(ui) isPressed(MouseButton button) const;
+		api(ui) bool isPointed() const;
+		api(ui) bool isFocused() const;
+		api(ui) bool isPressed() const;
+		api(ui) bool isPressed(MouseButton button) const;
 
-		MouseButton api(ui) pressedButtons() const;
+		api(ui) MouseButton pressedButtons() const;
 
 		int displayOrder() const
 		{
@@ -419,8 +412,8 @@ namespace Rapture
 			return _focusOrder;
 		}
 
-		UISpace api(ui) * space() const;
-		Graphics api(ui) * graphics() const;
+		api(ui) UISpace * space() const;
+		api(ui) Graphics * graphics() const;
 
 		void show()
 		{
@@ -432,39 +425,37 @@ namespace Rapture
 			setVisibility(false);
 		}
 
-		void api(ui) focus();
+		api(ui) void focus();
 
-		void api(ui) setVisibility(bool visible);
-		void api(ui) setFocusability(bool focusable);
-		void api(ui) setDisplayOrder(int order);
-		void api(ui) setFocusOrder(int order);
+		api(ui) void setVisibility(bool visible);
+		api(ui) void setFocusability(bool focusable);
+		api(ui) void setDisplayOrder(int order);
+		api(ui) void setFocusOrder(int order);
 
-		void api(ui) bringToFront();
-		void api(ui) sendToBack();
+		api(ui) void bringToFront();
+		api(ui) void sendToBack();
 
 		using BasicWidget::read;
 
-		virtual void api(ui) read(Handle<KeyDownMessage> & msg) override;
-		virtual void api(ui) read(Handle<CharMessage> & msg) override;
-		virtual void api(ui) read(Handle<KeyUpMessage> & msg) override;
-		virtual void api(ui) read(Handle<WidgetResizeMessage> & msg) override;
+		virtual api(ui) void read(Handle<KeyDownMessage> & msg) override;
+		virtual api(ui) void read(Handle<CharMessage> & msg) override;
+		virtual api(ui) void read(Handle<KeyUpMessage> & msg) override;
+		virtual api(ui) void read(Handle<WidgetResizeMessage> & msg) override;
 
 	protected:
 		api(ui) Widget(UISpace * space, Widget * parent, const IntRect & region);
 
-		void api(ui) draw(Graphics * graphics, const IntRect & clipRegion);
+		api(ui) void draw(Graphics * graphics, const IntRect & clipRegion);
 
-		void api(ui) forgetParent();
-
-		void api(ui) removeFocus();
-		void api(ui) receiveFocus();
+		api(ui) void removeFocus();
+		api(ui) void receiveFocus();
 
 		UISpace * _space;
 
-		TypedSet<Layer> _layers;
 		SubjectSet<BasicWidget> _children;
+		ComponentSet<WidgetComponent> _components;
 
-		array_list<Layer *> _layerList;
+		ArrayList<Layer> _layers;
 		array_list<Widget *> _displayList;
 
 		int _flags = 0;
@@ -629,48 +620,83 @@ namespace Rapture
 		return Handle<Widget>(*this, parent);
 	}
 
-	template<class WidgetClass, typename ... A, selectif_t<0>>
+	template<class WidgetClass, typename ... A, selectif_t<0>> // append widget
 	inline Handle<WidgetClass> Widget::append(A && ... args)
 	{
 		return Handle<WidgetClass>(this, forward<A>(args)...);
 	}
 
 	template<class LayerClass, typename ... A, selectif_t<1>>
-	inline Handle<LayerClass> Widget::append(A && ... args)
+	inline Handle<LayerClass> Widget::append(A && ... args) // append layer
 	{
-		return _layers.construct<LayerClass>(this, forward<A>(args)...);
+		Handle<LayerClass> layer(this, forward<A>(args)...);
+		_layers.insert(std::upper_bound(_layers.begin(), _layers.end(), layer, Layer::Sorter()), layer); // sorted insert
+
+		return layer;
+	}
+
+	template<class Component, typename ... A, selectif_t<2>> // append component
+	inline Handle<Component> Widget::append(A && ... args)
+	{
+		return _components.construct<Component>(this, forward<A>(args)...);
+	}
+
+	inline void Widget::setLayerOrder(Layer * layer, int order)
+	{
+		auto i = std::find(_layers.begin(), _layers.end(), layer);
+
+		if(i == _layers.end())
+			return;
+
+		int old = layer->_order;
+		layer->_order = order;
+
+		// sorted move
+		if(order < old)
+			std::rotate(std::upper_bound(_layers.begin(), i, *i, Layer::Sorter()), i, std::next(i));
+		else
+			std::rotate(i, i + 1, std::lower_bound(std::next(i), _layers.end(), *i, Layer::Sorter()));
+	}
+
+	inline void Widget::detach(Layer * layer)
+	{
+		erase(_layers, layer);
 	}
 
 	template<class Drawer, useif_t>
-	inline Handle<DefaultLayer> Widget::attach(const Drawer & drawer, int order)
+	inline Handle<CustomLayer> Widget::attach(const Drawer & drawer, int order)
 	{
-		return append<DefaultLayer>(drawer, order);
+		return append<CustomLayer>(drawer, order);
 	}
 
-	template<int Id, class Drawer, useif_t>
-	inline Handle<CustomLayer<Id>> Widget::attach(const Drawer & drawer, int order)
+	template<class Component, useif_t>
+	inline Handle<Component> & Widget::init(Handle<Component> & component)
 	{
-		return append<CustomLayer<Id>>(drawer, order);
+		return component.init(this);
 	}
 
-	template<class LayerClass, useif_t>
-	inline Handle<LayerClass> Widget::layer()
+	template<class Component, useif_t>
+	inline Handle<Component> Widget::require()
 	{
-		return _layers.require<LayerClass>(this);
+		return _components.require<Component>(this);
 	}
 
-	inline Widget & Widget::operator += (const Handle<Widget> & child)
+	template<class Component, class LinkComponent, useif_t>
+	inline Handle<Component> Widget::link(LinkComponent * link)
 	{
-		attach(child);
-		return *this;
+		return _components.link<Component>(link, this);
 	}
 
-	inline Widget & Widget::operator -= (Handle<Widget> & child)
+	template<class Component, useif_t>
+	inline Handle<Component> Widget::seek()
 	{
-		if(child->_parent == this)
-			child->detach();
+		return _components.seek<Component>();
+	}
 
-		return *this;
+	template<class Component, useif_t>
+	inline void Widget::detach()
+	{
+		_components.remove<Component>();
 	}
 
 	template<class Drawer, useif_t>

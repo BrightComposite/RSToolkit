@@ -203,6 +203,7 @@ namespace Rapture
 		{
 		public:
 			SceneLayer(Widget * widget, Scene * scene) : Layer(widget, INT_MAX), _scene(scene) {}
+			virtual ~SceneLayer() {}
 
 			virtual void draw(const IntRect & clipRegion) const override
 			{
@@ -220,32 +221,32 @@ namespace Rapture
 		api(scene) Scene(Widget * widget, const string & name = "unknown scene");
 		virtual api(scene) ~Scene();
 
-		Graphics3D api(scene) & graphics() const;
+		Graphics3api(scene) D & graphics() const;
 		Widget     api(scene) & widget()   const;
 		UISpace    api(scene) & space()    const;
 		Camera     api(scene) * camera()   const;
 		Viewport   api(scene)   viewport() const;
 
-		void api(scene) setCamera(Camera * camera);
+		api(scene) void setCamera(Camera * camera);
 
-		void api(scene) invalidate() const;
-		void api(scene) render() const;
+		api(scene) void invalidate() const;
+		api(scene) void render() const;
 
-		void api(scene) attach(Handle<SceneObject> obj);
-		void api(scene) detach(SceneObject * obj);
+		api(scene) void attach(Handle<SceneObject> obj);
+		api(scene) void detach(SceneObject * obj);
 
-		void api(scene) setTickLength(milliseconds length);
-		void api(scene) update();
+		api(scene) void setTickLength(milliseconds length);
+		api(scene) void update();
 
 	protected:
 		api(scene) Scene(const string & name);
 
-		void api(scene) draw(Graphics3D & graphics, const IntRect & viewport) const;
-		void api(scene) onWidgetResize(Handle<WidgetResizeMessage> & msg, Widget & w);
+		api(scene) void draw(Graphics3D & graphics, const IntRect & viewport) const;
+		api(scene) void onWidgetResize(Handle<WidgetResizeMessage> & msg, Widget & w);
 
 		Camera * _camera = nullptr;
 		Widget * _widget = nullptr;
-		Array<SceneObject> _objects;
+		ArrayList<SceneObject> _objects;
 		array_list<Drawable *> _drawables;
 
 		milliseconds _tickLength = 1ms;

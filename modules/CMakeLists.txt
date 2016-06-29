@@ -24,6 +24,7 @@ set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "")
 
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
     add_compile_options(/arch:AVX2)
+	add_definitions(-D_UNICODE -DUNICODE)
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
     add_compile_options(-std=c++14 -pthread -mavx2 -fabi-version=10)
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)

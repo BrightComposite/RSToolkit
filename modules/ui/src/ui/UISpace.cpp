@@ -1,8 +1,8 @@
 //---------------------------------------------------------------------------
 
 #include <ui/UISpace.h>
+#include <windows/PointAdapter.h>
 #include <windows/RectAdapter.h>
-#include <windows.h>
 
 #include <application/Application.h>
 
@@ -90,15 +90,18 @@ namespace Rapture
 	{
 		setclass(UISpace);
 
-		_surface = _graphics->createSurface(this);
+		_surface = graphics->createSurface(this);
 		_graphics->bind(_surface);
 
 		_root.init(this, region());
 		_focused = _focusList.end();
+
+		_cursor = Cursor::default();
 	}
 
 	UISpace::~UISpace()
 	{
+		_focused = _focusList.end();
 		send<UIDestroyMessage>(this);
 		_root = nullptr;
 	}
@@ -156,6 +159,20 @@ namespace Rapture
 
 		_invalids.clear();
 		_graphics->present();
+	}
+
+	void UISpace::setCursor(Cursor * cursor)
+	{
+		if(_cursor == cursor)
+			return;
+
+		if(_cursor != nullptr)
+			_cursor->unbind(this);
+
+		_cursor = cursor;
+
+		if(_cursor != nullptr)
+			_cursor->bind(this);
 	}
 
 	Widget * UISpace::focused() const
@@ -218,6 +235,27 @@ namespace Rapture
 		(*_focused)->receiveFocus();
 
 		return *_focused;
+	}
+
+	void UISpace::getCursorPos(IntPoint & pt) const
+	{
+		PointAdapter a;
+		GetCursorPos(&a);
+		ScreenToClient(_handle, &a);
+
+		a.assignTo(pt);
+	}
+
+	void UISpace::setCursorPos(const IntPoint & pt)
+	{
+		PointAdapter a(pt);
+		ClientToScreen(_handle, &a);
+		SetCursorPos(a.x(), a.y());
+	}
+
+	void UISpace::clipCursor(const IntRect & region)
+	{
+		ClipCursor(&RectAdapter(region));
 	}
 
 	void UISpace::read(Handle<KeyDownMessage> & msg)
@@ -287,7 +325,7 @@ namespace Rapture
 
 		unpress(MouseButton(~buttons), msg->x, msg->y, 0);
 
-		Widget * w = _root->findWidget({msg->x, msg->y});
+		Widget * w = _root->findAt({msg->x, msg->y});
 
 		if(w != _pointed)
 		{
@@ -374,7 +412,7 @@ namespace Rapture
 
 			if(w == _pointed)
 			{
-				send<WidgetStopPressMessage>(*w, i->first);
+				send<WidgetReleaseMessage>(*w, i->first);
 				send<WidgetChangedStateMessage>(*w, WidgetState::Pressed, false);
 			}
 

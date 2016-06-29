@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------
 
-#include <graphics/text/io/FontIO.h>
+#include <graphics/font/io/FontIO.h>
 
 #include <iostream>
 

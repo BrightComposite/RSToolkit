@@ -22,7 +22,6 @@ namespace Rapture
 	{
 		deny_copy(Graphics3D);
 
-		friend class Uniform;
 		friend class Mesh;
 		friend class IndexedMesh;
 
@@ -60,32 +59,30 @@ namespace Rapture
 		using Graphics::bind;
 		using Graphics::draw;
 
-		void api(graphics) bind(const Handle<Texture> & texture, uint index);
-		void api(graphics) bind(const VertexShader * shader);
-		void api(graphics) bind(const PixelShader * shader);
-		void api(graphics) bind(const VertexBuffer * buffer);
-		void api(graphics) bind(const IndexBuffer * buffer);
+		api(graphics) void bind(const Handle<Texture> & texture, uint index);
+		api(graphics) void bind(const VertexShader * shader);
+		api(graphics) void bind(const PixelShader * shader);
+		api(graphics) void bind(const VertexBuffer * buffer);
+		api(graphics) void bind(const IndexBuffer * buffer);
 
-		virtual void api(graphics) rectangle(const IntRect & rect) override final;
-		virtual void api(graphics) ellipse(const IntRect & rect) override final;
-		virtual void api(graphics) rectangle(const SqRect & rect) override final;
-		virtual void api(graphics) ellipse(const SqRect & rect) override final;
+		virtual api(graphics) void rectangle(const IntRect & rect) override final;
+		virtual api(graphics) void ellipse(const IntRect & rect) override final;
+		virtual api(graphics) void rectangle(const SqRect & rect) override final;
+		virtual api(graphics) void ellipse(const SqRect & rect) override final;
 
-		virtual void api(graphics) draw(const Figure * figure, const IntRect & bounds) override final;
-		virtual void api(graphics) draw(const Figure * figure, const FloatTransform & transform) override final;
-		virtual void api(graphics) draw(const Image * image, int x, int y) override final;
-		virtual void api(graphics) draw(const Image * image, int x, int y, int width, int height) override final;
-		virtual void api(graphics) draw(const Image * image, const IntRect & rect) override final;
-		virtual void api(graphics) draw(const Image * image, const SqRect & rect) override final;
-		virtual void api(graphics) draw(const Symbol * symbol, int x, int y) override final;
+		virtual api(graphics) void draw(const Figure * figure, const IntRect & bounds) override final;
+		virtual api(graphics) void draw(const Figure * figure, const FloatTransform & transform) override final;
+		virtual api(graphics) void draw(const Image * image, const IntRect & rect) override final;
+		virtual api(graphics) void draw(const Image * image, const SqRect & rect) override final;
+		virtual api(graphics) void draw(const Symbol * symbol, int x, int y) override final;
 
-		VertexLayout api(graphics) * Graphics3D::getVertexLayout(const string & fingerprint);
-		const Handle<ShaderCode> api(graphics) & getShaderCode(const string & id, ShaderType type) const;
-		const Handle<ShaderProgram> api(graphics) & getShaderProgram(const string & id);
+		api(graphics) VertexLayout * Graphics3D::getVertexLayout(const string & fingerprint);
+		api(graphics) const Handle<ShaderCode> & getShaderCode(const string & id, ShaderType type) const;
+		api(graphics) const Handle<ShaderProgram> & getShaderProgram(const string & id);
 
-		Handle<Mesh> api(graphics) createMesh(VertexLayout * layout, const VertexData & data);
-		Handle<Mesh> api(graphics) createMesh(const string & fingerprint, const VertexData & data);
-		Handle<IndexedMesh> api(graphics) createIndexedMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, uint indicesLocation = 0);
+		api(graphics) Handle<Mesh> createMesh(VertexLayout * layout, const VertexData & data);
+		api(graphics) Handle<Mesh> createMesh(const string & fingerprint, const VertexData & data);
+		api(graphics) Handle<IndexedMesh> createIndexedMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, uint indicesLocation = 0);
 
 		float depth()
 		{
@@ -115,13 +112,13 @@ namespace Rapture
 		template<class T, typename ... A, useif <is_uniform<T>::value, can_construct_contents<T, A...>::value> endif>
 		void updateUniform(A && ... args)
 		{
-			uniforms.require<T>(this)->template set<T>(forward<A>(args)...);
+			uniforms.require<T>(this)->set(forward<A>(args)...);
 		}
 
 		template<class T, useif <is_uniform<T>::value> endif>
 		void updateUniform(const Contents<T> & contents)
 		{
-			uniforms.require<T>(this)->template set<T>(contents);
+			uniforms.require<T>(this)->set(contents);
 		}
 
 		Techniques2D techniques2d;
@@ -129,13 +126,13 @@ namespace Rapture
 		Meshes meshes;
 
 	protected:
-		friend UniformMap;
+		friend UniformSet;
 
-		virtual void api(graphics) initFacilities() override;
-		virtual void api(graphics) updateBrushState() override;
+		virtual api(graphics) void initFacilities() override;
+		virtual api(graphics) void updateBrushState() override;
 
-		void api(graphics) updateAreaUniform(const IntRect & rect);
-		void api(graphics) updateAreaUniform(const SqRect & rect);
+		api(graphics) void updateAreaUniform(const IntRect & rect);
+		api(graphics) void updateAreaUniform(const SqRect & rect);
 
 		virtual Handle<VertexLayout> createVertexLayout(const string & fingerprint) = 0;
 		virtual Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) = 0;
@@ -153,19 +150,19 @@ namespace Rapture
 			return set;
 		}
 
-		template<class T>
-		void init(Handle<Uniform, Graphics3D> & uniform)
+		template<class T, useif <is_uniform<T>::value> endif>
+		Handle<T, Graphics3D> & init(Handle<T, Graphics3D> & uniform)
 		{
-			uniform.init(createUniformAdapter(T::shader, T::index, sizeof(Contents<T>)));
+			return uniform.init(createUniformAdapter(T::shader, T::index, sizeof(Contents<T>)));
 		}
 
 		float _depth = 1.0f;
 		StateHandle<bool> _depthTestMode {false};
 
-		UniformMap uniforms;
+		UniformSet uniforms;
 		ShaderMap shaders;
 
-		Array<Texture> _textures;
+		ArrayList<Texture> _textures;
 
 		HashMap<string, VertexLayout> vertexLayouts;
 		HashMap<string, ShaderProgram> shaderPrograms;

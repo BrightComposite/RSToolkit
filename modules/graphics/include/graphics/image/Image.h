@@ -17,6 +17,7 @@ namespace Rapture
 	class Image : public Object
 	{
 	public:
+		Image(Graphics * graphics, uint width, uint height, ImageFormat format) : _format(format), _width(width), _height(height), _graphics(graphics) {}
 		Image(Graphics * graphics, const ImageData & data) : _format(data.format), _width(data.width), _height(data.height), _graphics(graphics) {}
 		virtual ~Image() {}
 
@@ -39,7 +40,7 @@ namespace Rapture
 		virtual void requestData(ImageData * output) const = 0;
 
 		static Handle<Image> api(graphics) load(Graphics * graphics, const path & filepath);
-		static void api(graphics) save(const path & filepath, const Image * image);
+		static api(graphics) void save(const path & filepath, const Image * image);
 
 	protected:
 		uint _width, _height;

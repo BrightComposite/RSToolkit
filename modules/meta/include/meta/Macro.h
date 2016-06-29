@@ -41,6 +41,9 @@
 #define rapture_export_api
 #endif
 
+#define api_struct(module, ...) template struct api(module) __VA_ARGS__
+#define api_class(module, ...)  template class  api(module) __VA_ARGS__
+
 namespace Rapture
 {
     using std::forward;

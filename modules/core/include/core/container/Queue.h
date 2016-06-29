@@ -17,18 +17,18 @@ namespace Rapture
 	using std::deque;
 	using std::queue;
 
-	template<class T, class ... OwnerAttr>
-	class Deque : public deque<Handle<T, OwnerAttr...>>
+	template<class T, class ... Owner>
+	class Deque : public deque<Handle<T, Owner...>>
 	{
 	public:
-		using deque<Handle<T, OwnerAttr...>>::deque;
+		using deque<Handle<T, Owner...>>::deque;
 	};
 
-	template<class T, class ... OwnerAttr>
-	class Queue : public queue<Handle<T, OwnerAttr...>>
+	template<class T, class ... Owner>
+	class Queue : public queue<Handle<T, Owner...>>
 	{
 	public:
-		using queue<Handle<T, OwnerAttr...>>::queue;
+		using queue<Handle<T, Owner...>>::queue;
 	};
 }
 

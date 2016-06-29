@@ -24,8 +24,6 @@
 #include <ui/Window.h>
 #include <ui/Panel.h>
 
-#include <graphics/text/Font.h>
-
 #include <windows/Message.h>
 
 #include <vld.h>
@@ -171,7 +169,7 @@ namespace Rapture
 				g->rectangle(inner);
 			};
 
-			std::array_list<IntRect> rects = {
+			array_list<IntRect> rects = {
 				{10, 10, 30, 30},
 				{40, 10, 60, 30},
 				{10, 40, 30, 60},
@@ -187,14 +185,17 @@ namespace Rapture
 			std::bernoulli_distribution dist;
 			auto isVisible = std::bind(dist, rndm);
 
+			auto * hand_cursor = Cursor::find("hand");
+			auto * wait_cursor = Cursor::find("wait");
+
 			for(int iy = 0; iy < 4; ++iy)
 			{
 				for(int ix = 0; ix < 4; ++ix)
 				{
-					int x = (dx + w) * (ix + 1);
-					int y = (dy + h) * (iy + 1) + 100;
+					int x = (dx + w) * ix + 10;
+					int y = (dy + h) * iy + 100;
 
-					auto panel = back->append<Panel>(IntRect {x - w, y - h, x, y});
+					auto panel = back->append<Panel>(IntRect {x, y, x + w, y + h});
 
 					panel->setName("panel("_s << ix << ',' << iy << ')');
 					panel->attach(panelDrawer);
@@ -206,6 +207,9 @@ namespace Rapture
 						child->setName("child("_s << ix << ',' << iy << ',' << ir << ')');
 						child->setVisibility(isVisible());
 						child->attach(childDrawer);
+
+						hand_cursor->attach(child);
+						wait_cursor->attachPressed(child);
 					}
 				}
 			}
@@ -322,7 +326,7 @@ namespace Rapture
 
 	static int render(Handle<Window> & window)
 	{
-		//std::this_thread::sleep_for(1ms);
+		std::this_thread::sleep_for(1ms);
 
 		static int frames = 0;
 		static int maxframes = 0;
@@ -337,7 +341,7 @@ namespace Rapture
 			lastSecond = hrc::now();
 		}
 
-		window->invalidate();
+		//window->invalidate();
 		window->validate();
 		++frames;
 

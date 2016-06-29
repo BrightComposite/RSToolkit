@@ -16,19 +16,21 @@ namespace Rapture
 {
 	using std::set;
 	using std::unordered_set;
+	using std::multiset;
+	using std::unordered_multiset;
 
-	template<class T, class ... OwnerAttr>
-	class Set : public set<Handle<T, OwnerAttr...>>
+	template<class T, class ... Owner>
+	class Set : public set<Handle<T, Owner...>>
 	{
 	public:
-		using set<Handle<T, OwnerAttr...>>::set;
+		using set<Handle<T, Owner...>>::set;
 	};
 
-	template<class T, class Hash, class ... OwnerAttr>
-	class CustomSet : public set<Handle<T, OwnerAttr...>, Hash>
+	template<class T, class Hash, class ... Owner>
+	class CustomSet : public set<Handle<T, Owner...>, Hash>
 	{
 	public:
-		using set<Handle<T, OwnerAttr...>, Hash>::set;
+		using set<Handle<T, Owner...>, Hash>::set;
 	};
 
 	template<typename T>
@@ -38,18 +40,18 @@ namespace Rapture
 		using set<T *>::set;
 	};
 
-	template<class T, class ... OwnerAttr>
-	class HashSet : public unordered_set<Handle<T, OwnerAttr...>>
+	template<class T, class ... Owner>
+	class HashSet : public unordered_set<Handle<T, Owner...>>
 	{
 	public:
-		using unordered_set<Handle<T, OwnerAttr...>>::unordered_set;
+		using unordered_set<Handle<T, Owner...>>::unordered_set;
 	};
 
-	template<class T, class Hash, class ... OwnerAttr>
-	class CustomHashSet : public unordered_set<Handle<T, OwnerAttr...>, Hash>
+	template<class T, class Hash, class ... Owner>
+	class CustomHashSet : public unordered_set<Handle<T, Owner...>, Hash>
 	{
 	public:
-		using unordered_set<Handle<T, OwnerAttr...>, Hash>::unordered_set;
+		using unordered_set<Handle<T, Owner...>, Hash>::unordered_set;
 	};
 
 	template<typename T>

@@ -81,8 +81,8 @@ namespace Rapture
 		MotionState(Physical * physical) : physical(physical) {}
 		virtual ~MotionState() {}
 
-		virtual void api(physics) getWorldTransform(btTransform & trans) const override;
-		virtual void api(physics) setWorldTransform(const btTransform & trans) override;
+		virtual api(physics) void getWorldTransform(btTransform & trans) const override;
+		virtual api(physics) void setWorldTransform(const btTransform & trans) override;
 
 		Physical * physical;
 	};
@@ -114,9 +114,9 @@ namespace Rapture
 			_world->removeRigidBody(_rigidBody);
 		}
 
-		virtual void api(physics) setMass(float mass);
-		virtual void api(physics) setLinearVelocity(const fvec & v);
-		fvec api(physics) getLinearVelocity();
+		virtual api(physics) void setMass(float mass);
+		virtual api(physics) void setLinearVelocity(const fvec & v);
+		api(physics) fvec getLinearVelocity();
 
 		virtual void contactWith(Physical * physical, const ContactInfo & info) {}
 

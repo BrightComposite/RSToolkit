@@ -18,11 +18,7 @@
 
 #include <DirectXMath.h>
 
-#include <core/Subject.h>
-#include <core/addition/Cached.h>
-#include <core/container/TypedMap.h>
-#include <core/addition/HandleSingleton.h>
-#include <core/container/Array.h>
+#include <message/Subject.h>
 
 #include <windows/ComHandle.h>
 #include <windows/ComException.h>
@@ -63,17 +59,20 @@ namespace Rapture
 			Debug debug;
 
 		public:
+			using Graphics3D::init;
 			using Graphics3D::bind;
 			using Graphics3D::draw;
 
-			virtual void api(direct3d11) clip(const IntRect & rect) override;
-			virtual void api(direct3d11) present() const override;
+			virtual api(direct3d11) void clip(const IntRect & rect) override;
+			virtual api(direct3d11) void present() const override;
 
-			virtual void api(direct3d11) printInfo();
-			virtual void api(direct3d11) printDebug();
-			virtual void api(direct3d11) checkForErrors();
+			virtual api(direct3d11) void printInfo();
+			virtual api(direct3d11) void printDebug();
+			virtual api(direct3d11) void checkForErrors();
 
-			virtual Handle<Image> api(direct3d11) createImage(const ImageData & data) override;
+			virtual api(direct3d11) Handle<Image> createImage(const ImageData & data) override;
+			virtual api(direct3d11) Handle<Surface> createSurface(UISpace * space) override;
+			virtual api(direct3d11) Handle<Surface> createSurface(const IntSize & size, Handle<Image> & image) override;
 
 			ComHandle<ID3D11Device2, D3DGraphics> device;
 			ComHandle<ID3D11DeviceContext2, D3DGraphics> context;
@@ -91,29 +90,27 @@ namespace Rapture
 			api(direct3d11) D3DGraphics();
 			virtual api(direct3d11) ~D3DGraphics();
 
-			virtual Handle<Surface> api(direct3d11) createSurface(UISpace * space) override;
+			virtual api(direct3d11) Handle<VertexLayout> createVertexLayout(const string & fingerprint) override;
+			virtual api(direct3d11) Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) override;
+			virtual api(direct3d11) Handle<IndexBuffer> createIndexBuffer(const VertexIndices & indices) override;
 
-			virtual Handle<VertexLayout> api(direct3d11) createVertexLayout(const string & fingerprint) override;
-			virtual Handle<VertexBuffer> api(direct3d11) createVertexBuffer(VertexLayout * layout, const VertexData & data) override;
-			virtual Handle<IndexBuffer> api(direct3d11) createIndexBuffer(const VertexIndices & indices) override;
+			virtual api(direct3d11) UniqueHandle<UniformAdapter> createUniformAdapter(ShaderType shader, int index, size_t size) override;
 
-			virtual UniqueHandle<UniformAdapter> api(direct3d11) createUniformAdapter(ShaderType shader, int index, size_t size) override;
-
-			virtual void api(direct3d11) initFacilities() override;
+			virtual api(direct3d11) void initFacilities() override;
 
 			template<class Program, class ... A, useif <
 				is_shader_program<Program>::value,
 				can_construct<Handle<ShaderCode>, A>::value...,
 				can_construct<Program, D3DGraphics *, VertexLayout *, ShaderCodeSet *>::value
-			> endif
+				> endif
 			>
-				void setShaderProgram(const string & id, VertexLayout * layout, A &&... args)
+			void setShaderProgram(const string & id, VertexLayout * layout, A &&... args)
 			{
 				shaderPrograms[id] = handle<Program>(this, layout, createCodeSet({handle<ShaderCode>(forward<A>(args))...}));
 			}
 
-			void api(direct3d11) initDevice();
-			void api(direct3d11) initShaders();
+			api(direct3d11) void initDevice();
+			api(direct3d11) void initShaders();
 
 			D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_NULL;
 			D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
@@ -123,19 +120,21 @@ namespace Rapture
 
 		class D3DImage : public Image
 		{
-			friend_owned_handle(D3DImage, D3DGraphics);
+			friend class TextureSurface;
 
 		public:
-			virtual ~D3DImage() {}
-
-			virtual void api(direct3d11) apply() const override;
-			virtual void api(direct3d11) requestData(ImageData * output) const override;
-
-		protected:
+			api(direct3d11) D3DImage(D3DGraphics * graphics, uint width, uint height);
 			api(direct3d11) D3DImage(D3DGraphics * graphics, const ImageData & data);
 
+			virtual ~D3DImage() {}
+
+			virtual api(direct3d11) void apply() const override;
+			virtual api(direct3d11) void requestData(ImageData * output) const override;
+
+		protected:
+			ComHandle<ID3D11Texture2D> _handle;
+			ComHandle<ID3D11ShaderResourceView> _resource;
 			ComHandle<ID3D11SamplerState> _state;
-			ComHandle<ID3D11ShaderResourceView> _handle;
 			D3DGraphics * _ctx;
 		};
 
@@ -148,8 +147,8 @@ namespace Rapture
 		public:
 			virtual ~D3DVertexLayout() {}
 
-			virtual void api(direct3d11) apply();
-			virtual void api(direct3d11) accept(const ShaderCode * code);
+			virtual api(direct3d11) void apply();
+			virtual api(direct3d11) void accept(const ShaderCode * code);
 
 		protected:
 			api(direct3d11) D3DVertexLayout(D3DGraphics * graphics, const string & fingerprint);
@@ -167,8 +166,8 @@ namespace Rapture
 		public:
 			virtual ~D3DVertexBuffer() {}
 
-			virtual void api(direct3d11) apply() const override;
-			virtual void api(direct3d11) draw(const Mesh * mesh) const override;
+			virtual api(direct3d11) void apply() const override;
+			virtual api(direct3d11) void draw(const Mesh * mesh) const override;
 
 		protected:
 			api(direct3d11) D3DVertexBuffer(D3DGraphics * graphics, VertexLayout * layout, const VertexData & vd, D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -185,8 +184,8 @@ namespace Rapture
 		public:
 			virtual ~D3DIndexBuffer() {}
 
-			virtual void api(direct3d11) apply() const override;
-			virtual void api(direct3d11) draw(const IndexedMesh * mesh) const override;
+			virtual api(direct3d11) void apply() const override;
+			virtual api(direct3d11) void draw(const IndexedMesh * mesh) const override;
 
 		protected:
 			api(direct3d11) D3DIndexBuffer(D3DGraphics * graphics, const VertexIndices & indices);
@@ -204,10 +203,10 @@ namespace Rapture
 		public:
 			virtual ~D3DUniformAdapter() {}
 
+			virtual api(direct3d11) void update(const void * data) override;
+
 		protected:
 			api(direct3d11) D3DUniformAdapter(D3DGraphics * graphics, ShaderType shader, int index, size_t size);
-
-			virtual void api(direct3d11) update(const void * data) override;
 
 			ComHandle<ID3D11Buffer> buffer;
 			int index;
@@ -241,8 +240,8 @@ namespace Rapture
 			api(direct3d11) D3DShader(D3DShaderProgram * program);
 
 		protected:
-			void api(direct3d11) read(const String & filename, Handle<ShaderCode> & out);
-			void api(direct3d11) compile(const String & filename, const String & entrance, const String & shaderModel, Handle<ShaderCode> & out);
+			api(direct3d11) void read(const String & filename, Handle<ShaderCode> & out);
+			api(direct3d11) void compile(const String & filename, const String & entrance, const String & shaderModel, Handle<ShaderCode> & out);
 
 			D3DShaderProgram * program;
 		};
@@ -250,14 +249,14 @@ namespace Rapture
 		template<>
 		class D3DShader<ShaderType::Vertex> : public Shader<ShaderType::Vertex>, public D3DShader<ShaderType::Common>
 		{
-			void api(direct3d11) init(const Handle<ShaderCode> & code);
+			api(direct3d11) void init(const Handle<ShaderCode> & code);
 
 		public:
 			api(direct3d11) D3DShader(D3DShaderProgram * program, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
 			api(direct3d11) D3DShader(D3DShaderProgram * program, const Handle<ShaderCode> & code);
 			virtual ~D3DShader() {}
 
-			virtual void api(direct3d11) apply() const override;
+			virtual api(direct3d11) void apply() const override;
 
 			ComHandle<ID3D11VertexShader> id;
 		};
@@ -265,14 +264,14 @@ namespace Rapture
 		template<>
 		class D3DShader<ShaderType::Pixel> : public Shader<ShaderType::Pixel>, public D3DShader<ShaderType::Common>
 		{
-			void api(direct3d11) init(const Handle<ShaderCode> & code);
+			api(direct3d11) void init(const Handle<ShaderCode> & code);
 
 		public:
 			api(direct3d11) D3DShader(D3DShaderProgram * program, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
 			api(direct3d11) D3DShader(D3DShaderProgram * program, const Handle<ShaderCode> & code);
 			virtual ~D3DShader() {}
 
-			virtual void api(direct3d11) apply() const override;
+			virtual api(direct3d11) void apply() const override;
 
 			ComHandle<ID3D11PixelShader> id;
 		};
@@ -281,69 +280,81 @@ namespace Rapture
 
 		class D3DSurface : public Surface
 		{
-			friend class D3DGraphics;
+			deny_copy(D3DSurface);
 
 		public:
 			api(direct3d11) D3DSurface(D3DGraphics * graphics, const IntSize & size);
-			virtual ~D3DSurface();
+			virtual api(direct3d11) ~D3DSurface();
 
-			virtual void api(direct3d11) clear() const;
+			virtual api(direct3d11) void clear() const override;
+			virtual api(direct3d11) void present() const override;
 
 		protected:
-			D3DGraphics * graphics;
 			void createDepthStencil();
 
-			ComHandle<ID3D11DepthStencilView> depthStencilView;
+			D3DGraphics * _graphics;
+			ComHandle<ID3D11DepthStencilView> _depthStencilView;
 		};
 
-		class DepthBufferSurface : public D3DSurface
+		class DepthSurface : public D3DSurface
 		{
-		public:
-			api(direct3d11) DepthBufferSurface(D3DGraphics * graphics, const IntSize & size);
-			DepthBufferSurface(const DepthBufferSurface &) = delete;
-			virtual ~DepthBufferSurface() {}
+			deny_copy(DepthSurface);
 
-			virtual void api(direct3d11) apply() const override;
+		public:
+			api(direct3d11) DepthSurface(D3DGraphics * graphics, const IntSize & size);
+			virtual ~DepthSurface() {}
+
+			virtual api(direct3d11) void apply() const override;
+			virtual api(direct3d11) void clear() const override;
 		};
 
 		class UISurface : public D3DSurface
 		{
-			friend class D3DGraphics;
+			deny_copy(UISurface);
 
 		public:
 			api(direct3d11) UISurface(D3DGraphics * graphics, UISpace * space);
-			UISurface(const UISurface &) = delete;
 			virtual api(direct3d11) ~UISurface();
 
-			virtual void api(direct3d11) apply() const override;
-			virtual void api(direct3d11) present() const override;
-			virtual void api(direct3d11) requestData(ImageData * data) const override;
+			virtual api(direct3d11) void apply() const override;
+			virtual api(direct3d11) void present() const override;
+			virtual api(direct3d11) void requestData(ImageData * data) const override;
+
+			virtual api(direct3d11) void resize() override;
 
 		protected:
-			void api(direct3d11) createSwapChain(bool fullscreen);
-			void api(direct3d11) createRenderTarget();
-			void api(direct3d11) releaseRenderTarget();
+			api(direct3d11) void createSwapChain(bool fullscreen);
+			api(direct3d11) void createRenderTarget();
+			api(direct3d11) void releaseRenderTarget();
 
-			static void api(direct3d11) findPreferredMode(const ComHandle<IDXGIOutput> & output, DXGI_MODE_DESC & mode);
+			static api(direct3d11) void findPreferredMode(const ComHandle<IDXGIOutput> & output, DXGI_MODE_DESC & mode);
 
-			void api(direct3d11) onUIResize(Handle<UIResizeMessage> & msg, UISpace & space);
-			void api(direct3d11) onUIFullscreen(Handle<UIFullscreenMessage> & msg, UISpace & space);
-			void api(direct3d11) onUIDestroy(Handle<UIDestroyMessage> & msg, UISpace & space);
+			api(direct3d11) void onUIResize(Handle<UIResizeMessage> & msg, UISpace & space);
+			api(direct3d11) void onUIFullscreen(Handle<UIFullscreenMessage> & msg, UISpace & space);
+			api(direct3d11) void onUIDestroy(Handle<UIDestroyMessage> & msg, UISpace & space);
 
-			ComHandle<IDXGISwapChain1> swapChain;
-			ComHandle<ID3D11RenderTargetView> renderTargetView;
+			ComHandle<IDXGISwapChain1> _swapChain;
+			ComHandle<ID3D11RenderTargetView> _renderView;
 
-			DXGI_PRESENT_PARAMETERS presentParams;
-			UISpace * space;
+			DXGI_PRESENT_PARAMETERS _presentParams;
+			UISpace * _space;
 		};
 
-		class TextureSurface : public D3DSurface
+		class TextureSurface : virtual public D3DSurface
 		{
+			friend class D3DGraphics;
+
 		public:
-			api(direct3d11) TextureSurface(D3DGraphics * graphics, const IntSize & size);
+			api(direct3d11) TextureSurface(D3DGraphics * graphics, const IntSize & size, Handle<Image> & image);
 			virtual ~TextureSurface() {}
 
-			virtual void api(direct3d11) apply() const override;
+			virtual api(direct3d11) void apply() const override;
+			virtual api(direct3d11) void clear() const override;
+			virtual api(direct3d11) void requestData(ImageData * data) const override;
+
+		protected:
+			ComHandle<ID3D11RenderTargetView> _renderView;
+			Handle<D3DImage> _texture;
 		};
 
 		//---------------------------------------------------------------------------

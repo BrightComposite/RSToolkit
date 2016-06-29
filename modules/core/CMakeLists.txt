@@ -21,17 +21,16 @@ add_module_sources(
 	SRC_GROUP include Headers
 		START_SECTION core
 			Class.h
+			Component.h
             Exception.h
 			Handle.h
             Hash.h
-			Morph.h
+			Morpher.h
 			Object.h
 			String.h
-			Subject.h
 
 			START_SECTION action
 				Action.h
-				Function.h
 				Thread.h
 			END_SECTION
 
@@ -50,7 +49,7 @@ add_module_sources(
 			END_SECTION
 
 			START_SECTION container
-				Array.h
+				ArrayList.h
                 Container.h
 				Data.h
 				List.h
@@ -59,8 +58,6 @@ add_module_sources(
 				Set.h
 				Stack.h
 				StaticMap.h
-				TypedSet.h
-				TypedMap.h
 			END_SECTION
 
 			START_SECTION intrinsic
@@ -80,12 +77,6 @@ add_module_sources(
 					DefaultAllocator.h
 					PoolAllocator.h
 				END_SECTION
-			END_SECTION
-
-			START_SECTION message
-				Channel.h
-				Message.h
-				MessageClass.h
 			END_SECTION
 		END_SECTION
 

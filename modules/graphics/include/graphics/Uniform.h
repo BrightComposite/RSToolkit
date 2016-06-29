@@ -8,7 +8,8 @@
 #include <meta/Meta.h>
 #include <math/Transform.h>
 
-#include <core/container/TypedMap.h>
+#include <core/addition/Contents.h>
+#include <core/Morpher.h>
 
 #include "Shaders.h"
 
@@ -18,25 +19,69 @@ namespace Rapture
 {
 	class Graphics3D;
 
-	namespace Uniforms
+	class UniformAdapter : public Shared
 	{
-		struct Base {};
-	}
+	public:
+		virtual void update(const void * data) = 0;
+	};
 
-	typebase_api(graphics, Uniforms::Base);
+	class Uniform : public Shared
+	{
+		morph_base(Uniform);
+		deny_copy(Uniform);
+
+	protected:
+		Uniform(UniqueHandle<UniformAdapter> && adapter) : _adapter(forward<UniqueHandle<UniformAdapter>>(adapter)) {}
+
+		UniqueHandle<UniformAdapter> _adapter;
+	};
+
+	create_morph_pool(graphics, Uniform);
+
+	template<class T>
+	using is_uniform = is_base_of<Uniform, T>;
+
+	using UniformSet = Morpher<Uniform, Graphics3D>;
 
 #define uniform_class(name, shader_index, shader_type, components)		\
 	namespace Uniforms													\
 	{																	\
-		struct name : Base												\
-		{																\
-			static const uint index = shader_index;						\
-			static const ShaderType shader = ShaderType::shader_type;	\
-		};																\
+		class name;														\
 	}																	\
 																		\
 	aligned_contents(Uniforms::name, 16, components)					\
-	typeid_api(graphics, Uniforms::name, Uniforms::Base)
+																		\
+	namespace Uniforms													\
+	{																	\
+		class name : public Uniform										\
+		{																\
+		public:															\
+			static const uint index = shader_index;						\
+			static const ShaderType shader = ShaderType::shader_type;	\
+																		\
+			template<class ... A, useif <								\
+				can_construct_contents<name, A...>::value				\
+				> endif													\
+			>															\
+			void set(A &&... args)										\
+			{															\
+				_adapter->update(Contents<name>(forward<A>(args)...));	\
+			}															\
+																		\
+			void set(const Contents<name> & contents)					\
+			{															\
+				_adapter->update(contents);								\
+			}															\
+																		\
+		protected:														\
+			friend_owned_handle(name, Graphics3D);						\
+																		\
+			name(UniqueHandle<UniformAdapter> && a) :					\
+				Uniform(forward<UniqueHandle<UniformAdapter>>(a)) {}	\
+		};																\
+	}																	\
+																		\
+	create_morph_type(graphics, Uniforms::name)
 
 	uniform_class
 	(
@@ -76,46 +121,6 @@ namespace Rapture
 		Viewport, 5, Vertex,
 		(float2, size)
 	);
-
-	template<class T>
-	using is_uniform = is_base_of<Uniforms::Base, T>;
-
-	class UniformAdapter : public Shared
-	{
-		friend class Uniform;
-
-	protected:
-		virtual void update(const void * data) = 0;
-	};
-
-	class Uniform : public Shared
-	{
-	public:
-		Uniform(const Uniform & uniform) = delete;
-		Uniform & operator = (const Uniform & uniform) = delete;
-
-		template<class T, class ... A, useif <can_construct_contents<T, A...>::value> endif>
-		void set(A &&... args)
-		{
-			_adapter->update(Contents<T>(forward<A>(args)...));
-		}
-
-		template<class T>
-		void set(const Contents<T> & contents)
-		{
-			_adapter->update(contents);
-		}
-
-	protected:
-		friend_owned_handle(Uniform, Graphics3D);
-
-		Uniform(UniqueHandle<UniformAdapter> && adapter) : _adapter(forward<UniqueHandle<UniformAdapter>>(adapter)) {}
-		Uniform(Uniform && uniform) : _adapter(move(uniform._adapter)) {}
-
-		UniqueHandle<UniformAdapter> _adapter;
-	};
-
-	using UniformMap = TypedMap<Uniforms::Base, Uniform, Graphics3D>;
 }
 
 //---------------------------------------------------------------------------

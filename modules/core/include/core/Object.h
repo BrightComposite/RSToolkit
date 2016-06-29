@@ -44,6 +44,9 @@ namespace Rapture
 	protected:
 		const MetaClass * _class;
     };
+
+	template<class T>
+	using is_object = based_on<T, Object>;
 }
 
 //---------------------------------------------------------------------------

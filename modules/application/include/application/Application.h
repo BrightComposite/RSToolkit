@@ -8,7 +8,7 @@
 #include <windows.h>
 
 #include <core/addition/Singleton.h>
-#include <core/container/Array.h>
+#include <core/container/ArrayList.h>
 #include <core/action/Action.h>
 #include <core/String.h>
 
@@ -16,7 +16,7 @@
 
 //---------------------------------------------------------------------------
 
-int api(export) wmain(int argc, wchar_t * argv[]);
+api(export) int wmain(int argc, wchar_t * argv[]);
 
 namespace Rapture
 {
@@ -35,15 +35,15 @@ namespace Rapture
 		friend struct Entrance;
 
 	public:
-		static HINSTANCE api(application) getWindowsInstance();
+		static api(application) HINSTANCE getWindowsInstance();
 
-		static const wstring api(application) & getRootPath();
+		static api(application) const wstring & getRootPath();
 		static const array_list<wstring> api(application) & startupArguments();
 
-		static int api(application) getShowCommand();
+		static api(application) int getShowCommand();
 
 	private:
-		static void api(application) main(int argc, wchar_t * argv[]);
+		static api(application) void main(int argc, wchar_t * argv[]);
 
 		Application() {}
 

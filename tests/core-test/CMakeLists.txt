@@ -13,6 +13,7 @@ include(${RAPTURE_TOOLS}/module.cmake)
 start_module(
 	APPLICATION
     RaptureApplication "application"
+    RaptureMessage "message"
 )
 
 set_module_folder(tests)

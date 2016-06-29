@@ -6,7 +6,7 @@
 //---------------------------------------------------------------------------
 
 #include <core/addition/Singleton.h>
-#include <core/container/Array.h>
+#include <core/container/ArrayList.h>
 #include <core/action/Action.h>
 #include <core/Exception.h>
 

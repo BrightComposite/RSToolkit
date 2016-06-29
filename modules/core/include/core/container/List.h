@@ -15,11 +15,11 @@ namespace Rapture
 {
 	using std::list;
 
-	template<typename T, class ... OwnerAttr>
-	class List : public list<Handle<T, OwnerAttr...>>
+	template<typename T, class ... Owner>
+	class List : public list<Handle<T, Owner...>>
 	{
 	public:
-		using list<Handle<T, OwnerAttr...>>::list;
+		using list<Handle<T, Owner...>>::list;
 	};
 
 	template<typename T>

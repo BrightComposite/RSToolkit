@@ -6,7 +6,7 @@
 //---------------------------------------------------------------------------
 
 #include <core/Object.h>
-#include <core/container/Array.h>
+#include <core/container/ArrayList.h>
 
 #include <math/Vector.h>
 
@@ -44,7 +44,7 @@ namespace Rapture
 		using btDiscreteDynamicsWorld::operator new[];
 		using btDiscreteDynamicsWorld::operator delete[];
 
-		static void api(physics) update(btDynamicsWorld * world, btScalar timeStep);
+		static api(physics) void update(btDynamicsWorld * world, btScalar timeStep);
 	};
 }
 

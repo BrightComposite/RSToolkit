@@ -40,9 +40,8 @@ add_module_sources(
 				END_SECTION
 			END_SECTION
 
-			START_SECTION text
+			START_SECTION font
 				Font.h
-				Text.h
 
 				START_SECTION io
 					FontIO.h

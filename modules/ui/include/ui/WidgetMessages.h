@@ -5,11 +5,11 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/message/Message.h>
+#include <message/Message.h>
 #include <core/Handle.h>
 #include <math/Rect.h>
 
-#include "WidgetDefs.h"
+#include "WidgetEnum.h"
 
 //---------------------------------------------------------------------------
 
@@ -145,9 +145,11 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// After mouse down
-	message_class(WidgetPressMessage,
+	message_class
+	(
+		WidgetPressMessage,
 		(MouseButton, button)
-		);
+	);
 
 //---------------------------------------------------------------------------
 
@@ -161,7 +163,11 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	// After mouse up
-	message_class(WidgetReleaseMessage);
+	message_class
+	(
+		WidgetReleaseMessage,
+		(MouseButton, button)
+	);
 
 //---------------------------------------------------------------------------
 

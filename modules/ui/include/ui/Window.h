@@ -63,31 +63,31 @@ namespace Rapture
 
 		api(ui) void centralize();
 
-		virtual void api(ui) registerHotkey(int id, int key, int modifiers = 0) override;
-		virtual void api(ui) unregisterHotkey(int id) override;
+		virtual api(ui) void registerHotkey(int id, int key, int modifiers = 0) override;
+		virtual api(ui) void unregisterHotkey(int id) override;
 
 		bool isFullscreen() const
 		{
 			return _fullscreen;
 		}
 
-		void api(ui) setFullscreen(bool fullscreen);
-		void api(ui) toggleFullscreen();
+		api(ui) void setFullscreen(bool fullscreen);
+		api(ui) void toggleFullscreen();
 
-		void api(ui) setState(WindowState state);
+		api(ui) void setState(WindowState state);
 
-		void api(ui) show();
-		void api(ui) hide();
-		void api(ui) minimize();
-		void api(ui) maximize();
-		void api(ui) restore();
+		api(ui) void show();
+		api(ui) void hide();
+		api(ui) void minimize();
+		api(ui) void maximize();
+		api(ui) void restore();
 
 		BorderStyle borderStyle() const
 		{
 			return _borderStyle;
 		}
 
-		void api(ui) setBorderStyle(BorderStyle style);
+		api(ui) void setBorderStyle(BorderStyle style);
 
 		bool isVisible() const
 		{
@@ -99,17 +99,17 @@ namespace Rapture
 			return _state;
 		}
 
-		void api(ui) setCaption(const WideString & caption);
-		WideString api(ui) getCaption();
+		api(ui) void setCaption(const WideString & caption);
+		api(ui) WideString getCaption();
 
-		void api(ui) close();
+		api(ui) void close();
 
 	protected:
-		void api(ui) makeFullscreen();
-		void api(ui) restoreSize();
-		void api(ui) applyBorderStyle();
+		api(ui) void makeFullscreen();
+		api(ui) void restoreSize();
+		api(ui) void applyBorderStyle();
 
-		friend LRESULT api(ui) CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+		friend api(ui) LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 		bool _isShown = false;
 

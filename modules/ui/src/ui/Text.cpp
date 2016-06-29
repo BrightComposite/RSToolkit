@@ -1,18 +1,25 @@
 //---------------------------------------------------------------------------
 
-#ifndef HANDLE_SINGLETON_H
-#define HANDLE_SINGLETON_H
-
-//---------------------------------------------------------------------------
-
-#include <core/Handle.h>
-#include "Singleton.h"
+#include <ui/Text.h>
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
+	void Text::attach(Widget * w)
+	{
+
+	}
+
+	Text * Text::get(Widget * w)
+	{
+		return nullptr;
+	}
+
+	void Text::clear(Widget * w)
+	{
+
+	}
 }
 
 //---------------------------------------------------------------------------
-#endif

@@ -47,18 +47,9 @@ namespace Rapture
 		out.bottom = (int)(anchors.bottom * parent.height()) + offsets.bottom;
 	}
 
-	Layer::Layer(Widget * widget, int order) : _widget(widget), _order(order)
+	void CustomLayer::draw() const
 	{
-		_widget->_layerList.push_back(this);
-		std::sort(_widget->_layerList.begin(), _widget->_layerList.end());
-	}
-
-	Layer::~Layer() {}
-
-	void Layer::setOrder(int order)
-	{
-		_order = order;
-		std::sort(_widget->_layerList.begin(), _widget->_layerList.end());
+		drawer(_widget, _widget->region());
 	}
 
 	Widget::Widget(Widget * parent) : Widget(parent, *parent) {}
@@ -93,57 +84,45 @@ namespace Rapture
 
 	Widget::~Widget()
 	{
-		_layerList.clear();
-		_displayList.clear();
-		_layers.clear();
-		_children.clear();
-
-		if(_parent != nullptr)
+		if(isPointed())
 		{
-			forgetParent();
-
-			if(isPointed())
-			{
-				send<MouseLeaveMessage>(*this);
-				_space->_pointed = nullptr;
-			}
-
-			if(isPressed())
-			{
-				auto & pl = _space->_pressedList;
-
-				for(auto i = pl.begin(); i != pl.end(); ++i)
-				{
-					if(i->second == this)
-					{
-						i = pl.erase(i);
-
-						if(i == pl.end())
-							break;
-					}
-				}
-
-				send<WidgetStopPressMessage>(*this, _mouseState.buttons());
-				_mouseState.unpress();
-			}
-
-			setFocusability(false);
+			send<MouseLeaveMessage>(*this);
+			_space->_pointed = nullptr;
 		}
+
+		if(isPressed())
+		{
+			auto & pl = _space->_pressedList;
+
+			for(auto i = pl.begin(); i != pl.end(); ++i)
+			{
+				if(i->second == this)
+				{
+					i = pl.erase(i);
+
+					if(i == pl.end())
+						break;
+				}
+			}
+
+			send<WidgetStopPressMessage>(*this, _mouseState.buttons());
+			_mouseState.unpress();
+		}
+
+		setFocusability(false);
 	}
 
 	void Widget::draw(Graphics * graphics, const IntRect & clipRegion)
 	{
-		IntRect r = absRegion();
-
-		if(!r.isIntersecting(clipRegion))
+		IntRect r = absRegion() & clipRegion;
+		
+		if(r.isEmpty())
 			return;
-
-		r &= clipRegion;
 
 		graphics->clip(r);
 
-		for(auto & layer : _layerList)
-			layer->draw(r);
+		for(auto & layer : _layers)
+			layer->draw();
 
 		for(auto & ch : _displayList)
 			ch->draw(graphics, r);
@@ -166,27 +145,16 @@ namespace Rapture
 		return child;
 	}
 
-	Handle<Widget> Widget::detach()
+	void Widget::detach(Widget * w)
 	{
-		Handle<Widget> w = this;
+		if(w->_parent != this)
+			return;
 
-		if(_parent != nullptr)
-		{
-			forgetParent();
+		if(w->isVisible() && _displayList.size() > 0)
+			erase(_displayList, w);
 
-			_parent->_children.erase(w);
-			_parent = nullptr;
-		}
-
-		return w;
-	}
-
-	void Widget::forgetParent()
-	{
-		auto & dl = _parent->_displayList;
-
-		if(isVisible() && dl.size() > 0)
-			erase(dl, this);
+		w->_parent = nullptr;
+		_children.erase(w);
 	}
 
 	void Widget::setVisibility(bool visible)
@@ -495,7 +463,7 @@ namespace Rapture
 		changePlacement(newRegion.left, newRegion.top, newRegion.right, newRegion.bottom, mask);
 	}
 
-	Widget * Widget::findWidget(const IntPoint & pt)
+	Widget * Widget::findAt(const IntPoint & pt)
 	{
 		for(auto i = _displayList.rbegin(); i != _displayList.rend(); ++i)
 		{
@@ -503,7 +471,7 @@ namespace Rapture
 			auto p = pt - ch->_relPos;
 
 			if(ch->localRegion().includes(p))
-				return ch->findWidget(p);
+				return ch->findAt(p);
 		}
 
 		return this;

@@ -287,7 +287,7 @@ namespace Rapture
 			m[3] = VectorType::positiveW;
 		}
 
-		static const Quaternion api(math) default;
+		static api(math) const Quaternion default;
 	};
 
 	using FloatQuaternion = Quaternion<float>;

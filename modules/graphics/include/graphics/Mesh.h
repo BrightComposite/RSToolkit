@@ -67,7 +67,7 @@ namespace Rapture
 	public:
 		Mesh(Graphics3D * graphics, const Handle<VertexBuffer> & vbuffer, uint stride, uint verticesLocation = 0) : graphics(graphics), vbuffer(vbuffer), stride(stride), verticesLocation(verticesLocation) {}
 
-		virtual void api(graphics) draw() const;
+		virtual api(graphics) void draw() const;
 
 		Graphics3D * graphics;
 		Handle<VertexBuffer> vbuffer;
@@ -79,7 +79,7 @@ namespace Rapture
 	public:
 		IndexedMesh(Graphics3D * graphics, const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, uint stride, uint verticesLocation = 0, uint indicesLocation = 0) : Mesh(graphics, vbuffer, stride, verticesLocation), ibuffer(ibuffer), indicesLocation(indicesLocation) {}
 
-		virtual void api(graphics) draw() const override;
+		virtual api(graphics) void draw() const override;
 
 		Handle<IndexBuffer> ibuffer;
 		uint indicesLocation;

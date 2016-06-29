@@ -33,11 +33,11 @@ namespace Rapture
 	string  api(core) narrow(const wstring & wide);
 	string  api(core) narrow(const wstring & wide, const locale & loc);
 
-	wstring api(core) widen(const string & narrow);
-	wstring api(core) widen(const string & narrow, const locale & loc);
+	api(core) wstring widen(const string & narrow);
+	api(core) wstring widen(const string & narrow, const locale & loc);
 
-	void api(core) print(String & target, const Object & obj);
-	void api(core) print(WideString & target, const Object & obj);
+	api(core) void print(String & target, const Object & obj);
+	api(core) void print(WideString & target, const Object & obj);
 
 	template<class T>
 	struct can_str_print;
@@ -1011,11 +1011,11 @@ namespace Rapture
 	typedef list<string> StringList;
 	typedef list<wstring> WideStringList;
 
-	StringList api(core) split(const string & text, const char * sep = " \t");
-	StringList api(core) splitOnLines(const string & text, size_t lineLength, bool separateWords = true);
+	api(core) StringList split(const string & text, const char * sep = " \t");
+	api(core) StringList splitOnLines(const string & text, size_t lineLength, bool separateWords = true);
 
-	WideStringList api(core) split(const wstring & text, const wchar_t * sep = L" \t");
-	WideStringList api(core) splitOnLines(const wstring & text, size_t lineLength, bool separateWords = true);
+	api(core) WideStringList split(const wstring & text, const wchar_t * sep = L" \t");
+	api(core) WideStringList splitOnLines(const wstring & text, size_t lineLength, bool separateWords = true);
 
 	inline String operator + (const char * s, const String & string)
 	{
@@ -1063,8 +1063,8 @@ namespace Rapture
 	int		api(core) toInt(const wchar_t * s);
 	long	api(core) toLong(const wchar_t * s);
 
-	String api(core) operator "" _s(const char * s, size_t unitsCount);
-	WideString api(core) operator "" _s(const wchar_t * s, size_t unitsCount);
+	api(core) String operator "" _s(const char * s, size_t unitsCount);
+	api(core) WideString operator "" _s(const wchar_t * s, size_t unitsCount);
 
 	template<class Ch>
 	struct GetStringType {};

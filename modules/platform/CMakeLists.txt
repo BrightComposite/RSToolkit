@@ -23,8 +23,9 @@ add_module_sources(
 		START_SECTION windows
 			ComException.h
 			ComHandle.h
-			RectAdapter.h
 			Message.h
+			PointAdapter.h
+			RectAdapter.h
 		END_SECTION
 
 	SRC_GROUP src Sources

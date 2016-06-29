@@ -269,7 +269,7 @@ namespace Rapture
 
 		devMode.dmSize = sizeof(DEVMODE);
 
-		EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &devMode);
+		EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &devMode);
 
 		width = devMode.dmPelsWidth;
 		height = devMode.dmPelsHeight;

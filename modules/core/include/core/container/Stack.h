@@ -16,11 +16,11 @@ namespace Rapture
 {
 	using std::stack;
 
-	template<typename T, class ... OwnerAttr>
-	class Stack : public stack<Handle<T, OwnerAttr...>>
+	template<typename T, class ... Owner>
+	class Stack : public stack<Handle<T, Owner...>>
 	{
 	public:
-		using stack<Handle<T, OwnerAttr...>>::stack;
+		using stack<Handle<T, Owner...>>::stack;
 	};
 }
 

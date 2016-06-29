@@ -1,12 +1,13 @@
 //---------------------------------------------------------------------------
 
-#ifndef ARRAY_H
-#define ARRAY_H
+#ifndef ARRAY_LIST_H
+#define ARRAY_LIST_H
 
 //---------------------------------------------------------------------------
 
 #include <core/Handle.h>
 
+#include <array>
 #include <vector>
 
 //---------------------------------------------------------------------------
@@ -25,11 +26,11 @@ namespace Rapture
 {
 	using std::array_list;
 
-	template<typename T, class ... OwnerAttr>
-	class Array : public array_list<Handle<T, OwnerAttr...>>
+	template<typename T, class ... Owner>
+	class ArrayList : public array_list<Handle<T, Owner...>>
 	{
 	public:
-		using array_list<Handle<T, OwnerAttr...>>::array_list;
+		using array_list<Handle<T, Owner...>>::array_list;
 	};
 
 	template<typename T>

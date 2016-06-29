@@ -8,6 +8,160 @@ namespace Rapture
 {
 	implement_link(Graphics);
 
+	void Graphics::bind(const Handle<Surface> & surface)
+	{
+		if(_surface == surface)
+			return;
+
+		_surface = surface;
+		_surface->apply();
+
+		clip(viewport());
+	}
+
+	void Graphics::bind(const Handle<Font> & font)
+	{
+		_font = font;
+	}
+
+	const Handle<Surface> & Graphics::surface()
+	{
+		return _surface;
+	}
+
+	const Viewport & Graphics::viewport() const
+	{
+		return _surface->_viewport;
+	}
+
+	const IntRect & Graphics::clipRect() const
+	{
+		return _clipRect;
+	}
+
+	const Color & Graphics::clearColor() const
+	{
+		return *_clearColor;
+	}
+
+	const Color & Graphics::color() const
+	{
+		return *_color;
+	}
+
+	int Graphics::fontSize() const
+	{
+		return *_fontSize;
+	}
+
+	int Graphics::lineWidth() const
+	{
+		return *_lineWidth;
+	}
+
+	FillMode Graphics::fillMode() const
+	{
+		return *_fillMode;
+	}
+
+	void Graphics::setFontSize(int size)
+	{
+		_fontSize->set(size);
+	}
+
+	void Graphics::setLineWidth(int size)
+	{
+		_lineWidth->set(size);
+	}
+
+	void Graphics::setFillMode(FillMode mode)
+	{
+		_fillMode->set(mode);
+	}
+
+	void Graphics::draw(const Image * image, const IntPoint & pt)
+	{
+		draw(image, pt.x, pt.y);
+	}
+
+	void Graphics::draw(const Image * image, const IntPoint & pt, const IntSize & sz)
+	{
+		draw(image, pt.x, pt.y, sz.x, sz.y);
+	}
+
+	void Graphics::draw(const Image * image, int x, int y)
+	{
+		draw(image, IntRect {x, y, x + image->width(), y + image->height()});
+	}
+
+	void Graphics::draw(const Image * image, int x, int y, int width, int height)
+	{
+		draw(image, IntRect {x, y, x + width, y + height});
+	}
+
+	void Graphics::draw(const Symbol * symbol, const IntPoint & pt)
+	{
+		draw(symbol, pt.x, pt.y);
+	}
+
+	void Graphics::draw(const string & text, int x, int y)
+	{
+		draw<string>(this, text, x, y);
+	}
+
+	void Graphics::draw(const wstring & text, int x, int y)
+	{
+		draw<wstring>(this, text, x, y);
+	}
+
+	void Graphics::draw(const string & text, const IntPoint & pt)
+	{
+		draw(text, pt.x, pt.y);
+	}
+
+	void Graphics::draw(const wstring & text, const IntPoint & pt)
+	{
+		draw(text, pt.x, pt.y);
+	}
+
+	IntSize Graphics::getTextSize(const string & text)
+	{
+		return textSize<string>(this, text);
+	}
+
+	IntSize Graphics::getTextSize(const wstring & text)
+	{
+		return textSize<wstring>(this, text);
+	}
+
+	State<Color> * Graphics::colorState()
+	{
+		return _color;
+	}
+
+	State<int> * Graphics::fontSizeState()
+	{
+		return _fontSize;
+	}
+
+	State<int> * Graphics::lineWidthState()
+	{
+		return _lineWidth;
+	}
+
+	State<FillMode> * Graphics::fillModeState()
+	{
+		return _fillMode;
+	}
+
+	Handle<ImageData> Graphics::requestSurfaceData() const
+	{
+		auto data = handle<ImageData>();
+		_surface->requestData(data);
+
+		return data;
+	}
+
 	template<class string_t>
 	IntSize Graphics::textSize(Graphics * graphics, const string_t & text)
 	{

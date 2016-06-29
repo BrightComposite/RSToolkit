@@ -573,27 +573,27 @@ namespace Rapture
 			return static_cast<int>(Intrin::sum(Intrin::sub(v1, v2)));
 		}
 
-		static const Vector api(math) zero;			// [  0,  0,  0,  0 ]
-		static const Vector api(math) one;			// [  1,  1,  1,  1 ]
-		static const Vector api(math) two;			// [  2,  2,  2,  2 ]
-		static const Vector api(math) oneXYZ;		// [  1,  1,  1,  0 ]
-		static const Vector api(math) twoXYZ;		// [  2,  2,  2,  0 ]
-		static const Vector api(math) minusOne;		// [ -1, -1, -1, -1 ]
-		static const Vector api(math) half;			// [ .5, .5, .5, .5 ]
+		static api(math) const Vector zero;			// [  0,  0,  0,  0 ]
+		static api(math) const Vector one;			// [  1,  1,  1,  1 ]
+		static api(math) const Vector two;			// [  2,  2,  2,  2 ]
+		static api(math) const Vector oneXYZ;		// [  1,  1,  1,  0 ]
+		static api(math) const Vector twoXYZ;		// [  2,  2,  2,  0 ]
+		static api(math) const Vector minusOne;		// [ -1, -1, -1, -1 ]
+		static api(math) const Vector half;			// [ .5, .5, .5, .5 ]
 
-		static const Vector api(math) positiveX;	// [  1,  0,  0,  0 ]
-		static const Vector api(math) positiveY;	// [  0,  1,  0,  0 ]
-		static const Vector api(math) positiveZ;	// [  0,  0,  1,  0 ]
-		static const Vector api(math) positiveW;	// [  0,  0,  0,  1 ]
-		static const Vector api(math) negativeX;	// [ -1,  0,  0,  0 ]
-		static const Vector api(math) negativeY;	// [  0, -1,  0,  0 ]
-		static const Vector api(math) negativeZ;	// [  0,  0, -1,  0 ]
-		static const Vector api(math) negativeW;	// [  0,  0,  0, -1 ]
+		static api(math) const Vector positiveX;	// [  1,  0,  0,  0 ]
+		static api(math) const Vector positiveY;	// [  0,  1,  0,  0 ]
+		static api(math) const Vector positiveZ;	// [  0,  0,  1,  0 ]
+		static api(math) const Vector positiveW;	// [  0,  0,  0,  1 ]
+		static api(math) const Vector negativeX;	// [ -1,  0,  0,  0 ]
+		static api(math) const Vector negativeY;	// [  0, -1,  0,  0 ]
+		static api(math) const Vector negativeZ;	// [  0,  0, -1,  0 ]
+		static api(math) const Vector negativeW;	// [  0,  0,  0, -1 ]
 
-		static const Vector api(math) & left;
-		static const Vector api(math) & up;
-		static const Vector api(math) & forward;
-		static const Vector api(math) & default;
+		static api(math) const Vector & left;
+		static api(math) const Vector & up;
+		static api(math) const Vector & forward;
+		static api(math) const Vector & default;
 	};
 
 	using ByteVector = Vector<byte>;

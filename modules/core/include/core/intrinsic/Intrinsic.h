@@ -386,22 +386,19 @@ namespace Rapture
 			return {shuffle<3, 2, 1, 0>(a)};
 		}
 
-		template<byte A, byte B, byte C, byte D, useif <(A < 2 && B < 2 && C < 2 && D < 2)>
-			endif>
+		template<byte A, byte B, byte C, byte D, useif <(A < 2 && B < 2 && C < 2 && D < 2)> endif>
 		static inline void __vectorcall blend(const type & a, const type & b, type & out)
 		{
 			out = _mm_blend_epi32(a, b, mk_mask4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D, useif <(A < 2 && B < 2 && C < 2 && D < 2)>
-			endif>
+		template<byte A, byte B, byte C, byte D, useif <(A < 2 && B < 2 && C < 2 && D < 2)> endif>
 		static inline inner __vectorcall blend(const type & a, const type & b)
 		{
 			return {_mm_blend_epi32(a, b, mk_mask4(A, B, C, D))};
 		}
 
-		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
-			endif>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)> endif>
 		static inline void __vectorcall shuffle2(const type & a, const type & b, type & out)
 		{
 			out = _mm_blend_epi32(
@@ -411,8 +408,7 @@ namespace Rapture
 				);
 		}
 
-		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
-			endif>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)> endif>
 		static inline inner __vectorcall shuffle2(const type & a, const type & b)
 		{
 			return {_mm_blend_epi32(
@@ -422,8 +418,7 @@ namespace Rapture
 				)};
 		}
 
-		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
-			endif>
+		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)> endif>
 		static inline void __vectorcall shuffle(const type & a, type & out)
 		{
 			out = _mm_shuffle_epi32(a, mk_shuffle_4(A, B, C, D));
@@ -766,43 +761,55 @@ namespace Rapture
 			return {_mm_reverse_ps(a)};
 		}
 
-		template<byte A, byte B, byte C, byte D, useif <(A < 2 && B < 2 && C < 2 && D < 2)>
-			endif>
+		template<byte A, byte B, byte C, byte D, useif <
+			(A < 2 && B < 2 && C < 2 && D < 2)
+			> endif
+		>
 		static inline void __vectorcall blend(const type & a, const type & b, type & out)
 		{
 			out = _mm_blend_ps(a, b, mk_mask4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D, useif <(A < 2 && B < 2 && C < 2 && D < 2)>
-			endif>
+		template<byte A, byte B, byte C, byte D, useif <
+			(A < 2 && B < 2 && C < 2 && D < 2)
+			> endif
+		>
 		static inline inner __vectorcall blend(const type & a, const type & b)
 		{
 			return _mm_blend_ps(a, b, mk_mask4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
-			endif>
+		template<byte A, byte B, byte C, byte D, useif <
+			(A < 4 && B < 4 && C < 4 && D < 4)
+			> endif
+		>
 		static inline void __vectorcall shuffle2(const type & a, const type & b, type & out)
 		{
 			out = _mm_shuffle_ps(a, b, mk_shuffle_4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
-			endif>
+		template<byte A, byte B, byte C, byte D, useif <
+			(A < 4 && B < 4 && C < 4 && D < 4)
+			> endif
+		>
 		static inline inner __vectorcall shuffle2(const type & a, const type & b)
 		{
 			return {_mm_shuffle_ps(a, b, mk_shuffle_4(A, B, C, D))};
 		}
 
-		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
-			endif>
+		template<byte A, byte B, byte C, byte D, useif <
+			(A < 4 && B < 4 && C < 4 && D < 4)
+			> endif
+		>
 		static inline void __vectorcall shuffle(const type & a, type & out)
 		{
 			out = _mm_permute_ps(a, mk_shuffle_4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)>
-			endif>
+		template<byte A, byte B, byte C, byte D, useif <
+			(A < 4 && B < 4 && C < 4 && D < 4)
+			> endif
+		>
 		static inline inner __vectorcall shuffle(const type & a)
 		{
 			return {_mm_permute_ps(a, mk_shuffle_4(A, B, C, D))};

@@ -85,12 +85,12 @@ namespace Rapture
 
 	VertexElement VertexElement::pos2("p2", VertexElement::Position, 0, 2);
 	VertexElement VertexElement::pos3("p3", VertexElement::Position, 0, 3);
-	VertexElement VertexElement::color3("c3", VertexElement::Color, 0, 3);
-	VertexElement VertexElement::colorf("c4", VertexElement::Color, 0, 4);
+	VertexElement VertexElement::color3("c3", VertexElement::GenericColor, 0, 3);
+	VertexElement VertexElement::Color("c4", VertexElement::GenericColor, 0, 4);
 	VertexElement VertexElement::tex("t", VertexElement::Texcoord, 0, 2);
 	VertexElement VertexElement::normal("n", VertexElement::Normal, 0, 3);
-	VertexElement VertexElement::secondaryColor3("s3", VertexElement::Color, 1, 3);
-	VertexElement VertexElement::secondaryColor4("s4", VertexElement::Color, 1, 4);
+	VertexElement VertexElement::secondaryColor3("s3", VertexElement::GenericColor, 1, 3);
+	VertexElement VertexElement::secondaryColor4("s4", VertexElement::GenericColor, 1, 4);
 
 	void GraphicModel::draw(int pass) const
 	{
@@ -257,16 +257,6 @@ namespace Rapture
 		figure->draw();
 	}
 
-	void Graphics3D::draw(const Image * image, int x, int y)
-	{
-		draw(image, IntRect {x, y, x + image->width(), y + image->height()});
-	}
-
-	void Graphics3D::draw(const Image * image, int x, int y, int width, int height)
-	{
-		draw(image, IntRect {x, y, x + width, y + height});
-	}
-
 	void Graphics3D::draw(const Image * image, const IntRect & rect)
 	{
 		if(image->graphics() != this)
@@ -293,16 +283,12 @@ namespace Rapture
 
 	void Graphics3D::draw(const Symbol * symbol, int x, int y)
 	{
-		if(symbol->graphics() != this)
-			return;
-
 		auto image = symbol->image();
 
-		if(image == nullptr)
+		if(image == nullptr || image->graphics() != this)
 			return;
 
 		image->apply();
-
 		updateAreaUniform(IntRect({x + symbol->left(), y + symbol->top()}, {image->width(), image->height()}));
 
 		techniques2d.text->apply();

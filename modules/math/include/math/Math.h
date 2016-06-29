@@ -27,29 +27,29 @@ namespace Rapture
 	template<class T>
 	struct MathConstants
 	{
-		static const T api(math) one;
-		static const T api(math) pi;
-		static const T api(math) pi2;
-		static const T api(math) half_pi;
-		static const T api(math) half_pi3;
-		static const T api(math) inv_pi;
-		static const T api(math) inv_pi2;
-		static const T api(math) degree180;
-		static const T api(math) degree360;
-		static const T api(math) eps;
-		static const T api(math) eps2;
-		static const T api(math) eps3;
-		static const T api(math) infinity;
+		static api(math) const T one;
+		static api(math) const T pi;
+		static api(math) const T pi2;
+		static api(math) const T half_pi;
+		static api(math) const T half_pi3;
+		static api(math) const T inv_pi;
+		static api(math) const T inv_pi2;
+		static api(math) const T degree180;
+		static api(math) const T degree360;
+		static api(math) const T eps;
+		static api(math) const T eps2;
+		static api(math) const T eps3;
+		static api(math) const T infinity;
 
-		static const T api(math) degreetorad;
-		static const T api(math) radtodegree;
+		static api(math) const T degreetorad;
+		static api(math) const T radtodegree;
 	};
 
 	template<class T>
 	struct MathCoefficients
 	{
-		static const T api(math) sin[];
-		static const T api(math) cos[];
+		static api(math) const T sin[];
+		static api(math) const T cos[];
 		/*static const T tan[];
 		static const T arc[];
 		static const T atan[];*/

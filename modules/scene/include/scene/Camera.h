@@ -46,13 +46,13 @@ namespace Rapture
 			return _projectionMode;
 		}
 
-		void api(scene) setProjectionMode(ProjectionMode mode);
+		api(scene) void setProjectionMode(ProjectionMode mode);
 
-		void api(scene) setZoom(float zoom);
-		void api(scene) setFieldOfView(float fov);
-		void api(scene) updateProjection();
+		api(scene) void setZoom(float zoom);
+		api(scene) void setFieldOfView(float fov);
+		api(scene) void updateProjection();
 
-		void api(scene) update();
+		api(scene) void update();
 
 	protected:
 		float _zoom = 0.01f;

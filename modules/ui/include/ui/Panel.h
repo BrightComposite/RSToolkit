@@ -33,7 +33,7 @@ namespace Rapture
 		}
 
 		using Widget::read;
-		virtual void api(ui) read(Handle<WidgetChangedStateMessage> & msg) override;
+		virtual api(ui) void read(Handle<WidgetChangedStateMessage> & msg) override;
 	};
 }
 

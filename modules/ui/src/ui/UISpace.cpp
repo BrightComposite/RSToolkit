@@ -6,6 +6,8 @@
 
 #include <application/Application.h>
 
+#include <graphics/Graphics.h>
+
 //---------------------------------------------------------------------------
 
 namespace Rapture

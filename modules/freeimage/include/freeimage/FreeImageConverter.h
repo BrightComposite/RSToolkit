@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef FREE_IMAGE_CONVERTER_H
 #define FREE_IMAGE_CONVERTER_H
 

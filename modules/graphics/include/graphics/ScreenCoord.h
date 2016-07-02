@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef SCREEN_COORD_H
 #define SCREEN_COORD_H
 

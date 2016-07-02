@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef RECT_ADAPTER_H
 #define RECT_ADAPTER_H
 

@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef GRAPHICS_SHADERS_H
 #define GRAPHICS_SHADERS_H
 

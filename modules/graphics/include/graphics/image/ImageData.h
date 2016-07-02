@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef IMAGE_DATA_H
 #define IMAGE_DATA_H
 
@@ -7,6 +9,8 @@
 
 #include <core/container/Data.h>
 #include <core/String.h>
+
+#include <math/Rect.h>
 
 #include <io/FileSystem.h>
 
@@ -159,14 +163,23 @@ namespace Rapture
 		
 	public:
 		ImageData() : Base() {}
-		ImageData(const ImageData & img) : Base(img), width(img.width), height(img.height), format(img.format) {}
+		ImageData(const ImageData & img) : Base(img), area(img.area), format(img.format) {}
 		virtual ~ImageData() {}
+
+		uint width() const
+		{
+			return area.x;
+		}
+
+		uint height() const
+		{
+			return area.y;
+		}
 
 		ImageData & operator = (const ImageData & img)
 		{
 			Base::operator = (img);
-			width = img.width;
-			height = img.height;
+			area = img.area;
 			format = img.format;
 
 			return *this;
@@ -175,8 +188,7 @@ namespace Rapture
 		ImageData & operator = (ImageData && img)
 		{
 			Base::operator = (forward<Base>(img));
-			width = img.width;
-			height = img.height;
+			area = img.area;
 			format = img.format;
 
 			return *this;
@@ -184,13 +196,13 @@ namespace Rapture
 
 		void alloc()
 		{
-			Base::alloc(width * height * preferredBpp(format));
+			Base::alloc(area.x * area.y * preferredBpp(format));
 		}
 
 		api(graphics) void convert(ImageFormat newFormat);
 		api(graphics) void convert(ImageData * out, ImageFormat newFormat) const;
 
-		uint width = 0, height = 0;
+		UintSize area = {0, 0};
 		ImageFormat format = ImageFormat::unknown;
 	};
 

@@ -73,18 +73,17 @@ namespace Rapture
 
 		FinalAction release_bmp(FreeImage_Unload, bmp);
 
-		output->width = FreeImage_GetWidth(bmp);
-		output->height = FreeImage_GetHeight(bmp);
+		output->area = {FreeImage_GetWidth(bmp), FreeImage_GetHeight(bmp)};
 
 		const byte bpp = static_cast<byte>(FreeImage_GetBPP(bmp) / 8);
 
 		output->format = preferredFormat(bpp);
 		output->alloc();
 
-		FreeImage_ConvertToRawBits(output->ptr, bmp, output->width * bpp, bpp * 8, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK, TRUE);
+		FreeImage_ConvertToRawBits(output->ptr, bmp, output->width() * bpp, bpp * 8, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK, TRUE);
 	}
 
-	void FreeImageConverter::encode(OwnedByteData * output, const string & type, const ImageData * image)
+	void FreeImageConverter::encode(OwnedByteData * output, const string & type, const ImageData * input)
 	{
 		FREE_IMAGE_FORMAT internal_format = getFIFFormat(type);
 
@@ -98,21 +97,21 @@ namespace Rapture
 		
 		FinalAction release_mem(FreeImage_CloseMemory, mem);
 
-		uint w = image->width, h = image->height;
+		uint w = input->width(), h = input->height();
 		int bpp, pitch;
 		byte * data;
 
 		{
 			Handle<ImageData> buffer(nothing);
-			bpp = preferredBpp(image->format);
+			bpp = preferredBpp(input->format);
 
 			if(internal_format == FIF_JPEG || bpp < 4)
 			{
-				image->convert(buffer, ImageFormat::rgb);
+				input->convert(buffer, ImageFormat::rgb);
 				bpp = 3;
 			}
 			else
-				image->convert(buffer, ImageFormat::rgba);
+				input->convert(buffer, ImageFormat::rgba);
 
 			pitch = w * bpp;
 			data = buffer->send();

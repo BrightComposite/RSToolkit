@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef WIDGET_MESSAGES_H
 #define WIDGET_MESSAGES_H
 

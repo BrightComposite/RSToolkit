@@ -118,7 +118,7 @@ namespace Rapture
 		array_list<FloatPoint> points;
 		auto & p = data.points;
 
-		for(int i = 0; i < p.size() - 3; i += 2)
+		for(size_t i = 0; i < p.size() - 3; i += 2)
 		{
 			points.push_back(p[i]);
 			points.push_back(p[i + 1]);
@@ -379,6 +379,12 @@ namespace Rapture
 	void Graphics3D::updateBrushState()
 	{
 		updateUniform<Uniforms::BrushOptions>(color(), lineWidth());
+	}
+
+	void Graphics3D::updateSurface()
+	{
+		clip(_surface->size());
+		updateUniform<Uniforms::Viewport>(FloatSize {_surface->size()});
 	}
 
 	void Graphics3D::updateAreaUniform(const IntRect & rect)

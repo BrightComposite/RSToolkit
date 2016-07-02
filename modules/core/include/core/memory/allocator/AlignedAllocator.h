@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef ALIGNED_ALLOCATOR_H
 #define ALIGNED_ALLOCATOR_H
 

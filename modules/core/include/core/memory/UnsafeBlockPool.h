@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef UNSAFE_BLOCK_POOL_H
 #define UNSAFE_BLOCK_POOL_H
 

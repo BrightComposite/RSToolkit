@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef FREETYPE_DECODER_H
 #define FREETYPE_DECODER_H
 

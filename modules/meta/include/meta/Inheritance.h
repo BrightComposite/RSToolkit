@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef META_INHERITANCE_H
 #define META_INHERITANCE_H
 

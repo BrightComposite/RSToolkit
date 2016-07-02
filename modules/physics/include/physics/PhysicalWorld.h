@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef PHYSICAL_WORLD_H
 #define PHYSICAL_WORLD_H
 

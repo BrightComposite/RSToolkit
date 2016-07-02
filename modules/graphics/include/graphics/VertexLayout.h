@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef VERTEX_LAYOUT_H
 #define VERTEX_LAYOUT_H
 

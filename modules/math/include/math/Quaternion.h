@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef QUATERNION_H
 #define QUATERNION_H
 

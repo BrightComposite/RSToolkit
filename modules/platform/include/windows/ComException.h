@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef COM_EXCEPTION_H
 #define COM_EXCEPTION_H
 

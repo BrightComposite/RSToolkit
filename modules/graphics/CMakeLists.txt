@@ -28,6 +28,7 @@ add_module_sources(
 			Mesh.h
 			ScreenCoord.h
 			Shaders.h
+			Surface.h
 			Uniform.h
 			VertexLayout.h
 

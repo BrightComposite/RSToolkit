@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef STARTER_H
 #define STARTER_H
 
@@ -16,8 +18,6 @@
 
 extern int _CRT_glob;
 extern C_EXTERN void __wgetmainargs(int *, wchar_t ***, wchar_t ***, int, int *);
-
-int api_export wmain(int argc, wchar_t * argv[]);
 
 int main()
 {

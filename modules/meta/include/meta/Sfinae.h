@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef META_SFINAE_H
 #define META_SFINAE_H
 

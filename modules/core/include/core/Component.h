@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef COMPONENT_H
 #define COMPONENT_H
 
@@ -13,6 +15,10 @@
 
 namespace Rapture
 {
+#define component_base(Base) morph_base(Base)
+#define create_component_pool(module, Base) create_morph_pool(module, Base)
+#define create_component(module, Component) create_morph_type(module, Component)
+
 	class Component : public Object
 	{
 		template<class, class ...>
@@ -55,10 +61,6 @@ namespace Rapture
 		map<int, Component *> _links;
 	};
 
-#define component_base(Base) morph_base(Base)
-#define create_component_pool(module, Base) create_morph_pool(module, Base)
-#define create_component(module, Component) create_morph_type(module, Component)
-
 	class LinkedComponentException : public Exception
 	{
 	public:
@@ -72,8 +74,6 @@ namespace Rapture
 	class ComponentSet
 	{
 	public:
-		static_assert(is_morph_type<Base>::value, "ComponentSet can only use component types marked with the 'component_base' macro");
-
 		template<class T, class Context>
 		using is_context = is_same<decltype(declval<Context>().init(declval<Handle<T, Owner...> &>())), Handle<T, Owner...> &>;
 
@@ -190,7 +190,7 @@ namespace Rapture
 		}
 
 	protected:
-		Map<int, Base, Owner...> map;
+		UnorderedMap<int, Base, Owner...> map;
 	};
 }
 

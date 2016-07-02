@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef META_PREPROCESSOR_H
 #define META_PREPROCESSOR_H
 

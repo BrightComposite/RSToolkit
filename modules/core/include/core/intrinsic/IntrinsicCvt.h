@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef INTRINSIC_CVT_H
 #define INTRINSIC_CVT_H
 

@@ -56,8 +56,7 @@ namespace Rapture
 
 			data.character = character;
 
-			data.width = bmp.width;
-			data.height = bmp.rows;
+			data.area = {bmp.width, bmp.rows};
 
 			data.left = bitglyph->left;
 			data.top = size - bitglyph->top;
@@ -82,7 +81,7 @@ namespace Rapture
 				data.format = ImageFormat::unknown;
 			}
 
-			if(data.width * data.height > 0)
+			if(data.width() * data.height() > 0)
 			{
 				data.set(bmp.buffer, bmp.width * bmp.rows);
 				symbol.init(graphics, data);
@@ -98,7 +97,7 @@ namespace Rapture
 
 		Handle<ByteData> data;
 		FT_Face face;
-		mutable map<const Graphics *, map<int, HashMap<wchar_t, Symbol>>> _cache;
+		mutable map<const Graphics *, map<int, UnorderedMap<wchar_t, Symbol>>> _cache;
 	};
 
 	FreeTypeDecoder::FreeTypeDecoder()

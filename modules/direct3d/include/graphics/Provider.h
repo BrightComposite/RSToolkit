@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef DIRECT3D_PROVIDER_H
 #define DIRECT3D_PROVIDER_H
 

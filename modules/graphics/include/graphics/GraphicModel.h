@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef GRAPHIC_MODEL_H
 #define GRAPHIC_MODEL_H
 
@@ -17,7 +19,7 @@ namespace Rapture
 {
 	class Graphics3D;
 
-	class GraphicModel
+	class GraphicModel : public Shared
 	{
 	public:
 		GraphicModel(Graphics3D * graphics, Handle<Mesh> mesh, Handle<FxTechnique> technique) :

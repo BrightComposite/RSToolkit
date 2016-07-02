@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef MAP_H
 #define MAP_H
 
@@ -21,14 +23,14 @@ namespace Rapture
 	using std::unordered_multimap;
 
 	template<class K, class V, class ... Owner>
-	class HashMap : public unordered_map<K, Handle<V, Owner...>>
+	class UnorderedMap : public unordered_map<K, Handle<V, Owner...>>
 	{
 	public:
 		using unordered_map<K, Handle<V, Owner...>>::unordered_map;
 	};
 
 	template<class K, class V, class Hasher, class ... Owner>
-	class CustomHashMap : public unordered_map<K, Handle<V, Owner...>, Hasher>
+	class CustomUnorderedMap : public unordered_map<K, Handle<V, Owner...>, Hasher>
 	{
 	public:
 		using unordered_map<K, Handle<V, Owner...>, Hasher>::unordered_map;

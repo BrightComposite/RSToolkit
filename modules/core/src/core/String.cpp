@@ -385,7 +385,7 @@ namespace Rapture
 		if(l > capacity())
 			reserve(l);
 
-		wchar_t * ptr = new wchar_t[l];
+		wchar_t * ptr = new wchar_t[l + 1];
 
 		for(size_t i = start; i < l - 1; ++i)
 			ptr[i] = sym;

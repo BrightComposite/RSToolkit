@@ -211,7 +211,7 @@ namespace Rapture
 				RectAdapter a;
 				GetClientRect(w._handle, &a.rect);
 
-				WINDOWPLACEMENT wp;
+				WINDOWPLACEMENT wp {};
 				GetWindowPlacement(hWnd, &wp);
 
 				if(wp.showCmd == SW_SHOWNORMAL || w._width != a.width() || w._height != a.height())

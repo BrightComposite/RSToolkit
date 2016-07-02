@@ -8,7 +8,7 @@ namespace Rapture
 {
 	implement_link(Graphics);
 
-	void Graphics::bind(const Handle<Surface> & surface)
+	void Graphics::bind(Surface * surface)
 	{
 		if(_surface == surface)
 			return;
@@ -16,7 +16,7 @@ namespace Rapture
 		_surface = surface;
 		_surface->apply();
 
-		clip(viewport());
+		updateSurface();
 	}
 
 	void Graphics::bind(const Handle<Font> & font)
@@ -24,7 +24,7 @@ namespace Rapture
 		_font = font;
 	}
 
-	const Handle<Surface> & Graphics::surface()
+	Surface * Graphics::surface()
 	{
 		return _surface;
 	}
@@ -106,22 +106,46 @@ namespace Rapture
 
 	void Graphics::draw(const string & text, int x, int y)
 	{
-		draw<string>(this, text, x, y);
+		int newx;
+		draw<string>(this, text, x, y, newx);
 	}
 
 	void Graphics::draw(const wstring & text, int x, int y)
 	{
-		draw<wstring>(this, text, x, y);
+		int newx;
+		draw<wstring>(this, text, x, y, newx);
 	}
 
 	void Graphics::draw(const string & text, const IntPoint & pt)
 	{
-		draw(text, pt.x, pt.y);
+		int newx;
+		draw<string>(this, text, pt.x, pt.y, newx);
 	}
 
 	void Graphics::draw(const wstring & text, const IntPoint & pt)
 	{
-		draw(text, pt.x, pt.y);
+		int newx;
+		draw<wstring>(this, text, pt.x, pt.y, newx);
+	}
+
+	void Graphics::draw(const string & text, int x, int y, int & newx)
+	{
+		draw<string>(this, text, x, y, newx);
+	}
+
+	void Graphics::draw(const wstring & text, int x, int y, int & newx)
+	{
+		draw<wstring>(this, text, x, y, newx);
+	}
+
+	void Graphics::draw(const string & text, const IntPoint & pt, int & newx)
+	{
+		draw<string>(this, text, pt.x, pt.y, newx);
+	}
+
+	void Graphics::draw(const wstring & text, const IntPoint & pt, int & newx)
+	{
+		draw<wstring>(this, text, pt.x, pt.y, newx);
 	}
 
 	IntSize Graphics::getTextSize(const string & text)
@@ -137,6 +161,11 @@ namespace Rapture
 	State<Color> * Graphics::colorState()
 	{
 		return _color;
+	}
+
+	State<Color> * Graphics::clearColorState()
+	{
+		return _clearColor;
 	}
 
 	State<int> * Graphics::fontSizeState()
@@ -162,6 +191,11 @@ namespace Rapture
 		return data;
 	}
 
+	void Graphics::updateSurface()
+	{
+		clip(_surface->_viewport);
+	}
+
 	template<class string_t>
 	IntSize Graphics::textSize(Graphics * graphics, const string_t & text)
 	{
@@ -171,7 +205,10 @@ namespace Rapture
 		Handle<Symbol> symbol;
 		IntSize size;
 
-		graphics->_font->getSymbol(symbol, graphics, graphics->_fontSize->get(), ' ');
+		auto font = graphics->_font;
+		int fontSize = graphics->_fontSize->get();
+
+		font->getSymbol(symbol, graphics, fontSize, ' ');
 		int space = symbol->_advance.x;
 		int tab = space * 4;
 
@@ -193,7 +230,7 @@ namespace Rapture
 				if(ch < ' ')
 					break;
 
-				graphics->_font->getSymbol(symbol, graphics, graphics->_fontSize->get(), ch);
+				font->getSymbol(symbol, graphics, fontSize, ch);
 				size.x += symbol->_advance.x;
 
 				if(symbol->_image != nullptr)
@@ -213,40 +250,41 @@ namespace Rapture
 	}
 
 	template<class string_t>
-	void Graphics::draw(Graphics * graphics, const string_t & text, int x, int y)
+	void Graphics::draw(Graphics * graphics, const string_t & text, int x, int y, int & newx)
 	{
 		if(graphics->_font == nullptr)
 			return;
 
 		Handle<Symbol> symbol;
+		newx = x;
 
-		graphics->_font->getSymbol(symbol, graphics, graphics->_fontSize->get(), ' ');
+		auto font = graphics->_font;
+		int fontSize = graphics->_fontSize->get();
+
+		font->getSymbol(symbol, graphics, fontSize, ' ');
 		int space = symbol->_advance.x;
 		int tab = space * 4;
-		int offset = 0;
 
-		for(size_t i = 0; i < text.length(); ++i)
+		for(auto & ch : text)
 		{
-			auto & ch = text[i];
-
 			switch(ch)
 			{
-			case '\t':
-				offset = ((offset + space) / tab + 1) * tab;
-				break;
-
-			case ' ':
-				offset += space;
-				break;
-
-			default:
-				if(ch < ' ')
+				case '\t':
+					newx = ((newx + space) / tab + 1) * tab;
 					break;
 
-				graphics->_font->getSymbol(symbol, graphics, graphics->_fontSize->get(), ch);
-				graphics->draw(symbol, x + offset, y);
+				case ' ':
+					newx += space;
+					break;
 
-				offset += symbol->_advance.x;
+				default:
+					if(ch < ' ')
+						break;
+
+					font->getSymbol(symbol, graphics, fontSize, ch);
+					graphics->draw(symbol, newx, y);
+
+					newx += symbol->_advance.x;
 			}
 		}
 	}
@@ -254,8 +292,8 @@ namespace Rapture
 	template IntSize Graphics::textSize<string>(Graphics * graphics, const string & text);
 	template IntSize Graphics::textSize<wstring>(Graphics * graphics, const wstring & text);
 
-	template void Graphics::draw<string>(Graphics * graphics, const string & text, int x, int y);
-	template void Graphics::draw<wstring>(Graphics * graphics, const wstring & text, int x, int y);
+	template void Graphics::draw<string>(Graphics * graphics, const string & text, int x, int y, int & newx);
+	template void Graphics::draw<wstring>(Graphics * graphics, const wstring & text, int x, int y, int & newx);
 
 	void ScreenCoord::toRel(const IntRect & rectAbs, const IntSize & viewport, FloatPoint & posRel, FloatSize & sizeRel)
 	{

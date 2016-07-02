@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
@@ -23,88 +25,13 @@
 #include <graphics/font/Font.h>
 
 #include "Color.h"
-
-#undef min
-#undef max
+#include "Surface.h"
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	class Surface;
-	class Surface;
 	class UISpace;
-
-	class RigidSurfaceException : public Exception
-	{
-	public:
-		RigidSurfaceException() : Exception("Tried to resize rigid surface!") {}
-		virtual ~RigidSurfaceException() {}
-	};
-
-	class Surface : public Shared
-	{
-		friend class Graphics;
-
-	public:
-		Surface(const IntSize & size) : _viewport(size) {}
-		virtual ~Surface() {}
-
-		const Viewport & viewport() const
-		{
-			return _viewport;
-		}
-
-		const IntSize & size() const
-		{
-			return _viewport.size();
-		}
-
-		int width() const
-		{
-			return _viewport.width();
-		}
-
-		int height() const
-		{
-			return _viewport.height();
-		}
-
-		void setSize(const IntSize & size)
-		{
-			auto tmp = _viewport;
-			_viewport.set(size);
-
-			try {
-				resize();
-			}
-			catch(...) {
-				_viewport = tmp;
-				throw;
-			}
-		}
-
-		virtual void apply() const = 0;
-		virtual void present() const = 0;
-		virtual void clear() const = 0;
-		virtual void requestData(ImageData * data) const = 0;
-
-		Handle<ImageData> requestData() const
-		{
-			auto data = handle<ImageData>();
-			requestData(data);
-
-			return data;
-		}
-
-	protected:
-		virtual void resize()
-		{
-			throw RigidSurfaceException();
-		}
-
-		Viewport _viewport;
-	};
 
 	enum class FillMode
 	{
@@ -144,7 +71,7 @@ namespace Rapture
 		Graphics() { setclass(Graphics); }
 		virtual ~Graphics() {}
 
-		api(graphics) const Handle<Surface> & surface();
+		api(graphics) Surface * surface();
 		api(graphics) const Viewport & viewport() const;
 
 		api(graphics) const IntRect & clipRect() const;
@@ -159,6 +86,7 @@ namespace Rapture
 		api(graphics) IntSize getTextSize(const wstring & text);
 
 		api(graphics) State<Color> * colorState();
+		api(graphics) State<Color> * clearColorState();
 		api(graphics) State<int> * fontSizeState();
 		api(graphics) State<int> * lineWidthState();
 		api(graphics) State<FillMode> * fillModeState();
@@ -193,7 +121,7 @@ namespace Rapture
 		api(graphics) void setLineWidth(int size);
 		api(graphics) void setFillMode(FillMode mode);
 
-		api(graphics) void bind(const Handle<Surface> & surface);
+		api(graphics) void bind(Surface * surface);
 		api(graphics) void bind(const Handle<Font> & font);
 
 		virtual Handle<Image> createImage(const ImageData & data) = 0;
@@ -227,19 +155,26 @@ namespace Rapture
 		api(graphics) void draw(const string & text, const IntPoint & pt);
 		api(graphics) void draw(const wstring & text, const IntPoint & pt);
 
+		api(graphics) void draw(const string & text, int x, int y, int & newx);
+		api(graphics) void draw(const wstring & text, int x, int y, int & newx);
+		api(graphics) void draw(const string & text, const IntPoint & pt, int & newx);
+		api(graphics) void draw(const wstring & text, const IntPoint & pt, int & newx);
+
 		virtual void present() const = 0;
 
 	protected:
 		virtual void initFacilities() {}
 		virtual void updateBrushState() {}
 
+		virtual api(graphics) void updateSurface();
+
 		template<class string_t>
-		static api(graphics) void draw(Graphics * graphics, const string_t & text, int x, int y);
+		static api(graphics) void draw(Graphics * graphics, const string_t & text, int x, int y, int & outx);
 
 		template<class string_t>
 		static api(graphics) IntSize textSize(Graphics * graphics, const string_t & text);
 
-		Handle<Surface> _surface;
+		Surface * _surface;
 		Handle<Font> _font;
 
 		IntRect _clipRect {0.0f, 0.0f, 10000.0f, 10000.0f};

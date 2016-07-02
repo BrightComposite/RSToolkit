@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef IMAGE_H
 #define IMAGE_H
 
@@ -17,18 +19,23 @@ namespace Rapture
 	class Image : public Object
 	{
 	public:
-		Image(Graphics * graphics, uint width, uint height, ImageFormat format) : _format(format), _width(width), _height(height), _graphics(graphics) {}
-		Image(Graphics * graphics, const ImageData & data) : _format(data.format), _width(data.width), _height(data.height), _graphics(graphics) {}
+		Image(Graphics * graphics, uint width, uint height, ImageFormat format) : _format(format), _size(width, height), _graphics(graphics) {}
+		Image(Graphics * graphics, const ImageData & data) : _format(data.format), _size(data.area), _graphics(graphics) {}
 		virtual ~Image() {}
+
+		const UintSize & size() const
+		{
+			return _size;
+		}
 
 		uint width() const
 		{
-			return _width;
+			return _size.x;
 		}
 
 		uint height() const
 		{
-			return _height;
+			return _size.y;
 		}
 
 		Graphics * graphics() const
@@ -43,7 +50,7 @@ namespace Rapture
 		static api(graphics) void save(const path & filepath, const Image * image);
 
 	protected:
-		uint _width, _height;
+		UintSize _size;
 		ImageFormat _format;
 		Graphics * _graphics;
 	};

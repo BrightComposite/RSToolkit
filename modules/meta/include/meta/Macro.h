@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef META_MACRO_H
 #define META_MACRO_H
 
@@ -64,6 +66,18 @@ namespace Rapture
 	}
 
 	template<class T>
+	constexpr bool between(T value, T min, T max)
+	{
+		return value >= min && value <= max;
+	}
+
+	template<class T, class Y>
+	constexpr auto align(T x, Y a)
+	{
+		return ((x - 1) | (a - 1)) + 1;
+	}
+
+	template<class T>
 	size_t max_index(initializer_list<T> list)
 	{
 		return std::max_element(list.begin(), list.end()) - list.begin();
@@ -82,16 +96,22 @@ namespace Rapture
 		return {minmax.first - list.begin(), minmax.second - list.begin()};
 	}
 
-	template<class T>
-	constexpr bool between(T value, T min, T max)
+	template<class T, class F>
+	auto acquire(const T & object, F functor) -> decltype(functor(object))
 	{
-		return value >= min && value <= max;
+		return object != nullptr ? functor(object) : nullptr;
 	}
 
-	template<class T, class Y>
-	constexpr auto align(T x, Y a)
+	template<class T, class F>
+	auto acquire(T && object, F functor) -> decltype(functor(forward<T>(object)))
 	{
-		return ((x - 1) | (a - 1)) + 1;
+		return object != nullptr ? functor(forward<T>(object)) : nullptr;
+	}
+
+	template<class T, class F>
+	auto acquire(T * object, F functor) -> decltype(functor(object))
+	{
+		return object != nullptr ? functor(object) : nullptr;
 	}
 
 	template<class T>

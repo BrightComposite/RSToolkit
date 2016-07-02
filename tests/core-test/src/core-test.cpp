@@ -81,6 +81,8 @@ namespace Rapture
 		bind_message(DummySubject, DummyMessage);
 	};
 
+	channels_api(core_test, DummySubject, DummyMessage)
+
 	class DummyReceiver : public MessageReceiver
 	{
 	public:

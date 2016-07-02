@@ -34,6 +34,8 @@ add_module_sources(
 
 	SRC_GROUP src Sources
 		START_SECTION direct3d
+			D3DObjects.cpp
+			D3DSurfaces.cpp
 			Direct3D11.cpp
 
 			START_SECTION shaders

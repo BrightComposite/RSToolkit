@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef DIRECT3D11_H
 #define DIRECT3D11_H
 
@@ -296,6 +298,20 @@ namespace Rapture
 			ComHandle<ID3D11DepthStencilView> _depthStencilView;
 		};
 
+		class RenderTargetSurface : public D3DSurface
+		{
+			deny_copy(RenderTargetSurface);
+
+		public:
+			api(direct3d11) RenderTargetSurface(D3DGraphics * graphics, const IntSize & size);
+			virtual api(direct3d11) ~RenderTargetSurface();
+
+			virtual api(direct3d11) void apply() const override;
+
+		protected:
+			ComHandle<ID3D11RenderTargetView> _renderView;
+		};
+
 		class DepthSurface : public D3DSurface
 		{
 			deny_copy(DepthSurface);
@@ -308,7 +324,7 @@ namespace Rapture
 			virtual api(direct3d11) void clear() const override;
 		};
 
-		class UISurface : public D3DSurface
+		class UISurface : public RenderTargetSurface
 		{
 			deny_copy(UISurface);
 
@@ -316,7 +332,6 @@ namespace Rapture
 			api(direct3d11) UISurface(D3DGraphics * graphics, UISpace * space);
 			virtual api(direct3d11) ~UISurface();
 
-			virtual api(direct3d11) void apply() const override;
 			virtual api(direct3d11) void present() const override;
 			virtual api(direct3d11) void requestData(ImageData * data) const override;
 
@@ -334,13 +349,12 @@ namespace Rapture
 			api(direct3d11) void onUIDestroy(Handle<UIDestroyMessage> & msg, UISpace & space);
 
 			ComHandle<IDXGISwapChain1> _swapChain;
-			ComHandle<ID3D11RenderTargetView> _renderView;
 
 			DXGI_PRESENT_PARAMETERS _presentParams;
 			UISpace * _space;
 		};
 
-		class TextureSurface : virtual public D3DSurface
+		class TextureSurface : virtual public RenderTargetSurface
 		{
 			friend class D3DGraphics;
 
@@ -348,12 +362,10 @@ namespace Rapture
 			api(direct3d11) TextureSurface(D3DGraphics * graphics, const IntSize & size, Handle<Image> & image);
 			virtual ~TextureSurface() {}
 
-			virtual api(direct3d11) void apply() const override;
 			virtual api(direct3d11) void clear() const override;
 			virtual api(direct3d11) void requestData(ImageData * data) const override;
 
 		protected:
-			ComHandle<ID3D11RenderTargetView> _renderView;
 			Handle<D3DImage> _texture;
 		};
 

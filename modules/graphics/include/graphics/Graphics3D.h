@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef GRAPHICS_3D_H
 #define GRAPHICS_3D_H
 
@@ -131,6 +133,8 @@ namespace Rapture
 		virtual api(graphics) void initFacilities() override;
 		virtual api(graphics) void updateBrushState() override;
 
+		virtual api(graphics) void updateSurface() override;
+
 		api(graphics) void updateAreaUniform(const IntRect & rect);
 		api(graphics) void updateAreaUniform(const SqRect & rect);
 
@@ -164,8 +168,8 @@ namespace Rapture
 
 		ArrayList<Texture> _textures;
 
-		HashMap<string, VertexLayout> vertexLayouts;
-		HashMap<string, ShaderProgram> shaderPrograms;
+		UnorderedMap<string, VertexLayout> vertexLayouts;
+		UnorderedMap<string, ShaderProgram> shaderPrograms;
 
 		Handle<const VertexShader> _vshader;
 		Handle<const PixelShader> _pshader;

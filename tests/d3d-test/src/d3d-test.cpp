@@ -24,6 +24,9 @@
 #include <ui/Window.h>
 #include <ui/Panel.h>
 
+#include <ui/Cursor.h>
+#include <ui/Text.h>
+
 #include <windows/Message.h>
 
 #include <vld.h>
@@ -282,24 +285,22 @@ namespace Rapture
 
 			fontSize = 16;
 			Handle<Panel> russian_label(back);
-			Handle<WideString> russian_text(L"ÀÁÂÃÄÅ¨ÆÇÈÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäå¸æçèêëìíîïðñòóôõö÷øùúûüýþÿ");
 
 			graphics->bind(arial_italic);
 			graphics->setFontSize(fontSize);
 
+			WideString russian_text(L"ÀÁÂÃÄÅ¨ÆÇÈÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäå¸æçèêëìíîïðñòóôõö÷øùúûüýþÿ");
 			russian_label->setName("Russian Text Label");
-			russian_label->setPlacement({10, 50}, graphics->getTextSize(*russian_text));
+			russian_label->setPlacement({10, 50}, graphics->getTextSize(russian_text));
 
-			*russian_label << [russian_text, arial_italic, fontSize](const Widget * widget, const IntRect & region) {
-				auto * graphics = widget->graphics();
+			Text::set<StaticTextLayer>(russian_label, Handle<Text>(russian_text, arial_italic, Color(0.0f, 0.0f, 0.0f), fontSize), russian_label->size());
 
-				graphics->bind(arial_italic);
-				graphics->setFontSize(fontSize);
-
-				graphics->setColor(0.0f, 0.0f, 0.0f);
-				graphics->draw(*russian_text, widget->absPos());
+			subscribe_on(Widget, WidgetReleaseMessage, *russian_label)
+			{
+				static int count = 0;
+				Text::get(&dest)->setContents(L"ÀÁÂÃÄÅ¨ÆÇÈÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäå¸æçèêëìíîïðñòóôõö÷øùúûüýþÿ"_s + count++);
 			};
-
+			
 			window->setCaption(L"Rapture::Direct3D test");
 
 			ThreadLoop::add(processWindowMessage);

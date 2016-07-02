@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef CACHED_H
 #define CACHED_H
 
@@ -22,7 +24,7 @@ namespace Rapture
 		template<class ... A>
 		static auto & get(const K & key)
 		{
-			static HashMap<K, T, Cached> _cache;
+			static UnorderedMap<K, T, Cached> _cache;
 			auto & h = _cache[key];
 
 			if(h == nullptr)
@@ -71,7 +73,7 @@ namespace Rapture
 
 		static auto & cache()
 		{
-			static HashMap<K, T, Precached> _cache;
+			static UnorderedMap<K, T, Precached> _cache;
 			return _cache;
 		}
 	};

@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef MORPHER_H
 #define MORPHER_H
 
@@ -13,12 +15,6 @@
 
 namespace Rapture
 {
-	template<class Base>
-	struct MorphPool {};
-
-	template<class T>
-	struct MorphType {};
-
 	/**
 	 *	Marks the Base class as a root of morphers hierarchy. But you'll still
 	 *	need to create a pool for morphers based on this root with
@@ -65,6 +61,14 @@ namespace Rapture
 	}
 
 //---------------------------------------------------------------------------
+
+#define morphid(Type) MorphType<Type>::id()
+
+	template<class Base>
+	struct MorphPool {};
+
+	template<class T>
+	struct MorphType {};
 
 	template<class Base, class ... Owner>
 	class Morpher
@@ -120,7 +124,7 @@ namespace Rapture
 		template<class T, useif <based_on<T, Base>::value> endif>
 		Handle<T, Owner...> seek() const
 		{
-			auto i = map.find(MorphType<T>::id());
+			auto i = map.find(morphid(T));
 
 			if(i == map.end())
 				return nullptr;
@@ -131,7 +135,7 @@ namespace Rapture
 		template<class T, useif <based_on<T, Base>::value> endif>
 		void remove()
 		{
-			map.erase(MorphType<T>::id());
+			map.erase(morphid(T));
 		}
 
 		void clear()
@@ -148,10 +152,10 @@ namespace Rapture
 		template<class T>
 		Handle<Base, Owner...> & place()
 		{
-			return map[MorphType<T>::id()];
+			return map[morphid(T)];
 		}
 
-		Map<int, Base, Owner...> map;
+		UnorderedMap<int, Base, Owner...> map;
 	};
 };
 

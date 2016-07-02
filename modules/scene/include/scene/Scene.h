@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef SCENE_H
 #define SCENE_H
 
@@ -198,30 +200,43 @@ namespace Rapture
 
 		deny_copy(Scene);
 
-	protected:
-		class SceneLayer : public Layer
+	public:
+		class Component : public WidgetComponent 
 		{
 		public:
-			SceneLayer(Widget * widget, Scene * scene) : Layer(widget, INT_MAX), _scene(scene) {}
-			virtual ~SceneLayer() {}
-
-			virtual void draw(const IntRect & clipRegion) const override
+			Component(Widget * widget, Scene * scene) : WidgetComponent(widget), layer(scene)
 			{
-				_scene->draw(_scene->graphics(), scaleToSquare(_widget->absRegion()));
+				_widget->attach(&layer);
+			}
+
+			virtual ~Component()
+			{
+				_widget->detach(&layer);
 			}
 
 		protected:
-			Scene * _scene;
+			class Layer : public WidgetLayer
+			{
+			public:
+				Layer(Scene * scene) : WidgetLayer(INT_MAX), _scene(scene) {}
+
+			protected:
+				virtual void draw(Widget * w) override
+				{
+					_scene->draw(_scene->graphics(), scaleToSquare(w->absRegion()));
+				}
+
+				Scene * _scene;
+			} layer;
 		};
 
 		typedef std::chrono::high_resolution_clock clock;
 		typedef time_point<clock> time_marker;
 
-	public:
 		api(scene) Scene(Widget * widget, const string & name = "unknown scene");
 		virtual api(scene) ~Scene();
 
-		Graphics3api(scene) D & graphics() const;
+		Graphics3D api(scene) & graphics() const;
 		Widget     api(scene) & widget()   const;
 		UISpace    api(scene) & space()    const;
 		Camera     api(scene) * camera()   const;
@@ -255,6 +270,8 @@ namespace Rapture
 
 		ticks_t _ticks = 0;
 	};
+
+	create_component(scene, Scene::Component);
 
 	class SceneProvider
 	{

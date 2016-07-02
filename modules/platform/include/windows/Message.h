@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef WINDOW_MESSAGE_H
 #define WINDOW_MESSAGE_H
 

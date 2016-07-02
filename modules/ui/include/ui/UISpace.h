@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef UI_SPACE_H
 #define UI_SPACE_H
 
@@ -8,11 +10,15 @@
 #include "Widget.h"
 #include "Cursor.h"
 
+#include <meta/Bitmask.h>
+#include <graphics/Surface.h>
+
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	class UISpace; 
+	class UISpace;
+	class Surface;
 
 	link_class(ui, UISpace, Class<Subject>);
 

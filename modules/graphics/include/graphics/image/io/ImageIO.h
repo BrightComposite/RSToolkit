@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef IMAGE_CONVERTER_H
 #define IMAGE_CONVERTER_H
 

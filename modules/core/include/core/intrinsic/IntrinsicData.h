@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef INTRINSIC_DATA_H
 #define INTRINSIC_DATA_H
 

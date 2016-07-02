@@ -67,39 +67,39 @@ namespace Rapture
 		out->convert(newFormat);
 	}
 
-#define init_buffer(src_bpp, dst_bpp, src_ptr, dst_ptr)	\
-	const byte bpp	= __min(src_bpp, dst_bpp);			\
-	const byte sbpp = src_bpp;							\
-	const byte dbpp = dst_bpp;							\
-	size_t bsize = img->width * img->height * dbpp;		\
-	byte * buffer = Memory<byte>::allocate(bsize);		\
-	byte * src_ptr = img->ptr;							\
+#define init_buffer(src_bpp, dst_bpp, src_ptr, dst_ptr)		\
+	const byte bpp	= __min(src_bpp, dst_bpp);				\
+	const byte sbpp = src_bpp;								\
+	const byte dbpp = dst_bpp;								\
+	size_t bsize = data->width() * data->height() * dbpp;	\
+	byte * buffer = Memory<byte>::allocate(bsize);			\
+	byte * src_ptr = data->ptr;								\
 	byte * dst_ptr = buffer;
 
 #define iterate_buffer(src_ptr, dst_ptr)		\
-	for(uint y = 0; y < img->height; ++y)		\
-		for(uint x = 0; x < img->width; ++x,	\
+	for(uint y = 0; y < data->height(); ++y)	\
+		for(uint x = 0; x < data->width(); ++x,	\
 			src_ptr += sbpp, dst_ptr += dbpp)
 
 #define copy(dst_ptr, src_ptr)		\
 	memcpy(dst_ptr, src_ptr, bpp);
 
 #define move_buffer()				\
-	img->set(move(buffer), bsize);
+	data->set(move(buffer), bsize);
 
 #define init_img_ptr(img_bpp, img_ptr)	\
 	const byte bpp = img_bpp;			\
-	byte * img_ptr = img->ptr;
+	byte * img_ptr = data->ptr;
 
 #define iterate_image(img_ptr)					\
-	for(uint y = 0; y < img->height; ++y)		\
-		for(uint x = 0; x < img->width; ++x,	\
+	for(uint y = 0; y < data->height(); ++y)	\
+		for(uint x = 0; x < data->width(); ++x,	\
 			img_ptr += bpp)
 
 	//-----------------------------------------------------------------------
 
 	template<>
-	void ImageFormatConverter<ImageFormat::rgb, ImageFormat::rgba>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::rgb, ImageFormat::rgba>::convert(ImageData * data)
 	{
 		init_buffer(3, 4, src, dst);
 
@@ -113,9 +113,9 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::rgb, ImageFormat::bgr>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::rgb, ImageFormat::bgr>::convert(ImageData * data)
 	{
-		init_img_ptr(preferredBpp(img->format), buffer);
+		init_img_ptr(preferredBpp(data->format), buffer);
 
 		iterate_image(buffer)
 		{
@@ -124,7 +124,7 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::rgb, ImageFormat::bgra>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::rgb, ImageFormat::bgra>::convert(ImageData * data)
 	{
 		init_buffer(3, 4, src, dst);
 
@@ -140,7 +140,7 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::rgb, ImageFormat::argb>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::rgb, ImageFormat::argb>::convert(ImageData * data)
 	{
 		init_buffer(3, 4, src, dst);
 
@@ -154,9 +154,9 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::rgb, ImageFormat::grayscale>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::rgb, ImageFormat::grayscale>::convert(ImageData * data)
 	{
-		init_buffer(preferredBpp(img->format), 1, src, dst);
+		init_buffer(preferredBpp(data->format), 1, src, dst);
 
 		iterate_buffer(src, dst)
 		{
@@ -167,7 +167,7 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::rgb, ImageFormat::grayscale_alpha>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::rgb, ImageFormat::grayscale_alpha>::convert(ImageData * data)
 	{
 		init_buffer(3, 2, src, dst);
 
@@ -183,7 +183,7 @@ namespace Rapture
 	//-----------------------------------------------------------------------
 
 	template<>
-	void ImageFormatConverter<ImageFormat::rgba, ImageFormat::rgb>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::rgba, ImageFormat::rgb>::convert(ImageData * data)
 	{
 		init_buffer(4, 3, src, dst);
 
@@ -196,7 +196,7 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::rgba, ImageFormat::bgr>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::rgba, ImageFormat::bgr>::convert(ImageData * data)
 	{
 		init_buffer(4, 3, src, dst);
 
@@ -211,7 +211,7 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::rgba, ImageFormat::bgra>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::rgba, ImageFormat::bgra>::convert(ImageData * data)
 	{
 		init_buffer(4, 4, src, dst);
 
@@ -227,7 +227,7 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::rgba, ImageFormat::argb>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::rgba, ImageFormat::argb>::convert(ImageData * data)
 	{
 		init_buffer(4, 4, src, dst);
 
@@ -241,13 +241,13 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::rgba, ImageFormat::grayscale>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::rgba, ImageFormat::grayscale>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::rgb, ImageFormat::grayscale>::convert(img);
+		ImageFormatConverter<ImageFormat::rgb, ImageFormat::grayscale>::convert(data);
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::rgba, ImageFormat::grayscale_alpha>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::rgba, ImageFormat::grayscale_alpha>::convert(ImageData * data)
 	{
 		init_buffer(4, 2, src, dst);
 
@@ -263,25 +263,25 @@ namespace Rapture
 	//-----------------------------------------------------------------------
 
 	template<>
-	void ImageFormatConverter<ImageFormat::bgr, ImageFormat::rgb>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::bgr, ImageFormat::rgb>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::rgb, ImageFormat::bgr>::convert(img);
+		ImageFormatConverter<ImageFormat::rgb, ImageFormat::bgr>::convert(data);
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::bgr, ImageFormat::rgba>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::bgr, ImageFormat::rgba>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::rgb, ImageFormat::bgra>::convert(img);
+		ImageFormatConverter<ImageFormat::rgb, ImageFormat::bgra>::convert(data);
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::bgr, ImageFormat::bgra>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::bgr, ImageFormat::bgra>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::rgb, ImageFormat::rgba>::convert(img);
+		ImageFormatConverter<ImageFormat::rgb, ImageFormat::rgba>::convert(data);
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::bgr, ImageFormat::argb>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::bgr, ImageFormat::argb>::convert(ImageData * data)
 	{
 		init_buffer(3, 4, src, dst);
 
@@ -297,39 +297,39 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::bgr, ImageFormat::grayscale>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::bgr, ImageFormat::grayscale>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::rgb, ImageFormat::grayscale>::convert(img);
+		ImageFormatConverter<ImageFormat::rgb, ImageFormat::grayscale>::convert(data);
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::bgr, ImageFormat::grayscale_alpha>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::bgr, ImageFormat::grayscale_alpha>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::rgb, ImageFormat::grayscale_alpha>::convert(img);
+		ImageFormatConverter<ImageFormat::rgb, ImageFormat::grayscale_alpha>::convert(data);
 	}
 
 	//-----------------------------------------------------------------------
 
 	template<>
-	void ImageFormatConverter<ImageFormat::bgra, ImageFormat::rgb>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::bgra, ImageFormat::rgb>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::rgba, ImageFormat::bgr>::convert(img);
+		ImageFormatConverter<ImageFormat::rgba, ImageFormat::bgr>::convert(data);
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::bgra, ImageFormat::rgba>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::bgra, ImageFormat::rgba>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::rgba, ImageFormat::bgra>::convert(img);
+		ImageFormatConverter<ImageFormat::rgba, ImageFormat::bgra>::convert(data);
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::bgra, ImageFormat::bgr>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::bgra, ImageFormat::bgr>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::rgba, ImageFormat::rgb>::convert(img);
+		ImageFormatConverter<ImageFormat::rgba, ImageFormat::rgb>::convert(data);
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::bgra, ImageFormat::argb>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::bgra, ImageFormat::argb>::convert(ImageData * data)
 	{
 		init_buffer(4, 4, src, dst);
 
@@ -345,21 +345,21 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::bgra, ImageFormat::grayscale>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::bgra, ImageFormat::grayscale>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::rgb, ImageFormat::grayscale>::convert(img);
+		ImageFormatConverter<ImageFormat::rgb, ImageFormat::grayscale>::convert(data);
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::bgra, ImageFormat::grayscale_alpha>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::bgra, ImageFormat::grayscale_alpha>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::rgba, ImageFormat::grayscale_alpha>::convert(img);
+		ImageFormatConverter<ImageFormat::rgba, ImageFormat::grayscale_alpha>::convert(data);
 	}
 
 	//-----------------------------------------------------------------------
 
 	template<>
-	void ImageFormatConverter<ImageFormat::argb, ImageFormat::rgb>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::argb, ImageFormat::rgb>::convert(ImageData * data)
 	{
 		init_buffer(4, 3, src, dst);
 
@@ -374,7 +374,7 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::argb, ImageFormat::rgba>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::argb, ImageFormat::rgba>::convert(ImageData * data)
 	{
 		init_buffer(4, 4, src, dst);
 
@@ -388,7 +388,7 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::argb, ImageFormat::bgr>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::argb, ImageFormat::bgr>::convert(ImageData * data)
 	{
 		init_buffer(4, 3, src, dst);
 
@@ -403,13 +403,13 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::argb, ImageFormat::bgra>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::argb, ImageFormat::bgra>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::bgra, ImageFormat::argb>::convert(img);
+		ImageFormatConverter<ImageFormat::bgra, ImageFormat::argb>::convert(data);
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::argb, ImageFormat::grayscale>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::argb, ImageFormat::grayscale>::convert(ImageData * data)
 	{
 		init_buffer(4, 1, src, dst);
 
@@ -422,7 +422,7 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::argb, ImageFormat::grayscale_alpha>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::argb, ImageFormat::grayscale_alpha>::convert(ImageData * data)
 	{
 		init_buffer(4, 2, src, dst);
 
@@ -438,9 +438,9 @@ namespace Rapture
 	//-----------------------------------------------------------------------
 
 	template<>
-	void ImageFormatConverter<ImageFormat::grayscale, ImageFormat::rgb>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::grayscale, ImageFormat::rgb>::convert(ImageData * data)
 	{
-		init_buffer(preferredBpp(img->format), 3, src, dst);
+		init_buffer(preferredBpp(data->format), 3, src, dst);
 
 		iterate_buffer(src, dst)
 		{
@@ -451,7 +451,7 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::grayscale, ImageFormat::rgba>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::grayscale, ImageFormat::rgba>::convert(ImageData * data)
 	{
 		init_buffer(1, 4, src, dst);
 
@@ -465,19 +465,19 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::grayscale, ImageFormat::bgr>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::grayscale, ImageFormat::bgr>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::grayscale, ImageFormat::rgb>::convert(img);
+		ImageFormatConverter<ImageFormat::grayscale, ImageFormat::rgb>::convert(data);
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::grayscale, ImageFormat::bgra>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::grayscale, ImageFormat::bgra>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::grayscale, ImageFormat::rgba>::convert(img);
+		ImageFormatConverter<ImageFormat::grayscale, ImageFormat::rgba>::convert(data);
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::grayscale, ImageFormat::argb>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::grayscale, ImageFormat::argb>::convert(ImageData * data)
 	{
 		init_buffer(1, 4, src, dst);
 
@@ -491,7 +491,7 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::grayscale, ImageFormat::grayscale_alpha>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::grayscale, ImageFormat::grayscale_alpha>::convert(ImageData * data)
 	{
 		init_buffer(1, 2, src, dst);
 
@@ -507,13 +507,13 @@ namespace Rapture
 	//-----------------------------------------------------------------------
 
 	template<>
-	void ImageFormatConverter<ImageFormat::grayscale_alpha, ImageFormat::rgb>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::grayscale_alpha, ImageFormat::rgb>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::grayscale, ImageFormat::rgb>::convert(img);
+		ImageFormatConverter<ImageFormat::grayscale, ImageFormat::rgb>::convert(data);
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::grayscale_alpha, ImageFormat::rgba>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::grayscale_alpha, ImageFormat::rgba>::convert(ImageData * data)
 	{
 		init_buffer(2, 4, src, dst);
 
@@ -527,19 +527,19 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::grayscale_alpha, ImageFormat::bgr>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::grayscale_alpha, ImageFormat::bgr>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::grayscale_alpha, ImageFormat::rgb>::convert(img);
+		ImageFormatConverter<ImageFormat::grayscale_alpha, ImageFormat::rgb>::convert(data);
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::grayscale_alpha, ImageFormat::bgra>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::grayscale_alpha, ImageFormat::bgra>::convert(ImageData * data)
 	{
-		ImageFormatConverter<ImageFormat::grayscale_alpha, ImageFormat::rgba>::convert(img);
+		ImageFormatConverter<ImageFormat::grayscale_alpha, ImageFormat::rgba>::convert(data);
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::grayscale_alpha, ImageFormat::argb>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::grayscale_alpha, ImageFormat::argb>::convert(ImageData * data)
 	{
 		init_buffer(2, 4, src, dst);
 
@@ -553,7 +553,7 @@ namespace Rapture
 	}
 
 	template<>
-	void ImageFormatConverter<ImageFormat::grayscale_alpha, ImageFormat::grayscale>::convert(ImageData * img)
+	void ImageFormatConverter<ImageFormat::grayscale_alpha, ImageFormat::grayscale>::convert(ImageData * data)
 	{
 		init_buffer(2, 1, src, dst);
 

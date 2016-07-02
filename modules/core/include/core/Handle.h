@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef HANDLE_H
 #define HANDLE_H
 
@@ -95,32 +97,6 @@ namespace Rapture
 		}
 	};
 
-	/**
-	 *  @brief
-	 *	Pointer-wrapping kind of handle. It is used with the objects of
-	 *	non-shareable classes.
-	 */
-	template<class T>
-	struct SharedWrapper : public Shared
-	{
-		template<class, bool>
-		friend struct SharedCast;
-
-		SharedWrapper(T * obj) : _inner(obj) {}
-
-		template<class ... A>
-		SharedWrapper(A &&... args) : _inner(new T(forward<A>(args)...)) {}
-
-		~SharedWrapper()
-		{
-			PointerDeleter<T> deleter;
-			deleter(_inner);
-		}
-
-	protected:
-		T * _inner;
-	};
-
 	struct SharedEmpty : Empty, Shared {};
 
 	template<class T>
@@ -130,53 +106,23 @@ namespace Rapture
 
 	/**
 	 *  @brief
-	 *	Template struct which provides casts for different kinds of handles.
+	 *	Template struct which provides casts for different handles.
 	 */
-	template<class T, bool = is_shareable<T>::value>
+	template<class T>
 	struct SharedCast
 	{
-		using SharedType = SharedWrapper<T>;
-
-		static T * toObj(SharedType * shared)
-		{
-			return shared->_inner;
-		}
-
-		template<class U>
-		static SharedType * cast(SharedWrapper<U> * shared)
-		{
-			return reinterpret_cast<SharedType *>(shared);
-		}
-
-		static void toShared(T & x)
-		{
-			static_assert(is_same<T, SharedWrapper<T>>::value, "RaptureCore error: Can't make this object shared!");
-		}
-	};
-
-	template<class T>
-	struct SharedCast<T, true>
-	{
-		using SharedType = T;
-
-		static T * toObj(SharedType * shared)
+		static T * toObj(T * shared)
 		{
 			return shared;
 		}
 
 		template<class U>
-		static SharedType * cast(U * shared)
+		static T * cast(U * shared)
 		{
-			return static_cast<SharedType *>(shared);
+			return static_cast<T *>(shared);
 		}
 
-		template<class U>
-		static void cast(SharedWrapper<U> * shared)
-		{
-			static_assert(is_same<T, SharedWrapper<T>>::value, "RaptureCore error: Can't cast SharedWrapper to shareable object!");
-		}
-
-		static SharedType * toShared(T & x)
+		static T * toShared(T & x)
 		{
 			return &x;
 		}
@@ -222,8 +168,6 @@ namespace Rapture
 	class Handle<T> : public Handle<T, Empty>
 	{
 		using Base = Handle<T, Empty>;
-		using CastType = typename Base::CastType;
-		using SharedType = typename Base::SharedType;
 
 	public:
 		Handle() : Base() {}
@@ -231,7 +175,7 @@ namespace Rapture
 		Handle(const Handle & h) : Base(h) {}
 		Handle(Handle && h) : Base(forward<Handle>(h)) {}
 
-		Handle(SharedType * shared) : Base(shared) {}
+		Handle(T * shared) : Base(shared) {}
 		Handle(nullptr_t) : Base(nullptr) {}
 
 		template<class U, class ... A, useif <based_on<U, T>::value && !is_const<U>::value> endif>
@@ -274,7 +218,7 @@ namespace Rapture
 			return *this;
 		}
 
-		Handle & operator = (SharedType * shared)
+		Handle & operator = (T * shared)
 		{
 			Base::operator = (shared);
 			return *this;
@@ -290,7 +234,7 @@ namespace Rapture
 		template<typename ... A, selectif(0) <can_construct<T, A...>::value> endif>
 		static Handle create(A &&... args)
 		{
-			SharedType * sh = new SharedType(forward<A>(args)...);
+			T * sh = new T(forward<A>(args)...);
 			--sh->_refs;
 
 			return sh;
@@ -311,7 +255,7 @@ namespace Rapture
 		template<class U>
 		static Handle cast(const Handle<U> & handle)
 		{
-			return CastType::cast(handle._shared);
+			return static_cast<T *>(handle._shared);
 		}
 	};
 
@@ -328,40 +272,38 @@ namespace Rapture
 		friend struct Shared;
 		friend Owner;
 
-		static_assert(is_determined_class<T>::value, "Class T hasn't been determined yet");
-
 	protected:
 		using Base = Wrapper<T *, Handle<T, Owner>>;
-		using CastType = SharedCast<T>;
-		using SharedType = typename CastType::SharedType;
 
 		friend Base;
 
-		SharedType * _shared;
+		T * _shared;
 
-		Handle(SharedType * shared) : _shared(shared) { keep(); }
+		Handle(T * shared) : _shared(shared) { keep(); }
 
 		template<class U = T, useif <can_construct<U>::value> endif>
-		Handle(Empty) : _shared(new SharedType()) {}
+		Handle(Empty) : _shared(new T()) {}
 		
 		template<class U, class ... O, useif <based_on<U, T>::value, !is_const<U>::value> endif, skipif <same_types<Owner, Types<O...>>::value> endif>
-		Handle(const Handle<U, O...> & h) : _shared(CastType::cast(h._shared)) { keep(); }
+		Handle(const Handle<U, O...> & h) : _shared(static_cast<T *>(h._shared)) { keep(); }
 		template<class U, class ... O, useif <based_on<U, T>::value, !is_const<U>::value> endif, skipif <same_types<Owner, Types<O...>>::value> endif>
-		Handle(Handle<U, O...> && h) : _shared(CastType::cast(h._shared)) { h._shared = nullptr; }
+		Handle(Handle<U, O...> && h) : _shared(static_cast<T *>(h._shared)) { h._shared = nullptr; }
 
 		template<class ... A, selectif(0) <can_construct<T, A...>::value, (sizeof...(A) > 0)> endif>
-		explicit Handle(A &&... args) : _shared(new SharedType(forward<A>(args)...)) {}
+		explicit Handle(A &&... args) : _shared(new T(forward<A>(args)...)) {}
 
 		template<class ... A, selectif(1) <is_abstract<T>::value, !is_handle_init<T, A...>::value> endif>
 		explicit Handle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
 
 		T * inptr_() const
 		{
-			return CastType::toObj(_shared);
+			return _shared;
 		}
 
 		void keep()
 		{
+			static_assert(based_on<T, Shared>::value, "T must inherit the Shared type");
+
 			if(_shared != nullptr)
 				++_shared->_refs;
 		}
@@ -384,7 +326,7 @@ namespace Rapture
 				return *this;
 
 			release();
-			_shared = CastType::cast(h._shared);
+			_shared = static_cast<T *>(h._shared);
 			keep();
 
 			return *this;
@@ -397,13 +339,13 @@ namespace Rapture
 				return *this;
 
 			release();
-			_shared = CastType::cast(h._shared);
+			_shared = static_cast<T *>(h._shared);
 			h._shared = nullptr;
 
 			return *this;
 		}
 
-		Handle & operator = (SharedType * shared)
+		Handle & operator = (T * shared)
 		{
 			release();
 			_shared = shared;
@@ -416,7 +358,7 @@ namespace Rapture
 		Handle & init(A &&... args)
 		{
 			release();
-			_shared = new SharedType(forward<A>(args)...);
+			_shared = new T(forward<A>(args)...);
 
 			return *this;
 		}
@@ -430,7 +372,7 @@ namespace Rapture
 		template<typename ... A, selectif(0) <can_construct<T, A...>::value> endif>
 		static Handle create(A &&... args)
 		{
-			SharedType * sh = new SharedType(forward<A>(args)...);
+			T * sh = new T(forward<A>(args)...);
 			--sh->_refs;
 
 			return sh;
@@ -450,9 +392,9 @@ namespace Rapture
 		Handle(Handle && h) : _shared(h._shared) { h._shared = nullptr; }
 
 		template<class U, useif <based_on<U, T>::value, not_same_type<U, T>::value, !is_const<U>::value> endif>
-		Handle(const Handle<U, Owner> & h) : _shared(CastType::cast(h._shared)) { keep(); }
+		Handle(const Handle<U, Owner> & h) : _shared(static_cast<T *>(h._shared)) { keep(); }
 		template<class U, useif <based_on<U, T>::value, not_same_type<U, T>::value, !is_const<U>::value> endif>
-		Handle(Handle<U, Owner> && h) : _shared(CastType::cast(h._shared)) { h._shared = nullptr; }
+		Handle(Handle<U, Owner> && h) : _shared(static_cast<T *>(h._shared)) { h._shared = nullptr; }
 
 		~Handle() { release(); }
 
@@ -492,7 +434,7 @@ namespace Rapture
 				return *this;
 
 			release();
-			_shared = CastType::cast(h._shared);
+			_shared = static_cast<T *>(h._shared);
 			keep();
 
 			return *this;
@@ -505,7 +447,7 @@ namespace Rapture
 				return *this;
 
 			release();
-			_shared = CastType::cast(h._shared);
+			_shared = static_cast<T *>(h._shared);
 			h._shared = nullptr;
 
 			return *this;
@@ -517,7 +459,7 @@ namespace Rapture
 			return _shared == h._shared;
 		}
 
-		bool operator == (SharedType * shared) const
+		bool operator == (T * shared) const
 		{
 			return _shared == shared;
 		}
@@ -545,7 +487,7 @@ namespace Rapture
 			return _shared < h._shared;
 		}
 
-		operator SharedType * () const
+		operator T * () const
 		{
 			return _shared;
 		}
@@ -563,7 +505,7 @@ namespace Rapture
 		template<class U>
 		static Handle cast(const Handle<U, Owner> & h)
 		{
-			return CastType::cast(h._shared);
+			return static_cast<T *>(h._shared);
 		}
 	};
 
@@ -571,9 +513,6 @@ namespace Rapture
 	class Handle<const T> : public Handle<const T, Empty>
 	{
 		using Base = Handle<const T, Empty>;
-		using CastType = typename Base::CastType;
-		using SharedType = typename Base::SharedType;
-		using RealSharedType = typename Base::RealSharedType;
 
 	public:
 		Handle() : Base() {}
@@ -584,7 +523,7 @@ namespace Rapture
 		Handle(const Handle<T> & h) : Base(h) {}
 		Handle(Handle<T> && h) : Base(forward<Handle<T>>(h)) {}
 
-		Handle(SharedType * shared) : Base(shared) {}
+		Handle(const T * shared) : Base(shared) {}
 		Handle(nullptr_t) : Base(nullptr) {}
 
 		template<class U, class ... A, useif <based_on<U, T>::value> endif>
@@ -624,7 +563,7 @@ namespace Rapture
 			return *this;
 		}
 
-		Handle & operator = (SharedType * shared)
+		Handle & operator = (const T * shared)
 		{
 			Base::operator = (shared);
 			return *this;
@@ -640,7 +579,7 @@ namespace Rapture
 		template<typename ... A, selectif(0) <can_construct<T, A...>::value> endif>
 		static Handle create(A &&... args)
 		{
-			auto sh = new RealSharedType(forward<A>(args)...);
+			auto sh = new T(forward<A>(args)...);
 			--sh->_refs;
 
 			return sh;
@@ -661,7 +600,7 @@ namespace Rapture
 		template<class U>
 		static Handle cast(const Handle<const U> & handle)
 		{
-			return CastType::cast(handle._shared);
+			return static_cast<const T *>(handle._shared);
 		}
 	};
 
@@ -674,36 +613,31 @@ namespace Rapture
 		friend struct Shared;
 		friend Owner;
 
-		static_assert(is_determined_class<T>::value, "Class T hasn't been determined yet");
-
 	protected:
 		using Base = Wrapper<const T *, Handle<const T, Owner>>;
-		using CastType = SharedCast<const T>;
-		using SharedType = typename CastType::SharedType;
-		using RealSharedType = typename SharedCast<T>::SharedType;
 
 		friend Base;
 
-		SharedType * _shared;
+		const T * _shared;
 
-		Handle(SharedType * shared) : _shared(shared) { keep(); }
+		Handle(const T * shared) : _shared(shared) { keep(); }
 
 		template<class U, class ... A, useif <based_on<U, T>::value> endif>
-		Handle(const Handle<U, A...> & h) : _shared(CastType::cast(h._shared)) { keep(); }
+		Handle(const Handle<U, A...> & h) : _shared(static_cast<const T *>(h._shared)) { keep(); }
 		template<class U, class ... A, useif <based_on<U, T>::value> endif>
-		Handle(Handle<U, A...> && h) : _shared(CastType::cast(h._shared)) { h._shared = nullptr; }
+		Handle(Handle<U, A...> && h) : _shared(static_cast<const T *>(h._shared)) { h._shared = nullptr; }
 
 		template<class U = T, useif <can_construct<U>::value> endif>
-		Handle(Empty) : _shared(new RealSharedType()) {}
+		Handle(Empty) : _shared(new T()) {}
 
 		template<class ... A, selectif(0) <can_construct<T, A...>::value && (sizeof...(A) > 0)> endif>
-		explicit Handle(A && ... args) : _shared(new RealSharedType(forward<A>(args)...)) {}
+		explicit Handle(A && ... args) : _shared(new T(forward<A>(args)...)) {}
 		template<class ... A, selectif(1) <is_abstract<T>::value && !is_handle_init<T, A...>::value> endif>
 		explicit Handle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
 
 		const T * inptr_() const
 		{
-			return CastType::toObj(_shared);
+			return _shared;
 		}
 
 		void keep()
@@ -771,7 +705,7 @@ namespace Rapture
 			return *this;
 		}
 
-		Handle & operator = (SharedType * shared)
+		Handle & operator = (const T * shared)
 		{
 			release();
 			_shared = shared;
@@ -784,7 +718,7 @@ namespace Rapture
 		Handle & init(A &&... args)
 		{
 			release();
-			_shared = new RealSharedType(forward<A>(args)...);
+			_shared = new T(forward<A>(args)...);
 
 			return *this;
 		}
@@ -798,7 +732,7 @@ namespace Rapture
 		template<class ... A, selectif(0) <can_construct<T, A...>::value> endif>
 		static Handle create(A &&... args)
 		{
-			RealSharedType * sh = new RealSharedType(forward<A>(args)...);
+			T * sh = new T(forward<A>(args)...);
 			--sh->_refs;
 
 			return sh;
@@ -830,7 +764,7 @@ namespace Rapture
 			return h._shared == _shared;
 		}
 
-		bool operator == (SharedType * shared) const
+		bool operator == (const T * shared) const
 		{
 			return _shared == shared;
 		}
@@ -858,7 +792,7 @@ namespace Rapture
 			return _shared < h._shared;
 		}
 
-		operator SharedType * () const
+		operator const T * () const
 		{
 			return _shared;
 		}
@@ -876,7 +810,7 @@ namespace Rapture
 		template<class U>
 		static Handle cast(const Handle<const U, Owner> & h)
 		{
-			return h._shared;
+			return static_cast<const T *>(h._shared);
 		}
 	};
 
@@ -915,7 +849,7 @@ namespace Rapture
 	template<class T>
 	Handle<T> share(T & x)
 	{
-		return SharedCast<T>::toShared(x);
+		return &x;
 	}
 
 	template<class T>
@@ -1340,7 +1274,7 @@ namespace Rapture
 
 		static const bool value =
 			sizeof...(A) == 1 && (
-			(based_on<FirstType, typename SharedCast<T>::SharedType>::value && std::is_pointer<FirstType>::value) ||
+			(based_on<FirstType, T>::value && std::is_pointer<FirstType>::value) ||
 			is_handle_of<FirstType, T>::value ||
 			same_type<FirstType, nullptr_t>::value ||
 			same_type<FirstType, Empty>::value

@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef GROUND_OBJECT_H
 #define GROUND_OBJECT_H
 

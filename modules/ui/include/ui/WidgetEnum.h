@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef WIDGET_ENUM_H
 #define WIDGET_ENUM_H
 
@@ -14,6 +16,7 @@ namespace Rapture
 	enum class MouseButton : int
 	{
 		None   = 0,
+
 		Left   = 1 << 0,
 		Middle = 1 << 1,
 		Right  = 1 << 2,
@@ -25,6 +28,7 @@ namespace Rapture
 		All = Left | Middle | Right,
 
 		NotNone   = ~None,
+
 		NotLeft   = ~Left,
 		NotMiddle = ~Middle,
 		NotRight  = ~Right,

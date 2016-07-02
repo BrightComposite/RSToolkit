@@ -19,14 +19,14 @@ namespace Rapture
 	{
 		using namespace boost::filesystem;
 
-		OwnedByteData raw;
-		ifstream input(filepath.string(), ios_base::binary);
-
 		if(!exists(filepath))
 			throw Exception("File ", filepath.string(), " doesn't exist!");
 
-		raw.alloc(static_cast<size_t>(file_size(filepath)));
+		OwnedByteData raw(static_cast<size_t>(file_size(filepath)));
+
+		ifstream input(filepath.string(), ios_base::binary);
 		input.read(reinterpret_cast<char *>(raw.ptr), raw.size);
+		input.close();
 
 		read(output, get_extension(filepath), &raw);
 	}
@@ -36,12 +36,8 @@ namespace Rapture
 		OwnedByteData raw;
 		write(&raw, get_extension(filepath), image);
 
-		FILE * stream;
-
-		if(fopen_s(&stream, filepath.string().c_str(), "w+b") != 0)
-			throw ErrnoException();
-
-		fwrite(raw.ptr, 1, raw.size, stream);
-		fclose(stream);
+		ofstream output(filepath.string(), ios_base::binary | ios_base::trunc);
+		output.write(reinterpret_cast<char *>(raw.ptr), raw.size);
+		output.close();
 	}
 }

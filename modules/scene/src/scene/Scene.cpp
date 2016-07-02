@@ -30,7 +30,7 @@ namespace Rapture
 			throw Exception("Widget for the scene must support 3D graphics!");
 
 		_widget = widget;
-		_widget->append<SceneLayer>(this);
+		_widget->append<Component>(this);
 		connect(*_widget, this, &Scene::onWidgetResize);
 
 		_firstTick = _lastTick = clock::now();

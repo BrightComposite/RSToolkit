@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #ifndef POINT_ADAPTER_H
 #define POINT_ADAPTER_H
 

@@ -3,53 +3,17 @@
 #include <ui/Widget.h>
 #include <ui/UISpace.h>
 
+#include <graphics/Graphics.h>
+
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	implement_link(BasicWidget);
 	implement_link(Widget);
 
-	BasicWidget::BasicWidget(Widget * parent, const IntRect & rect) : _relPos(rect.pos()), _absPos(_parent ? _relPos + _parent->_absPos : _relPos), _size(rect.size()), _parent(parent), _offsets(rect)
+	void CustomLayer::draw(Widget * w)
 	{
-		setclass(BasicWidget);
-	}
-
-	BasicWidget::BasicWidget(Widget * parent, const IntPoint & pos, const IntSize & size) : _relPos(pos), _absPos(_parent ? _relPos + _parent->_absPos : _relPos), _size(size), _parent(parent), _offsets(pos, size)
-	{
-		setclass(BasicWidget);
-	}
-
-	BasicWidget::BasicWidget(const BasicWidget & w) : _relPos(w._relPos), _absPos(w._absPos), _size(w._size), _parent(w._parent), _offsets(w._offsets), _anchors(w._anchors)
-	{
-		setclass(BasicWidget);
-	}
-
-	void BasicWidget::calculateOffsets(IntRect & out, const BasicWidget & region, const BasicWidget & parent)
-	{
-		if(region._alignment == ModelMask::LeftTop)
-		{
-			out.setPlacement(region._relPos, region._size);
-			return;
-		}
-
-		out.left   = region.left()   - (int)(region._anchors.left   * parent.width()) ;
-		out.top    = region.top()    - (int)(region._anchors.top    * parent.height());
-		out.right  = region.right()  - (int)(region._anchors.right  * parent.width()) ;
-		out.bottom = region.bottom() - (int)(region._anchors.bottom * parent.height());
-	}
-
-	void BasicWidget::calculateRegionRect(IntRect & out, const IntRect & offsets, const FloatRect & anchors, const BasicWidget & parent)
-	{
-		out.left   = (int)(anchors.left   * parent.width())  + offsets.left  ;
-		out.top    = (int)(anchors.top    * parent.height()) + offsets.top   ;
-		out.right  = (int)(anchors.right  * parent.width())  + offsets.right ;
-		out.bottom = (int)(anchors.bottom * parent.height()) + offsets.bottom;
-	}
-
-	void CustomLayer::draw() const
-	{
-		drawer(_widget, _widget->region());
+		drawer(w, w->region());
 	}
 
 	Widget::Widget(Widget * parent) : Widget(parent, *parent) {}
@@ -57,7 +21,8 @@ namespace Rapture
 	Widget::Widget(Widget * parent, const IntRect & area) : Widget(parent->_space, parent, area) {}
 	Widget::Widget(UISpace * space, const IntRect & area) : Widget(space, space->_root, area) {}
 
-	Widget::Widget(UISpace * space, Widget * parent, const IntRect & region) : BasicWidget(parent, region), _space(space)
+	Widget::Widget(UISpace * space, Widget * parent, const IntRect & region) :
+		_parent(parent), _relPos(region.pos()), _absPos(_parent ? _relPos + _parent->_absPos : _relPos), _size(region.size()), _offsets(region), _space(space)
 	{
 		setclass(Widget);
 
@@ -67,8 +32,6 @@ namespace Rapture
 
 	Widget::Widget(const Widget & widget, Widget * parent) : Widget(widget._space, parent, widget)
 	{
-		setclass(Widget);
-
 		_flags = widget._flags;
 
 		if(isFocusable())
@@ -112,6 +75,28 @@ namespace Rapture
 		setFocusability(false);
 	}
 
+	void Widget::calculateOffsets(IntRect & out, const Widget & region, const Widget & parent)
+	{
+		if(region._alignment == ModelMask::LeftTop)
+		{
+			out.setPlacement(region._relPos, region._size);
+			return;
+		}
+
+		out.left   = region.left()   - (int)(region._anchors.left   * parent.width()) ;
+		out.top    = region.top()    - (int)(region._anchors.top    * parent.height());
+		out.right  = region.right()  - (int)(region._anchors.right  * parent.width()) ;
+		out.bottom = region.bottom() - (int)(region._anchors.bottom * parent.height());
+	}
+
+	void Widget::calculateRegionRect(IntRect & out, const IntRect & offsets, const FloatRect & anchors, const Widget & parent)
+	{
+		out.left   = (int)(anchors.left   * parent.width())  + offsets.left  ;
+		out.top    = (int)(anchors.top    * parent.height()) + offsets.top   ;
+		out.right  = (int)(anchors.right  * parent.width())  + offsets.right ;
+		out.bottom = (int)(anchors.bottom * parent.height()) + offsets.bottom;
+	}
+
 	void Widget::draw(Graphics * graphics, const IntRect & clipRegion)
 	{
 		IntRect r = absRegion() & clipRegion;
@@ -122,7 +107,7 @@ namespace Rapture
 		graphics->clip(r);
 
 		for(auto & layer : _layers)
-			layer->draw();
+			layer->draw(this);
 
 		for(auto & ch : _displayList)
 			ch->draw(graphics, r);
@@ -232,7 +217,7 @@ namespace Rapture
 
 		auto w = dl.back();
 
-		if(w == this)
+		if(w == this || w == nullptr)
 			return;
 
 		setDisplayOrder(w->_displayOrder + 1);
@@ -251,7 +236,7 @@ namespace Rapture
 
 		auto w = dl.front();
 
-		if(w == this)
+		if(w == this || w == nullptr)
 			return;
 
 		setDisplayOrder(w->_displayOrder - 1);
@@ -331,7 +316,7 @@ namespace Rapture
 		return _space->graphics();
 	}
 
-	void BasicWidget::changeSize(int width, int height, ModelMask mask)
+	void Widget::changeSize(int width, int height, ModelMask mask)
 	{
 		if(_parent != nullptr)
 		{
@@ -385,10 +370,9 @@ namespace Rapture
 		}
 	}
 
-	void BasicWidget::changePlacement(int left, int top, int right, int bottom, ModelMask mask)
+	void Widget::changePlacement(int left, int top, int right, int bottom, ModelMask mask)
 	{
-		auto w = static_cast<Widget *>(this);
-		auto msg = send<WidgetMoveMessage>(*w, left, top, right, bottom, mask);
+		auto msg = send<WidgetMoveMessage>(*this, left, top, right, bottom, mask);
 		
 		ModelMask resizeMask = ModelMask(0);
 		IntSize size = _size;
@@ -414,9 +398,9 @@ namespace Rapture
 			_offsets.bottom = msg->bottom - (int)(_anchors.bottom * _parent->height());
 
 			if(resizeMask != 0)
-				send<WidgetResizeMessage>(*w, width(), height(), resizeMask);
+				send<WidgetResizeMessage>(*this, width(), height(), resizeMask);
 
-			BasicWidget::calculateOffsets(_offsets, *this, *_parent);
+			calculateOffsets(_offsets, *this, *_parent);
 		}
 		else
 		{
@@ -432,19 +416,19 @@ namespace Rapture
 				set_flag(ModelMask::Vertical, resizeMask);
 
 			if(resizeMask != 0)
-				send<WidgetResizeMessage>(*w, width(), height(), resizeMask);
+				send<WidgetResizeMessage>(*this, width(), height(), resizeMask);
 		}
 
-		send<AfterWidgetMoveMessage>(*w, _relPos.x, _relPos.y, _relPos.x + _size.x, _relPos.y + _size.y);
+		send<AfterWidgetMoveMessage>(*this, _relPos.x, _relPos.y, _relPos.x + _size.x, _relPos.y + _size.y);
 	}
 
-	void BasicWidget::updateAnchors()
+	void Widget::updateAnchors()
 	{
 		if(_parent == nullptr)
 			return;
 
 		IntRect newRegion;
-		BasicWidget::calculateRegionRect(newRegion, _offsets, _anchors, *_parent);
+		Widget::calculateRegionRect(newRegion, _offsets, _anchors, *_parent);
 
 		ModelMask mask = ModelMask(0);
 
@@ -494,6 +478,27 @@ namespace Rapture
 		if(_parent != nullptr)
 			resend(msg, *_parent);
 	}
+
+	void Widget::read(Handle<MouseUpdateMessage> & msg) {}
+	void Widget::read(Handle<MouseDownMessage> & msg) {}
+	void Widget::read(Handle<MouseMoveMessage> & msg) {}
+	void Widget::read(Handle<MouseUpMessage> & msg) {}
+	void Widget::read(Handle<MouseClickMessage> & msg) {}
+	void Widget::read(Handle<MouseDblClickMessage> & msg) {}
+	void Widget::read(Handle<MouseWheelMessage> & msg) {}
+	void Widget::read(Handle<MouseEnterMessage> & msg) {}
+	void Widget::read(Handle<MouseLeaveMessage> & msg) {}
+	void Widget::read(Handle<WidgetPressMessage> & msg) {}
+	void Widget::read(Handle<WidgetStopPressMessage> & msg) {}
+	void Widget::read(Handle<WidgetReleaseMessage> & msg) {}
+	void Widget::read(Handle<WidgetChangedStateMessage> & msg) {}
+	void Widget::read(Handle<ChangeFocusOrderMessage> & msg) {}
+	void Widget::read(Handle<AfterChangeFocusOrderMessage> & msg) {}
+	void Widget::read(Handle<ChangeDisplayOrderMessage> & msg) {}
+	void Widget::read(Handle<AfterChangeDisplayOrderMessage> & msg) {}
+	void Widget::read(Handle<WidgetDrawMessage> & msg) {}
+	void Widget::read(Handle<WidgetMoveMessage> & msg) {}
+	void Widget::read(Handle<AfterWidgetMoveMessage> & msg) {}
 
 	void Widget::read(Handle<WidgetResizeMessage> & msg)
 	{

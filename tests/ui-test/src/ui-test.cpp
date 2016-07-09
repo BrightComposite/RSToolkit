@@ -7,8 +7,8 @@
 #include <application/Application.h>
 #include <application/ThreadLoop.h>
 
-#include <core/action/Action.h>
-#include <core/action/Thread.h>
+#include <core/function/Function.h>
+#include <core/function/Thread.h>
 
 #include <graphics/Provider.h>
 

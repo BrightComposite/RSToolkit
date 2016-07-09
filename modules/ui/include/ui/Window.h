@@ -105,6 +105,7 @@ namespace Rapture
 		api(ui) WideString getCaption();
 
 		api(ui) void close();
+		api(ui) void attachThread();
 
 	protected:
 		api(ui) void makeFullscreen();
@@ -130,7 +131,7 @@ namespace Rapture
 
 	channels_api(ui, Window, WindowMessages)
 
-	inline bool IsKeyPressed(int v_key)
+	inline bool isKeyPressed(int v_key)
 	{
 		return hi_bit_mask::state(GetKeyState(v_key));
 	}

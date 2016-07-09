@@ -50,10 +50,29 @@ namespace Rapture
 			);
 		}
 
-		D3DVertexBuffer::D3DVertexBuffer(D3DGraphics * graphics, VertexLayout * layout, const VertexData & vd, D3D_PRIMITIVE_TOPOLOGY topology) : VertexBuffer(layout, vd), graphics(graphics), topology(topology)
+		D3DVertexBuffer::D3DVertexBuffer(D3DGraphics * graphics, VertexLayout * layout, const VertexData & vd, VertexTopology topology) : VertexBuffer(layout, vd, topology), graphics(graphics)
 		{
 			if(vd.size % layout->stride != 0)
 				throw Exception("Size of vertex buffer doesn't matches its vertex input layout");
+			
+			switch(topology)
+			{
+				case VertexTopology::Triangles:
+					this->topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+					break;
+
+				case VertexTopology::TriangleStrip:
+					this->topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+					break;
+
+				case VertexTopology::Lines:
+					this->topology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+					break;
+
+				case VertexTopology::LineStrip:
+					this->topology = D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
+					break;
+			};
 
 			D3D11_BUFFER_DESC bd;
 			ZeroMemory(&bd, sizeof(bd));
@@ -160,10 +179,6 @@ namespace Rapture
 				case ShaderCodeState::Compiled:
 					read(path + "_vs.cso", code);
 					break;
-
-				case ShaderCodeState::Embedded:
-					code = program->graphics->getShaderCode(path, ShaderType::Vertex);
-					break;
 			}
 
 			init(code);
@@ -204,10 +219,6 @@ namespace Rapture
 
 				case ShaderCodeState::Compiled:
 					read(path + "_ps.cso", code);
-					break;
-
-				case ShaderCodeState::Embedded:
-					code = program->graphics->getShaderCode(path, ShaderType::Pixel);
 					break;
 			}
 

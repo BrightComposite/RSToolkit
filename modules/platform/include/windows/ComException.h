@@ -16,12 +16,6 @@ namespace Rapture
 {
 	class ComException : public Exception
 	{
-		static String getError(HRESULT hr)
-		{
-			_com_error err(hr);
-			return err.ErrorMessage();
-		}
-
 	public:
 		ComException(HRESULT hr) : Exception(getError(hr)) {}
 		template<class H, class ... T>
@@ -30,6 +24,12 @@ namespace Rapture
 		ComException(ComException && except) : Exception(forward<Exception>(except)) {}
 
 		virtual ~ComException() {}
+
+		static String getError(HRESULT hr)
+		{
+			_com_error err(hr);
+			return err.ErrorMessage();
+		}
 	};
 
 	template<typename ... A>

@@ -2,7 +2,9 @@
 
 #include <ui/Window.h>
 #include <windows/RectAdapter.h>
+#include <graphics/Graphics.h>
 
+#include <application/ThreadLoop.h>
 #include <windows.h>
 
 //---------------------------------------------------------------------------
@@ -67,8 +69,7 @@ namespace Rapture
 
 			case WM_CLOSE:
 			{
-				w._isClosed = true;
-				send<WindowCloseMessage>(w);
+				w._closed = true;
 				DestroyWindow(hWnd);
 				break;
 			}
@@ -76,13 +77,13 @@ namespace Rapture
 			case WM_DESTROY:
 			{
 				KillTimer(hWnd, w._timer);
-				PostQuitMessage(0);
+				send<WindowCloseMessage>(w);
 				break;
 			}
 
 			case WM_ACTIVATE:
 			{
-				if(LOWORD(wParam) == 0 && !w._isClosed)
+				if(LOWORD(wParam) == 0 && !w._closed)
 					w.setFullscreen(false);
 
 				break;
@@ -192,10 +193,8 @@ namespace Rapture
 
 			case WM_TIMER:
 			{
-				POINT pt;
-				GetCursorPos(&pt);
-				ScreenToClient(hWnd, &pt);
-
+				IntPoint pt;
+				w.acquireCursorPos(pt);
 				send<MouseUpdateMessage>(w, pt.x, pt.y);
 				break;
 			}
@@ -463,6 +462,13 @@ namespace Rapture
 	void Window::close()
 	{
 		SendMessageW(_handle, WM_CLOSE, 0, 0);
+	}
+
+	void Window::attachThread()
+	{
+		connect([](Handle<WindowCloseMessage> & msg, Window & dest) {
+			ThreadLoop::stop();
+		}, *this);
 	}
 }
 

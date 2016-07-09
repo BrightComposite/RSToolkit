@@ -72,12 +72,20 @@ namespace Rapture
 			return _surface;
 		}
 
-		api(ui) Cursor * cursor() const
+		Cursor * cursor() const
 		{
 			return _cursor;
 		}
 
+		bool enabled() const
+		{
+			return _enabled;
+		}
+
 		api(ui) void setCursor(Cursor * cursor);
+
+		api(ui) void enable();
+		api(ui) void disable();
 
 		/**
 		 *	Marks the whole window for update.
@@ -100,9 +108,10 @@ namespace Rapture
 			validate();
 		}
 
-		api(ui) void getCursorPos(IntPoint & pt) const;
+		api(ui) const IntPoint & cursorPos() const;
 		api(ui) void setCursorPos(const IntPoint & pt);
 		api(ui) void clipCursor(const IntRect & region);
+		api(ui) void unclipCursor();
 
 		virtual api(ui) void registerHotkey(int id, int key, int modifiers = 0) {}
 		virtual api(ui) void unregisterHotkey(int id) {}
@@ -116,23 +125,17 @@ namespace Rapture
 		virtual api(ui) void read(Handle<UIResizeMessage> & msg);
 
 	protected:
-		bind_messages(UISpace,
-			KeyDownMessage,
-			CharMessage,
-			KeyUpMessage,
-			MouseDownMessage,
-			MouseUpdateMessage,
-			MouseUpMessage,
-			HotkeyMessage,
-			UIMessages
-		)
+		bind_messages(UISpace, UIMessages)
 
 		Widget * focused() const;
 
 		Widget * focusNext();
 		Widget * focusPrevious();
 
+		void acquireCursorPos(IntPoint &) const;
 		void unpress(MouseButton buttons, int x, int y, int flags);
+
+		void updateClipRect();
 
 		HWND _handle;
 		int _width, _height;
@@ -150,20 +153,17 @@ namespace Rapture
 		array_list<IntRect> _invalids;
 
 		Cursor * _cursor = nullptr;
+		IntPoint _cursorPos;
+
+		IntRect _clipRect;
+		bool _clipped = false;
 
 		bool _fullscreen = false;
-		bool _isClosed = false;
+		bool _closed = false;
+		bool _enabled = true;
 	};
 
-	channels_api(ui, UISpace,
-		KeyDownMessage,
-		CharMessage,
-		KeyUpMessage,
-		MouseDownMessage,
-		MouseUpdateMessage,
-		MouseUpMessage,
-		UIMessages
-	)
+	channels_api(ui, UISpace, UIMessages)
 
 	struct KeyMap
 	{

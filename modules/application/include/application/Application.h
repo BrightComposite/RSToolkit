@@ -11,7 +11,7 @@
 
 #include <core/addition/Singleton.h>
 #include <core/container/ArrayList.h>
-#include <core/action/Action.h>
+#include <core/function/Function.h>
 #include <core/String.h>
 
 #include "ThreadLoop.h"
@@ -28,6 +28,8 @@ namespace Rapture
 	using ApplicationArguments = data<wchar_t *>;
 	using EntranceFunction = int(*)();
 	using ExitFunction = void(*)();
+
+	template struct api(application) Singleton<Application>;
 
 	class Application : public Singleton<Application>
 	{
@@ -54,13 +56,11 @@ namespace Rapture
 
 		HINSTANCE hInstance = nullptr;
 		wstring rootPath;
-
 		array_list<wstring> args;
+
 		EntranceFunction entrance = nullptr;
 		int showCommand;
 	};
-
-	template struct api(application) Singleton<Application>;
 
 	struct api(application) Entrance
 	{

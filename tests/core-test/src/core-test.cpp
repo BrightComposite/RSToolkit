@@ -63,9 +63,9 @@ namespace Rapture
 	{
 		testSubjects();
 		testHandles();
-		testHandlesSafety();
+		//testHandlesSafety(); //bad test
 
-		absorb() _getch();
+		_getch();
 		return 0;
 	});
 
@@ -128,7 +128,7 @@ namespace Rapture
 
 		auto message = send<DummyMessage>(dummy, 0);
 
-		const int times = 16;
+		const int times = 128;
 
 		start = hrc::now();
 
@@ -136,52 +136,69 @@ namespace Rapture
 			subj.resend(message, dummy);
 
 		elapsed = hrc::now() - start;
-		cout << "Message delivery time (" << times << " times): " << elapsed.count() << " ns" << endl;
+		long long deliveryTime = elapsed.count();
+		cout << "Message delivery time (" << times << " times): " << deliveryTime << " ns" << endl;
 
+		/*
 		start = hrc::now();
-		connect(dummy, receiver);
+
+		connect(receiver, dummy);
 		elapsed = hrc::now() - start;
 		cout << "Message plain callback connection: " << elapsed.count() << " ns" << endl;
 
 		start = hrc::now();
 
-		subscribe_on(DummySubject, DummyMessage)
-		{
-
-		};
-
-		elapsed = hrc::now() - start;
-		cout << "Global message lambda callback connection: " << elapsed.count() << " ns" << endl;
-
-		start = hrc::now();
-
-		subscribe_on(DummySubject, DummyMessage, dummy)
-		{
-		
-		};
-
-		elapsed = hrc::now() - start;
-		cout << "Message lambda callback connection: " << elapsed.count() << " ns" << endl;
-
-		start = hrc::now();
-
-		connect<DummySubject, DummyMessage>(dummy, [](Handle<DummyMessage> & msg, DummySubject & dst)
+		connect([](Handle<DummyMessage> & msg, DummySubject & dst)
 		{
 
 		});
 
 		elapsed = hrc::now() - start;
-		cout << "Message lambda callback connection 2: " << elapsed.count() << " ns" << endl;
+		cout << "Global message lambda callback connection: " << elapsed.count() << " ns" << endl;
+		*/
+		Connector c;
 
 		start = hrc::now();
-		connect(dummy, rcvr, &DummyReceiver::receive);
+
+		connect(c, [](Handle<DummyMessage> & msg, DummySubject & dst)
+		{
+
+		});
+
+		elapsed = hrc::now() - start;
+		cout << "Auto global message lambda callback connection: " << elapsed.count() << " ns" << endl;
+		/*
+		start = hrc::now();
+
+		connect([](Handle<DummyMessage> & msg, DummySubject & dst)
+		{
+
+		}, dummy);
+
+		elapsed = hrc::now() - start;
+		cout << "Message lambda callback connection: " << elapsed.count() << " ns" << endl;
+		*/
+		start = hrc::now();
+
+		connect(c, [](Handle<DummyMessage> & msg, DummySubject & dst)
+		{
+
+		}, dummy);
+
+		elapsed = hrc::now() - start;
+		cout << "Auto message lambda callback connection: " << elapsed.count() << " ns" << endl;
+
+		start = hrc::now();
+		connect(rcvr, &DummyReceiver::receive, dummy);
 		elapsed = hrc::now() - start;
 		cout << "Message object callback connection: " << elapsed.count() << " ns" << endl;
-
+		/*
 		start = hrc::now();
-		connect<DummySubject, DummyMessage>(dummy, std::bind(&DummyReceiver::receive, rcvr, std::placeholders::_1, std::placeholders::_2));
+		connect<DummySubject, DummyMessage>(std::bind(&DummyReceiver::receive, rcvr, std::placeholders::_1, std::placeholders::_2), dummy);
 		elapsed = hrc::now() - start;
 		cout << "Message object callback connection 2: " << elapsed.count() << " ns" << endl;
+		*/
+		auto count = Receivers<DummySubject, DummyMessage>::count(dummy);
 
 		start = hrc::now();
 
@@ -189,16 +206,16 @@ namespace Rapture
 			subj.resend(message, dummy);
 
 		elapsed = hrc::now() - start;
-		cout << "Message delivery time with 6 connections (" << times << " times): " << elapsed.count() << " ns" << endl;
-		/*
-		start = hrc::now();
-
-		for(register int i = 0; i < times; ++i)
-			dummy.read(message, &subj);
-
-		elapsed = hrc::now() - start;
-		cout << "Immediate message delivery time (" << times << " times): " << elapsed.count() << " ns" << endl;
-		*/
+		long long connectedDeliveryTime = elapsed.count();
+		cout << "Message delivery time with " << count << " connections (" << times << " times): " << connectedDeliveryTime << " ns" << endl;
+		long long oneDeliveryTime = connectedDeliveryTime / times;
+		cout << "Approximate time for delivery: " << oneDeliveryTime << " ns, including:" << endl;
+		long long deliveryOverhead = deliveryTime / times;
+		cout << "	delivery overhead: " << deliveryOverhead << " ns" << endl;
+		long long delta = (connectedDeliveryTime - deliveryTime) / times;
+		cout << "	time for connections: " << delta << " ns, including:" << endl;
+		long long oneConnectionTime = delta / count;
+		cout << "		time for one connection: " << oneConnectionTime << " ns" << endl;
 	}
 
 	static void testHandlesSafety()

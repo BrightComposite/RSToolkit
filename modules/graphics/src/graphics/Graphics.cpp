@@ -14,9 +14,12 @@ namespace Rapture
 			return;
 
 		_surface = surface;
-		_surface->apply();
 
-		updateSurface();
+		if(_surface != nullptr)
+		{
+			_surface->apply();
+			updateSurface();
+		}
 	}
 
 	void Graphics::bind(const Handle<Font> & font)
@@ -150,12 +153,12 @@ namespace Rapture
 
 	IntSize Graphics::getTextSize(const string & text)
 	{
-		return textSize<string>(this, text);
+		return _font != nullptr ? _font->getTextSize(this, text, fontSize()) : IntSize{0, 0};
 	}
 
 	IntSize Graphics::getTextSize(const wstring & text)
 	{
-		return textSize<wstring>(this, text);
+		return _font != nullptr ? _font->getTextSize(this, text, fontSize()) : IntSize{0, 0};
 	}
 
 	State<Color> * Graphics::colorState()
@@ -193,60 +196,8 @@ namespace Rapture
 
 	void Graphics::updateSurface()
 	{
-		clip(_surface->_viewport);
-	}
-
-	template<class string_t>
-	IntSize Graphics::textSize(Graphics * graphics, const string_t & text)
-	{
-		if(graphics->_font == nullptr)
-			return {0, 0};
-
-		Handle<Symbol> symbol;
-		IntSize size;
-
-		auto font = graphics->_font;
-		int fontSize = graphics->_fontSize->get();
-
-		font->getSymbol(symbol, graphics, fontSize, ' ');
-		int space = symbol->_advance.x;
-		int tab = space * 4;
-
-		for(size_t i = 0; i < text.length(); ++i)
-		{
-			auto & ch = text[i];
-
-			switch(ch)
-			{
-			case '\t':
-				size.x = ((size.x + space) / tab + 1) * tab;
-				break;
-
-			case ' ':
-				size.x += space;
-				break;
-
-			default:
-				if(ch < ' ')
-					break;
-
-				font->getSymbol(symbol, graphics, fontSize, ch);
-				size.x += symbol->_advance.x;
-
-				if(symbol->_image != nullptr)
-				{
-					int h = symbol->_image->height() + symbol->_top;
-
-					if(h > size.y)
-						size.y = h;
-
-					if(i == text.length() - 1)
-						size.x += std::max(0, static_cast<int>(symbol->_image->width()) - symbol->_advance.x);
-				}
-			}
-		}
-
-		return size;
+		if(_surface != nullptr)
+			clip(_surface->_viewport);
 	}
 
 	template<class string_t>
@@ -288,9 +239,6 @@ namespace Rapture
 			}
 		}
 	}
-
-	template IntSize Graphics::textSize<string>(Graphics * graphics, const string & text);
-	template IntSize Graphics::textSize<wstring>(Graphics * graphics, const wstring & text);
 
 	template void Graphics::draw<string>(Graphics * graphics, const string & text, int x, int y, int & newx);
 	template void Graphics::draw<wstring>(Graphics * graphics, const wstring & text, int x, int y, int & newx);

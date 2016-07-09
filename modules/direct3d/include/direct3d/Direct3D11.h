@@ -46,10 +46,11 @@ namespace Rapture
 
 	namespace Direct3D11
 	{
-		class Debug
+		class Debug : public GraphicsDebug
 		{
 		public:
-			~Debug();
+			api(direct3d11) Debug(const ComHandle<ID3D11Device2, D3DGraphics> & device);
+			virtual api(direct3d11) ~Debug();
 
 			ComHandle<ID3D11Debug> handle;
 		};
@@ -58,7 +59,7 @@ namespace Rapture
 		{
 			friend_graphics_provider(D3DGraphics);
 
-			Debug debug;
+			Handle<Debug> debug = nullptr;
 
 		public:
 			using Graphics3D::init;
@@ -76,13 +77,20 @@ namespace Rapture
 			virtual api(direct3d11) Handle<Surface> createSurface(UISpace * space) override;
 			virtual api(direct3d11) Handle<Surface> createSurface(const IntSize & size, Handle<Image> & image) override;
 
+			virtual Handle<GraphicsDebug> getDebug() const override
+			{
+				return debug;
+			}
+
 			ComHandle<ID3D11Device2, D3DGraphics> device;
 			ComHandle<ID3D11DeviceContext2, D3DGraphics> context;
 			ComHandle<ID3D11RasterizerState, D3DGraphics> solidRS;
+			ComHandle<ID3D11RasterizerState, D3DGraphics> transparentRS;
 			ComHandle<ID3D11RasterizerState, D3DGraphics> wiredRS;
-			ComHandle<ID3D11DepthStencilState, D3DGraphics> depthState2D;
-			ComHandle<ID3D11DepthStencilState, D3DGraphics> depthState3D;
-			ComHandle<ID3D11BlendState, D3DGraphics> blendState;
+			ComHandle<ID3D11DepthStencilState, D3DGraphics> depthDisabled;
+			ComHandle<ID3D11DepthStencilState, D3DGraphics> depthEnabled;
+			ComHandle<ID3D11BlendState, D3DGraphics> blendStateDisabled;
+			ComHandle<ID3D11BlendState, D3DGraphics> blendStateEnabled;
 			ComHandle<ID3D11SamplerState, D3DGraphics> linearSampler;
 			ComHandle<IDXGIFactory2, D3DGraphics> dxgiFactory;
 
@@ -93,7 +101,7 @@ namespace Rapture
 			virtual api(direct3d11) ~D3DGraphics();
 
 			virtual api(direct3d11) Handle<VertexLayout> createVertexLayout(const string & fingerprint) override;
-			virtual api(direct3d11) Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) override;
+			virtual api(direct3d11) Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data, VertexTopology topology) override;
 			virtual api(direct3d11) Handle<IndexBuffer> createIndexBuffer(const VertexIndices & indices) override;
 
 			virtual api(direct3d11) UniqueHandle<UniformAdapter> createUniformAdapter(ShaderType shader, int index, size_t size) override;
@@ -172,7 +180,7 @@ namespace Rapture
 			virtual api(direct3d11) void draw(const Mesh * mesh) const override;
 
 		protected:
-			api(direct3d11) D3DVertexBuffer(D3DGraphics * graphics, VertexLayout * layout, const VertexData & vd, D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			api(direct3d11) D3DVertexBuffer(D3DGraphics * graphics, VertexLayout * layout, const VertexData & vd, VertexTopology topology);
 
 			D3DGraphics * graphics;
 			D3D_PRIMITIVE_TOPOLOGY topology;
@@ -231,8 +239,7 @@ namespace Rapture
 		enum class ShaderCodeState
 		{
 			Raw,
-			Compiled,
-			Embedded
+			Compiled
 		};
 
 		template<>
@@ -324,13 +331,13 @@ namespace Rapture
 			virtual api(direct3d11) void clear() const override;
 		};
 
-		class UISurface : public RenderTargetSurface
+		class UISurface : public RenderTargetSurface, public Connector
 		{
 			deny_copy(UISurface);
 
 		public:
 			api(direct3d11) UISurface(D3DGraphics * graphics, UISpace * space);
-			virtual api(direct3d11) ~UISurface();
+			virtual ~UISurface() {}
 
 			virtual api(direct3d11) void present() const override;
 			virtual api(direct3d11) void requestData(ImageData * data) const override;

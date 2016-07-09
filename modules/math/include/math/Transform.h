@@ -134,28 +134,52 @@ namespace Rapture
 			t._matrix *= _matrix;
 		}
 
-		Transform & operator *= (const Transform & t)
+		Transform & operator *= (const Transform & t) &
 		{
 			_matrix *= t.matrix;
 			return *this;
 		}
 
-		Transform & translate(const Vector<T> & s)
+		Transform && operator *= (const Transform & t) &&
+		{
+			_matrix *= t.matrix;
+			return move(*this);
+		}
+
+		Transform & translate(const Vector<T> & s) &
 		{
 			_matrix.translate(s);
 			return *this;
 		}
 
-		Transform & rotate(const Quaternion<T> & q)
+		Transform && translate(const Vector<T> & s) &&
+		{
+			_matrix.translate(s);
+			return move(*this);
+		}
+
+		Transform & rotate(const Quaternion<T> & q) &
 		{
 			_matrix *= q.toMatrix();
 			return *this;
 		}
 
-		Transform & scale(const Vector<T> & s)
+		Transform && rotate(const Quaternion<T> & q) &&
+		{
+			_matrix *= q.toMatrix();
+			return move(*this);
+		}
+
+		Transform & scale(const Vector<T> & s) &
 		{
 			_matrix.scale(s);
 			return *this;
+		}
+
+		Transform && scale(const Vector<T> & s) &&
+		{
+			_matrix.scale(s);
+			return move(*this);
 		}
 
 	protected:

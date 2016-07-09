@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/action/Action.h>
+#include <core/function/Function.h>
 #include <core/Class.h>
 
 //---------------------------------------------------------------------------
@@ -46,51 +46,48 @@ namespace Rapture
 		template<class, class>
 		friend class Wrapper;
 
-		inline T * inptr_() const
+		inline T * pointer() const
 		{
-			return static_cast<const Owner *>(this)->inptr_();
+			return static_cast<const Owner *>(this)->pointer();
 		}
 
 	public:
 		inline T * inner() const
 		{
-			return inptr_();
+			return pointer();
 		}
 
 		inline T * operator -> () const
 		{
-			return inptr_();
+			return pointer();
 		}
 
 		template<typename R, typename ... A>
 		inline auto operator ->* (R(__thiscall T::*method)(A...)) const
 		{
-			return wrap_method(inptr_(), method);
+			return wrap_method(pointer(), method);
 		}
 
 		template<typename R, typename ... A>
 		inline auto operator ->* (R(__thiscall T::*method)(A...) const) const
 		{
-			return wrap_method(inptr_(), method);
+			return wrap_method(pointer(), method);
 		}
 
-		template<typename V, useif <
-			std::is_member_pointer<V>::value
-			> endif
-		>
+		template<typename V, useif <std::is_member_pointer<V>::value> endif>
 		inline V & operator ->* (V T::*member) const
 		{
-			return inptr_()->*member;
+			return pointer()->*member;
 		}
 
 		inline operator T * () const
 		{
-			return inptr_();
+			return pointer();
 		}
 
 		inline T & operator * () const
 		{
-			return *inptr_();
+			return *pointer();
 		}
 	};
 
@@ -173,7 +170,7 @@ namespace Rapture
 	protected:
 		mutable T * _inner;
 
-		inline T * inptr_() const
+		inline T * pointer() const
 		{
 			return _inner;
 		}
@@ -208,46 +205,42 @@ namespace Rapture
 		template<class, class>
 		friend class Wrapper;
 
-		inline const T * inptr_() const
+		inline const T * pointer() const
 		{
-			return static_cast<const Owner *>(this)->inptr_();
+			return static_cast<const Owner *>(this)->pointer();
 		}
 
 	public:
 		inline const T * inner() const
 		{
-			return inptr_();
+			return pointer();
 		}
 
 		inline const T * operator -> () const
 		{
-			return inptr_();
+			return pointer();
 		}
 
 		template<typename R, typename ... A>
 		inline auto operator ->* (R (T::*method)(A...) const) const
 		{
-			return wrap_method(inptr_(), method);
+			return wrap_method(pointer(), method);
 		}
 
-		template<
-			typename V, 
-			useif <std::is_member_pointer<V>::value> endif
-
-		>
+		template<typename V, useif <std::is_member_pointer<V>::value> endif>
 		inline const V & operator ->* (V T::*member) const
 		{
-			return inptr_()->*member;
+			return pointer()->*member;
 		}
 
 		inline operator const T * () const
 		{
-			return inptr_();
+			return pointer();
 		}
 
 		inline const T & operator * () const
 		{
-			return *inptr_();
+			return *pointer();
 		}
 	};
 

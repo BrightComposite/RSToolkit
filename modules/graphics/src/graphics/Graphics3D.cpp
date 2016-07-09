@@ -8,24 +8,68 @@ namespace Rapture
 {
 	implement_link(Graphics3D);
 
-	static const float quadData[] =
+	static const float quad2dData[] =
 	{
-		-1.0f,  1.0f,
-		 1.0f, -1.0f,
-		-1.0f, -1.0f,
 		-1.0f,  1.0f,
 		 1.0f,  1.0f,
 		 1.0f, -1.0f,
+	    -1.0f,  1.0f,
+		 1.0f, -1.0f,
+		-1.0f, -1.0f
 	};
 
-	static const float texquadData[] =
+	static const float texquad2dData[] =
 	{
-		-1.0f,  1.0f,	0.0f, 0.0f,
-		 1.0f, -1.0f,	1.0f, 1.0f,
-		-1.0f, -1.0f,	0.0f, 1.0f,
 		-1.0f,  1.0f,	0.0f, 0.0f,
 		 1.0f,  1.0f,	1.0f, 0.0f,
 		 1.0f, -1.0f,	1.0f, 1.0f,
+	    -1.0f,  1.0f,	0.0f, 0.0f,
+		 1.0f, -1.0f,	1.0f, 1.0f,
+		-1.0f, -1.0f,	0.0f, 1.0f
+	};
+
+	static const float linequad2dData[] =
+	{
+		-1.0f,  1.0f,
+	 	 1.0f,  1.0f,
+		 1.0f,  1.0f,
+		 1.0f, -1.0f,
+		 1.0f, -1.0f,
+		-1.0f, -1.0f,
+		-1.0f, -1.0f,
+		-1.0f,  1.0f
+	};
+
+	static const float quad3dData[] =
+	{
+		-1.0f,  1.0f, 0.0f,
+		 1.0f,  1.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f,
+		-1.0f, -1.0f, 0.0f
+	};
+
+	static const float texquad3dData[] =
+	{
+		-1.0f,  1.0f, 0.0f,		0.0f, 0.0f,
+		 1.0f,  1.0f, 0.0f,		1.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f,		1.0f, 1.0f,
+		-1.0f,  1.0f, 0.0f,		0.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f,		1.0f, 1.0f,
+		-1.0f, -1.0f, 0.0f,		0.0f, 1.0f
+	};
+
+	static const float linequad3dData[] =
+	{
+		-1.0f,  1.0f, 0.0f,
+		 1.0f,  1.0f, 0.0f,
+		 1.0f,  1.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f,
+		-1.0f, -1.0f, 0.0f,
+		-1.0f, -1.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f
 	};
 
 	static const float cubeData[] =
@@ -37,7 +81,7 @@ namespace Rapture
 		/* Bottom */ -1.0, -1.0, -1.0, /**/  1.0, -1.0, -1.0, /**/  1.0, -1.0,  1.0, /**/ -1.0, -1.0,  1.0,
 
 		/* Right  */  1.0, -1.0, -1.0, /**/  1.0,  1.0, -1.0, /**/  1.0,  1.0,  1.0, /**/  1.0, -1.0,  1.0,
-		/*  Left  */ -1.0, -1.0, -1.0, /**/ -1.0, -1.0,  1.0, /**/ -1.0,  1.0,  1.0, /**/ -1.0,  1.0, -1.0,
+		/*  Left  */ -1.0, -1.0, -1.0, /**/ -1.0, -1.0,  1.0, /**/ -1.0,  1.0,  1.0, /**/ -1.0,  1.0, -1.0
 	};
 
 	static const float texcubeData[] =
@@ -77,8 +121,25 @@ namespace Rapture
 
 #undef indices
 
-	VertexData VertexData::quad(quadData);
-	VertexData VertexData::texquad(texquadData);
+#define indices(o, x0, x1, x2, x3, x4, x5, x6, x7) x0 + o, x1 + o, x2 + o, x3 + o, x4 + o, x5 + o, x6 + o, x7 + o
+
+	VertexIndices VertexIndices::linecube = {
+		indices(0,  0, 1, 1, 2, 2, 3, 3, 0),
+		indices(4,  0, 1, 1, 2, 2, 3, 3, 0),
+		indices(8,  0, 1, 1, 2, 2, 3, 3, 0),
+		indices(12, 0, 1, 1, 2, 2, 3, 3, 0),
+		indices(16, 0, 1, 1, 2, 2, 3, 3, 0),
+		indices(20, 0, 1, 1, 2, 2, 3, 3, 0)
+	};
+
+#undef indices
+
+	VertexData VertexData::quad2d(quad2dData);
+	VertexData VertexData::texquad2d(texquad2dData);
+	VertexData VertexData::linequad2d(linequad2dData);
+	VertexData VertexData::quad3d(quad3dData);
+	VertexData VertexData::texquad3d(texquad3dData);
+	VertexData VertexData::linequad3d(linequad3dData);
 	VertexData VertexData::cube(cubeData);
 	VertexData VertexData::texcube(texcubeData);
 	VertexData VertexData::colorcube(colorcubeData);
@@ -190,7 +251,7 @@ namespace Rapture
 		else
 			techniques2d.wired_rectangle->apply();
 
-		meshes.quad->draw();
+		meshes2d.quad->draw();
 	}
 
 	void Graphics3D::ellipse(const IntRect & rect)
@@ -204,7 +265,7 @@ namespace Rapture
 		else
 			techniques2d.wired_ellipse->apply();
 
-		meshes.texquad->draw();
+		meshes2d.texquad->draw();
 	}
 
 	void Graphics3D::rectangle(const SqRect & rect)
@@ -218,7 +279,7 @@ namespace Rapture
 		else
 			techniques2d.wired_rectangle->apply();
 
-		meshes.quad->draw();
+		meshes2d.quad->draw();
 	}
 
 	void Graphics3D::ellipse(const SqRect & rect)
@@ -233,7 +294,7 @@ namespace Rapture
 		else
 			techniques2d.wired_ellipse->apply();
 
-		meshes.texquad->draw();
+		meshes2d.texquad->draw();
 	}
 
 	void Graphics3D::draw(const Figure * figure, const IntRect & bounds)
@@ -266,7 +327,7 @@ namespace Rapture
 		updateAreaUniform(rect);
 
 		techniques2d.image->apply();
-		meshes.texquad->draw();
+		meshes2d.texquad->draw();
 	}
 
 	void Graphics3D::draw(const Image * image, const SqRect & rect)
@@ -278,7 +339,7 @@ namespace Rapture
 		updateAreaUniform(rect);
 
 		techniques2d.image->apply();
-		meshes.texquad->draw();
+		meshes2d.texquad->draw();
 	}
 
 	void Graphics3D::draw(const Symbol * symbol, int x, int y)
@@ -292,23 +353,7 @@ namespace Rapture
 		updateAreaUniform(IntRect({x + symbol->left(), y + symbol->top()}, {image->width(), image->height()}));
 
 		techniques2d.text->apply();
-		meshes.texquad->draw();
-	}
-
-	const Handle<ShaderCode> & Graphics3D::getShaderCode(const string & id, ShaderType type) const
-	{
-		auto i = shaders.find(id);
-
-		if(i == shaders.end())
-			throw Exception("Can't find embedded shader set with id \"", id, "\"");
-
-		auto & set = i->second;
-		auto ci = set->code.find(type);
-
-		if(ci == set->code.end())
-			throw Exception("Embedded shader set with id \"", id, "\" doesn't contain shader of type \"", type, "\"");
-
-		return ci->second;
+		meshes2d.texquad->draw();
 	}
 
 	VertexLayout * Graphics3D::getVertexLayout(const string & fingerprint)
@@ -326,20 +371,20 @@ namespace Rapture
 		return shaderPrograms[id];
 	}
 
-	Handle<Mesh> Graphics3D::createMesh(VertexLayout * layout, const VertexData & data)
+	Handle<Mesh> Graphics3D::createMesh(VertexLayout * layout, const VertexData & data, VertexTopology topology)
 	{
-		return Handle<Mesh>(this, createVertexBuffer(layout, data), layout->stride, data.start);
+		return Handle<Mesh>(this, createVertexBuffer(layout, data, topology), layout->stride, data.start);
 	}
 
-	Handle<Mesh> Graphics3D::createMesh(const string & fingerprint, const VertexData & data)
+	Handle<Mesh> Graphics3D::createMesh(const string & fingerprint, const VertexData & data, VertexTopology topology)
 	{
 		auto layout = getVertexLayout(fingerprint);
-		return Handle<Mesh>(this, createVertexBuffer(layout, data), layout->stride, data.start);
+		return Handle<Mesh>(this, createVertexBuffer(layout, data, topology), layout->stride, data.start);
 	}
 
-	Handle<IndexedMesh> Graphics3D::createIndexedMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, uint indicesLocation)
+	Handle<IndexedMesh> Graphics3D::createIndexedMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, VertexTopology topology, uint indicesLocation)
 	{
-		return Handle<IndexedMesh>(this, createVertexBuffer(layout, data), createIndexBuffer(indices), layout->stride, data.start, indicesLocation);
+		return Handle<IndexedMesh>(this, createVertexBuffer(layout, data, topology), createIndexBuffer(indices), layout->stride, data.start, indicesLocation);
 	}
 
 	void Graphics3D::initFacilities()
@@ -350,11 +395,17 @@ namespace Rapture
 		auto p3t = getVertexLayout("p3 t");
 		auto p3c4 = getVertexLayout("p3 c4");
 
-		meshes.quad = createMesh(p2, VertexData::quad);
-		meshes.texquad = createMesh(p2t, VertexData::texquad);
-		meshes.cube = createIndexedMesh(p3, VertexData::cube, VertexIndices::cube);
-		meshes.texcube = createIndexedMesh(p3t, VertexData::texcube, VertexIndices::cube);
-		meshes.colorcube = createIndexedMesh(p3c4, VertexData::colorcube, VertexIndices::cube);
+		meshes2d.quad = createMesh(p2, VertexData::quad2d);
+		meshes2d.texquad = createMesh(p2t, VertexData::texquad2d);
+		meshes2d.linequad = createMesh(p2, VertexData::linequad2d, VertexTopology::Lines);
+
+		meshes3d.quad = createMesh(p3, VertexData::quad3d);
+		meshes3d.texquad = createMesh(p3t, VertexData::texquad3d);
+		meshes3d.linequad = createMesh(p2, VertexData::linequad3d, VertexTopology::Lines);
+		meshes3d.cube = createIndexedMesh(p3, VertexData::cube, VertexIndices::cube);
+		meshes3d.texcube = createIndexedMesh(p3t, VertexData::texcube, VertexIndices::cube);
+		meshes3d.colorcube = createIndexedMesh(p3c4, VertexData::colorcube, VertexIndices::cube);
+		meshes3d.linecube = createIndexedMesh(p3, VertexData::cube, VertexIndices::linecube, VertexTopology::Lines);
 
 		techniques2d.rectangle.init(getShaderProgram("2d/rect"));
 		techniques2d.ellipse.init(getShaderProgram("2d/ellipse"));
@@ -371,9 +422,39 @@ namespace Rapture
 		updateUniform<Uniforms::Model>();
 		updateUniform<Uniforms::View>();
 		updateUniform<Uniforms::Projection>();
+
 		updateBrushState();
 
 		techniques2d.rectangle->apply();
+	}
+
+	void Graphics3D::clearFacilities()
+	{
+		meshes2d.quad = nullptr;
+		meshes2d.texquad = nullptr;
+
+		meshes3d.quad = nullptr;
+		meshes3d.texquad = nullptr;
+		meshes3d.cube = nullptr;
+		meshes3d.texcube = nullptr;
+		meshes3d.colorcube = nullptr;
+
+		techniques2d.rectangle = nullptr;
+		techniques2d.ellipse = nullptr;
+		techniques2d.wired_rectangle = nullptr;
+		techniques2d.wired_ellipse = nullptr;
+		techniques2d.figure = nullptr;
+		techniques2d.image = nullptr;
+		techniques2d.text = nullptr;
+
+		techniques3d.color = nullptr;
+		techniques3d.multicolor = nullptr;
+		techniques3d.texture = nullptr;
+
+		_textures.clear();
+		shaderPrograms.clear();
+		uniforms.clear();
+		vertexLayouts.clear();
 	}
 
 	void Graphics3D::updateBrushState()

@@ -51,7 +51,7 @@ namespace Rapture
 		class name;														\
 	}																	\
 																		\
-	aligned_contents(Uniforms::name, 16, components)					\
+	aligned_contents(Uniforms::name, alignas(16), components)			\
 																		\
 	namespace Uniforms													\
 	{																	\

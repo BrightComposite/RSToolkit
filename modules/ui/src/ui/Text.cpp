@@ -1,22 +1,43 @@
 //---------------------------------------------------------------------------
 
 #include <ui/Text.h>
-#include <graphics/Graphics.h>
+#include <graphics/Graphics3D.h>
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	void Text::draw(Graphics * graphics, const IntPoint & pos)
-	{
-		graphics->setColor(_color);
-		graphics->bind(_font);
-		graphics->setFontSize(_fontSize);
+	Text::Text(Graphics * graphics, const WideString & s, const Handle<Font> & font, const Color & color, int fontSize) :
+		_graphics(graphics), _contents(s), _font(font), _color(color), _fontSize(fontSize), _size(font->getTextSize(graphics, s, fontSize)) {}
 
-		graphics->draw(_contents, pos);
+	void Text::draw(const IntPoint & pos)
+	{
+		_graphics->setColor(_color);
+		_graphics->bind(_font);
+		_graphics->setFontSize(_fontSize);
+
+		_graphics->draw(_contents, pos);
 	}
 
-	TextLayer::TextLayer(Graphics * graphics, const Handle<Text> & text) : _graphics(graphics), _text(text) {}
+	void Text::setDynamic(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color, int fontSize)
+	{
+		w->require<TextComponent>()->setLayer(Handle<TextLayer>(w, Handle<Text>(w->graphics(), s, font, color, fontSize)));
+	}
+
+	void Text::setSmart(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color, int fontSize)
+	{
+		w->require<TextComponent>()->setLayer(Handle<SmartTextLayer>(w, Handle<Text>(w->graphics(), s, font, color, fontSize)));
+	}
+
+	void Text::setContents(Widget * w, const WideString & s)
+	{
+		auto c = w->seek<TextComponent>();
+
+		if(c == nullptr)
+			return;
+
+		c->layer()->setContents(s);
+	}
 
 	TextLayer * Text::get(Widget * w)
 	{
@@ -33,9 +54,11 @@ namespace Rapture
 		w->detach<TextComponent>();
 	}
 
+	TextLayer::TextLayer(Widget * w, const Handle<Text> & text) : _graphics(w->graphics()), _text(text) {}
+
 	void TextLayer::draw(Widget * w)
 	{
-		_text->draw(w->graphics(), w->absPos());
+		_text->draw(w->absPos());
 	}
 
 	TextComponent::TextComponent(Widget * widget) : WidgetComponent(widget), _layer(nullptr) {}
@@ -71,8 +94,8 @@ namespace Rapture
 		_widget->attach(_layer);
 	}
 
-	StaticTextLayer::StaticTextLayer(Graphics * graphics, const Handle<Text> & text, const IntSize & size) : 
-		TextLayer(graphics, text), _image(nullptr), _surface(_graphics->createSurface(size, _image))
+	StaticTextLayer::StaticTextLayer(Widget * w, const Handle<Text> & text) : 
+		TextLayer(w, text)
 	{
 		update();
 	}
@@ -85,10 +108,11 @@ namespace Rapture
 	void StaticTextLayer::update()
 	{
 		auto old = _graphics->surface();
+		_surface = _graphics->createSurface(_text->size(), _image);
 		_graphics->bind(_surface);
-		auto cc = hold(_graphics->clearColorState(), {1.0f, 1.0f, 1.0f, 0.0f});
+		auto cc = hold(_graphics->clearColorState(), {0.0f, 0.0f, 0.0f, 0.0f});
 		_surface->clear();
-		_text->draw(_graphics, {0, 0});
+		_text->draw({0, 0});
 		_graphics->bind(old);
 	}
 

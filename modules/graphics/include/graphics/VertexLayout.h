@@ -21,6 +21,8 @@ namespace Rapture
 	class ShaderCode;
 	class VertexElement;
 
+	api_class(graphics, Precached<string, VertexElement>);
+
 	class VertexElement : public Shared, public Precached<string, VertexElement>
 	{
 		friend class VertexLayout;
@@ -52,8 +54,6 @@ namespace Rapture
 		VertexElement(const string & id, Type type, uint index, uint units) : Precached<string, VertexElement>(id),
 			id(id), type(type), index(index), units(units) {}
 	};
-
-	template class api(graphics) Precached<string, VertexElement>;
 
 //---------------------------------------------------------------------------
 

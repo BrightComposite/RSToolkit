@@ -20,7 +20,7 @@ namespace Rapture
 	 *	need to create a pool for morphers based on this root with
 	 *	'create_morph_pool' macro.
 	 */
-#define morph_base(Base) using MorphBase = Base; template<class> friend struct MorphType; friend_sfinae(is_morph_type)
+#define morph_base(Base) using MorphBase = Base; template<class> friend struct MorphType; template<class> friend struct is_morph_type
 
 	type_checker(is_morph_type, MorphBase);
 

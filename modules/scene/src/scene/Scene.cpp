@@ -19,9 +19,10 @@ namespace Rapture
 		scene->_objects.emplace_back(this);
 	}
 
-	Drawable::Drawable(Scene * scene)
+	Drawable::Drawable(Scene * scene, bool transparent) : _transparent(transparent)
 	{
-		scene->_drawables.push_back(this);
+		auto & list = _transparent ? scene->_transparent : scene->_opaque;
+		list.push_back(this);
 	}
 
 	Scene::Scene(Widget * widget, const string & name) : Scene(name)
@@ -31,20 +32,10 @@ namespace Rapture
 
 		_widget = widget;
 		_widget->append<Component>(this);
-		connect(*_widget, this, &Scene::onWidgetResize);
+		connect(this, &Scene::onWidgetResize, *_widget);
 
 		_firstTick = _lastTick = clock::now();
 		_ticks = 0;
-	}
-
-	Scene::Scene(const string & name) : Named(name)
-	{
-		setclass(Scene);
-	}
-
-	Scene::~Scene()
-	{
-		disconnect(*_widget, this, &Scene::onWidgetResize);
 	}
 
 	Graphics3D & Scene::graphics() const
@@ -101,7 +92,11 @@ namespace Rapture
 		_objects.push_back(obj);
 
 		if(obj kindof(Drawable))
-			_drawables.push_back(dynamic_cast<Drawable *>(static_cast<SceneObject *>(obj)));
+		{
+			auto * drawable = dynamic_cast<Drawable *>(static_cast<SceneObject *>(obj));
+			auto & list = drawable->transparent() ? _transparent : _opaque;
+			list.push_back(drawable);
+		}
 	}
 
 	void Scene::detach(SceneObject * obj)
@@ -121,12 +116,13 @@ namespace Rapture
 		if(obj kindof(Drawable))
 		{
 			auto * drawable = dynamic_cast<Drawable *>(obj);
+			auto & list = drawable->transparent() ? _transparent : _opaque;
 
-			for(auto i = _drawables.begin(); i != _drawables.end(); ++i)
+			for(auto i = list.begin(); i != list.end(); ++i)
 			{
 				if(*i == drawable)
 				{
-					_drawables.erase(i);
+					list.erase(i);
 					break;
 				}
 			}
@@ -181,7 +177,12 @@ namespace Rapture
 
 	void Scene::draw(Graphics3D & graphics, const IntRect & viewport) const
 	{
-		for(auto & drawable : _drawables)
+		for(auto & drawable : _opaque)
+			drawable->draw(graphics, viewport, _camera ? _camera->zoom() : 0.0f);
+
+		auto dt = hold(graphics.depthTestState(), false);
+
+		for(auto & drawable : _transparent)
 			drawable->draw(graphics, viewport, _camera ? _camera->zoom() : 0.0f);
 	}
 

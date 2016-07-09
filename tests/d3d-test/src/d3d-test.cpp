@@ -3,12 +3,13 @@
 #include <iostream>
 #include <chrono>
 #include <random>
+#include <mutex>
 
 #include <application/Application.h>
 #include <application/ThreadLoop.h>
 
-#include <core/action/Action.h>
-#include <core/action/Thread.h>
+#include <core/function/Function.h>
+#include <core/function/Thread.h>
 
 #include <direct3d/Direct3D11.h>
 
@@ -92,7 +93,7 @@ namespace Rapture
 
 			window->registerHotkey(HOTKEY_FULLSCREEN, VK_RETURN, MOD_ALT);
 
-			subscribe_on(UISpace, HotkeyMessage, *window)
+			connect([](Handle<HotkeyMessage> & msg, UISpace & dest)
 			{
 				auto window = static_cast<Window *>(&dest);
 
@@ -102,9 +103,9 @@ namespace Rapture
 						window->toggleFullscreen();
 						break;
 				}
-			};
+			}, *window);
 
-			subscribe_on(Widget, MouseDownMessage)
+			connect([](Handle<MouseDownMessage> & msg, Widget & dest)
 			{
 				switch(msg->button)
 				{
@@ -112,7 +113,7 @@ namespace Rapture
 						cout << "Widget " << dest.name() << " has been pressed!" << endl;
 						break;
 				}
-			};
+			});
 
 			subscribe_on(UISpace, KeyUpMessage, *window)
 			{
@@ -247,67 +248,44 @@ namespace Rapture
 			auto arial_italic = FontCache::get("Arial", FontStyle::Italic);
 			auto pristina_font = FontCache::get("Pristina", FontStyle::Regular);
 
-			int fontSize = 24;
 			Handle<Panel> label(back);
 			Handle<Panel> english_label(back);
+			Handle<Panel> open_file(back);
 
-			Handle<String> engine_text(L"Rapture State Engine");
-			Handle<String> english_text(L"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz,-:;\" \'.?!\\/~`");
+			WideString engine_text(L"Rapture State Engine");
+			WideString english_text(L"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz,-:;\" \'.?!\\/~`");
+			WideString open_file_text(L"Íàæìèòå, ÷òîáû âûáðàòü ôàéë");
 
 			graphics->bind(pristina_font);
-			graphics->setFontSize(fontSize);
+			graphics->setFontSize(24);
 
 			label->setName("Engine Label");
-			label->setPlacement(ModelMask::RightTop, {-10, 10}, graphics->getTextSize(*engine_text));
+			label->setPlacement(ModelMask::RightTop, {-10, 10}, graphics->getTextSize(engine_text));
+			Text::set(label, engine_text, pristina_font, Color(0.5f, 0.5f, 1.0f), 24);
 
 			english_label->setName("Text Label");
-			english_label->setPlacement({10, 10}, graphics->getTextSize(*english_text));
-
-			*label << [engine_text, pristina_font, fontSize](const Widget * widget, const IntRect & region) {
-				auto * graphics = widget->graphics();
-
-				graphics->bind(pristina_font);
-				graphics->setFontSize(fontSize);
-
-				graphics->setColor(0.8f, 0.8f, 0.86f);
-				graphics->draw(*engine_text, widget->absPos());
-			};
-
-			*english_label << [english_text, pristina_font, fontSize](const Widget * widget, const IntRect & region) {
-				auto * graphics = widget->graphics();
-
-				graphics->bind(pristina_font);
-				graphics->setFontSize(fontSize);
-
-				graphics->setColor<hsv>(0.5f, 0.5f, 0.5f);
-				graphics->draw(*english_text, widget->absPos());
-			};
-
-			fontSize = 16;
-			Handle<Panel> russian_label(back);
+			english_label->setPlacement({10, 10}, graphics->getTextSize(english_text));
+			Text::set(english_label, english_text, pristina_font, hsv(0.5f, 0.5f, 0.5f), 24);
 
 			graphics->bind(arial_italic);
-			graphics->setFontSize(fontSize);
+			graphics->setFontSize(16);
 
-			WideString russian_text(L"ÀÁÂÃÄÅ¨ÆÇÈÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäå¸æçèêëìíîïðñòóôõö÷øùúûüýþÿ");
-			russian_label->setName("Russian Text Label");
-			russian_label->setPlacement({10, 50}, graphics->getTextSize(russian_text));
+			open_file->setName("Open File Button");
+			open_file->setPlacement({10, 50}, graphics->getTextSize(open_file_text));
+			Text::set(open_file, open_file_text, arial_italic, Color(0.0f, 0.0f, 0.0f), 16);
 
-			Text::set<StaticTextLayer>(russian_label, Handle<Text>(russian_text, arial_italic, Color(0.0f, 0.0f, 0.0f), fontSize), russian_label->size());
-
-			subscribe_on(Widget, WidgetReleaseMessage, *russian_label)
+			connect([](Handle<WidgetReleaseMessage> & msg, Widget & dest)
 			{
-				static int count = 0;
-				Text::get(&dest)->setContents(L"ÀÁÂÃÄÅ¨ÆÇÈÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäå¸æçèêëìíîïðñòóôõö÷øùúûüýþÿ"_s + count++);
-			};
+
+			}, *open_file);
 			
+			window->attachThread();
 			window->setCaption(L"Rapture::Direct3D test");
+			window->centralize();
+			window->show();
 
 			ThreadLoop::add(processWindowMessage);
 			ThreadLoop::add(bind(render, window));
-
-			window->show();
-			window->centralize();
 
 			lastFrame = lastSecond = hrc::now();
 			ThreadLoop::run();
@@ -327,7 +305,7 @@ namespace Rapture
 
 	static int render(Handle<Window> & window)
 	{
-		std::this_thread::sleep_for(1ms);
+		//std::this_thread::sleep_for(1ms);
 
 		static int frames = 0;
 		static int maxframes = 0;
@@ -342,7 +320,7 @@ namespace Rapture
 			lastSecond = hrc::now();
 		}
 
-		//window->invalidate();
+		window->invalidate();
 		window->validate();
 		++frames;
 

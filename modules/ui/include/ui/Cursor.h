@@ -49,20 +49,17 @@ namespace Rapture
 
 	class CursorComponent : public WidgetComponent
 	{
+		deny_copy(CursorComponent);
 		friend class Cursor;
 
 	public:
 		CursorComponent(Widget * widget) : WidgetComponent(widget)
 		{
-			connect(*_widget, this, &CursorComponent::onMouseEnter);
-			connect(*_widget, this, &CursorComponent::onMouseLeave);
+			connect(this, &CursorComponent::onMouseEnter, *_widget);
+			connect(this, &CursorComponent::onMouseLeave, *_widget);
 		}
 
-		virtual ~CursorComponent()
-		{
-			disconnect(*_widget, this, &CursorComponent::onMouseEnter);
-			disconnect(*_widget, this, &CursorComponent::onMouseLeave);
-		}
+		virtual ~CursorComponent() {}
 
 		api(ui) Cursor * cursor();
 		api(ui) void setCursor(Cursor * cursor);
@@ -81,6 +78,7 @@ namespace Rapture
 
 	class PressedCursorComponent : public WidgetComponent
 	{
+		deny_copy(PressedCursorComponent);
 		friend class Cursor;
 
 	public:
@@ -88,15 +86,11 @@ namespace Rapture
 		{
 			_cursorComponent = widget->link<CursorComponent>(this);
 
-			connect(*_widget, this, &PressedCursorComponent::onWidgetPress);
-			connect(*_widget, this, &PressedCursorComponent::onWidgetRelease);
+			connect(*this, &PressedCursorComponent::onWidgetPress, *_widget);
+			connect(*this, &PressedCursorComponent::onWidgetRelease, *_widget);
 		}
 
-		virtual ~PressedCursorComponent()
-		{
-			disconnect(*_widget, this, &PressedCursorComponent::onWidgetPress);
-			disconnect(*_widget, this, &PressedCursorComponent::onWidgetRelease);
-		}
+		virtual ~PressedCursorComponent() {}
 
 		api(ui) Cursor * cursor(MouseButton button);
 		api(ui) void setCursor(Cursor * cursor, MouseButton button);

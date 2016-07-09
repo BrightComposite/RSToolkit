@@ -39,15 +39,34 @@ namespace Rapture
 		class DepthTestState : public State<bool>
 		{
 		public:
-			DepthTestState(D3DGraphics * graphics) : State<bool>(false), graphics(graphics) {}
+			DepthTestState(D3DGraphics * graphics) : State<bool>(true), graphics(graphics) {}
 
 		protected:
 			virtual void change() override
 			{
 				if(_state)
-					graphics->context->OMSetDepthStencilState(graphics->depthState3D, 0);
+					graphics->context->OMSetDepthStencilState(graphics->depthEnabled, 0);
 				else
-					graphics->context->OMSetDepthStencilState(graphics->depthState2D, 0);
+					graphics->context->OMSetDepthStencilState(graphics->depthDisabled, 0);
+
+				graphics->setDepth(1.0f);
+			}
+
+			D3DGraphics * graphics;
+		};
+
+		class AlphaTestState : public State<bool>
+		{
+		public:
+			AlphaTestState(D3DGraphics * graphics) : State<bool>(true), graphics(graphics) {}
+
+		protected:
+			virtual void change() override
+			{
+				if(_state)
+					graphics->context->OMSetBlendState(graphics->blendStateEnabled, nullptr, 0xFFFFFFFF);
+				else
+					graphics->context->OMSetBlendState(graphics->blendStateDisabled, nullptr, 0xFFFFFFFF);
 
 				graphics->setDepth(1.0f);
 			}
@@ -63,6 +82,12 @@ namespace Rapture
 
 			_fillMode = handle<FillModeState>(this);
 			_depthTestMode = handle<DepthTestState>(this);
+			_alphaTestMode = handle<AlphaTestState>(this);
+		}
+
+		Debug::Debug(const ComHandle<ID3D11Device2, D3DGraphics> & device)
+		{
+			device.queryInterface(handle);
 		}
 
 		Debug::~Debug()
@@ -78,14 +103,12 @@ namespace Rapture
 			{
 				context->OMSetRenderTargets(0, 0, 0);
 				context->Flush();
-
 				context->ClearState();
 			}
 		}
 
 		void D3DGraphics::initDevice()
 		{
-			HRESULT hr = S_OK;
 			UINT createDeviceFlags = 0;
 
 		#ifdef DEBUG_DX
@@ -113,6 +136,8 @@ namespace Rapture
 			ComHandle<ID3D11Device> ndevice;
 			ComHandle<ID3D11DeviceContext> ncontext;
 
+			HRESULT hr = S_OK;
+
 			for(auto & dt : driverTypes)
 			{
 				driverType = dt;
@@ -125,18 +150,22 @@ namespace Rapture
 
 			com_assert(hr);
 
-			device = ndevice;
-			context = ncontext;
+			ndevice.queryInterface(device);
+			ncontext.queryInterface(context);
 
 		#ifdef DEBUG_DX
-			debug.handle = device;
+			debug.init(device);
 		#endif
 
 			D3D11_RASTERIZER_DESC rd;
 			ZeroMemory(&rd, sizeof(rd));
 
 			rd.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
+		#ifdef DEBUG_DX
+			rd.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE;
+		#else
 			rd.CullMode = D3D11_CULL_MODE::D3D11_CULL_BACK;
+		#endif
 			rd.FrontCounterClockwise = false;
 			rd.DepthBias = 0;
 			rd.SlopeScaledDepthBias = 0.0f;
@@ -148,9 +177,10 @@ namespace Rapture
 
 			device->CreateRasterizerState(&rd, &solidRS);
 
-			rd.FillMode = D3D11_FILL_MODE::D3D11_FILL_WIREFRAME;
 			rd.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE;
+			device->CreateRasterizerState(&rd, &transparentRS);
 
+			rd.FillMode = D3D11_FILL_MODE::D3D11_FILL_WIREFRAME;
 			device->CreateRasterizerState(&rd, &wiredRS);
 			context->RSSetState(solidRS);
 
@@ -168,18 +198,33 @@ namespace Rapture
 				rt.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 				rt.BlendOp = D3D11_BLEND_OP_ADD;
 				rt.SrcBlendAlpha = D3D11_BLEND_ONE;
-				rt.DestBlendAlpha = D3D11_BLEND_ZERO;
+				rt.DestBlendAlpha = D3D11_BLEND_ONE;
 				rt.BlendOpAlpha = D3D11_BLEND_OP_ADD;
 				rt.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 			}
 
-			float blendFactor[] = {0.0f, 0.0f, 0.0f, 0.0f};
+			device->CreateBlendState(&bd, &blendStateEnabled);
+			/*
+			for(int i = 0; i < 8; ++i)
+			{
+				auto & rt = bd.RenderTarget[i];
+				rt.DestBlendAlpha = D3D11_BLEND_ZERO;
+			}
 
-			device->CreateBlendState(&bd, &blendState);
-			context->OMSetBlendState(blendState, blendFactor, 0xFFFFFFFF);
+			device->CreateBlendState(&bd, &blendStateEnabled);
+			*/
+			for(int i = 0; i < 8; ++i)
+			{
+				auto & rt = bd.RenderTarget[i];
+				rt.BlendEnable = FALSE;
+			}
+
+			device->CreateBlendState(&bd, &blendStateDisabled);
+
+			context->OMSetBlendState(blendStateEnabled, nullptr, 0xFFFFFFFF);
 
 			D3D11_DEPTH_STENCIL_DESC dsd;
-			dsd.DepthEnable = TRUE;
+			dsd.DepthEnable = FALSE;
 			dsd.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 			dsd.DepthFunc = D3D11_COMPARISON_ALWAYS;
 			dsd.StencilEnable = FALSE;
@@ -196,22 +241,26 @@ namespace Rapture
 			dsd.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 			dsd.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
-			device->CreateDepthStencilState(&dsd, &depthState2D);
+			device->CreateDepthStencilState(&dsd, &depthDisabled);
 
+			dsd.DepthEnable = TRUE;
 			dsd.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 
-			device->CreateDepthStencilState(&dsd, &depthState3D);
+			device->CreateDepthStencilState(&dsd, &depthEnabled);
 
-			context->OMSetDepthStencilState(depthState2D, 0);
+			context->OMSetDepthStencilState(depthEnabled, 0);
 
 			ComHandle<IDXGIAdapter> dxgiAdapter;
-			ComHandle<IDXGIDevice1>(device)->GetAdapter(&dxgiAdapter);
+			ComHandle<IDXGIDevice1> d1;
+
+			device.queryInterface(d1);
+			d1->GetAdapter(&dxgiAdapter);
 			dxgiAdapter->GetParent(__uuidof(IDXGIFactory2), dxgiFactory.pointer());
 
-			ComHandle<IDXGIDevice3> dxgiDevice;
-			dxgiDevice = device;
+			ComHandle<IDXGIDevice3> d3;
+			device.queryInterface(d3);
 
-			dxgiDevice->SetMaximumFrameLatency(1);
+			d3->SetMaximumFrameLatency(1);
 		}
 
 		void D3DGraphics::initFacilities()
@@ -234,9 +283,9 @@ namespace Rapture
 			return Handle<D3DVertexLayout, D3DGraphics>(this, fingerprint);
 		}
 
-		Handle<VertexBuffer> D3DGraphics::createVertexBuffer(VertexLayout * layout, const VertexData & data)
+		Handle<VertexBuffer> D3DGraphics::createVertexBuffer(VertexLayout * layout, const VertexData & data, VertexTopology topology)
 		{
-			return Handle<D3DVertexBuffer, D3DGraphics>(this, layout, data);
+			return Handle<D3DVertexBuffer, D3DGraphics>(this, layout, data, topology);
 		}
 
 		Handle<IndexBuffer> D3DGraphics::createIndexBuffer(const VertexIndices & indices)

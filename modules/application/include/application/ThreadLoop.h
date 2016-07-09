@@ -9,7 +9,7 @@
 
 #include <core/addition/Singleton.h>
 #include <core/container/ArrayList.h>
-#include <core/action/Action.h>
+#include <core/function/Function.h>
 #include <core/Exception.h>
 
 #include <chrono>
@@ -19,6 +19,10 @@
 namespace Rapture
 {
 	using namespace std::literals;
+
+	class ThreadLoop;
+
+	template struct api(application) Singleton<ThreadLoop, ThreadLocalModel>;
 
 	class ThreadLoop : public Singleton<ThreadLoop, ThreadLocalModel>
 	{
@@ -55,7 +59,11 @@ namespace Rapture
 						it = list.erase(it);
 
 						if(it == list.end())
-							break;
+						{
+							loop.active = false;
+							return;
+						}
+
 						break;
 
 					case 2:
@@ -99,8 +107,6 @@ namespace Rapture
 		array_list<Iteration> iterations;
 		bool active = false;
 	};
-
-	template struct api(application) Singleton<ThreadLoop, ThreadLocalModel>;
 }
 
 //---------------------------------------------------------------------------

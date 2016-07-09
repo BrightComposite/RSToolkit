@@ -64,8 +64,6 @@ namespace Rapture
 
 		void RenderTargetSurface::apply() const
 		{
-			static const float blendFactor[] = {0.0f, 0.0f, 0.0f, 0.0f};
-
 			_graphics->context->OMSetRenderTargets(1, &_renderView, _depthStencilView);
 
 			D3D11_VIEWPORT vp;
@@ -77,7 +75,6 @@ namespace Rapture
 			vp.TopLeftY = 0;
 
 			_graphics->context->RSSetViewports(1, &vp);
-			_graphics->context->OMSetBlendState(_graphics->blendState, blendFactor, 0xFFFFFFFF);
 		}
 
 		DepthSurface::DepthSurface(D3DGraphics * graphics, const IntSize & size) : D3DSurface(graphics, size)
@@ -100,16 +97,9 @@ namespace Rapture
 			createSwapChain(false);
 			ZeroMemory(&_presentParams, sizeof(_presentParams));
 
-			connect(*_space, this, &UISurface::onUIResize);
-			connect(*_space, this, &UISurface::onUIFullscreen);
-			connect(*_space, this, &UISurface::onUIDestroy);
-		}
-
-		UISurface::~UISurface()
-		{
-			disconnect(*_space, this, &UISurface::onUIResize);
-			disconnect(*_space, this, &UISurface::onUIFullscreen);
-			disconnect(*_space, this, &UISurface::onUIDestroy);
+			connect(this, &UISurface::onUIResize, *_space);
+			connect(this, &UISurface::onUIFullscreen, *_space);
+			connect(this, &UISurface::onUIDestroy, *_space);
 		}
 
 		void UISurface::createSwapChain(bool fullscreen)
@@ -138,10 +128,7 @@ namespace Rapture
 				if(fullscreen)
 				{
 					ComHandle<IDXGIOutput> output;
-
-					com_assert(
-						_swapChain->GetContainingOutput(&output)
-					);
+					com_assert(_swapChain->GetContainingOutput(&output));
 
 					output->FindClosestMatchingMode(&md, &md, _graphics->device);
 					//findPreferredMode(output, md);
@@ -165,7 +152,7 @@ namespace Rapture
 				_graphics->dxgiFactory->CreateSwapChain(_graphics->device, &sd, &sc)
 			);
 
-			_swapChain = sc;
+			sc.queryInterface(_swapChain);
 			createRenderTarget();
 
 			if(fullscreen)
@@ -310,6 +297,9 @@ namespace Rapture
 		void UISurface::onUIDestroy(Handle<UIDestroyMessage> & msg, UISpace & space)
 		{
 			_swapChain->SetFullscreenState(FALSE, nullptr);
+
+			if(_graphics->surface() == this)
+				_graphics->bind(null<Surface>());
 		}
 
 		TextureSurface::TextureSurface(D3DGraphics * graphics, const IntSize & size, Handle<Image> & image) : RenderTargetSurface(graphics, size), _texture(graphics, size.x, size.y)

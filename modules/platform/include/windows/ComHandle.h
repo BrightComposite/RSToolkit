@@ -26,6 +26,8 @@ namespace Rapture
 
 		static_assert(is_base_of<IUnknown, T>::value, "T class must implement IUnknown!");
 
+		T * _object;
+
 		void keep()
 		{
 			if(_object != nullptr)
@@ -40,8 +42,6 @@ namespace Rapture
 				_object = nullptr;
 			}
 		}
-
-		T * _object;
 
 		inline ComHandle & operator = (const ComHandle & com)
 		{
@@ -70,15 +70,6 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class U, class ... A>
-		inline ComHandle & operator = (const ComHandle<U, A...> & com)
-		{
-			release();
-			com.queryInterface(*this);
-
-			return *this;
-		}
-
 		inline ComHandle & operator = (nullptr_t)
 		{
 			release();
@@ -101,12 +92,6 @@ namespace Rapture
 		inline ComHandle(ComHandle && com) : _object(com._object)
 		{
 			com._object = nullptr;
-		}
-
-		template<class U, class ... A>
-		inline ComHandle(const ComHandle<U, A...> & com) : _object(nullptr)
-		{
-			com.queryInterface(*this);
 		}
 
 		virtual ~ComHandle()
@@ -173,9 +158,8 @@ namespace Rapture
 		template<class U, class ... A>
 		void queryInterface(ComHandle<U, A...> & com) const
 		{
-			com_assert(
-				_object->QueryInterface(__uuidof (U), com.pointer())
-				);
+			com.release();
+			com_assert(_object->QueryInterface(__uuidof (U), com.pointer()));
 		}
 	};
 
@@ -190,8 +174,6 @@ namespace Rapture
 		inline ComHandle() : Base() {}
 		inline ComHandle(const ComHandle & com) : Base(com) {}
 		inline ComHandle(ComHandle && com) : Base(forward<ComHandle>(com)) {}
-		template<class U, class ... A>
-		inline ComHandle(const ComHandle<U, A...> & com) : Base(com) {}
 
 		virtual ~ComHandle() {}
 
@@ -204,13 +186,6 @@ namespace Rapture
 		inline ComHandle & operator = (ComHandle && com)
 		{
 			Base::operator = (forward<ComHandle>(com));
-			return *this;
-		}
-
-		template<class U, class ... A>
-		inline ComHandle & operator = (const ComHandle<U, A...> & com)
-		{
-			Base::operator = (com);
 			return *this;
 		}
 

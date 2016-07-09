@@ -275,6 +275,8 @@ namespace Rapture
 		inline LayerClass * attach(LayerClass * layer);
 		template<class LayerClass, useif <is_layer<LayerClass>::value> endif>
 		inline LayerClass * attach(const Handle<LayerClass> & layer);
+		template<class LayerClass, useif <is_layer<LayerClass>::value> endif>
+		inline LayerClass * attach(const UniqueHandle<LayerClass> & layer);
 		template<class Drawer, useif <is_widget_drawer<Drawer>::value> endif>
 		inline CustomLayer * attach(const Drawer & drawer, int order = 0);
 		inline void setLayerOrder(WidgetLayer * layer, int order);
@@ -409,7 +411,7 @@ namespace Rapture
 
 	channels_api(ui, Widget, WidgetMessages)
 
-	class WidgetComponent : public Component
+	class WidgetComponent : public Component, public Connector
 	{
 		morph_base(WidgetComponent);
 
@@ -442,6 +444,23 @@ namespace Rapture
 		int _order;
 
 		using Sorter = MemberSort<WidgetLayer, int, &WidgetLayer::_order>;
+	};
+
+	class WidgetLayerComponent : public WidgetComponent
+	{
+	public:
+		WidgetLayerComponent(Widget * widget, UniqueHandle<WidgetLayer> && layer) : WidgetComponent(widget), _layer(move(layer))
+		{
+			_widget->attach(_layer);
+		}
+
+		virtual ~WidgetLayerComponent()
+		{
+			_widget->detach(_layer);
+		}
+
+	protected:
+		UniqueHandle<WidgetLayer> _layer;
 	};
 
 	typedef std::function<void(const Widget *, const IntRect &)> WidgetDrawer;
@@ -651,6 +670,13 @@ namespace Rapture
 
 	template<class LayerClass, useif_t>
 	inline LayerClass * Widget::attach(const Handle<LayerClass> & layer)
+	{
+		_layers.insert(std::upper_bound(_layers.begin(), _layers.end(), layer, WidgetLayer::Sorter()), layer); // sorted insert
+		return layer;
+	}
+
+	template<class LayerClass, useif_t>
+	inline LayerClass * Widget::attach(const UniqueHandle<LayerClass> & layer)
 	{
 		_layers.insert(std::upper_bound(_layers.begin(), _layers.end(), layer, WidgetLayer::Sorter()), layer); // sorted insert
 		return layer;

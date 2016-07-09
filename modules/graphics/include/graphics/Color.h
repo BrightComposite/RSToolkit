@@ -163,18 +163,18 @@ namespace Rapture
 
 		GenericColor & operator = (const GenericColor & color)
 		{
-			vector = color.vector;
+			this->vector = color.vector;
 			return *this;
 		}
 
 		bool operator == (const GenericColor & color) const
 		{
-			return vector == color.vector;
+			return this->vector == color.vector;
 		}
 
 		bool operator != (const GenericColor & color) const
 		{
-			return vector != color.vector;
+			return this->vector != color.vector;
 		}
 
 		T & operator [] (int index)
@@ -307,7 +307,7 @@ namespace Rapture
 			static const int first[]  = {1, 2, 0};
 			static const int second[] = {2, 0, 1};
 
-			static const float third  = 1 / 3.0f;
+			static const float third  = 1.0f / 3.0f;
 
 			auto minmax = minmax_index(float_list{color.r, color.g, color.b});
 			out = {0.0f, 0.0f, color[minmax.second], color.a};
@@ -317,7 +317,7 @@ namespace Rapture
 			if(delta < FloatMath::eps)
 				return;
 
-			out.h = std::fmodf(minmax.second * third + (color[first[minmax.second]] - color[second[minmax.second]]) / delta + 1.0f, 1.0f);
+			out.h = std::fmod(minmax.second * third + (color[first[minmax.second]] - color[second[minmax.second]]) / delta + 1.0f, 1.0f);
 			out.s = delta / out.v;
 		}
 	};
@@ -333,15 +333,15 @@ namespace Rapture
 
 			static const byte third = 85;
 			static const float sixx = 6.0f / 255.0f;
-			static const float rsix = 1.0f / (255.0f * 6.0f);
 
-			byte c = color.v * color.s / 255;
-			byte x = byte(c * (1 - std::abs(std::fmodf(color.h * rsix, third) - 1)));
+			float sector = color.h * sixx;
+			byte chroma = color.v * color.s / 255;
+			byte x = byte(chroma * (1 - std::abs(std::fmod(sector, 2.0f) - 1)));
 
-			int i = std::min(static_cast<int>(color.h * sixx), 5);
+			int i = std::min(static_cast<int>(sector), 5);
 
 			out[cc[i]] = color.v;
-			out[zz[i]] = color.v - c;
+			out[zz[i]] = color.v - chroma;
 			out[xx[i]] = std::min<byte>(x + out[zz[i]], 255);
 
 			out.a = color.a;
@@ -353,15 +353,14 @@ namespace Rapture
 			static const int xx[] = {1, 0, 2, 1, 0, 2};
 			static const int zz[] = {2, 2, 0, 0, 1, 1};
 
-			static const float third  = 1 / 3.0f;
+			float sector = color.h * 6.0f;
+			float chroma = color.v * color.s;
+			float x = chroma * (1.0f - std::abs(std::fmod(sector, 2.0f) - 1.0f));
 
-			float c = color.v * color.s;
-			float x = c * (1 - std::abs(std::fmodf(color.h * (1 / 6.0f), third) - 1));
-
-			int i = std::min(static_cast<int>(color.h * 6), 5);
+			int i = std::min(static_cast<int>(sector), 5);
 
 			out[cc[i]] = color.v;
-			out[zz[i]] = color.v - c;
+			out[zz[i]] = color.v - chroma;
 			out[xx[i]] = std::min(x + out[zz[i]], 1.0f);
 
 			out.a = color.a;

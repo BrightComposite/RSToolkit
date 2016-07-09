@@ -29,11 +29,6 @@ add_module_sources(
 			Object.h
 			String.h
 
-			START_SECTION action
-				Action.h
-				Thread.h
-			END_SECTION
-
 			START_SECTION addition
 				Cached.h
 				Contents.h
@@ -58,6 +53,11 @@ add_module_sources(
 				Set.h
 				Stack.h
 				StaticMap.h
+			END_SECTION
+
+			START_SECTION function
+				Function.h
+				Thread.h
 			END_SECTION
 
 			START_SECTION intrinsic

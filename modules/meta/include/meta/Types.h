@@ -45,11 +45,14 @@ namespace Rapture
 
 	using std::is_const;
 	using std::is_array;
+	using std::is_pointer;
 	using std::is_lvalue_reference;
 	using std::is_rvalue_reference;
 
 	using std::is_empty;
 	using std::is_abstract;
+	using std::is_function;
+	using std::is_class;
 
 	using std::is_same;
 	using std::is_base_of;

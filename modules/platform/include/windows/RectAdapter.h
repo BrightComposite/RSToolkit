@@ -78,6 +78,26 @@ namespace Rapture
 			return rect.bottom - rect.top;
 		}
 
+		POINT & leftTop()
+		{
+			return *reinterpret_cast<POINT *>(&rect.left);
+		}
+
+		POINT & rightBottom()
+		{
+			return *reinterpret_cast<POINT *>(&rect.right);
+		}
+
+		const POINT & leftTop() const
+		{
+			return *reinterpret_cast<const POINT *>(&rect.left);
+		}
+
+		const POINT & rightBottom() const
+		{
+			return *reinterpret_cast<const POINT *>(&rect.right);
+		}
+
 		RECT * operator & ()
 		{
 			return &rect;

@@ -58,7 +58,7 @@ namespace Rapture
 		member_cast(data, Data);
 		member_cast(intrinsic, IntrinType);
 
-		Vector() : data(zero.data) {}
+		Vector() : data(identity.data) {}
 		Vector(const Vector & v) : data(v.data) {}
 		Vector(const Data & data) : data(data) {}
 		Vector(Vector && v) : data(move(v.data)) {}
@@ -246,8 +246,8 @@ namespace Rapture
 		Vector cross(const Data & v) const
 		{
 			return Intrin::sub(
-				Intrin::mul(Intrin::shuffle<1, 2, 0, 3>(data), Intrin::shuffle<2, 0, 1, 3>(v)),
-				Intrin::mul(Intrin::shuffle<2, 0, 1, 3>(data), Intrin::shuffle<1, 2, 0, 3>(v))
+				Intrin::mul(Intrin::template shuffle<1, 2, 0, 3>(data), Intrin::template shuffle<2, 0, 1, 3>(v)),
+				Intrin::mul(Intrin::template shuffle<2, 0, 1, 3>(data), Intrin::template shuffle<1, 2, 0, 3>(v))
 			);
 		}
 
@@ -545,19 +545,19 @@ namespace Rapture
 		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)> endif>
 		inline Vector shuffle() const
 		{
-			return Intrin::shuffle<A, B, C, D>(data);
+			return Intrin::template shuffle<A, B, C, D>(data);
 		}
 
 		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)> endif>
 		inline Vector shuffle(const Data & v) const
 		{
-			return Intrin::shuffle2<A, B, C, D>(data, v);
+			return Intrin::template shuffle2<A, B, C, D>(data, v);
 		}
 
 		template<byte A, byte B, byte C, byte D, useif <(A < 2 && B < 2 && C < 2 && D < 2)> endif>
 		inline Vector blend(const Data & v) const
 		{
-			return Intrin::blend<A, B, C, D>(data, v);
+			return Intrin::template blend<A, B, C, D>(data, v);
 		}
 
 		static inline Vector minimum(const Data & v1, const Data & v2)
@@ -595,7 +595,7 @@ namespace Rapture
 		static api(math) const Vector & left;
 		static api(math) const Vector & up;
 		static api(math) const Vector & forward;
-		static api(math) const Vector & default;
+		static api(math) const Vector & identity;
 	};
 
 	using ByteVector = Vector<byte>;
@@ -677,7 +677,7 @@ namespace Rapture
 			s = Intrin::bit_or(Intrin::bit_and(comp, x), Intrin::bit_andnot(comp, Intrin::sub(Intrin::bit_or(VectorMath<T>::pi, sign), x)));
 			x = Intrin::sqr(s);
 
-			s *= 
+			s *=
 				Vector<T>::one + x * (
 					VectorCfs<T>::sin[0] + x * (
 						VectorCfs<T>::sin[1] + x * (

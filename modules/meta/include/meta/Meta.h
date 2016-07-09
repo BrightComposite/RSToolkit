@@ -36,8 +36,11 @@ namespace Rapture
 			typedef Empty type;
 		};
 
-		template<template<typename...> class Tpl, int I, typename ... T>
-		struct cut_t<I, Tpl<T...>> : cut_t<I, T...> {};
+		template<int I, typename ... T>
+		struct cut_t<I, Types<T...>> : cut_t<I, T...> {};
+
+		template<int I, typename ... T>
+		struct cut_t<I, tuple<T...>> : cut_t<I, T...> {};
 	}
 
 	/**
@@ -185,7 +188,7 @@ namespace Rapture
 			foreach_t<T...>::template iterate<Functor>(forward<A>(args)...);
 		}
 	};
-	
+
 	/**
 	 *	@brief
 	 *  Iterates through the tuple types with the Functor.
@@ -206,9 +209,11 @@ namespace Rapture
 	template<class From, class To>
 	struct Cast {};
 
-	sfinae_checker(can_cast, (class From, class To), (From, To),
-		decltype(Cast<From, To>::cast(declval<To>(), declval<From>()))
-	);
+	static_method_checker(has_cast_method, cast);
+
+	template<class From, class To>
+	using can_cast = has_cast_method<Cast<From, To>, To &, const From &>;
+
 }
 
 //---------------------------------------------------------------------------

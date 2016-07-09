@@ -7,14 +7,14 @@
 
 //---------------------------------------------------------------------------
 
-#include "Graphics.h" 
+#include "Graphics.h"
 #include "GraphicModel.h"
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	class Graphics3D; 
+	class Graphics3D;
 
 	link_class(graphics, Graphics3D, Class<Graphics>);
 
@@ -45,13 +45,22 @@ namespace Rapture
 			Handle<FxTechnique, Graphics3D> texture;
 		};
 
-		struct Meshes
+		struct Meshes2D
 		{
 			Handle<Mesh, Graphics3D> quad;
 			Handle<Mesh, Graphics3D> texquad;
+			Handle<Mesh, Graphics3D> linequad;
+		};
+
+		struct Meshes3D
+		{
+			Handle<Mesh, Graphics3D> quad;
+			Handle<Mesh, Graphics3D> texquad;
+			Handle<Mesh, Graphics3D> linequad;
 			Handle<Mesh, Graphics3D> cube;
 			Handle<Mesh, Graphics3D> texcube;
 			Handle<Mesh, Graphics3D> colorcube;
+			Handle<Mesh, Graphics3D> linecube;
 		};
 
 	public:
@@ -78,13 +87,12 @@ namespace Rapture
 		virtual api(graphics) void draw(const Image * image, const SqRect & rect) override final;
 		virtual api(graphics) void draw(const Symbol * symbol, int x, int y) override final;
 
-		api(graphics) VertexLayout * Graphics3D::getVertexLayout(const string & fingerprint);
-		api(graphics) const Handle<ShaderCode> & getShaderCode(const string & id, ShaderType type) const;
+		api(graphics) VertexLayout * getVertexLayout(const string & fingerprint);
 		api(graphics) const Handle<ShaderProgram> & getShaderProgram(const string & id);
 
-		api(graphics) Handle<Mesh> createMesh(VertexLayout * layout, const VertexData & data);
-		api(graphics) Handle<Mesh> createMesh(const string & fingerprint, const VertexData & data);
-		api(graphics) Handle<IndexedMesh> createIndexedMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, uint indicesLocation = 0);
+		api(graphics) Handle<Mesh> createMesh(VertexLayout * layout, const VertexData & data, VertexTopology topology = VertexTopology::Triangles);
+		api(graphics) Handle<Mesh> createMesh(const string & fingerprint, const VertexData & data, VertexTopology topology = VertexTopology::Triangles);
+		api(graphics) Handle<IndexedMesh> createIndexedMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles, uint indicesLocation = 0);
 
 		float depth()
 		{
@@ -101,14 +109,29 @@ namespace Rapture
 			return *_depthTestMode;
 		}
 
+		bool alphaTestMode() const
+		{
+			return *_alphaTestMode;
+		}
+
+		void setAlphaTestMode(bool mode)
+		{
+			*_alphaTestMode = mode;
+		}
+
 		void setDepthTestMode(bool mode)
 		{
 			*_depthTestMode = mode;
 		}
 
-		State<bool> * depthTestModeState()
+		State<bool> * depthTestState()
 		{
 			return _depthTestMode;
+		}
+
+		State<bool> * alphaTestState()
+		{
+			return _alphaTestMode;
 		}
 
 		template<class T, typename ... A, useif <is_uniform<T>::value, can_construct_contents<T, A...>::value> endif>
@@ -125,7 +148,8 @@ namespace Rapture
 
 		Techniques2D techniques2d;
 		Techniques3D techniques3d;
-		Meshes meshes;
+		Meshes2D meshes2d;
+		Meshes3D meshes3d;
 
 	protected:
 		friend UniformSet;
@@ -137,9 +161,11 @@ namespace Rapture
 
 		api(graphics) void updateAreaUniform(const IntRect & rect);
 		api(graphics) void updateAreaUniform(const SqRect & rect);
+		
+		api(graphics) void clearFacilities();
 
 		virtual Handle<VertexLayout> createVertexLayout(const string & fingerprint) = 0;
-		virtual Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) = 0;
+		virtual Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data, VertexTopology topology) = 0;
 		virtual Handle<IndexBuffer> createIndexBuffer(const VertexIndices & indices) = 0;
 
 		virtual UniqueHandle<UniformAdapter> createUniformAdapter(ShaderType shader, int index, size_t size) = 0;
@@ -162,9 +188,9 @@ namespace Rapture
 
 		float _depth = 1.0f;
 		StateHandle<bool> _depthTestMode {false};
+		StateHandle<bool> _alphaTestMode {false};
 
 		UniformSet uniforms;
-		ShaderMap shaders;
 
 		ArrayList<Texture> _textures;
 

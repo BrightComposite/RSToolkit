@@ -3,6 +3,7 @@
 #include <ui/UISpace.h>
 #include <windows/PointAdapter.h>
 #include <windows/RectAdapter.h>
+#include <windows/ComException.h>
 
 #include <application/Application.h>
 
@@ -18,7 +19,7 @@ namespace Rapture
 	{
 		auto hInstance = Application::getWindowsInstance();
 
-		if(GetClassInfoExW(hInstance, className, &wcex) == TRUE)
+		if(GetClassInfoExW(hInstance, className, &wcex) != FALSE)
 			return;
 
 		wcex.cbSize = sizeof(WNDCLASSEXA);
@@ -145,7 +146,7 @@ namespace Rapture
 
 	void UISpace::validate()
 	{
-		if(_invalids.empty())
+		if(_invalids.empty() || !_enabled)
 			return;
 
 		_graphics->bind(_surface);
@@ -175,6 +176,24 @@ namespace Rapture
 
 		if(_cursor != nullptr)
 			_cursor->bind(this);
+	}
+
+	void UISpace::enable()
+	{
+		if(_enabled)
+			return;
+
+		_enabled = true;
+		EnableWindow(_handle, TRUE);
+	}
+
+	void UISpace::disable()
+	{
+		if(!_enabled)
+			return;
+
+		_enabled = false;
+		EnableWindow(_handle, FALSE);
 	}
 
 	Widget * UISpace::focused() const
@@ -238,8 +257,21 @@ namespace Rapture
 
 		return *_focused;
 	}
+	
+	const IntPoint & UISpace::cursorPos() const
+	{
+		return _cursorPos;
+	}
 
-	void UISpace::getCursorPos(IntPoint & pt) const
+	void UISpace::setCursorPos(const IntPoint & pt)
+	{
+		_cursorPos = pt;
+		PointAdapter a(_cursorPos);
+		ClientToScreen(_handle, &a);
+		SetCursorPos(a.x(), a.y());
+	}
+
+	void UISpace::acquireCursorPos(IntPoint & pt) const
 	{
 		PointAdapter a;
 		GetCursorPos(&a);
@@ -248,20 +280,35 @@ namespace Rapture
 		a.assignTo(pt);
 	}
 
-	void UISpace::setCursorPos(const IntPoint & pt)
-	{
-		PointAdapter a(pt);
-		ClientToScreen(_handle, &a);
-		SetCursorPos(a.x(), a.y());
-	}
-
 	void UISpace::clipCursor(const IntRect & region)
 	{
-		ClipCursor(&RectAdapter(region));
+		_clipRect = region;
+		updateClipRect();
+		_clipped = true;
+	}
+
+	void UISpace::updateClipRect()
+	{
+		RectAdapter a(_clipRect);
+
+		ClientToScreen(_handle, &a.leftTop());
+		ClientToScreen(_handle, &a.rightBottom());
+		ClipCursor(&a);
+
+		acquireCursorPos(_cursorPos);
+	}
+
+	void UISpace::unclipCursor()
+	{
+		ClipCursor(nullptr);
+		_clipped = false;
 	}
 
 	void UISpace::read(Handle<KeyDownMessage> & msg)
 	{
+		if(!_enabled)
+			return;
+
 		Widget * f = focused();
 
 		if(f != nullptr)
@@ -270,6 +317,9 @@ namespace Rapture
 
 	void UISpace::read(Handle<CharMessage> & msg)
 	{
+		if(!_enabled)
+			return;
+
 		Widget * f = focused();
 
 		if(f != nullptr)
@@ -278,6 +328,9 @@ namespace Rapture
 
 	void UISpace::read(Handle<KeyUpMessage> & msg)
 	{
+		if(!_enabled)
+			return;
+
 		Widget * f = focused();
 
 		if(f != nullptr)
@@ -286,6 +339,9 @@ namespace Rapture
 
 	void UISpace::read(Handle<MouseDownMessage> & msg)
 	{
+		if(!_enabled)
+			return;
+
 		_mouseState.press(msg->button);
 		send<MouseUpdateMessage>(*this, msg->x, msg->y);
 
@@ -314,6 +370,9 @@ namespace Rapture
 
 	void UISpace::read(Handle<MouseUpdateMessage> & msg)
 	{
+		if(!_enabled)
+			return;
+
 		MouseButton buttons = MouseButton::None;
 
 		if(hi_bit_mask::state(GetKeyState(VK_LBUTTON)))
@@ -373,6 +432,13 @@ namespace Rapture
 
 		_pointed = w;
 
+		IntPoint oldPos = _cursorPos;
+		_cursorPos = {msg->x, msg->y};
+		bool mouseMoved = (_cursorPos - oldPos) != IntPoint{0, 0};
+
+		if(mouseMoved)
+			send<MouseMoveMessage>(*this, msg->x, msg->y);
+
 		if(_pointed != nullptr)
 		{
 			int x = msg->x;
@@ -383,6 +449,9 @@ namespace Rapture
 
 			resend(msg, *_pointed);
 
+			if(mouseMoved)
+				send<MouseMoveMessage>(*_pointed, msg->x, msg->y);
+
 			msg->x = x;
 			msg->y = y;
 		}
@@ -390,11 +459,17 @@ namespace Rapture
 
 	void UISpace::read(Handle<MouseUpMessage> & msg)
 	{
+		if(!_enabled)
+			return;
+
 		send<MouseUpdateMessage>(*this, msg->x, msg->y);
 	}
 
 	void UISpace::read(Handle<UIResizeMessage> & msg)
 	{
+		if(!_enabled)
+			return;
+
 		_root->changeSize(_width, _height, ModelMask::FullSize);
 	}
 
@@ -407,19 +482,20 @@ namespace Rapture
 			if(!check_flag(i->first, buttons))
 				continue;
 
+			MouseButton button = i->first;
 			Widget * w = i->second;
-			w->_mouseState.unpress(i->first);
+			i = _pressedList.erase(i);
 
-			send<MouseUpMessage>(*w, i->first, x - w->absLeft(), y - w->absTop(), flags);
+			w->_mouseState.unpress(button);
+
+			send<MouseUpMessage>(*w, button, x - w->absLeft(), y - w->absTop(), flags);
 
 			if(w == _pointed)
 			{
-				send<WidgetReleaseMessage>(*w, i->first);
+				send<WidgetReleaseMessage>(*w, button);
 				send<WidgetChangedStateMessage>(*w, WidgetState::Pressed, false);
 			}
 
-			i = _pressedList.erase(i);
-			
 			if(i == _pressedList.end())
 				break;
 		}

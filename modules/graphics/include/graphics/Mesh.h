@@ -24,8 +24,12 @@ namespace Rapture
 	public:
 		using data<const void>::data;
 
-		static api(graphics) VertexData quad;
-		static api(graphics) VertexData texquad;
+		static api(graphics) VertexData quad2d;
+		static api(graphics) VertexData texquad2d;
+		static api(graphics) VertexData linequad2d;
+		static api(graphics) VertexData quad3d;
+		static api(graphics) VertexData texquad3d;
+		static api(graphics) VertexData linequad3d;
 		static api(graphics) VertexData cube;
 		static api(graphics) VertexData texcube;
 		static api(graphics) VertexData colorcube;
@@ -39,12 +43,21 @@ namespace Rapture
 		using array_list<uint16_t>::array_list;
 
 		static api(graphics) VertexIndices cube;
+		static api(graphics) VertexIndices linecube;
+	};
+
+	enum class VertexTopology
+	{
+		Triangles,
+		TriangleStrip,
+		Lines,
+		LineStrip
 	};
 
 	class VertexBuffer : public Shared
 	{
 	public:
-		VertexBuffer(VertexLayout * layout, const VertexData & vd) : layout(layout), verticesCount(static_cast<uint>(vd.size / layout->stride)) {}
+		VertexBuffer(VertexLayout * layout, const VertexData & vd, VertexTopology topology = VertexTopology::Triangles) : layout(layout), verticesCount(static_cast<uint>(vd.size / layout->stride)) {}
 
 		virtual void apply() const = 0;
 		virtual void draw(const Mesh * mesh) const = 0;

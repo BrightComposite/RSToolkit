@@ -77,7 +77,7 @@ if %build_cb% EQU "1"  (
 	cd "build-cb"
 	set CC=x86_64-w64-mingw32-gcc
 	set CXX=x86_64-w64-mingw32-g++
-	cmake -G "CodeBlocks - MinGW Makefiles" %here%../modules
+	cmake -G "CodeBlocks - Unix Makefiles" %here%../modules
 	cd ..
 )
 

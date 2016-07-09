@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <utility>
+#include <algorithm>
 #include "Preprocessor.h"
 #include "Flag.h"
 
@@ -99,19 +100,19 @@ namespace Rapture
 	template<class T, class F>
 	auto acquire(const T & object, F functor) -> decltype(functor(object))
 	{
-		return object != nullptr ? functor(object) : nullptr;
+		return object != nullptr ? functor(object) : 0;
 	}
 
 	template<class T, class F>
 	auto acquire(T && object, F functor) -> decltype(functor(forward<T>(object)))
 	{
-		return object != nullptr ? functor(forward<T>(object)) : nullptr;
+		return object != nullptr ? functor(forward<T>(object)) : 0;
 	}
 
 	template<class T, class F>
 	auto acquire(T * object, F functor) -> decltype(functor(object))
 	{
-		return object != nullptr ? functor(object) : nullptr;
+		return object != nullptr ? functor(object) : 0;
 	}
 
 	template<class T>
@@ -136,6 +137,12 @@ namespace Rapture
 	const void * void_ptr(const T & val)
 	{
 		return reinterpret_cast<const void *>(&val);
+	}
+
+	template<class T>
+	T * null()
+	{
+		return static_cast<T *>(nullptr);
 	}
 
 	template<class T>

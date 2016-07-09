@@ -13,83 +13,125 @@
 
 namespace Rapture
 {
-#define sfinae_checker(name, a0, a1, ...)				\
-	namespace Internals									\
-	{													\
-		template<class ... T>							\
-		struct name {};									\
-														\
-		template<macrowrap a0>							\
-		struct name<macrowrap a1>						\
-		{												\
-			template<class = int, class = __VA_ARGS__>	\
-			static auto checker(int) -> true_type;		\
-														\
-			template<class = int>						\
-			static auto checker(...) -> false_type;		\
-		};												\
-	}													\
-														\
-	template<macrowrap a0>								\
-	struct name : decltype(								\
-		Internals::name<macrowrap a1>					\
-			::template checker<>(0)						\
-	) {}												\
-
-	//---------------------------------------------------------------------------
-
-#define type_checker(name, type)						\
-	sfinae_checker(										\
-		name, (class T), (T),							\
-		typename T::type								\
-	)													\
-
-#define function_checker(name, func)					\
-	sfinae_checker(										\
-		name, (class ... A), (A...),					\
-		decltype(func(declval<A>()...))					\
-	)													\
-
-#define method_checker(name, method)					\
-	sfinae_checker(										\
-		name, (class T, class ... A), (T, A...),		\
-		decltype(declval<T>().method(declval<A>()...))	\
-	)
-
-#define member_checker(name, member)					\
-	sfinae_checker(										\
-		name, (class T), (T),							\
-		decltype(T::member)								\
-	)													\
-
-#define friend_sfinae(checker)							\
-	template<class...>									\
-	friend struct Rapture::Internals::checker			\
+	template<class T>
+	struct sfinae_int { sfinae_int(int) {} };
 
 //---------------------------------------------------------------------------
 
-	sfinae_checker(
-		is_callable, (class T, class ... A), (T, A...),
-		decltype(declval<T>()(declval<A>()...))
-	);
+#define type_checker(name, type)						                                                                    \
+	template<class T>											                                                            \
+	struct name						                                                                                        \
+	{						                                                                                                \
+	private:						                                                                                        \
+		template<typename U>						                                                                        \
+		static true_type  _(sfinae_int<typename U::type>);		                                                            \
+		template<typename U>						                                                                        \
+		static false_type _(...);						                                                                    \
+																                                                            \
+	public:														                                                            \
+		static constexpr bool value = decltype(_<T>(0))::value;	                                                            \
+	};
+
+#define function_checker(name, func)							                                                            \
+	template<class ... A>										                                                            \
+	struct name						                                                                                        \
+	{						                                                                                                \
+	private:						                                                                                        \
+		template<typename ... B>						                                                                    \
+		static true_type  _(sfinae_int<decltype(func(declval<B>()...))>);	                                                \
+		template<typename ... B>						                                                                    \
+		static false_type _(...);						                                                                    \
+																                                                            \
+	public:														                                                            \
+		static constexpr bool value = decltype(_<A...>(0))::value;	                                                        \
+	};
+
+#define method_checker(name, method)					                                                                    \
+	template<class T, class ... A>										                                                    \
+	struct name						                                                                                        \
+	{						                                                                                                \
+	private:						                                                                                        \
+		template<typename U>						                                                                        \
+		static true_type  _(sfinae_int<decltype(declval<U>().method(declval<A>()...))>);			                        \
+		template<typename U>						                                                                        \
+		static false_type _(...);						                                                                    \
+																                                                            \
+	public:														                                                            \
+		static constexpr bool value = decltype(_<T>(0))::value;	                                                            \
+	};
+
+#define static_method_checker(name, method)					                                                                \
+	template<class T, class ... A>										                                                    \
+	struct name						                                                                                        \
+	{						                                                                                                \
+	private:						                                                                                        \
+		template<typename U>						                                                                        \
+		static true_type  _(sfinae_int<decltype(U::method(declval<A>()...))>);											    \
+		template<typename U>						                                                                        \
+		static false_type _(...);						                                                                    \
+																                                                            \
+	public:														                                                            \
+		static constexpr bool value = decltype(_<T>(0))::value;	                                                            \
+	};
+
+#define member_checker(name, member)					                                                                    \
+	template<class T>											                                                            \
+	struct name						                                                                                        \
+	{						                                                                                                \
+	private:						                                                                                        \
+		template<typename U>						                                                                        \
+		static true_type  _(sfinae_int<decltype(T::member)>);		                                                        \
+		template<typename U>						                                                                        \
+		static false_type _(...);						                                                                    \
+																                                                            \
+	public:														                                                            \
+		static constexpr bool value = decltype(_<T>(0))::value;	                                                            \
+	};
 
 //---------------------------------------------------------------------------
 
-#define type_getter(name, param, tgt, def)				\
-	template<class param>								\
-	struct name											\
-	{													\
-	private:											\
-		template<class U>								\
-		static auto _(int) -> identity<typename U::tgt>;\
-														\
-		template<class U>								\
-		static auto _(...) -> identity<def>;			\
-														\
-		typedef decltype(_<param>(0)) Decltype;			\
-														\
-	public:												\
-		typedef typename Decltype::type type;			\
+	template<class T, class ... A>
+	struct is_callable
+	{
+	private:
+		template<typename U>
+		static true_type  _(sfinae_int<decltype(declval<U>()(declval<A>()...))>);
+		template<typename U>
+		static false_type _(...);
+
+	public:
+		static constexpr bool value = decltype(_<T>(0))::value;
+	};
+
+	template<class T>
+	struct has_caller
+	{
+	private:
+		template<typename U>
+		static true_type  _(sfinae_int<decltype(&U::operator())>);
+		template<typename U>
+		static false_type _(...);
+
+	public:
+		static constexpr bool value = decltype(_<T>(0))::value;
+	};
+
+//---------------------------------------------------------------------------
+
+#define type_getter(name, T, tgt, def)					                                                                    \
+	template<class T>									                                                                    \
+	struct name											                                                                    \
+	{													                                                                    \
+	private:											                                                                    \
+		template<class U>								                                                                    \
+		static auto _(int) -> identity<typename U::tgt>;                                                                    \
+		template<class U>								                                                                    \
+		static auto _(...) -> identity<def>;			                                                                    \
+														                                                                    \
+		using identitype = decltype(_<T>(0));			                                                                    \
+														                                                                    \
+	public:												                                                                    \
+		using type = typename identitype::type;			                                                                    \
 	}
 }
 

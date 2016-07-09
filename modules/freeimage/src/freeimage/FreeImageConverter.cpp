@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
 #include <freeimage/FreeImageConverter.h>
-#include <core/action/Action.h>
+#include <core/function/Function.h>
 
 #include <FreeImage.h>
 
@@ -54,6 +54,7 @@ namespace Rapture
 
 	void FreeImageConverter::decode(ImageData * output, const string & type, const ByteData * raw)
 	{
+		Anyway anyway;
 		FREE_IMAGE_FORMAT internal_format = getFIFFormat(type);
 
 		if(internal_format == FIF_UNKNOWN)
@@ -64,14 +65,14 @@ namespace Rapture
 		if(!mem)
 			throw ImageConversionException("Can't open memory for image");
 
-		FinalAction release_mem(FreeImage_CloseMemory, mem);
+		anyway.add(FreeImage_CloseMemory, mem);
 
 		FIBITMAP * bmp = FreeImage_LoadFromMemory(internal_format, mem);
 
 		if(!bmp)
 			throw ImageConversionException("Can't read image of format \"", type, "\"");
 
-		FinalAction release_bmp(FreeImage_Unload, bmp);
+		anyway.add(FreeImage_Unload, bmp);
 
 		output->area = {FreeImage_GetWidth(bmp), FreeImage_GetHeight(bmp)};
 
@@ -85,6 +86,7 @@ namespace Rapture
 
 	void FreeImageConverter::encode(OwnedByteData * output, const string & type, const ImageData * input)
 	{
+		Anyway anyway;
 		FREE_IMAGE_FORMAT internal_format = getFIFFormat(type);
 
 		if(internal_format == FIF_UNKNOWN)
@@ -95,7 +97,7 @@ namespace Rapture
 		if(!mem)
 			throw ImageConversionException("Can't allocate memory for image");
 		
-		FinalAction release_mem(FreeImage_CloseMemory, mem);
+		anyway.add(FreeImage_CloseMemory, mem);
 
 		uint w = input->width(), h = input->height();
 		int bpp, pitch;
@@ -126,7 +128,7 @@ namespace Rapture
 		if(!bmp)
 			throw ImageConversionException("Can't convert raw data to format \"", type, "\"");
 
-		FinalAction release_bmp(FreeImage_Unload, bmp);
+		anyway.add(FreeImage_Unload, bmp);
 
 		if(!FreeImage_SaveToMemory(internal_format, bmp, mem))
 			throw ImageConversionException("Can't save bitmap of format \"", type, "\" to memory");

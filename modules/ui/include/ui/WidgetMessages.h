@@ -83,7 +83,6 @@ namespace Rapture
 		MouseMoveMessage,
 		(int, x)
 		(int, y)
-		(int, flags)
 	);
 
 //---------------------------------------------------------------------------
@@ -297,21 +296,23 @@ namespace Rapture
 
 //---------------------------------------------------------------------------
 
-#define WidgetMessages	\
-	KeyDownMessage, CharMessage, KeyUpMessage, MouseUpdateMessage, \
-	MouseDownMessage, MouseMoveMessage, MouseUpMessage, MouseClickMessage,\
-	MouseDblClickMessage, MouseWheelMessage, MouseEnterMessage,\
-	MouseLeaveMessage, WidgetPressMessage, WidgetStopPressMessage,\
-	WidgetReleaseMessage, WidgetChangedStateMessage,\
-	ChangeFocusOrderMessage, AfterChangeFocusOrderMessage,\
-	ChangeDisplayOrderMessage, AfterChangeDisplayOrderMessage,\
-	WidgetDrawMessage, WidgetMoveMessage, AfterWidgetMoveMessage, \
+#define WidgetMessages	                                                                                                    \
+	KeyDownMessage, CharMessage, KeyUpMessage, MouseUpdateMessage,                                                          \
+	MouseDownMessage, MouseMoveMessage, MouseUpMessage, MouseClickMessage,                                                  \
+	MouseDblClickMessage, MouseWheelMessage, MouseEnterMessage,                                                             \
+	MouseLeaveMessage, WidgetPressMessage, WidgetStopPressMessage,                                                          \
+	WidgetReleaseMessage, WidgetChangedStateMessage,                                                                        \
+	ChangeFocusOrderMessage, AfterChangeFocusOrderMessage,                                                                  \
+	ChangeDisplayOrderMessage, AfterChangeDisplayOrderMessage,                                                              \
+	WidgetDrawMessage, WidgetMoveMessage, AfterWidgetMoveMessage,                                                           \
 	WidgetResizeMessage
 
-#define UIMessages	\
-	HotkeyMessage, UIResizeMessage, UIFullscreenMessage, UIDestroyMessage
+#define UIMessages																											\
+	KeyDownMessage, CharMessage, KeyUpMessage, MouseUpdateMessage,                                                          \
+	MouseDownMessage, MouseMoveMessage, MouseUpMessage,                                                                     \
+	HotkeyMessage, UIResizeMessage, UIFullscreenMessage, UIDestroyMessage                                                   \
 
-#define WindowMessages	\
+#define WindowMessages	                                                                                                    \
 	WindowCloseMessage
 }
 

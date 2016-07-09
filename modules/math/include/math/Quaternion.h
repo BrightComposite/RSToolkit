@@ -43,7 +43,7 @@ namespace Rapture
 		member_cast(data, Data);
 		member_cast(intrinsic, IntrinType);
 
-		Quaternion() : data {VectorType::default} {}
+		Quaternion() : data {VectorType::identity} {}
 		Quaternion(const Quaternion & q) : data {q.data} {}
 		Quaternion(T x, T y, T z, T w) : q {x, y, z, w} {}
 
@@ -67,7 +67,7 @@ namespace Rapture
 			Cast<U, Quaternion>::cast(*this, v);
 		}
 
-		Quaternion(const VectorType & axis, T angle) : Quaternion(VectorMath<T>::trigon(angle * 0.5f).template shuffle<0, 0, 0, 1>() * axis.template blend<0, 0, 0, 1>(VectorType::default)) {}
+		Quaternion(const VectorType & axis, T angle) : Quaternion(VectorMath<T>::trigon(angle * 0.5f).template shuffle<0, 0, 0, 1>() * axis.template blend<0, 0, 0, 1>(VectorType::identity)) {}
 		//																											[ s  s  s  c ]						[ x  y  z  1 ]
 
 		Quaternion & operator = (const Quaternion & q)
@@ -128,13 +128,13 @@ namespace Rapture
 
 		Quaternion & conjugate()
 		{
-			v = v.negate<1, 1, 1, 0>();
+			v = v.template negate<1, 1, 1, 0>();
 			return *this;
 		}
 
 		Quaternion conjugation() const
 		{
-			return v.negate<1, 1, 1, 0>();
+			return v.template negate<1, 1, 1, 0>();
 		}
 
 		Quaternion & invert()
@@ -158,7 +158,7 @@ namespace Rapture
 			v -= q.v;
 			return *this;
 		}
-		
+
 		Quaternion & rotateBy(const Quaternion & q)
 		{
 			return *this = q * *this;
@@ -238,12 +238,12 @@ namespace Rapture
 
 		T norm() const
 		{
-			return v.sqr().sum();  
+			return v.sqr().sum();
 		}
 
 		T magnitude() const
 		{
-			return Math<T>::sqrt(norm());  
+			return Math<T>::sqrt(norm());
 		}
 
 		Quaternion & fromEuler(const VectorType & angles)
@@ -289,7 +289,7 @@ namespace Rapture
 			m[3] = VectorType::positiveW;
 		}
 
-		static api(math) const Quaternion default;
+		static api(math) const Quaternion identity;
 	};
 
 	using FloatQuaternion = Quaternion<float>;
@@ -314,8 +314,8 @@ namespace Rapture
 
 	template<class T>
 	Quaternion<T> operator * (const Quaternion<T> & q2, const Quaternion<T> & q1)
-	{ 
-		//q2.w*q1.x + q2.x*q1.w + q2.y*q1.z - q2.z*q1.y                        
+	{
+		//q2.w*q1.x + q2.x*q1.w + q2.y*q1.z - q2.z*q1.y
 		//q2.w*q1.y + q2.y*q1.w + q2.z*q1.x - q2.x*q1.z
 		//q2.w*q1.z + q2.z*q1.w + q2.x*q1.y - q2.y*q1.x
 		//q2.w*q1.w - q2.x*q1.x - q2.y*q1.y - q2.z*q1.z

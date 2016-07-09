@@ -59,6 +59,13 @@ namespace Rapture
 		virtual void draw() const = 0;
 	};
 
+	class GraphicsDebug : public Shared
+	{
+	public:
+		GraphicsDebug() {}
+		virtual ~GraphicsDebug() {}
+	};
+
 	link_class(graphics, Graphics, Class<Object>);
 
 	class Graphics : public Object
@@ -70,6 +77,8 @@ namespace Rapture
 	public:
 		Graphics() { setclass(Graphics); }
 		virtual ~Graphics() {}
+
+		virtual Handle<GraphicsDebug> getDebug() const = 0;
 
 		api(graphics) Surface * surface();
 		api(graphics) const Viewport & viewport() const;
@@ -171,9 +180,6 @@ namespace Rapture
 		template<class string_t>
 		static api(graphics) void draw(Graphics * graphics, const string_t & text, int x, int y, int & outx);
 
-		template<class string_t>
-		static api(graphics) IntSize textSize(Graphics * graphics, const string_t & text);
-
 		Surface * _surface;
 		Handle<Font> _font;
 
@@ -221,9 +227,10 @@ namespace Rapture
 		}
 	};
 
-#define friend_graphics_provider(G)						\
-	friend_owned_handle(G, CommonGraphicsProvider<G>);	\
+#define friend_graphics_provider(G)																							\
+	friend_owned_handle(G, CommonGraphicsProvider<G>);	                                                                    \
 	friend struct CommonGraphicsProvider<G>
+//----- friend_graphics_provider
 
 	class RectangleData	: public FigureData
 	{

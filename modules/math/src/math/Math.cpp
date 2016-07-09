@@ -107,8 +107,8 @@ namespace Rapture
 	template<> const DoubleVector & DoubleVector::up      = positiveY;
 	template<> const FloatVector  & FloatVector::forward  = positiveZ;
 	template<> const DoubleVector & DoubleVector::forward = positiveZ;
-	template<> const FloatVector  & FloatVector::default  = positiveW;
-	template<> const DoubleVector & DoubleVector::default = positiveW;
+	template<> const FloatVector  & FloatVector::identity = positiveW;
+	template<> const DoubleVector & DoubleVector::identity= positiveW;
 
 	template<> const FloatVector  FloatVector ::zero	  = { 0,  0,  0,  0 };
 	template<> const DoubleVector DoubleVector::zero	  = { 0,  0,  0,  0 };
@@ -163,8 +163,8 @@ namespace Rapture
 		{DoubleCfs::coefs[2], DoubleCfs::coefs[2], DoubleCfs::coefs[2], DoubleCfs::coefs[2]},	\
 		{DoubleCfs::coefs[3], DoubleCfs::coefs[3], DoubleCfs::coefs[3], DoubleCfs::coefs[3]},	\
 		{DoubleCfs::coefs[4], DoubleCfs::coefs[4], DoubleCfs::coefs[4], DoubleCfs::coefs[4]},	\
-	};		
-	
+	};
+
 	implement_vector_coefs(sin);
 	implement_vector_coefs(cos);
 
@@ -200,6 +200,6 @@ namespace Rapture
 		-1,  1
 	};
 
-	template<> const Quaternion<float>  Quaternion<float> ::default;
-	template<> const Quaternion<double> Quaternion<double>::default;
+	template<> const Quaternion<float>  Quaternion<float> ::identity;
+	template<> const Quaternion<double> Quaternion<double>::identity;
 }

@@ -103,7 +103,7 @@ namespace Rapture
 
 		Matrix & clear()
         {
-			m.assign(0);
+			m.fill(0);
 			return *this;
         }
 
@@ -644,9 +644,9 @@ namespace Rapture
 		d *= Vector<T>::two;
 
 		return {
-			d.maskX().blend<0, 0, 0, 1>(t.spreadX()),	// 2/w |  0  |  0  | -(x0+x1)/w
-			d.maskY().blend<0, 0, 0, 1>(t.spreadY()),	//  0  | 2/h |  0  | -(y0+y1)/h
-			d.maskZ().blend<0, 0, 0, 1>(t.spreadZ()),	//  0  |  0  | 2/l | -(z0+z1)/l
+			d.maskX().template blend<0, 0, 0, 1>(t.spreadX()),	// 2/w |  0  |  0  | -(x0+x1)/w
+			d.maskY().template blend<0, 0, 0, 1>(t.spreadY()),	//  0  | 2/h |  0  | -(y0+y1)/h
+			d.maskZ().template blend<0, 0, 0, 1>(t.spreadZ()),	//  0  |  0  | 2/l | -(z0+z1)/l
 			Vector<T>::positiveW						//  0  |  0  |  0  |    1
 		};
 	}
@@ -665,7 +665,7 @@ namespace Rapture
 			d.maskX(),									//    2/w    |     0     |     0    | 0
 			d.maskY(),									//     0     |    2/h    |     0    | 0
 			d.maskZ(),									//     0     |     0     |    2/l   | 0
-			t.blend<0, 0, 0, 1>(Vector<T>::positiveW)	//-(x0+x1)/w |-(y0+y1)/h |-(z0+z1)/l| 1
+			t.template blend<0, 0, 0, 1>(Vector<T>::positiveW)	//-(x0+x1)/w |-(y0+y1)/h |-(z0+z1)/l| 1
 		};
 	}
 
@@ -679,7 +679,7 @@ namespace Rapture
 		return {
 			v.maskX(),				// f/a | 0 | 0 |  0
 			v.maskY(),				//  0  | f | 0 |  0
-			v.mask<0, 0, 1, 1>(),	//  0  | 0 | z |-z0*z
+			v.template mask<0, 0, 1, 1>(),	//  0  | 0 | z |-z0*z
 			Vector<T>::positiveZ	//  0  | 0 | 1 |  0
 		};
 	}
@@ -694,7 +694,7 @@ namespace Rapture
 		return {
 			v.maskX(),									// f*a | 0 |  0  | 0
 			v.maskY(),									//  0  | f |  0  | 0
-			v.blend<1, 1, 0, 1>(Vector<T>::positiveW),	//  0  | 0 |  z  | 1
+			v.template blend<1, 1, 0, 1>(Vector<T>::positiveW),	//  0  | 0 |  z  | 1
 			v.spreadW().maskZ(),						//  0  | 0 |-z0*z| 0
 		};
 	}

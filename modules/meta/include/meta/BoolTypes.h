@@ -42,14 +42,23 @@ namespace Rapture
 	template<typename T, typename U>
 	struct are_same : is_same<T, U> {};
 
-	template<template<class...> class Tpl, typename ... T, typename ... U>
-	struct are_same<Tpl<T...>, Tpl<U...>> : is_same<Tpl<decay_t<T>...>, Tpl<decay_t<U>...>> {};
+	template<typename ... T, typename ... U>
+	struct are_same<tuple<T...>, tuple<U...>> : is_same<tuple<decay_t<T>...>, tuple<decay_t<U>...>> {};
 
-	template<template<class...> class Tpl, typename T, typename ... U>
-	struct are_same<T, Tpl<U...>> : is_same<Tpl<T>, Tpl<decay_t<U>...>> {};
+	template<typename T, typename ... U>
+	struct are_same<T, tuple<U...>> : is_same<tuple<T>, tuple<decay_t<U>...>> {};
 
-	template<template<class...> class Tpl, typename U, typename ... T>
-	struct are_same<Tpl<T...>, U> : is_same<Tpl<decay_t<T>...>, Tpl<U>> {};
+	template<typename U, typename ... T>
+	struct are_same<tuple<T...>, U> : is_same<tuple<decay_t<T>...>, tuple<U>> {};
+
+	template<typename ... T, typename ... U>
+	struct are_same<Types<T...>, Types<U...>> : is_same<Types<decay_t<T>...>, Types<decay_t<U>...>> {};
+
+	template<typename T, typename ... U>
+	struct are_same<T, Types<U...>> : is_same<Types<T>, Types<decay_t<U>...>> {};
+
+	template<typename U, typename ... T>
+	struct are_same<Types<T...>, U> : is_same<Types<decay_t<T>...>, Types<U>> {};
 
 	template<typename From, typename To>
 	struct are_convertible : is_convertible<From, To> {};
@@ -106,18 +115,34 @@ namespace Rapture
 	/**
 	 *	Used instead of std::is_constructible to allow "friendship"
 	 */
-	sfinae_checker(
-		is_constructible, (class T, class ... A), (T, A...),
-		decltype(T(declval<A>()...))
-	);
+	template<class T, class ... A>
+	struct is_constructible
+	{
+	private:
+		template<typename U>
+		static true_type  _(sfinae_int<decltype(U(declval<A>()...))>);
+		template<typename U>
+		static false_type _(...);
+
+	public:
+		static constexpr bool value = decltype(_<T>(0))::value;
+	};
 
 	/**
-	 *	Used instead of std::is_constructible to allow "friendship"
+	 *	Used instead of std::is_constructible to allow list-initialization
 	 */
-	sfinae_checker(
-		is_list_constructible, (class T, class ... A), (T, A...),
-		decltype(T {declval<A>()...})
-	);
+	template<class T, class ... A>
+	struct is_list_constructible
+	{
+	private:
+		template<typename U>
+		static true_type  _(sfinae_int<decltype(U {declval<A>()...})>);
+		template<typename U>
+		static false_type _(...);
+
+	public:
+		static constexpr bool value = decltype(_<T>(0))::value;
+	};
 
 //---------------------------------------------------------------------------
 

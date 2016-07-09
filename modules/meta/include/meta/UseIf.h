@@ -15,23 +15,30 @@ namespace Rapture
 	struct use_filter_t {};
 }
 
+//#ifdef MSVC
 #define declare_useif_class(Class)														        \
 struct Class																			        \
 {																						        \
 	enum class type { value };																    \
-/*																								\
+																								\
+	template<bool ... Test>																		\
+	struct filter : Rapture::use_filter_t<Class, Test...> {};									\
+																								\
+}
+/*#else
+#define declare_useif_class(Class)														        \
+struct Class																			        \
+{																						        \
+	enum class type { value };																    \
+																								\
 	template<bool ... Test, typename = typename Rapture::use_filter_t<Class, Test...>::type>    \
 	static constexpr type filter()														        \
 	{																					        \
 		return type::value;																	    \
 	}																					        \
-*/																								\
-																								\
-	template<bool ... Test>																		\
-	struct filter : Rapture::use_filter_t<Class, Test...> {};									\
-																								\
-}																						        \
-
+}
+#endif // MSVC
+*/
 declare_useif_class(SfinaeUse);
 declare_useif_class(SfinaeSkip);
 
@@ -87,14 +94,26 @@ using selectif_t = typename SfinaeSelect<I>::type;
 #define skipif		skipif_t	  = SfinaeSkip::filter
 #define selectif(I) selectif_t<I> = SfinaeSelect<I>::filter
 
+//#ifdef MSVC
 #define endif ::value
-
+/*#else
+#define endif ()
+#endif
+*/
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
+//#ifdef MSVC
+	template<class T, T Val>
+	struct use_filter_base : std::integral_constant<T, Val> {};
+/*#else
+	template<class T, T Val>
+	struct use_filter_base : identity<T> {};
+#endif // MSVC
+*/
 	template<>
-	struct use_filter_t<SfinaeUse> : std::integral_constant<useif_t, useif_t::value> {};
+	struct use_filter_t<SfinaeUse> : use_filter_base<useif_t, useif_t::value> {};
 
 	template<bool ... Others>
 	struct use_filter_t<SfinaeUse, true, Others...> : use_filter_t<SfinaeUse, Others...> {};
@@ -103,7 +122,7 @@ namespace Rapture
 	struct use_filter_t<SfinaeUse, false, Others...> {};
 
 	template<int I>
-	struct use_filter_t<SfinaeSelect<I>> : std::integral_constant<selectif_t<I>, selectif_t<I>::value> {};
+	struct use_filter_t<SfinaeSelect<I>> : use_filter_base<selectif_t<I>, selectif_t<I>::value> {};
 
 	template<int I, bool ... Others>
 	struct use_filter_t<SfinaeSelect<I>, true, Others...> : use_filter_t<SfinaeSelect<I>, Others...> {};
@@ -112,7 +131,7 @@ namespace Rapture
 	struct use_filter_t<SfinaeSelect<I>, false, Others...> {};
 
 	template<bool ... Others>
-	struct use_filter_t<SfinaeSkip, false, Others...> : std::integral_constant<skipif_t, skipif_t::value> {};
+	struct use_filter_t<SfinaeSkip, false, Others...> : use_filter_base<skipif_t, skipif_t::value> {};
 
 	template<bool ... Others>
 	struct use_filter_t<SfinaeSkip, true, Others...> : use_filter_t<SfinaeSkip, Others...> {};

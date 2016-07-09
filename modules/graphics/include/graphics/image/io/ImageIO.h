@@ -17,10 +17,13 @@
 
 namespace Rapture
 {
+	class ImageIO;
+	api_struct(graphics, Singleton<ImageIO>);
+
 	class ImageDecoder
 	{
 		friend class ImageIO;
-		
+
 	public:
 		virtual ~ImageDecoder() {}
 
@@ -31,7 +34,7 @@ namespace Rapture
 	class ImageEncoder
 	{
 		friend class ImageIO;
-		
+
 	public:
 		virtual ~ImageEncoder() {}
 
@@ -44,7 +47,7 @@ namespace Rapture
 	public:
 		virtual ~ImageConverter() {}
 	};
-	
+
 	class ImageConversionException : public Exception
 	{
 	public:
@@ -134,13 +137,11 @@ namespace Rapture
 			inst.decoders[type] = &Converter::instance();
 			inst.encoders[type] = &Converter::instance();
 		}
-		
+
 	protected:
 		map<string, ImageDecoder *> decoders;
 		map<string, ImageEncoder *> encoders;
 	};
-
-	api_struct(graphics, Singleton<ImageIO>);
 }
 
 //---------------------------------------------------------------------------

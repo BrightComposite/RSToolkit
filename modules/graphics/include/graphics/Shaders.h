@@ -87,11 +87,7 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	template<ShaderType type>
-	class Shader : public Shader<ShaderType::Common>
-	{
-	public:
-		virtual ~Shader() {}
-	};
+	class Shader {};
 
 	template<>
 	class Shader<ShaderType::Common> : public Shared
@@ -103,6 +99,20 @@ namespace Rapture
 
 	protected:
 		virtual void apply() const = 0;
+	};
+
+	template<>
+	class Shader<ShaderType::Vertex> : public Shader<ShaderType::Common>
+	{
+	public:
+		virtual ~Shader() {}
+	};
+
+	template<>
+	class Shader<ShaderType::Pixel> : public Shader<ShaderType::Common>
+	{
+	public:
+		virtual ~Shader() {}
 	};
 
 	using VertexShader = Shader<ShaderType::Vertex>;

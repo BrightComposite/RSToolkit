@@ -47,7 +47,8 @@ namespace Rapture
 			switch(r)
 			{
 			case codecvt_base::error:
-				throw ErrnoException("Error converting wstring to string");
+				return string();
+				//throw ErrnoException("Error converting wstring to string");
 
 			case codecvt_base::partial:
 				sz += to_nxt - to_beg;
@@ -110,7 +111,8 @@ namespace Rapture
 			switch(r)
 			{
 			case codecvt_base::error:
-				throw ErrnoException("Error converting string to wstring");
+				return wstring();
+				//throw ErrnoException("Error converting string to wstring");
 
 			case codecvt_base::partial:
 				sz += to_nxt - to_beg;

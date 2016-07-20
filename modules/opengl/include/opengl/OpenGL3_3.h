@@ -5,9 +5,19 @@
 
 //---------------------------------------------------------------------------
 
+#include <core/addition/Cached.h>
+#include <core/addition/Singleton.h>
+#include <core/container/ArrayList.h>
+
+#include <message/Subject.h>
+
 #include <graphics/Graphics3D.h>
 
+#include <ui/WidgetMessages.h>
+
 //---------------------------------------------------------------------------
+
+#define GLEW_STATIC
 
 #include <gl/glew.h>
 
@@ -17,13 +27,6 @@
 #include <gl/glxew.h>
 #endif // _WIN32
 
-#include <core/Subject.h>
-#include <core/addition/Cached.h>
-#include <core/addition/HandleSingleton.h>
-#include <core/container/Array.h>
-
-#include <ui/WidgetMessages.h>
-
 //---------------------------------------------------------------------------
 
 namespace Rapture
@@ -32,277 +35,29 @@ namespace Rapture
 
 	namespace OpenGL3_3
 	{
-		class GraphicContext;
 		class GLGraphics;
-		class Mesh;
-		class Image;
-		class Surface;
+		class GLImage;
+		class GLVertexLayout;
+		class GLShaderProgram;
 	}
 
-	link_class(open_gl3_3, OpenGL3_3::GraphicContext, Class<Graphics3D>);
-	link_class(open_gl3_3, OpenGL3_3::Graphics3D, Class<OpenGL3_3::GraphicContext>);
-	link_class(open_gl3_3, OpenGL3_3::Mesh, Class<Mesh>);
-
+	link_class(opengl3_3, OpenGL3_3::GLGraphics, Class<Graphics3D>);
+	
 	namespace OpenGL3_3
 	{
 	#ifdef _WIN32
-		typedef HGLRC RC;
+		typedef HGLRC Context;
 	#else
-		typedef GLXContext RC;
+		typedef GLXContext Context;
 	#endif // _WIN32
 
 		//---------------------------------------------------------------------------
 
-		class GraphicContext : public Rapture::Graphics3D
+		class GLGraphics : public Graphics3D
 		{
-		public:
-			HGLRC _handle;
+			friend_graphics_provider(GLGraphics);
+			friend class GLVertexLayout;
 
-		protected:
-			HWND _wnd;
-			HDC _device;
-		};
-
-		//---------------------------------------------------------------------------
-
-		class Image : public Rapture::Image
-		{
-			friend class GLGraphics;
-
-		public:
-			Image(const GraphicContext * ctx, const ImageData & data);
-
-			virtual void apply() const override;
-			virtual void requestData(ImageData * output) const override;
-
-		protected:
-			const GraphicContext * _ctx;
-			float _scale[2];
-			uint  _id;
-		};
-
-		typedef Image Texture;
-
-		//---------------------------------------------------------------------------
-
-		class VertexElement : public Shared, public Precached<string, VertexElement>
-		{
-			friend class VertexLayout;
-
-		public:
-			string id;
-			byte location;
-			uint size;
-
-			static VertexElement pos2;
-			static VertexElement pos3;
-			static VertexElement color3;
-			static VertexElement colorf;
-			static VertexElement secondaryColor3;
-			static VertexElement secondaryColor4;
-			static VertexElement tex;
-			static VertexElement normal;
-
-		protected:
-			VertexElement(const string & id, byte location, uint size) : Precached<string, VertexElement>(id),
-				id(id), location(location), size(size) {}
-		};
-
-		//---------------------------------------------------------------------------
-
-		class VertexLayout : public Shared, public Cached<string, VertexLayout>
-		{
-			typedef Cached<string, VertexLayout> Cache;
-
-		public:
-			string key;
-			Array<VertexElement> elements;
-			uint stride;
-
-		protected:
-			friend_handle;
-
-			VertexLayout(const String & key) : key(key)
-			{
-				stride = decodeData(key, elements);
-			}
-
-			static uint decodeData(const String & data, Array<VertexElement> & elements)
-			{
-				uint stride = 0;
-
-				for(const auto & str : split(data))
-				{
-					auto & vie = VertexElement::get(str);
-					elements.push_back(vie);
-					stride += vie->size;
-				}
-
-				return stride;
-			}
-		};
-
-		// TODO: save current layout in Graphics and apply it with the glVertexAttribPointer and the glEnableVertexAttribArray functions
-
-		//---------------------------------------------------------------------------
-
-		class VertexBuffer : public Shared
-		{
-		public:
-			VertexBuffer(const Handle<VertexLayout> & layout, const VertexData & vd, uint topology = GL_TRIANGLES);
-
-			GraphicContext * ctx;
-			Handle<VertexLayout> layout;
-			uint handle;
-			uint topology;
-			uint size;
-		};
-
-		class IndexBuffer : public Shared
-		{
-		public:
-			IndexBuffer(const VertexIndices & indices);
-
-			GraphicContext * ctx;
-			uint handle;
-			uint size;
-		};
-
-		//---------------------------------------------------------------------------
-
-		class Uniform : public Shared
-		{
-			friend class GLGraphics;
-
-		public:
-			Uniform(ShaderType shader, uint index, uint size);
-
-		protected:
-			void update(const void * data);
-
-			uint buffer;
-			uint index;
-			GraphicContext * ctx;
-		};
-
-		template<class T, bool isValid = is_uniform<T>::value>
-		class GenericUniform {};
-
-		template<class T>
-		class GenericUniform<T, true> : public Uniform
-		{
-		public:
-			GenericUniform() : Uniform(T::shader, T::index, static_cast<uint>(sizeof(T))) {}
-
-			void set(const T & data)
-			{
-				update(&data);
-			}
-
-			template<class ... A, useif <can_construct<T, A...>::value> endif>
-			void set(A &&... args)
-			{
-				T data(forward<A>(args)...);
-				update(&data);
-			}
-		};
-
-		//---------------------------------------------------------------------------
-
-		class FxTechnique : public Shared
-		{
-			friend class GLGraphics;
-			friend class VertexBuffer;
-
-			template<ShaderType>
-			friend class Shader;
-
-		public:
-			FxTechnique() {}
-			virtual ~FxTechnique() {}
-
-			virtual void apply(uint pass = 0) const = 0;
-			
-			const Handle<VertexLayout> & layout() const
-			{
-				return layout;
-			}
-
-		protected:
-			FxTechnique(const Handle<VertexLayout> & layout);
-
-			GraphicContext * ctx;
-			Handle<VertexLayout> layout;
-			uint passes;
-		};
-
-		//---------------------------------------------------------------------------
-
-		template<ShaderType type>
-		class Shader {};
-
-		typedef Shader<ShaderType::Common>		CommonShader;
-		typedef Shader<ShaderType::Vertex>		VertexShader;
-		typedef Shader<ShaderType::Fragment>	FragmentShader;
-		typedef Shader<ShaderType::Pixel>		PixelShader;
-
-		typedef data<const void> ShaderCode;
-		typedef HashMap<ShaderType, ShaderCode> ShaderCodeSet;
-		typedef HashMap<string, ShaderCodeSet> ShaderMap;
-
-		enum class ShaderCodeState
-		{
-			Raw,
-			Compiled,
-			Embedded
-		};
-
-		template<>
-		class Shader<ShaderType::Common> : public Shared
-		{
-		public:
-			Shader();
-			virtual void apply() const = 0;
-
-		protected:
-			void read(const String & filename, ShaderCode & out);
-			void compile(const String & filename, const String & entrance, const String & shaderModel, ShaderCode & out);
-		
-			GraphicContext * ctx;
-		};
-
-		template<>
-		class Shader<ShaderType::Vertex> : public CommonShader
-		{
-			void init(const Handle<FxTechnique> & technique, const ShaderCode & code);
-
-		public:
-			Shader(const Handle<FxTechnique> & technique, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
-			Shader(const Handle<FxTechnique> & technique, const Handle<ShaderCode> & code);
-
-			virtual void apply() const override;
-
-			uint id;
-		};
-
-		template<>
-		class Shader<ShaderType::Pixel> : public CommonShader
-		{
-			void init(const Handle<FxTechnique> & technique, const ShaderCode & code);
-
-		public:
-			Shader(const Handle<FxTechnique> & technique, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
-			Shader(const Handle<FxTechnique> & technique, const Handle<ShaderCode> & code);
-
-			virtual void apply() const override;
-
-			uint id;
-		};
-
-		//---------------------------------------------------------------------------
-
-		class GLGraphics : public GraphicContext
-		{
 		public:
 			struct ContextAttributes
 			{
@@ -315,275 +70,360 @@ namespace Rapture
 				int flags;
 			};
 
-			friend Handle<GLGraphics, GLGraphics> provide();
+			using Graphics3D::init;
+			using Graphics3D::bind;
+			using Graphics3D::draw;
 
-			virtual void clip(const IntRect & rect) override;
-			virtual void rectangle(const IntRect & rect) override;
-			virtual void ellipse(const IntRect & rect) override;
-			virtual void rectangle(const SqRect & r) override;
-			virtual void ellipse(const SqRect & r) override;
+			api(opengl3_3) void bind(const GLShaderProgram * program);
 
-			virtual void draw(const Rapture::Figure * figure, const IntRect & bounds) override;
-			virtual void draw(const Rapture::Figure * figure, const FloatTransform & transform) override;
+			virtual api(opengl3_3) void clip(const IntRect & rect) override;
+			virtual api(opengl3_3) void present() const override;
 
-			virtual void draw(const Rapture::Mesh * model) override;
+			virtual api(opengl3_3) void printInfo();
+			virtual api(opengl3_3) void printDebug();
+			virtual api(opengl3_3) void checkForErrors();
 
-			virtual void draw(const Rapture::Image * image, int x, int y) override;
-			virtual void draw(const Rapture::Image * image, int x, int y, int width, int height) override;
-			virtual void draw(const Rapture::Image * image, const IntRect & rect) override;
-			virtual void draw(const Rapture::Image * image, const SqRect & r) override;
+			virtual api(opengl3_3) Handle<Image> createImage(const ImageData & data) override;
+			virtual api(opengl3_3) Handle<Surface> createSurface(UISpace * space) override;
+			virtual api(opengl3_3) Handle<Surface> createSurface(const IntSize & size, Handle<Image> & image) override;
 
-			virtual void draw(const Rapture::Symbol * symbol, int x, int y) override;
-
-			virtual void present() const override;
-
-			virtual void printInfo();
-			virtual void printDebug();
-			virtual void checkForErrors();
-
-			using Rapture::Graphics::bind;
-
-			virtual void bind(const Handle<Rapture::Surface> & surface) override;
-			virtual void bind(const Handle<Rapture::Texture> & texture, uint index) override;
-
-			virtual Handle<Rapture::Image> createImage(const ImageData & data) override;
-			virtual Handle<Rapture::Figure> createFigure(const FigureData & data) override;
-
-		protected:
-			friend_handle;
-			friend class Mesh;
-
-			GLGraphics();
-			virtual ~GLGraphics();
-
-			virtual Handle<Rapture::Surface> createSurface(UISpace * space) override;
-			virtual void updateBrushState() override;
-
-			void draw(const Mesh * model);
-
-			void initDevice();
-			void initFacilities();
-			void freeFacilities();
-
-			Handle<VertexShader> vshader = nullptr;
-			Handle<PixelShader> pshader = nullptr;
-
-			mutable Handle<VertexBuffer> vbuffer = nullptr;
-			mutable Handle<IndexBuffer> ibuffer = nullptr;
-			mutable TypedSet<Uniform> uniformData;
-
-			Array<Texture> _textures;
-		};
-
-		inline Handle<GLGraphics, GLGraphics> provide()
-		{
-			return {emptiness};
-		}
-
-		//---------------------------------------------------------------------------
-
-		class Shaders
-		{
-			friend class GLGraphics;
-
-		public:
-			static ShaderCode getCode(const string & id, ShaderType type)
+			virtual Handle<GraphicsDebug> getDebug() const override
 			{
-				auto i = shaders.find(id);
-
-				if(i == shaders.end())
-					throw Exception("Can't find embedded shader set with id \"", id, "\"");
-
-				auto & set = i->second;
-				auto ci = set->code.find(type);
-
-				if(ci == set->code.end())
-					throw Exception("Embedded shader set with id \"", id, "\" doesn't contain shader of type \"", type, "\"");
-
-				return *ci->second;
+				return nullptr;
 			}
 
-			static Handle<ShaderCodeSet> setCode(const string & id, const initializer_list<Handle<ShaderCode>> & codeSet)
+			Context context() const
 			{
-				Handle<ShaderCodeSet> set;
-				auto i = shaders.find(id);
-
-				if(i == shaders.end())
-					shaders.insert({id, set.init()});
-				else
-					set = i->second;
-
-				for(size_t i = 0; i < codeSet.size(); ++i)
-					set->code.insert({static_cast<ShaderType>(i), *(codeSet.begin() + i)});
-
-				return set;
+				return _context;
 			}
 
 		protected:
-			static void initialize();
-			static void free();
+			api(opengl3_3) GLGraphics();
+			virtual api(opengl3_3) ~GLGraphics();
 
-			static ShaderMap shaders;
+			virtual api(opengl3_3) Handle<VertexLayout> createVertexLayout(const string & fingerprint) override;
+			virtual api(opengl3_3) Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) override;
+			virtual api(opengl3_3) Handle<IndexBuffer> createIndexBuffer(const VertexIndices & indices) override;
+
+			virtual api(opengl3_3) UniqueHandle<UniformAdapter> createUniformAdapter(ShaderType shader, int index, size_t size) override;
+
+			virtual api(opengl3_3) void initFacilities() override;
+
+			template<class Program, class ... A, useif<
+				is_shader_program<Program>::value,
+				can_construct<Handle<ShaderCode>, A>::value...,
+				can_construct<Program, GLGraphics *, VertexLayout *, ShaderCodeSet *>::value
+				>
+			>
+			void setShaderProgram(const string & id, VertexLayout * layout, A &&... args)
+			{
+				shaderPrograms[id] = handle<Program>(this, layout, createCodeSet({handle<ShaderCode>(forward<A>(args))...}));
+			}
+
+		private:
+			api(opengl3_3) void initDevice();
+			api(opengl3_3) void initShaders();
+
+			HWND _wnd;
+			HDC _device;
+			Context _context;
+
+			class VertexAttributes
+			{
+			public:
+				api(opengl3_3) void reserve(uint count);
+
+			protected:
+				uint _count = 0;
+			};
+
+			VertexAttributes _vertexAttributes;
+			const GLShaderProgram * _shaderProgram;
 		};
 
 		//---------------------------------------------------------------------------
 
-		class Mesh : public Rapture::Mesh
+		class GLImage : public Image
 		{
+			friend class TextureSurface;
+
 		public:
-			Mesh(const GLGraphics * graphics, const Handle<VertexLayout> & layout, const VertexData & vertexData)
-				: Rapture::Mesh(graphics, vertexData, layout->stride), buffer(layout, vertexData)
-			{
-				setclass(Mesh);
-			}
+			api(opengl3_3) GLImage(GLGraphics * graphics, uint width, uint height);
+			api(opengl3_3) GLImage(GLGraphics * ctx, const ImageData & data);
 
-			Handle<VertexBuffer> buffer;
+			virtual api(opengl3_3) void apply() const override;
+			virtual api(opengl3_3) void requestData(ImageData * output) const override;
 
-			static Handle<Mesh, GLGraphics> quad;
-			static Handle<Mesh, GLGraphics> texquad;
-		};
-
-		class Figure : public Rapture::Figure
-		{
-		public:
-			Figure(const GLGraphics * graphics, const FigureData & data);
-
-			Handle<Mesh> model;
+		protected:
+			float _scale[2];
+			uint  _id;
+			GLGraphics * _ctx;
 		};
 
 		//---------------------------------------------------------------------------
 
-		class Surface : public Rapture::Surface
+		class GLVertexLayout : public VertexLayout
 		{
-			friend class GLGraphics;
+			friend_owned_handle(GLVertexLayout, GLGraphics);
 
 		public:
-			Surface(const IntSize & size);
-			virtual ~Surface();
+			virtual ~GLVertexLayout() {}
 
-			virtual void clear() const;
+			virtual api(opengl3_3) void apply();
+			virtual api(opengl3_3) void accept(const ShaderCode * code);
+
+			static const char * const attributes[];
 
 		protected:
-			GraphicContext * ctx;
-			void createDepthStencil();
+			api(opengl3_3) GLVertexLayout(GLGraphics * graphics, const string & fingerprint);
 
-			RC _renderCtx;
-			GLGraphics::ContextAttributes attr;
+			GLGraphics * graphics;
 		};
 
-		class DepthBufferSurface : public Surface
+		// TODO: save current layout in Graphics and apply it with the glVertexAttribPointer and the glEnableVertexAttribArray functions
+
+		//---------------------------------------------------------------------------
+
+		class GLVertexBuffer : public VertexBuffer
+		{
+			friend_owned_handle(GLVertexBuffer, GLGraphics);
+
+		public:
+			virtual ~GLVertexBuffer() {}
+
+			virtual api(opengl3_3) void apply() const override;
+
+		protected:
+			api(opengl3_3) GLVertexBuffer(GLGraphics * graphics, VertexLayout * layout, const VertexData & vd);
+
+			uint topology;
+			uint handle;
+		};
+
+		class GLIndexBuffer : public IndexBuffer
+		{
+			friend_owned_handle(GLIndexBuffer, GLGraphics);
+
+		public:
+			virtual ~GLIndexBuffer() {}
+
+			virtual api(opengl3_3) void apply() const override;
+
+		protected:
+			api(opengl3_3) GLIndexBuffer(GLGraphics * graphics, const VertexIndices & indices);
+
+			GLGraphics * graphics;
+			uint handle;
+		};
+
+		class GLMeshTrait
 		{
 		public:
-			DepthBufferSurface(const IntSize & size);
-			DepthBufferSurface(const DepthBufferSurface &) = delete;
-			virtual ~DepthBufferSurface() {}
+			api(opengl3_3) GLMeshTrait(GLGraphics * graphics, VertexTopology topology);
+
+		protected:
+			uint topology;
+			GLGraphics * graphics;
+		};
+
+		class GLMesh : public Mesh, public GLMeshTrait
+		{
+		public:
+			GLMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vbuffer, VertexTopology topology, uint stride, uint verticesLocation) : Mesh(vbuffer, topology, stride, verticesLocation), GLMeshTrait(graphics, topology) {}
+
+			virtual api(opengl3_3) void draw() const;
+		};
+
+		class GLIndexedMesh : public IndexedMesh, public GLMeshTrait
+		{
+		public:
+			GLIndexedMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, VertexTopology topology, uint stride, uint verticesLocation, uint indicesLocation) : IndexedMesh(vbuffer, ibuffer, topology, stride, verticesLocation, indicesLocation), GLMeshTrait(graphics, topology) {}
+
+			virtual api(opengl3_3) void draw() const override;
+		};
+
+		//---------------------------------------------------------------------------
+
+		class GLUniformAdapter : public UniformAdapter
+		{
+			friend_owned_handle(GLUniformAdapter, GLGraphics);
+
+		public:
+			virtual ~GLUniformAdapter() {}
+
+			virtual api(opengl3_3) void update(const void * data) override;
+
+		protected:
+			api(opengl3_3) GLUniformAdapter(GLGraphics * graphics, ShaderType shader, uint index, uint size);
+
+			uint buffer;
+			uint index;
+			GLGraphics * ctx;
+		};
+
+		//---------------------------------------------------------------------------
+
+		class GLShaderProgram : public ShaderProgram
+		{
+		public:
+			api(opengl3_3) GLShaderProgram(GLGraphics * graphics, VertexLayout * layout);
+			api(opengl3_3) ~GLShaderProgram();
 
 			virtual void apply() const override;
+
+			GLGraphics * graphics;
+			VertexLayout * layout;
+			GLuint id = 0;
 		};
 
-		class UISurface : public Surface
+		class GLShader : public Shader
+		{
+		public:
+			api(opengl3_3) GLShader(GLShaderProgram * program, const String & path, ShaderCodeState state, GLenum type);
+			api(opengl3_3) GLShader(GLShaderProgram * program, const Handle<ShaderCode> & code, GLenum type);
+			virtual api(opengl3_3) ~GLShader();
+
+		protected:
+			api(opengl3_3) void read(const String & filename, GLenum type);
+			api(opengl3_3) void compile(const String & filename, GLenum type);
+			api(opengl3_3) bool initRaw(const Handle<ShaderCode> & code, GLenum type);
+			api(opengl3_3) bool initCompiled(const Handle<ShaderCode> & code, GLenum type);
+		
+			GLShaderProgram * program;
+			GLuint id;
+		};
+
+		class GLVertexShader : public GLShader
+		{
+		public:
+			api(opengl3_3) GLVertexShader(GLShaderProgram * program, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
+			api(opengl3_3) GLVertexShader(GLShaderProgram * program, const Handle<ShaderCode> & code);
+
+			virtual ~GLVertexShader() {}
+		};
+
+		class GLPixelShader : public GLShader
+		{
+		public:
+			api(opengl3_3) GLPixelShader(GLShaderProgram * program, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
+			api(opengl3_3) GLPixelShader(GLShaderProgram * program, const Handle<ShaderCode> & code);
+
+			virtual ~GLPixelShader() {}
+		};
+
+		//---------------------------------------------------------------------------
+
+		class GLSurface : public Surface
 		{
 			friend class GLGraphics;
 
 		public:
-			UISurface(UISpace * space);
-			UISurface(const UISurface &) = delete;
-			virtual ~UISurface();
+			api(opengl3_3) GLSurface(GLGraphics * graphics, const IntSize & size);
+			virtual api(opengl3_3) ~GLSurface();
 
-			virtual void apply() const override;
-			virtual void present() const override;
-			virtual void requestData(ImageData * data) const override;
+			virtual api(opengl3_3) void clear() const override;
+			virtual api(opengl3_3) void present() const override;
 
 		protected:
-			void createSwapChain(bool fullscreen);
+			api(opengl3_3) void createDepthStencil();
+
+			GLGraphics * _graphics;
+			HDC _deviceCtx = nullptr;
+			Context _renderCtx = nullptr;
+		};
+
+		class RenderTargetSurface : public GLSurface
+		{
+			deny_copy(RenderTargetSurface);
+
+		public:
+			api(opengl3_3) RenderTargetSurface(GLGraphics * graphics, const IntSize & size);
+			virtual api(opengl3_3) ~RenderTargetSurface();
+
+			virtual api(opengl3_3) void apply() const override;
+
+		protected:
+		};
+
+		class DepthSurface : public GLSurface
+		{
+			deny_copy(DepthSurface);
+
+		public:
+			api(opengl3_3) DepthSurface(GLGraphics * graphics, const IntSize & size);
+			virtual ~DepthSurface() {}
+
+			virtual api(opengl3_3) void apply() const override;
+			virtual api(opengl3_3) void clear() const override;
+		};
+
+		class UISurface : public RenderTargetSurface, public Connector
+		{
+			deny_copy(UISurface);
+
+		public:
+			api(opengl3_3) UISurface(GLGraphics * graphics, UISpace * space);
+			virtual ~UISurface() {}
+
+			virtual api(opengl3_3) void present() const override;
+			virtual api(opengl3_3) void requestData(ImageData * data) const override;
+
+			virtual api(opengl3_3) void resize() override;
+
+		private:
 			void createRenderTarget();
 			void releaseRenderTarget();
 
-			void onUIResize(Handle<UIResizeMessage> & msg, UISpace & space, const Subject * src);
-			void onUIFullscreen(Handle<UIFullscreenMessage> & msg, UISpace & space, const Subject * src);
-			void onUIDestroy(Handle<WindowCloseMessage> & msg, UISpace & space, const Subject * src);
+			void onUIResize(Handle<UIResizeMessage> & msg, UISpace & space);
+			void onUIFullscreen(Handle<UIFullscreenMessage> & msg, UISpace & space);
+			void onUIDestroy(Handle<UIDestroyMessage> & msg, UISpace & space);
 
-			UISpace * space;
+			UISpace * _space;
 		};
 
-		class TextureSurface : public Surface
+		class TextureSurface : public RenderTargetSurface
 		{
+			friend class GLGraphics;
+
 		public:
-			TextureSurface(const IntSize & size);
+			api(opengl3_3) TextureSurface(GLGraphics * graphics, const IntSize & size, Handle<Image> & image);
 			virtual ~TextureSurface() {}
 
-			virtual void apply() const override;
+			virtual api(opengl3_3) void clear() const override;
+			virtual api(opengl3_3) void requestData(ImageData * data) const override;
+
+		protected:
+			Handle<GLImage> _texture;
 		};
 
 		//---------------------------------------------------------------------------
 
-		class ShaderProgram : public Shared
+		class VPShaderProgram : public GLShaderProgram
 		{
 		public:
-			virtual ~ShaderProgram() {}
-			virtual void apply() const {}
+			VPShaderProgram(GLGraphics * graphics, VertexLayout * layout, const string & filename, ShaderCodeState state = ShaderCodeState::Compiled) : GLShaderProgram(graphics, layout),
+				vs(this, filename, state),
+				ps(this, filename, state)
+			{}
 
-		protected:
-			ShaderProgram() {}
-			uint id;
-		};
+			VPShaderProgram(GLGraphics * graphics, VertexLayout * layout, const Handle<ShaderCodeSet> & codeSet) : GLShaderProgram(graphics, layout),
+				vs(this, codeSet->code.at(ShaderType::Vertex)),
+				ps(this, codeSet->code.at(ShaderType::Fragment))
+			{}
 
-		class VPShaderProgram : public ShaderProgram
-		{
-		public:
-			VPShaderProgram(const Handle<FxTechnique> & technique, const string & filename, ShaderCodeState state = ShaderCodeState::Compiled) : vs(technique, filename, state), ps(technique, filename, state) {}
-			VPShaderProgram(const Handle<FxTechnique> & technique, const Handle<ShaderCodeSet> & codeSet) : vs(technique, codeSet->at(ShaderType::Vertex)), ps(technique, codeSet->at(ShaderType::Pixel)) {}
 			virtual ~VPShaderProgram() {}
 
-			virtual void apply() const override
-			{
-				vs->apply();
-				ps->apply();
-			}
-
 		protected:
-			Handle<VertexShader> vs;
-			Handle<PixelShader> ps;
+			Handle<GLVertexShader> vs;
+			Handle<GLPixelShader> ps;
 		};
+	}
 
-		//---------------------------------------------------------------------------
-
-		class SimpleTechnique : public FxTechnique
-		{
-		public:
-			SimpleTechnique(const Handle<VertexLayout> & layout)
-				: FxTechnique(layout), program() {}
-
-			SimpleTechnique(const Handle<VertexLayout> & layout, const Handle<ShaderProgram> & program)
-				: FxTechnique(layout), program(program) {}
-
-			template<class ShaderProgramType, class ... A, useif <can_construct<ShaderProgramType, Handle<FxTechnique>, A...>::value> endif>
-			SimpleTechnique(const Handle<VertexLayout> & layout, const Type<ShaderProgramType> &, A &&... args)
-				: FxTechnique(layout), program(handle<ShaderProgramType>(this, forward<A>(args)...)) {}
-
-			virtual ~SimpleTechnique() {}
-
-			void bind(const Handle<ShaderProgram> & program)
-			{
-				this->program = program;
-			}
-
-			virtual void apply(uint pass = 0) const override
-			{
-				program->apply();
-			}
-
-			static Handle<SimpleTechnique, Shaders> rectangle;
-			static Handle<SimpleTechnique, Shaders> ellipse;
-			static Handle<SimpleTechnique, Shaders> wired_rectangle;
-			static Handle<SimpleTechnique, Shaders> wired_ellipse;
-			static Handle<SimpleTechnique, Shaders> figure;
-			static Handle<SimpleTechnique, Shaders> image;
-			static Handle<SimpleTechnique, Shaders> text;
-
-		protected:
-			Handle<ShaderProgram> program;
-		};
+	inline int glGetInteger(uint param)
+	{
+		int value;
+		glGetIntegerv(param, &value);
+		return value;
 	}
 
 #ifndef OpenGL

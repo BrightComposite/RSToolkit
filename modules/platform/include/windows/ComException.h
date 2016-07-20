@@ -25,9 +25,10 @@ namespace Rapture
 
 		virtual ~ComException() {}
 
-		static String getError(HRESULT hr)
+		static WideString getError(HRESULT hr)
 		{
 			_com_error err(hr);
+			MessageBoxW(0, err.ErrorMessage(), L"COM exception", MB_ICONERROR);
 			return err.ErrorMessage();
 		}
 	};

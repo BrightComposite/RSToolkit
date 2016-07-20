@@ -173,8 +173,6 @@ namespace Rapture
 		template<size_t N>
 		owned_data(const T(&ptr)[N]) : Base(Memory<T>::copy(ptr, N), N) {}
 
-		owned_data(T *&& ptr, size_t size) : Base(forward<T*>(ptr), size) {}
-
 		owned_data(owned_data && rd) : Base(move(rd.ptr), rd.size)
 		{
 			rd.size = 0;
@@ -234,12 +232,6 @@ namespace Rapture
 			Memory<void>::free(this->ptr);
 			this->ptr = Memory<T>::copy(ptr, N);
 			this->size = N;
-		}
-
-		void set(T *&& ptr, size_t size)
-		{
-			Memory<void>::free(this->ptr);
-			Base::set(forward<T*>(this->ptr), size);
 		}
 
 		void apply(const T * ptr)
@@ -357,11 +349,6 @@ namespace Rapture
 			rd.size = 0;
 		}
 
-		owned_data(void *&& ptr, size_t size) : Base(ptr, size)
-		{
-			ptr = nullptr;
-		}
-
 		virtual ~owned_data() { Memory<void>::free(ptr); }
 
 		owned_data & operator = (const owned_data & rd)
@@ -415,12 +402,6 @@ namespace Rapture
 			Memory<void>::free(this->ptr);
 			this->ptr = Memory<T>::copy(ptr, N);
 			this->size = N * sizeof(T);
-		}
-
-		void set(void *&& ptr, size_t size)
-		{
-			Memory<void>::free(this->ptr);
-			Base::set(forward<void *>(ptr), size);
 		}
 
 		void apply(const void * ptr)

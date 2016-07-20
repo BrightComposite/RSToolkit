@@ -18,7 +18,7 @@ namespace Rapture
 
 	struct Thread : public Shared
 	{
-		template<class ... A, useif <can_construct<thread, A...>::value> endif>
+		template<class ... A, useif<can_construct<thread, A...>::value>>
 		Thread(A &&... args) : instance(forward<A>(args)...) {}
 		Thread(Thread && th) : instance(move(th.instance)) {}
 		~Thread() { if(instance.joinable()) instance.join(); }

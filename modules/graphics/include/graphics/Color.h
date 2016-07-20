@@ -145,17 +145,17 @@ namespace Rapture
 		GenericColor() : Base {Traits::default_color()} {}
 		GenericColor(const GenericColor & color) : Base {color.vector} {}
 
-		template<class ... A, selectif(0) <sizeof...(A) == 3, std::is_convertible<A, T>::value...> endif>
+		template<class ... A, selectif(0)<sizeof...(A) == 3, std::is_convertible<A, T>::value...>>
 		GenericColor(A &&... args) : Base {adapt<T, A>(forward<A>(args))..., Traits::alpha()} {}
 
-		template<class ... A, selectif(1) <sizeof...(A) == 4, std::is_convertible<A, T>::value...> endif>
+		template<class ... A, selectif(1)<sizeof...(A) == 4, std::is_convertible<A, T>::value...>>
 		GenericColor(A &&... args) : Base {adapt<T, A>(forward<A>(args))...} {}
 
 		GenericColor(const T(&color)[4]) : Base {color} {}
 		GenericColor(const T(&color)[3]) : Base {color[0], color[1], color[2], Traits::alpha()} {}
 		GenericColor(const Vector<T> & color) : Base {color} {}
 
-		template<ColorType d, ColorFormat f, useif <d != datatype || f != format> endif>
+		template<ColorType d, ColorFormat f, useif<d != datatype || f != format>>
 		GenericColor(const GenericColor<d, f> & color)
 		{
 			Cast<GenericColor<d, f>, GenericColor>::cast(*this, color);
@@ -213,25 +213,25 @@ namespace Rapture
 	template<ColorType inType, ColorFormat inFormat, ColorType outType, ColorFormat outFormat>
 	struct Cast<GenericColor<inType, inFormat>, GenericColor<outType, outFormat>>
 	{
-		template<ColorType In = inType, ColorType Out = outType, useif <In == Out> endif, useif <inFormat == outFormat> endif>
+		template<ColorType In = inType, ColorType Out = outType, useif<In == Out>, useif<inFormat == outFormat>>
 		static inline void cast(GenericColor<outType, outFormat> & out, const GenericColor<inType, inFormat> & in)
 		{
 			out = in;
 		}
 
-		template<ColorType In = inType, ColorType Out = outType, useif <In == Out> endif, skipif <inFormat == outFormat> endif>
+		template<ColorType In = inType, ColorType Out = outType, useif<In == Out>, skipif<inFormat == outFormat>>
 		static inline void cast(GenericColor<outType, outFormat> & out, const GenericColor<inType, inFormat> & in)
 		{
 			ColorFormatCast<inFormat, outFormat>::cast(out, in);
 		}
 
-		template<ColorType In = inType, ColorType Out = outType, skipif <In == Out> endif, useif <inFormat == outFormat> endif>
+		template<ColorType In = inType, ColorType Out = outType, skipif<In == Out>, useif<inFormat == outFormat>>
 		static inline void cast(GenericColor<outType, outFormat> & out, const GenericColor<inType, inFormat> & in)
 		{
 			ColorDataCast<inType, outType>::cast(out, in);
 		}
 
-		template<ColorType In = inType, ColorType Out = outType, skipif <In == Out> endif, skipif <inFormat == outFormat> endif>
+		template<ColorType In = inType, ColorType Out = outType, skipif<In == Out>, skipif<inFormat == outFormat>>
 		static inline void cast(GenericColor<outType, outFormat> & out, const GenericColor<inType, inFormat> & in)
 		{
 			GenericColor<outType, inFormat> temp;

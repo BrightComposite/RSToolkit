@@ -176,7 +176,7 @@ namespace Rapture
 			}
 
 			apply();
-			_graphics->bind(share(this));
+			_graphics->bind(this);
 		}
 
 		void UISurface::releaseRenderTarget()

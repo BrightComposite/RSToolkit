@@ -154,19 +154,19 @@ namespace Rapture
 	template<class T, class M>
 	struct is_method : not_same_type<typename method_wrapper<T, M>::MethodType, Empty> {};
 
-	template<class T, class M, useif <!std::is_pointer<T>::value, is_method<T, M>::value> endif>
+	template<class T, class M, useif<!std::is_pointer<T>::value, is_method<T, M>::value>>
 	forceinline method_wrapper<T &, M> wrap_method(T & object, M method)
 	{
 		return {object, method};
 	}
 
-	template<class T, class M, useif <!std::is_pointer<T>::value, is_method<T, M>::value> endif>
+	template<class T, class M, useif<!std::is_pointer<T>::value, is_method<T, M>::value>>
 	forceinline method_wrapper<T, M> wrap_method(T && object, M method)
 	{
 		return {forward<T>(object), method};
 	}
 
-	template<class T, class M, useif <is_method<T *, M>::value> endif>
+	template<class T, class M, useif<is_method<T *, M>::value>>
 	forceinline  method_wrapper<T *, M> wrap_method(T * object, M method)
 	{
 		return {object, method};
@@ -181,7 +181,7 @@ namespace Rapture
 		}
 	}
 
-	template<typename F, selectif(0) <is_function<F>::value> endif>
+	template<typename F, selectif(0)<is_function<F>::value>>
 	forceinline auto make_function(F f)
 	{
 		return Internals::make_function(f);
@@ -223,19 +223,19 @@ namespace Rapture
 		return wrap_method(f, mf);
 	}
 
-	template<typename F, selectif(1) <has_caller<F>::value> endif>
+	template<typename F, selectif(1)<has_caller<F>::value>>
 	forceinline auto make_function(F & f)
 	{
 		return make_function(f, &F::operator());
 	}
 
-	template<typename F, selectif(1) <has_caller<F>::value> endif>
+	template<typename F, selectif(1)<has_caller<F>::value>>
 	forceinline auto make_function(F && f)
 	{
 		return make_function(forward<F>(f), &F::operator());
 	}
 
-	template<typename F, selectif(1) <has_caller<F>::value> endif>
+	template<typename F, selectif(1)<has_caller<F>::value>>
 	forceinline auto make_function(F * f)
 	{
 		return make_function(f, &F::operator());

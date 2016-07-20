@@ -71,8 +71,6 @@ namespace Rapture
 		using Graphics::draw;
 
 		api(graphics) void bind(const Handle<Texture> & texture, uint index);
-		api(graphics) void bind(const VertexShader * shader);
-		api(graphics) void bind(const PixelShader * shader);
 		api(graphics) void bind(const VertexBuffer * buffer);
 		api(graphics) void bind(const IndexBuffer * buffer);
 
@@ -91,8 +89,17 @@ namespace Rapture
 		api(graphics) const Handle<ShaderProgram> & getShaderProgram(const string & id);
 
 		api(graphics) Handle<Mesh> createMesh(VertexLayout * layout, const VertexData & data, VertexTopology topology = VertexTopology::Triangles);
-		api(graphics) Handle<Mesh> createMesh(const string & fingerprint, const VertexData & data, VertexTopology topology = VertexTopology::Triangles);
 		api(graphics) Handle<IndexedMesh> createIndexedMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles, uint indicesLocation = 0);
+
+		Handle<Mesh> Graphics3D::createMesh(const string & fingerprint, const VertexData & data, VertexTopology topology = VertexTopology::Triangles)
+		{
+			return createMesh(getVertexLayout(fingerprint), data, topology);
+		}
+
+		Handle<IndexedMesh> Graphics3D::createIndexedMesh(const string & fingerprint, const VertexData & data, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles, uint indicesLocation = 0)
+		{
+			return createIndexedMesh(getVertexLayout(fingerprint), data, indices, topology, indicesLocation);
+		}
 
 		float depth()
 		{
@@ -109,14 +116,14 @@ namespace Rapture
 			return *_depthTestMode;
 		}
 
-		bool alphaTestMode() const
+		bool blendMode() const
 		{
-			return *_alphaTestMode;
+			return *_blendMode;
 		}
 
 		void setAlphaTestMode(bool mode)
 		{
-			*_alphaTestMode = mode;
+			*_blendMode = mode;
 		}
 
 		void setDepthTestMode(bool mode)
@@ -129,18 +136,18 @@ namespace Rapture
 			return _depthTestMode;
 		}
 
-		State<bool> * alphaTestState()
+		State<bool> * blendState()
 		{
-			return _alphaTestMode;
+			return _blendMode;
 		}
 
-		template<class T, typename ... A, useif <is_uniform<T>::value, can_construct_contents<T, A...>::value> endif>
+		template<class T, typename ... A, useif<is_uniform<T>::value, can_construct_contents<T, A...>::value>>
 		void updateUniform(A && ... args)
 		{
 			uniforms.require<T>(this)->set(forward<A>(args)...);
 		}
 
-		template<class T, useif <is_uniform<T>::value> endif>
+		template<class T, useif<is_uniform<T>::value>>
 		void updateUniform(const Contents<T> & contents)
 		{
 			uniforms.require<T>(this)->set(contents);
@@ -165,7 +172,7 @@ namespace Rapture
 		api(graphics) void clearFacilities();
 
 		virtual Handle<VertexLayout> createVertexLayout(const string & fingerprint) = 0;
-		virtual Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data, VertexTopology topology) = 0;
+		virtual Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) = 0;
 		virtual Handle<IndexBuffer> createIndexBuffer(const VertexIndices & indices) = 0;
 
 		virtual UniqueHandle<UniformAdapter> createUniformAdapter(ShaderType shader, int index, size_t size) = 0;
@@ -180,7 +187,7 @@ namespace Rapture
 			return set;
 		}
 
-		template<class T, useif <is_uniform<T>::value> endif>
+		template<class T, useif<is_uniform<T>::value>>
 		Handle<T, Graphics3D> & init(Handle<T, Graphics3D> & uniform)
 		{
 			return uniform.init(createUniformAdapter(T::shader, T::index, sizeof(Contents<T>)));
@@ -188,7 +195,7 @@ namespace Rapture
 
 		float _depth = 1.0f;
 		StateHandle<bool> _depthTestMode {false};
-		StateHandle<bool> _alphaTestMode {false};
+		StateHandle<bool> _blendMode {false};
 
 		UniformSet uniforms;
 
@@ -196,9 +203,6 @@ namespace Rapture
 
 		UnorderedMap<string, VertexLayout> vertexLayouts;
 		UnorderedMap<string, ShaderProgram> shaderPrograms;
-
-		Handle<const VertexShader> _vshader;
-		Handle<const PixelShader> _pshader;
 
 		Handle<const VertexBuffer> _vbuffer;
 		Handle<const IndexBuffer> _ibuffer;

@@ -20,7 +20,7 @@ namespace Rapture
 	public:
 		State() : _state() {}
 		State(const State & state) : _state(state._state) {}
-		template<class ... A, useif <can_construct<T, A...>::value> endif>
+		template<class ... A, useif<can_construct<T, A...>::value>>
 		State(A &&... args) : _state(forward<A>(args)...) {}
 		virtual ~State() {}
 
@@ -66,7 +66,7 @@ namespace Rapture
 			change();
 		}
 
-		template<class ... A, useif <not_same_types<T, tuple<A...>>::value, can_construct<T, A...>::value> endif>
+		template<class ... A, useif<not_same_types<T, tuple<A...>>::value, can_construct<T, A...>::value>>
 		void set(A &&... a)
 		{
 			_state = T {forward<A>(a)...};

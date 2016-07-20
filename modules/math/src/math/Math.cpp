@@ -10,8 +10,6 @@ namespace Rapture
 {
 	template struct MathConstants<float>;
 	template struct MathConstants<double>;
-	template struct MathConstants<Vector<float>>;
-	template struct MathConstants<Vector<double>>;
 
 	template<> const float  MathConstants<float> ::one			= 1.0f;
 	template<> const double MathConstants<double>::one			= 1.0;
@@ -78,58 +76,74 @@ namespace Rapture
 	};
 
 	template struct Vector<float>;
-	template struct Vector<double>;
 	template struct Matrix<float>;
-	template struct Matrix<double>;
 	template struct Matrix2x2<float>;
-	template struct Matrix2x2<double>;
 
 	template<> const FloatVector  FloatVector ::positiveX = { 1,  0,  0,  0 };
-	template<> const DoubleVector DoubleVector::positiveX = { 1,  0,  0,  0 };
 	template<> const FloatVector  FloatVector ::positiveY = { 0,  1,  0,  0 };
-	template<> const DoubleVector DoubleVector::positiveY = { 0,  1,  0,  0 };
 	template<> const FloatVector  FloatVector ::positiveZ = { 0,  0,  1,  0 };
-	template<> const DoubleVector DoubleVector::positiveZ = { 0,  0,  1,  0 };
 	template<> const FloatVector  FloatVector ::positiveW = { 0,  0,  0,  1 };
-	template<> const DoubleVector DoubleVector::positiveW = { 0,  0,  0,  1 };
 	template<> const FloatVector  FloatVector ::negativeX = {-1,  0,  0,  0 };
-	template<> const DoubleVector DoubleVector::negativeX = {-1,  0,  0,  0 };
 	template<> const FloatVector  FloatVector ::negativeY = { 0, -1,  0,  0 };
-	template<> const DoubleVector DoubleVector::negativeY = { 0, -1,  0,  0 };
 	template<> const FloatVector  FloatVector ::negativeZ = { 0,  0, -1,  0 };
-	template<> const DoubleVector DoubleVector::negativeZ = { 0,  0, -1,  0 };
 	template<> const FloatVector  FloatVector ::negativeW = { 0,  0,  0, -1 };
-	template<> const DoubleVector DoubleVector::negativeW = { 0,  0,  0, -1 };
 
 	template<> const FloatVector  & FloatVector::left     = positiveX;
-	template<> const DoubleVector & DoubleVector::left    = positiveX;
 	template<> const FloatVector  & FloatVector::up       = positiveY;
-	template<> const DoubleVector & DoubleVector::up      = positiveY;
 	template<> const FloatVector  & FloatVector::forward  = positiveZ;
-	template<> const DoubleVector & DoubleVector::forward = positiveZ;
 	template<> const FloatVector  & FloatVector::identity = positiveW;
-	template<> const DoubleVector & DoubleVector::identity= positiveW;
 
 	template<> const FloatVector  FloatVector ::zero	  = { 0,  0,  0,  0 };
-	template<> const DoubleVector DoubleVector::zero	  = { 0,  0,  0,  0 };
 	template<> const FloatVector  FloatVector ::one		  = { 1,  1,  1,  1 };
-	template<> const DoubleVector DoubleVector::one		  = { 1,  1,  1,  1 };
 	template<> const FloatVector  FloatVector ::two		  = { 2,  2,  2,  2 };
-	template<> const DoubleVector DoubleVector::two		  = { 2,  2,  2,  2 };
 	template<> const FloatVector  FloatVector ::oneXYZ	  = { 1,  1,  1,  0 };
-	template<> const DoubleVector DoubleVector::oneXYZ	  = { 1,  1,  1,  0 };
 	template<> const FloatVector  FloatVector ::twoXYZ	  = { 2,  2,  2,  0 };
-	template<> const DoubleVector DoubleVector::twoXYZ	  = { 2,  2,  2,  0 };
 	template<> const FloatVector  FloatVector ::minusOne  = {-1, -1, -1, -1 };
-	template<> const DoubleVector DoubleVector::minusOne  = {-1, -1, -1, -1 };
 
 	template<> const FloatVector  FloatVector ::half	  = {.5f,.5f,.5f,.5f};
+
+	template struct MathConstants<Vector<float>>;
+#ifdef USE_AVX
+
+	template struct Vector<double>;
+	template struct Matrix<double>;
+	template struct Matrix2x2<double>;
+
+	template<> const DoubleVector DoubleVector::positiveX = { 1,  0,  0,  0 };
+	template<> const DoubleVector DoubleVector::positiveY = { 0,  1,  0,  0 };
+	template<> const DoubleVector DoubleVector::positiveZ = { 0,  0,  1,  0 };
+	template<> const DoubleVector DoubleVector::positiveW = { 0,  0,  0,  1 };
+	template<> const DoubleVector DoubleVector::negativeX = {-1,  0,  0,  0 };
+	template<> const DoubleVector DoubleVector::negativeY = { 0, -1,  0,  0 };
+	template<> const DoubleVector DoubleVector::negativeZ = { 0,  0, -1,  0 };
+	template<> const DoubleVector DoubleVector::negativeW = { 0,  0,  0, -1 };
+
+	template<> const DoubleVector & DoubleVector::left    = positiveX;
+	template<> const DoubleVector & DoubleVector::up      = positiveY;
+	template<> const DoubleVector & DoubleVector::forward = positiveZ;
+	template<> const DoubleVector & DoubleVector::identity= positiveW;
+
+	template<> const DoubleVector DoubleVector::zero	  = { 0,  0,  0,  0 };
+	template<> const DoubleVector DoubleVector::one		  = { 1,  1,  1,  1 };
+	template<> const DoubleVector DoubleVector::two		  = { 2,  2,  2,  2 };
+	template<> const DoubleVector DoubleVector::oneXYZ	  = { 1,  1,  1,  0 };
+	template<> const DoubleVector DoubleVector::twoXYZ	  = { 2,  2,  2,  0 };
+	template<> const DoubleVector DoubleVector::minusOne  = {-1, -1, -1, -1 };
+
 	template<> const DoubleVector DoubleVector::half	  = {.5, .5, .5, .5 };
+
+	template struct MathConstants<Vector<double>>;
 
 #define implement_vector_constants(constant)																													\
 	template<> const FloatVector  FloatVectorConstants ::constant = { FloatMath::constant,  FloatMath::constant,  FloatMath::constant,  FloatMath::constant  };	\
 	template<> const DoubleVector DoubleVectorConstants::constant = { DoubleMath::constant, DoubleMath::constant, DoubleMath::constant, DoubleMath::constant }	\
 
+#else
+
+#define implement_vector_constants(constant)																													\
+	template<> const FloatVector  FloatVectorConstants ::constant = { FloatMath::constant,  FloatMath::constant,  FloatMath::constant,  FloatMath::constant  };	\
+	
+#endif
 	implement_vector_constants(one);
 	implement_vector_constants(pi);
 	implement_vector_constants(pi2);
@@ -148,34 +162,26 @@ namespace Rapture
 
 #undef implement_vector_constants
 
-#define implement_vector_coefs(coefs)															\
-	template<> const FloatVector FloatVectorCfs::coefs[5] = {									\
-		{FloatCfs::coefs[0], FloatCfs::coefs[0], FloatCfs::coefs[0], FloatCfs::coefs[0]},		\
-		{FloatCfs::coefs[1], FloatCfs::coefs[1], FloatCfs::coefs[1], FloatCfs::coefs[1]},		\
-		{FloatCfs::coefs[2], FloatCfs::coefs[2], FloatCfs::coefs[2], FloatCfs::coefs[2]},		\
-		{FloatCfs::coefs[3], FloatCfs::coefs[3], FloatCfs::coefs[3], FloatCfs::coefs[3]},		\
-		{FloatCfs::coefs[4], FloatCfs::coefs[4], FloatCfs::coefs[4], FloatCfs::coefs[4]},		\
-	};																							\
-																								\
-	template<> const DoubleVector DoubleVectorCfs::coefs[5] = {									\
-		{DoubleCfs::coefs[0], DoubleCfs::coefs[0], DoubleCfs::coefs[0], DoubleCfs::coefs[0]},	\
-		{DoubleCfs::coefs[1], DoubleCfs::coefs[1], DoubleCfs::coefs[1], DoubleCfs::coefs[1]},	\
-		{DoubleCfs::coefs[2], DoubleCfs::coefs[2], DoubleCfs::coefs[2], DoubleCfs::coefs[2]},	\
-		{DoubleCfs::coefs[3], DoubleCfs::coefs[3], DoubleCfs::coefs[3], DoubleCfs::coefs[3]},	\
-		{DoubleCfs::coefs[4], DoubleCfs::coefs[4], DoubleCfs::coefs[4], DoubleCfs::coefs[4]},	\
-	};
+#define implement_vector_coefs(coefs, T)												\
+	template<> const T##Vector T##VectorCfs::coefs[5] = {								\
+		{T##Cfs::coefs[0], T##Cfs::coefs[0], T##Cfs::coefs[0], T##Cfs::coefs[0]},		\
+		{T##Cfs::coefs[1], T##Cfs::coefs[1], T##Cfs::coefs[1], T##Cfs::coefs[1]},		\
+		{T##Cfs::coefs[2], T##Cfs::coefs[2], T##Cfs::coefs[2], T##Cfs::coefs[2]},		\
+		{T##Cfs::coefs[3], T##Cfs::coefs[3], T##Cfs::coefs[3], T##Cfs::coefs[3]},		\
+		{T##Cfs::coefs[4], T##Cfs::coefs[4], T##Cfs::coefs[4], T##Cfs::coefs[4]},		\
+	};																		
 
-	implement_vector_coefs(sin);
-	implement_vector_coefs(cos);
+	implement_vector_coefs(sin, Float);
+	implement_vector_coefs(cos, Float);
+
+#ifdef USE_AVX
+	implement_vector_coefs(sin, Double);
+	implement_vector_coefs(cos, Double);
+#endif
 
 #undef implement_vector_coefs
 
 	template<> const Matrix2x2<float> Matrix2x2<float>::initial = {
-		 1,  0,
-		 0,  1
-	};
-
-	template<> const Matrix2x2<double> Matrix2x2<double>::initial = {
 		 1,  0,
 		 0,  1
 	};
@@ -185,14 +191,22 @@ namespace Rapture
 		 0, -1
 	};
 
-	template<> const Matrix2x2<double> Matrix2x2<double>::negative = {
-		-1,  0,
-		 0, -1
-	};
-
 	template<> const Matrix2x2<float> Matrix2x2<float>::inversemask = {
 		 1, -1,
 		-1,  1
+	};
+
+	template<> const Quaternion<float>  Quaternion<float> ::identity;
+
+#ifdef USE_AVX
+	template<> const Matrix2x2<double> Matrix2x2<double>::initial = {
+		1,  0,
+		0,  1
+	};
+
+	template<> const Matrix2x2<double> Matrix2x2<double>::negative = {
+		-1,  0,
+		0, -1
 	};
 
 	template<> const Matrix2x2<double> Matrix2x2<double>::inversemask = {
@@ -200,6 +214,6 @@ namespace Rapture
 		-1,  1
 	};
 
-	template<> const Quaternion<float>  Quaternion<float> ::identity;
 	template<> const Quaternion<double> Quaternion<double>::identity;
+#endif
 }

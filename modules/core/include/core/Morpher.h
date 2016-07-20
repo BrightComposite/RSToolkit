@@ -79,7 +79,7 @@ namespace Rapture
 		template<class T, class Context>
 		using is_context = is_same<decltype(declval<Context>().init(declval<Handle<T, Owner...> &>())), Handle<T, Owner...> &>;
 
-		template<class T, class ... A, useif <based_on<T, Base>::value, can_construct<T, A...>::value> endif>
+		template<class T, class ... A, useif<based_on<T, Base>::value, can_construct<T, A...>::value>>
 		Handle<T, Owner...> construct(A && ... args)
 		{
 			Handle<T, Owner...> h;
@@ -87,7 +87,7 @@ namespace Rapture
 			return h;
 		}
 
-		template<class T, class Context, useif <based_on<T, Base>::value, is_context<T, Context>::value> endif>
+		template<class T, class Context, useif<based_on<T, Base>::value, is_context<T, Context>::value>>
 		Handle<T, Owner...> construct(Context * ctx)
 		{
 			Handle<T, Owner...> h;
@@ -95,7 +95,7 @@ namespace Rapture
 			return h;
 		}
 
-		template<class T, useif <based_on<T, Base>::value, can_construct<T>::value> endif>
+		template<class T, useif<based_on<T, Base>::value, can_construct<T>::value>>
 		Handle<T, Owner...> require()
 		{
 			auto & p = place<T>();
@@ -108,7 +108,7 @@ namespace Rapture
 			return h;
 		}
 
-		template<class T, class Context, useif <based_on<T, Base>::value, is_context<T, Context>::value> endif>
+		template<class T, class Context, useif<based_on<T, Base>::value, is_context<T, Context>::value>>
 		Handle<T, Owner...> require(Context * ctx)
 		{
 			auto & p = place<T>();
@@ -121,7 +121,7 @@ namespace Rapture
 			return h;
 		}
 
-		template<class T, useif <based_on<T, Base>::value> endif>
+		template<class T, useif<based_on<T, Base>::value>>
 		Handle<T, Owner...> seek() const
 		{
 			auto i = map.find(morphid(T));
@@ -132,7 +132,7 @@ namespace Rapture
 			return handle_cast<T>(i->second);
 		}
 
-		template<class T, useif <based_on<T, Base>::value> endif>
+		template<class T, useif<based_on<T, Base>::value>>
 		void remove()
 		{
 			map.erase(morphid(T));

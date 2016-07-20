@@ -45,7 +45,7 @@ namespace Rapture
 
 		virtual api(ui) void draw(const IntPoint & pos);
 
-		template<class TextLayerClass = StaticTextLayer, useif <based_on<TextLayerClass, TextLayer>::value> endif>
+		template<class TextLayerClass = StaticTextLayer, useif<based_on<TextLayerClass, TextLayer>::value>>
 		static void set(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color {0.0f, 0.0f, 0.0f}, int fontSize = 14)
 		{
 			w->require<TextComponent>()->setLayer(Handle<TextLayerClass>(w, Handle<Text>(w->graphics(), s, font, color, fontSize)));

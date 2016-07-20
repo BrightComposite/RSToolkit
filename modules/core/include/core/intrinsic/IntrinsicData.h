@@ -76,8 +76,6 @@ namespace Rapture
 	declare_intrin_type(float,  4, __m128);
 #ifdef USE_AVX
 	declare_intrin_type(double, 4, __m256d);
-#else
-	declare_intrin_type(double, 4, __m128d[2]);
 #endif
 	
 	template<class T>
@@ -132,7 +130,7 @@ namespace Rapture
 			intrin_cvt(v, this->v);
 		}
 
-		template<class U, useif <is_intrin<T>::value> endif>
+		template<class U, useif<is_intrin<T>::value>>
 		IntrinData(const U & v)
 		{
 			intrin_cvt(v, this->v);
@@ -184,13 +182,13 @@ namespace Rapture
 			return *reinterpret_cast<const unit *>(&v[index]);
 		}
 
-		template<int I, useif <(I < N)> endif>
+		template<int I, useif<(I < N)>>
 		static inline T __vectorcall get(const IntrinData & in)
 		{
 			return in.data[I];
 		}
 
-		template<int I, useif <(I < N)> endif>
+		template<int I, useif<(I < N)>>
 		static inline void __vectorcall set(type & out, T value)
 		{
 			reinterpret_cast<IntrinData *>(out)->data[I] = value;
@@ -216,7 +214,7 @@ namespace Rapture
 			intrin_cvt(v, this->v);
 		}
 
-		template<class U, useif <is_intrin<U>::value> endif>
+		template<class U, useif<is_intrin<U>::value>>
 		IntrinData(const U & v)
 		{
 			intrin_cvt(v, this->v);
@@ -248,13 +246,13 @@ namespace Rapture
 			return data;
 		}
 
-		template<int I, useif <(I < 2)> endif>
+		template<int I, useif<(I < 2)>>
 		static inline T get(const IntrinData & in)
 		{
 			return in.data[I];
 		}
 
-		template<int I, useif <(I < 2)> endif>
+		template<int I, useif<(I < 2)>>
 		static inline void set(type & out, T value)
 		{
 			reinterpret_cast<IntrinData *>(out)->data[I] = value;
@@ -284,7 +282,7 @@ namespace Rapture
 			intrin_cvt(v, this->v);
 		}
 
-		template<class U, useif <is_intrin<T>::value> endif>
+		template<class U, useif<is_intrin<T>::value>>
 		IntrinData(const U & v)
 		{
 			intrin_cvt(v, this->v);
@@ -336,13 +334,13 @@ namespace Rapture
 			return *reinterpret_cast<const unit *>(&v[index]);
 		}
 
-		template<int I, useif <(I < 4)> endif>
+		template<int I, useif<(I < 4)>>
 		static inline T get(const IntrinData & in)
 		{
 			return in.data[I];
 		}
 
-		template<int I, useif <(I < 4)> endif>
+		template<int I, useif<(I < 4)>>
 		static inline void set(type & out, T value)
 		{
 			reinterpret_cast<IntrinData *>(out)->data[I] = value;
@@ -391,13 +389,13 @@ namespace Rapture
 			return data;
 		}
 
-		template<int I, useif <(I < 4)> endif>
+		template<int I, useif<(I < 4)>>
 		static inline T get(const IntrinData & in)
 		{
 			return in.data[I];
 		}
 
-		template<int I, useif <(I < 4)> endif>
+		template<int I, useif<(I < 4)>>
 		static inline void set(type & out, T value)
 		{
 			reinterpret_cast<IntrinData *>(out)->data[I] = value;

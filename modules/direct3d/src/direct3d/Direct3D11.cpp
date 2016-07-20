@@ -9,10 +9,6 @@
 
 namespace Rapture
 {
-#ifdef _DEBUG
-#define DEBUG_DX
-#endif
-
 	implement_link(Direct3D::D3DGraphics);
 
 	namespace Direct3D
@@ -55,10 +51,10 @@ namespace Rapture
 			D3DGraphics * graphics;
 		};
 
-		class AlphaTestState : public State<bool>
+		class BlendState : public State<bool>
 		{
 		public:
-			AlphaTestState(D3DGraphics * graphics) : State<bool>(true), graphics(graphics) {}
+			BlendState(D3DGraphics * graphics) : State<bool>(true), graphics(graphics) {}
 
 		protected:
 			virtual void change() override
@@ -82,7 +78,7 @@ namespace Rapture
 
 			_fillMode = handle<FillModeState>(this);
 			_depthTestMode = handle<DepthTestState>(this);
-			_alphaTestMode = handle<AlphaTestState>(this);
+			_blendMode = handle<BlendState>(this);
 		}
 
 		Debug::Debug(const ComHandle<ID3D11Device2, D3DGraphics> & device)
@@ -150,7 +146,7 @@ namespace Rapture
 
 			com_assert(hr);
 
-			ndevice.queryInterface(device);
+			ndevice.queryInterface(device); //TODO Add interface checking
 			ncontext.queryInterface(context);
 
 		#ifdef DEBUG_DX
@@ -269,6 +265,25 @@ namespace Rapture
 			Graphics3D::initFacilities();
 		}
 
+		void D3DGraphics::bind(const D3DShader<ShaderType::Vertex> * shader)
+		{
+			if(_vshader != shader)
+			{
+				_vshader = shader;
+				shader->program->layout->apply();
+				context->VSSetShader(shader->id, nullptr, 0);
+			}
+		}
+
+		void D3DGraphics::bind(const D3DShader<ShaderType::Pixel> * shader)
+		{
+			if(_pshader != shader)
+			{
+				_pshader = shader;
+				context->PSSetShader(shader->id, nullptr, 0);
+			}
+		}
+
 		void D3DGraphics::printInfo() {}
 		void D3DGraphics::printDebug() {}
 		void D3DGraphics::checkForErrors() {}
@@ -283,9 +298,9 @@ namespace Rapture
 			return Handle<D3DVertexLayout, D3DGraphics>(this, fingerprint);
 		}
 
-		Handle<VertexBuffer> D3DGraphics::createVertexBuffer(VertexLayout * layout, const VertexData & data, VertexTopology topology)
+		Handle<VertexBuffer> D3DGraphics::createVertexBuffer(VertexLayout * layout, const VertexData & data)
 		{
-			return Handle<D3DVertexBuffer, D3DGraphics>(this, layout, data, topology);
+			return Handle<D3DVertexBuffer, D3DGraphics>(this, layout, data);
 		}
 
 		Handle<IndexBuffer> D3DGraphics::createIndexBuffer(const VertexIndices & indices)

@@ -81,14 +81,14 @@ namespace Rapture
 			return !_enabled;
 		}
 
-		template<class Msg, class Dst, class ... F, useif <can_construct<Msg, const Subject *, F ...>::value> endif>
+		template<class Msg, class Dst, class ... F, useif<can_construct<Msg, const Subject *, F ...>::value>>
 		Handle<Msg> send(Dst & dest, F &&... fields) const
 		{
 			Handle<Msg> msg(this, forward<F>(fields)...);
 			return Channel<Dst, Msg>::transmit(msg, dest);
 		}
 
-		template<class Msg, class Dst, class ... F, useif <can_construct<Msg, const Subject *, F ...>::value> endif>
+		template<class Msg, class Dst, class ... F, useif<can_construct<Msg, const Subject *, F ...>::value>>
 		Handle<Msg> send(Dst * dest, F &&... fields) const
 		{
 			if(dest == nullptr)
@@ -139,7 +139,7 @@ namespace Rapture
 	template<class Subj>
 	using SubjectSet = CustomHashSet<Subj, std::hash<Handle<Subject>>>;
 
-	template<class Msg, class Dst, class ... F, useif <can_construct<Msg, Subject *, F ...>::value> endif>
+	template<class Msg, class Dst, class ... F, useif<can_construct<Msg, Subject *, F ...>::value>>
 	Handle<Msg> send(Dst & dest, F &&... fields)
 	{
 		Handle<Msg> msg(Subject::universe(), forward<F>(fields)...);

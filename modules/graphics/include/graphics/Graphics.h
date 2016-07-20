@@ -102,25 +102,25 @@ namespace Rapture
 
 		api(graphics) Handle<ImageData> requestSurfaceData() const;
 
-		template<class ... A, useif <can_construct<Color, A...>::value> endif>
+		template<class ... A, useif<can_construct<Color, A...>::value>>
 		void setClearColor(A &&... a)
 		{
 			_clearColor->set(forward<A>(a)...);
 		}
 
-		template<class C, class ... A, useif <is_color<C>::value, can_construct<C, A...>::value, not_same_types<C, Types<A...>>::value> endif>
+		template<class C, class ... A, useif<is_color<C>::value, can_construct<C, A...>::value, not_same_types<C, Types<A...>>::value>>
 		void setClearColor(A &&... a)
 		{
 			_clearColor->set(C {forward<A>(a)...});
 		}
 
-		template<class ... A, useif <can_construct<Color, A...>::value> endif>
+		template<class ... A, useif<can_construct<Color, A...>::value>>
 		void setColor(A &&... a)
 		{
 			_color->set(forward<A>(a)...);
 		}
 
-		template<class C, class ... A, useif <is_color<C>::value, can_construct<C, A...>::value, not_same_types<C, Types<A...>>::value> endif>
+		template<class C, class ... A, useif<is_color<C>::value, can_construct<C, A...>::value, not_same_types<C, Types<A...>>::value>>
 		void setColor(A &&... a)
 		{
 			_color->set(C {forward<A>(a)...});

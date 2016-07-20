@@ -10,7 +10,7 @@ namespace Rapture
 
 	MouseManipulator::MouseManipulator(Widget * w) : WidgetComponent(w)
 	{
-		connect(this, onMouseMove, *w->space());
+		connect(this, &MouseManipulator::onMouseMove, *w->space());
 	}
 
 	void MouseManipulator::onMouseMove(Handle<MouseMoveMessage> &, UISpace &)
@@ -52,7 +52,7 @@ namespace Rapture
 
 	MouseDragger::MouseDragger(Widget * w) : MouseManipulator(w)
 	{
-		connect(this, onMouseDown, *w);
+		connect(this, &MouseDragger::onMouseDown, *w);
 	}
 
 	void MouseDragger::onMouseDown(Handle<MouseDownMessage> &, Widget &)

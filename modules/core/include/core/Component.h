@@ -46,13 +46,13 @@ namespace Rapture
 		}
 
 	protected:
-		template<class C, useif <based_on<C, Component>::value> endif>
+		template<class C, useif<based_on<C, Component>::value>>
 		void link(C * c)
 		{
 			_links[MorphType<C>::id()] = c;
 		}
 
-		template<class C, useif <based_on<C, Component>::value> endif>
+		template<class C, useif<based_on<C, Component>::value>>
 		void unlink(C *)
 		{
 			_links.erase(MorphType<C>::id());
@@ -77,7 +77,7 @@ namespace Rapture
 		template<class T, class Context>
 		using is_context = is_same<decltype(declval<Context>().init(declval<Handle<T, Owner...> &>())), Handle<T, Owner...> &>;
 
-		template<class T, class ... A, useif <based_on<T, Base>::value, can_construct<T, A...>::value> endif>
+		template<class T, class ... A, useif<based_on<T, Base>::value, can_construct<T, A...>::value>>
 		Handle<T, Owner...> construct(A && ... args)
 		{
 			auto & p = map[MorphType<T>::id()];
@@ -90,7 +90,7 @@ namespace Rapture
 			return c;
 		}
 
-		template<class T, class Context, useif <based_on<T, Base>::value, is_context<T, Context>::value> endif>
+		template<class T, class Context, useif<based_on<T, Base>::value, is_context<T, Context>::value>>
 		Handle<T, Owner...> construct(Context * ctx)
 		{
 			auto & p = map[MorphType<T>::id()];
@@ -103,7 +103,7 @@ namespace Rapture
 			return c;
 		}
 
-		template<class T, useif <based_on<T, Base>::value, can_construct<T>::value> endif>
+		template<class T, useif<based_on<T, Base>::value, can_construct<T>::value>>
 		Handle<T, Owner...> require()
 		{
 			auto & p = map[MorphType<T>::id()];
@@ -116,7 +116,7 @@ namespace Rapture
 			return c;
 		}
 
-		template<class T, class Context, useif <based_on<T, Base>::value, is_context<T, Context>::value> endif>
+		template<class T, class Context, useif<based_on<T, Base>::value, is_context<T, Context>::value>>
 		Handle<T, Owner...> require(Context * ctx)
 		{
 			auto & p = map[MorphType<T>::id()];
@@ -129,7 +129,7 @@ namespace Rapture
 			return c;
 		}
 
-		template<class T, class C, useif <based_on<T, Base>::value, can_construct<T>::value> endif>
+		template<class T, class C, useif<based_on<T, Base>::value, can_construct<T>::value>>
 		Handle<T, Owner...> link(C * component)
 		{
 			auto c = require<T>();
@@ -137,7 +137,7 @@ namespace Rapture
 			return c;
 		}
 
-		template<class T, class C, class Context, useif <based_on<T, Base>::value, is_context<T, Context>::value> endif>
+		template<class T, class C, class Context, useif<based_on<T, Base>::value, is_context<T, Context>::value>>
 		Handle<T, Owner...> link(C * component, Context * ctx)
 		{
 			auto c = require<T>(ctx);
@@ -145,7 +145,7 @@ namespace Rapture
 			return c;
 		}
 
-		template<class T, class C, useif <based_on<T, Base>::value, can_construct<T>::value> endif>
+		template<class T, class C, useif<based_on<T, Base>::value, can_construct<T>::value>>
 		void unlink(C * component)
 		{
 			auto c = seek<T>();
@@ -154,7 +154,7 @@ namespace Rapture
 				c->unlink(component);
 		}
 
-		template<class T, useif <based_on<T, Base>::value> endif>
+		template<class T, useif<based_on<T, Base>::value>>
 		Handle<T, Owner...> seek() const
 		{
 			auto i = map.find(MorphType<T>::id());
@@ -165,7 +165,7 @@ namespace Rapture
 			return handle_cast<T>(i->second);
 		}
 
-		template<class T, useif <based_on<T, Base>::value> endif>
+		template<class T, useif<based_on<T, Base>::value>>
 		void remove()
 		{
 			auto i = map.find(MorphType<T>::id());

@@ -64,10 +64,10 @@ namespace Rapture
 		Vector(Vector && v) : data(move(v.data)) {}
 		Vector(Data && data) : data(std::forward<Data>(data)) {}
 
-		template<class U, useif <!is_same<T, U>::value> endif>
+		template<class U, useif<!is_same<T, U>::value>>
 		Vector(const Vector<U> & v) : data(intrin_cvt<IntrinType>(v.intrinsic)) {}
 
-		template<class U, useif <can_cast<U, Vector>::value> endif>
+		template<class U, useif<can_cast<U, Vector>::value>>
 		Vector(const U & v)
 		{
 			Cast<U, Vector>::cast(*this, v);
@@ -94,7 +94,7 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class U, useif <can_cast<U, Vector>::value> endif>
+		template<class U, useif<can_cast<U, Vector>::value>>
 		Vector & operator = (const U & v)
 		{
 			Cast<U, Vector>::cast(*this, v);
@@ -359,13 +359,13 @@ namespace Rapture
 			return x >= y ? 0 : y >= z ? 1 : 2;
 		}
 
-		template<byte X, byte Y, byte Z, byte W, useif <(X < 2 && Y < 2 && Z < 2 && W < 2)> endif>
+		template<byte X, byte Y, byte Z, byte W, useif<(X < 2 && Y < 2 && Z < 2 && W < 2)>>
 		Vector mask() const // select some components (e.g. if X == 1 then result.x = v.x else result.x = 0)
 		{
 			return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(X, Y, Z, W)>::get(), data);
 		}
 
-		template<uint Axis, useif <(Axis < 4)> endif>
+		template<uint Axis, useif<(Axis < 4)>>
 		Vector maskAxis() const // set all components of a array_list to zero except of one
 		{
 			return Intrin::bit_and(VectorMaskAxis<T, bitmask<Axis>::value>::get(), data);
@@ -391,7 +391,7 @@ namespace Rapture
 			return maskAxis<3>();
 		}
 
-		template<uint Axis, useif <(Axis < 4)> endif>
+		template<uint Axis, useif<(Axis < 4)>>
 		Vector clearAxis() const // set a single component to zero
 		{
 			return Intrin::bit_and(VectorMaskAxis<T, 0xF ^ bitmask<Axis>::value>::get(), data);
@@ -417,13 +417,13 @@ namespace Rapture
 			return clearAxis<3>();
 		}
 
-		template<byte X, byte Y, byte Z, byte W, useif <(X < 2 && Y < 2 && Z < 2 && W < 2)> endif>
+		template<byte X, byte Y, byte Z, byte W, useif<(X < 2 && Y < 2 && Z < 2 && W < 2)>>
 		Vector negate() const // negate some components (e.g. if X == 1 then result.x = -v.x else result.x = v.x)
 		{
 			return Intrin::bit_xor(VectorSignAxis<T, mk_mask4(X, Y, Z, W)>::get(), data);
 		}
 
-		template<uint Axis, useif <(Axis < 4)> endif>
+		template<uint Axis, useif<(Axis < 4)>>
 		Vector negateAxis() const // negate one component
 		{
 			return Intrin::bit_xor(VectorSignAxis<T, bitmask<Axis>::value>::get(), data);
@@ -449,7 +449,7 @@ namespace Rapture
 			return negateAxis<3>();
 		}
 
-		template<uint Axis, useif <(Axis < 4)> endif>
+		template<uint Axis, useif<(Axis < 4)>>
 		Vector spreadAxis() const // get a array_list filled with a single component of a src array_list
 		{
 			return shuffle<Axis, Axis, Axis, Axis>();
@@ -475,14 +475,14 @@ namespace Rapture
 			return spreadAxis<3>();
 		}
 
-		template<uint Axis, useif <(Axis < 4)> endif>
+		template<uint Axis, useif<(Axis < 4)>>
 		Vector & addAxis(const Vector & vec)
 		{
 			v += vec.maskAxis<Axis>();
 			return *this;
 		}
 
-		template<uint Axis, useif <(Axis < 4)> endif>
+		template<uint Axis, useif<(Axis < 4)>>
 		Vector & subtractAxis(const Vector & vec)
 		{
 			v -= vec.maskAxis<Axis>();
@@ -513,14 +513,14 @@ namespace Rapture
 			return *this;
 		}
 
-		template<uint Axis, useif <(Axis < 4)> endif>
+		template<uint Axis, useif<(Axis < 4)>>
 		Vector & addAxis(T val)
 		{
 			v[Axis] += val;
 			return *this;
 		}
 
-		template<uint Axis, useif <(Axis < 4)> endif>
+		template<uint Axis, useif<(Axis < 4)>>
 		Vector & subtractAxis(T val)
 		{
 			v[Axis] -= val;
@@ -542,19 +542,19 @@ namespace Rapture
 			return *this;
 		}
 
-		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)> endif>
+		template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
 		inline Vector shuffle() const
 		{
 			return Intrin::template shuffle<A, B, C, D>(data);
 		}
 
-		template<byte A, byte B, byte C, byte D, useif <(A < 4 && B < 4 && C < 4 && D < 4)> endif>
+		template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
 		inline Vector shuffle(const Data & v) const
 		{
 			return Intrin::template shuffle2<A, B, C, D>(data, v);
 		}
 
-		template<byte A, byte B, byte C, byte D, useif <(A < 2 && B < 2 && C < 2 && D < 2)> endif>
+		template<byte A, byte B, byte C, byte D, useif<(A < 2 && B < 2 && C < 2 && D < 2)>>
 		inline Vector blend(const Data & v) const
 		{
 			return Intrin::template blend<A, B, C, D>(data, v);
@@ -601,12 +601,15 @@ namespace Rapture
 	using ByteVector = Vector<byte>;
 	using IntVector = Vector<int>;
 	using FloatVector = Vector<float>;
-	using DoubleVector = Vector<double>;
 
 	using bvec = ByteVector;
 	using ivec = IntVector;
 	using fvec = FloatVector;
+
+#ifdef USE_AVX
+	using DoubleVector = Vector<double>;
 	using dvec = DoubleVector;
+#endif
 
 	template<class T>
 	struct BasicMath<Vector<T>, false>
@@ -737,13 +740,14 @@ namespace Rapture
 	};
 
 	using FloatVectorMath = VectorMath<float>;
-	using DoubleVectorMath = VectorMath<double>;
-
 	using FloatVectorCfs = VectorCfs<float>;
-	using DoubleVectorCfs = VectorCfs<double>;
-
 	using FloatVectorConstants = VectorConstants<float>;
+
+#ifdef USE_AVX
+	using DoubleVectorMath = VectorMath<double>;
+	using DoubleVectorCfs = VectorCfs<double>;
 	using DoubleVectorConstants = VectorConstants<double>;
+#endif
 
 	inline Vector<float> vec()
 	{
@@ -760,6 +764,7 @@ namespace Rapture
 		return {x, y, z, w};
 	}
 
+#ifdef USE_AVX
 	inline Vector<double> vecd()
 	{
 		return Vector<double>::zero;
@@ -774,6 +779,7 @@ namespace Rapture
 	{
 		return {x, y, z, w};
 	}
+#endif
 
 	template<typename T>
 	inline Vector<T> operator + (const Vector<T> & v1, const Vector<T> & v2)
@@ -895,37 +901,37 @@ namespace Rapture
 		return Intrinsic<T, 4>::div(v1, v2.data);
 	}
 
-	template<typename T, typename U, useif <std::is_pod<U> endif> endif>
+	template<typename T, typename U, useif<std::is_pod<U>>>
 	inline Vector<T> operator + (const Vector<T> & vec, U a)
 	{
 		return Intrinsic<T, 4>::add(vec.data, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 	}
 
-	template<typename T, typename U, useif <std::is_pod<U> endif> endif>
+	template<typename T, typename U, useif<std::is_pod<U>>>
 	inline Vector<T> operator - (const Vector<T> & vec, U a)
 	{
 		return Intrinsic<T, 4>::sub(vec.data, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 	}
 
-	template<typename T, typename U, useif <std::is_pod<U> endif> endif>
+	template<typename T, typename U, useif<std::is_pod<U>>>
 	inline Vector<T> operator * (const Vector<T> & vec, U a)
 	{
 		return Intrinsic<T, 4>::mul(vec.data, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 	}
 
-	template<typename T, typename U, useif <std::is_pod<U>::value> endif>
+	template<typename T, typename U, useif<std::is_pod<U>::value>>
 	inline Vector<T> operator / (const Vector<T> & vec, U a)
 	{
 		return Intrinsic<T, 4>::div(vec.data, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 	}
 
-	template<typename T, typename U, useif <std::is_pod<U>::value> endif>
+	template<typename T, typename U, useif<std::is_pod<U>::value>>
 	inline Vector<T> operator * (U a, const Vector<T> & vec)
 	{
 		return Intrinsic<T, 4>::mul(Intrinsic<T, 4>::fill(static_cast<T>(a)), vec.data);
 	}
 
-	template<typename T, typename U, useif <std::is_pod<U>::value> endif>
+	template<typename T, typename U, useif<std::is_pod<U>::value>>
 	inline Vector<T> operator / (U a, const Vector<T> & vec)
 	{
 		return Intrinsic<T, 4>::div(Intrinsic<T, 4>::fill(static_cast<T>(a)), vec.data);
@@ -978,10 +984,12 @@ namespace Rapture
 		return {static_cast<float>(v)};
 	}
 
+#ifdef USE_AVX
 	inline DoubleVector operator "" _vd(long double v)
 	{
 		return {static_cast<double>(v)};
 	}
+#endif
 
 	template<class T>
 	inline void print(String & s, const Vector<T> & v)
@@ -1000,6 +1008,7 @@ namespace Rapture
 			);
 	}
 
+#ifdef USE_AVX
 	inline void print(String & s, const intrin_t<double, 4> & v)
 	{
 		s << String::assemble(
@@ -1010,6 +1019,7 @@ namespace Rapture
 			IntrinData<double, 4>::get<3>(v), ")"
 			);
 	}
+#endif
 }
 
 //---------------------------------------------------------------------------

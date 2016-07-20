@@ -146,12 +146,12 @@ namespace Rapture
 
 	VertexElement VertexElement::pos2("p2", VertexElement::Position, 0, 2);
 	VertexElement VertexElement::pos3("p3", VertexElement::Position, 0, 3);
-	VertexElement VertexElement::color3("c3", VertexElement::GenericColor, 0, 3);
-	VertexElement VertexElement::Color("c4", VertexElement::GenericColor, 0, 4);
+	VertexElement VertexElement::color3("c3", VertexElement::Color, 0, 3);
+	VertexElement VertexElement::color4("c4", VertexElement::Color, 0, 4);
 	VertexElement VertexElement::tex("t", VertexElement::Texcoord, 0, 2);
 	VertexElement VertexElement::normal("n", VertexElement::Normal, 0, 3);
-	VertexElement VertexElement::secondaryColor3("s3", VertexElement::GenericColor, 1, 3);
-	VertexElement VertexElement::secondaryColor4("s4", VertexElement::GenericColor, 1, 4);
+	VertexElement VertexElement::secondaryColor3("s3", VertexElement::Color, 1, 3);
+	VertexElement VertexElement::secondaryColor4("s4", VertexElement::Color, 1, 4);
 
 	void GraphicModel::draw(int pass) const
 	{
@@ -159,19 +159,6 @@ namespace Rapture
 
 		technique->apply(pass);
 		mesh->draw();
-	}
-
-	void Mesh::draw() const
-	{
-		graphics->bind(vbuffer);
-		vbuffer->draw(this);
-	}
-
-	void IndexedMesh::draw() const
-	{
-		graphics->bind(vbuffer);
-		graphics->bind(ibuffer);
-		ibuffer->draw(this);
 	}
 
 	static Handle<Mesh> createMesh(Graphics3D * graphics, const FigureData & data)
@@ -202,24 +189,6 @@ namespace Rapture
 
 		_textures[index] = texture;
 		texture->apply();
-	}
-
-	void Graphics3D::bind(const VertexShader * shader)
-	{
-		if(_vshader != shader)
-		{
-			_vshader = shader;
-			_vshader->apply();
-		}
-	}
-
-	void Graphics3D::bind(const PixelShader * shader)
-	{
-		if(_pshader != shader)
-		{
-			_pshader = shader;
-			_pshader->apply();
-		}
 	}
 
 	void Graphics3D::bind(const VertexBuffer * buffer)
@@ -373,18 +342,12 @@ namespace Rapture
 
 	Handle<Mesh> Graphics3D::createMesh(VertexLayout * layout, const VertexData & data, VertexTopology topology)
 	{
-		return Handle<Mesh>(this, createVertexBuffer(layout, data, topology), layout->stride, data.start);
-	}
-
-	Handle<Mesh> Graphics3D::createMesh(const string & fingerprint, const VertexData & data, VertexTopology topology)
-	{
-		auto layout = getVertexLayout(fingerprint);
-		return Handle<Mesh>(this, createVertexBuffer(layout, data, topology), layout->stride, data.start);
+		return Handle<Mesh>(this, createVertexBuffer(layout, data), topology, data.start);
 	}
 
 	Handle<IndexedMesh> Graphics3D::createIndexedMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, VertexTopology topology, uint indicesLocation)
 	{
-		return Handle<IndexedMesh>(this, createVertexBuffer(layout, data, topology), createIndexBuffer(indices), layout->stride, data.start, indicesLocation);
+		return Handle<IndexedMesh>(this, createVertexBuffer(layout, data), createIndexBuffer(indices), topology, data.start, indicesLocation);
 	}
 
 	void Graphics3D::initFacilities()

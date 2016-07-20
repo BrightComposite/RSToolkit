@@ -58,10 +58,10 @@ namespace Rapture
 		Quaternion(const Data & data) : data {data} {}
 		Quaternion(Data && data) : data {std::forward<Data>(data)} {}
 
-		template<class U, useif <!is_same<T, U>::value> endif>
+		template<class U, useif<!is_same<T, U>::value>>
 		Quaternion(const Quaternion<U> & q) : v(q.v) {}
 
-		template<class U, useif <can_cast<U, Quaternion>::value> endif>
+		template<class U, useif<can_cast<U, Quaternion>::value>>
 		Quaternion(const U & v)
 		{
 			Cast<U, Quaternion>::cast(*this, v);
@@ -76,7 +76,7 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class U, useif <can_cast<U, Quaternion>::value> endif>
+		template<class U, useif<can_cast<U, Quaternion>::value>>
 		Quaternion & operator = (const U & q)
 		{
 			Cast<U, Quaternion>::cast(*this, q);

@@ -28,10 +28,8 @@ namespace Rapture
 	enum class ShaderCodeState
 	{
 		Raw,
-		Compiled,
-		Embedded
+		Compiled
 	};
-
 }
 
 namespace std
@@ -42,7 +40,7 @@ namespace std
 
 namespace Rapture
 {
-	subclass(ShaderCode, data<const void>);
+	subclass(ShaderCode, owned_data<void>);
 
 	struct ShaderCodeSet : Shared
 	{
@@ -86,37 +84,11 @@ namespace Rapture
 
 //---------------------------------------------------------------------------
 
-	template<ShaderType type>
-	class Shader {};
-
-	template<>
-	class Shader<ShaderType::Common> : public Shared
-	{
-		friend class Graphics3D;
-
-	public:
-		virtual ~Shader() {}
-
-	protected:
-		virtual void apply() const = 0;
-	};
-
-	template<>
-	class Shader<ShaderType::Vertex> : public Shader<ShaderType::Common>
+	class Shader : public Shared
 	{
 	public:
 		virtual ~Shader() {}
 	};
-
-	template<>
-	class Shader<ShaderType::Pixel> : public Shader<ShaderType::Common>
-	{
-	public:
-		virtual ~Shader() {}
-	};
-
-	using VertexShader = Shader<ShaderType::Vertex>;
-	using PixelShader  = Shader<ShaderType::Pixel>;
 
 	template<class T>
 	using is_shader_program = is_base_of<ShaderProgram, T>;

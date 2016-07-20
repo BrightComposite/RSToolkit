@@ -246,7 +246,7 @@ namespace Rapture
 		api(scene) void invalidate() const;
 		api(scene) void render() const;
 
-		template<class Obj, class ... A, useif <based_on<Obj, SceneObject>::value, can_construct<Obj, Scene *, A...>::value> endif>
+		template<class Obj, class ... A, useif<based_on<Obj, SceneObject>::value, can_construct<Obj, Scene *, A...>::value>>
 		Handle<Obj> append(A &&... args)
 		{
 			return Handle<Obj>(this, forward<A>(args)...);

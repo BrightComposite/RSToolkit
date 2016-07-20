@@ -20,16 +20,16 @@ namespace Rapture {
         Point()                     : x(static_cast<T>(0)),		y(static_cast<T>(0))     {}
 		Point(const Point & pt)		: x(pt.x),					y(pt.y)					 {}
 
-		template<typename Tx, typename Ty, useif <std::is_pod<Tx>::value, std::is_pod<Ty>::value> endif>
+		template<typename Tx, typename Ty, useif<std::is_pod<Tx>::value, std::is_pod<Ty>::value>>
         Point(Tx x, Ty y)           : x(static_cast<T>(x)),		y(static_cast<T>(y))     {}
 
-		template<typename U, useif <std::is_convertible<U, T>::value> endif>
+		template<typename U, useif<std::is_convertible<U, T>::value>>
 		Point(const U (&pt)[2])	: x(static_cast<T>(pt[0])),	y(static_cast<T>(pt[1]))	 {}
 
-		template<typename U, useif <not_same_type<T, U>::value, std::is_convertible<U, T>::value> endif>
+		template<typename U, useif<not_same_type<T, U>::value, std::is_convertible<U, T>::value>>
         explicit Point(const Point<U> & pt) : x(static_cast<T>(pt.x)),	y(static_cast<T>(pt.y))  {}
 
-		template<typename Tx, typename Ty, useif <std::is_pod<Tx>::value, std::is_pod<Ty>::value> endif>
+		template<typename Tx, typename Ty, useif<std::is_pod<Tx>::value, std::is_pod<Ty>::value>>
         void set(Tx x, Ty y)
         {
             this->x = static_cast<T>(x);
@@ -50,7 +50,7 @@ namespace Rapture {
             y += static_cast<T>(pt.y);
         }
 
-		template<typename U, useif <std::is_pod<U>::value> endif>
+		template<typename U, useif<std::is_pod<U>::value>>
         void add(U value)
         {
             x += static_cast<T>(value);
@@ -64,7 +64,7 @@ namespace Rapture {
 			y -= static_cast<T>(pt.y);
 		}
 
-		template<typename U, useif <std::is_pod<U>::value> endif>
+		template<typename U, useif<std::is_pod<U>::value>>
 		void subtract(U value)
 		{
 			x -= static_cast<T>(value);
@@ -78,7 +78,7 @@ namespace Rapture {
             y *= static_cast<T>(pt.y);
         }
 
-		template<typename U, useif <std::is_pod<U>::value> endif>
+		template<typename U, useif<std::is_pod<U>::value>>
         void multiply(U value)
         {
             x *= static_cast<T>(value);
@@ -92,7 +92,7 @@ namespace Rapture {
             y /= static_cast<T>(pt.y);
         }
 
-		template<typename U, useif <std::is_pod<U>::value> endif>
+		template<typename U, useif<std::is_pod<U>::value>>
         void divide(U value)
         {
             x /= static_cast<T>(value);
@@ -196,7 +196,7 @@ namespace Rapture {
             return *this;
         }
 
-		template<typename U, useif <std::is_pod<U>::value> endif>
+		template<typename U, useif<std::is_pod<U>::value>>
         Point & operator += (U value)
         {
             add(value);
@@ -210,7 +210,7 @@ namespace Rapture {
             return *this;
         }
 
-		template<typename U, useif <std::is_pod<U>::value> endif>
+		template<typename U, useif<std::is_pod<U>::value>>
         Point & operator -= (U value)
         {
 			subtract(value);
@@ -224,7 +224,7 @@ namespace Rapture {
             return *this;
         }
 
-		template<typename U, useif <std::is_pod<U>::value> endif>
+		template<typename U, useif<std::is_pod<U>::value>>
         Point & operator *= (U value)
         {
             multiply(value);
@@ -238,7 +238,7 @@ namespace Rapture {
             return *this;
         }
 
-		template<typename U, useif <std::is_pod<U>::value> endif>
+		template<typename U, useif<std::is_pod<U>::value>>
         Point & operator /= (U value)
         {
             divide(value);
@@ -251,7 +251,7 @@ namespace Rapture {
             return Point(*this) += pt;
         }
 
-		template<typename U, useif <std::is_pod<U>::value> endif>
+		template<typename U, useif<std::is_pod<U>::value>>
         Point operator + (U value) const
         {
             return Point(*this) += value;
@@ -263,7 +263,7 @@ namespace Rapture {
             return Point(*this) -= pt;
         }
 
-		template<typename U, useif <std::is_pod<U>::value> endif>
+		template<typename U, useif<std::is_pod<U>::value>>
         Point operator - (U value) const
         {
             return Point(*this) -= value;
@@ -275,7 +275,7 @@ namespace Rapture {
             return Point(*this) *= pt;
         }
 
-		template<typename U, useif <std::is_pod<U>::value> endif>
+		template<typename U, useif<std::is_pod<U>::value>>
         Point operator * (U value) const
         {
             return Point(*this) *= value;
@@ -287,7 +287,7 @@ namespace Rapture {
             return Point(*this) /= pt;
         }
 
-		template<typename U, useif <std::is_pod<U>::value> endif>
+		template<typename U, useif<std::is_pod<U>::value>>
         Point operator / (U value) const
         {
             return Point(*this) /= value;

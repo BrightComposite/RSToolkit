@@ -21,6 +21,7 @@ start_module(
 )
 
 set_module_folder(modules)
+set_module_api_key(opengl3_3)
 
 add_module_sources(
 	SRC_GROUP include Headers
@@ -34,6 +35,8 @@ add_module_sources(
 
 	SRC_GROUP src Sources
 		START_SECTION opengl
+			GLObjects.cpp
+			GLSurfaces.cpp
 			OpenGL3_3.cpp
 		END_SECTION
 )

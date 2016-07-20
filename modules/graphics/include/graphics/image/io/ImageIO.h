@@ -105,31 +105,31 @@ namespace Rapture
 			return instance().encoders[type];
 		}
 
-		template<class Decoder, useif <
+		template<class Decoder, useif<
 			based_on<Decoder, Singleton<Decoder>>::value,
 			based_on<Decoder, ImageDecoder>::value
-			> endif
+			>
 		>
 		static void setDecoder(const string & type, Type<Decoder> = {})
 		{
 			instance().decoders[type] = &Decoder::instance();
 		}
 
-		template<class Encoder, useif <
+		template<class Encoder, useif<
 			based_on<Encoder, Singleton<Encoder>>::value,
 			based_on<Encoder, ImageEncoder>::value
-			> endif
+			>
 		>
 		static void setEncoder(const string & type, Type<Encoder> = {})
 		{
 			instance().encoders[type] = &Encoder::instance();
 		}
 
-		template<class Converter, useif <
+		template<class Converter, useif<
 			based_on<Converter, Singleton<Converter>>::value,
 			based_on<Converter, ImageDecoder>::value,
 			based_on<Converter, ImageEncoder>::value
-			> endif
+			>
 		>
 		static void setConverter(const string & type, Type<Converter> = {})
 		{

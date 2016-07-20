@@ -187,14 +187,11 @@ namespace Rapture
 #define macrowrap(...) __VA_ARGS__
 
 /**
- *	Use it to prevent warnings about unused return value
- */
-#define absorb(...) auto && ____##__VA_ARGS__ =
-
-/**
  *	Short for-loop
  */
 #define repeat(var, times) for(int var = 0; var < times; ++var)
+
+#define inscope() //if(true)
 
 #define deny_copy(... /* Class */) \
 	__VA_ARGS__(const __VA_ARGS__ &) = delete; \

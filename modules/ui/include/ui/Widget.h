@@ -250,39 +250,39 @@ namespace Rapture
 		static api(ui) void calculateRegionRect(IntRect & out, const IntRect & offsets, const FloatRect & anchors, const Widget & parent);
 		static api(ui) void calculateOffsets(IntRect & out, const Widget & region, const Widget & parent);
 
-		template<class WidgetClass, typename ... A, selectif(0) <is_widget<WidgetClass>::value, can_construct<WidgetClass, Widget *, A...>::value> endif>
+		template<class WidgetClass, typename ... A, selectif(0)<is_widget<WidgetClass>::value, can_construct<WidgetClass, Widget *, A...>::value>>
 		inline Handle<WidgetClass> append(A && ...);
-		template<class LayerClass, typename ... A, selectif(1) <is_layer<LayerClass>::value, !is_widget_component<LayerClass>::value, can_construct<LayerClass, A...>::value> endif>
+		template<class LayerClass, typename ... A, selectif(1)<is_layer<LayerClass>::value, !is_widget_component<LayerClass>::value, can_construct<LayerClass, A...>::value>>
 		inline LayerClass * append(A && ...);
-		template<class Component, typename ... A, selectif(2) <is_widget_component<Component>::value, can_construct<Component,  Widget *, A...>::value> endif>
+		template<class Component, typename ... A, selectif(2)<is_widget_component<Component>::value, can_construct<Component,  Widget *, A...>::value>>
 		inline Handle<Component> append(A && ...);
 
 		api(ui) Handle<Widget> attach(const Handle<Widget> & child);
 		api(ui) void detach(Widget * child);
 
-		template<class Component, useif <is_widget_component<Component>::value> endif>
+		template<class Component, useif<is_widget_component<Component>::value>>
 		inline Handle<Component> & init(Handle<Component> & component);
-		template<class Component, useif <is_widget_component<Component>::value> endif>
+		template<class Component, useif<is_widget_component<Component>::value>>
 		inline Handle<Component> require();
-		template<class Component, class LinkComponent, useif <is_widget_component<Component>::value, is_widget_component<LinkComponent>::value> endif>
+		template<class Component, class LinkComponent, useif<is_widget_component<Component>::value, is_widget_component<LinkComponent>::value>>
 		inline Handle<Component> link(LinkComponent *);
-		template<class Component, useif <is_widget_component<Component>::value> endif>
+		template<class Component, useif<is_widget_component<Component>::value>>
 		inline Handle<Component> seek();
-		template<class Component, useif <is_widget_component<Component>::value> endif>
+		template<class Component, useif<is_widget_component<Component>::value>>
 		inline void detach();
 
-		template<class LayerClass, useif <is_layer<LayerClass>::value> endif>
+		template<class LayerClass, useif<is_layer<LayerClass>::value>>
 		inline LayerClass * attach(LayerClass * layer);
-		template<class LayerClass, useif <is_layer<LayerClass>::value> endif>
+		template<class LayerClass, useif<is_layer<LayerClass>::value>>
 		inline LayerClass * attach(const Handle<LayerClass> & layer);
-		template<class LayerClass, useif <is_layer<LayerClass>::value> endif>
+		template<class LayerClass, useif<is_layer<LayerClass>::value>>
 		inline LayerClass * attach(const UniqueHandle<LayerClass> & layer);
-		template<class Drawer, useif <is_widget_drawer<Drawer>::value> endif>
+		template<class Drawer, useif<is_widget_drawer<Drawer>::value>>
 		inline CustomLayer * attach(const Drawer & drawer, int order = 0);
 		inline void setLayerOrder(WidgetLayer * layer, int order);
 		inline void detach(WidgetLayer * layer);
 
-		template<class Drawer, useif <is_widget_drawer<Drawer>::value> endif>
+		template<class Drawer, useif<is_widget_drawer<Drawer>::value>>
 		inline Widget & operator << (const Drawer & drawer);
 
 		virtual bool isDisplayable() const
@@ -482,7 +482,7 @@ namespace Rapture
 	public:
 		CustomLayerComponent(Widget * w) : WidgetComponent(w) {}
 
-		template<class LayerClass, useif <is_layer<LayerClass>::value> endif>
+		template<class LayerClass, useif<is_layer<LayerClass>::value>>
 		LayerClass * add(const Handle<LayerClass> & layer)
 		{
 			_layers.push_back(layer);
@@ -643,46 +643,46 @@ namespace Rapture
 		return Handle<Widget>(*this, parent);
 	}
 
-	template<class WidgetClass, typename ... A, selectif_t<0>> // append widget
+	template<class WidgetClass, typename ... A, selected_t(0)> // append widget
 	inline Handle<WidgetClass> Widget::append(A && ... args)
 	{
 		return Handle<WidgetClass>(this, forward<A>(args)...);
 	}
 
-	template<class LayerClass, typename ... A, selectif_t<1>>
+	template<class LayerClass, typename ... A, selected_t(1)>
 	inline LayerClass * Widget::append(A && ... args) // append layer
 	{
 		return require<CustomLayerComponent>()->add(Handle<LayerClass>(forward<A>(args)...));
 	}
 
-	template<class Component, typename ... A, selectif_t<2>> // append component
+	template<class Component, typename ... A, selected_t(2)> // append component
 	inline Handle<Component> Widget::append(A && ... args)
 	{
 		return _components.construct<Component>(this, forward<A>(args)...);
 	}
 
-	template<class LayerClass, useif_t>
+	template<class LayerClass, used_t>
 	inline LayerClass * Widget::attach(LayerClass * layer)
 	{
 		_layers.insert(std::upper_bound(_layers.begin(), _layers.end(), layer, WidgetLayer::Sorter()), layer); // sorted insert
 		return layer;
 	}
 
-	template<class LayerClass, useif_t>
+	template<class LayerClass, used_t>
 	inline LayerClass * Widget::attach(const Handle<LayerClass> & layer)
 	{
 		_layers.insert(std::upper_bound(_layers.begin(), _layers.end(), layer, WidgetLayer::Sorter()), layer); // sorted insert
 		return layer;
 	}
 
-	template<class LayerClass, useif_t>
+	template<class LayerClass, used_t>
 	inline LayerClass * Widget::attach(const UniqueHandle<LayerClass> & layer)
 	{
 		_layers.insert(std::upper_bound(_layers.begin(), _layers.end(), layer, WidgetLayer::Sorter()), layer); // sorted insert
 		return layer;
 	}
 
-	template<class Drawer, useif_t>
+	template<class Drawer, used_t>
 	inline CustomLayer * Widget::attach(const Drawer & drawer, int order)
 	{
 		return append<CustomLayer>(drawer, order);
@@ -710,37 +710,37 @@ namespace Rapture
 		erase(_layers, layer);
 	}
 
-	template<class Component, useif_t>
+	template<class Component, used_t>
 	inline Handle<Component> & Widget::init(Handle<Component> & component)
 	{
 		return component.init(this);
 	}
 
-	template<class Component, useif_t>
+	template<class Component, used_t>
 	inline Handle<Component> Widget::require()
 	{
 		return _components.require<Component>(this);
 	}
 
-	template<class Component, class LinkComponent, useif_t>
+	template<class Component, class LinkComponent, used_t>
 	inline Handle<Component> Widget::link(LinkComponent * link)
 	{
 		return _components.link<Component>(link, this);
 	}
 
-	template<class Component, useif_t>
+	template<class Component, used_t>
 	inline Handle<Component> Widget::seek()
 	{
 		return _components.seek<Component>();
 	}
 
-	template<class Component, useif_t>
+	template<class Component, used_t>
 	inline void Widget::detach()
 	{
 		_components.remove<Component>();
 	}
 
-	template<class Drawer, useif_t>
+	template<class Drawer, used_t>
 	inline Widget & Widget::operator << (const Drawer & drawer)
 	{
 		attach(drawer);

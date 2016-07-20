@@ -166,9 +166,9 @@ namespace Rapture
 	template<class H, class ... T>
 	struct foreach_t<H, T ...>
 	{
-		template<typename Functor, bool Cond, class ... A, useif <
+		template<typename Functor, bool Cond, class ... A, useif<
 			is_same<decltype(Functor::template iterate<H>(declval<A>()...)), bool>::value
-			> endif
+			>
 		>
 		static inline bool iterate(A &&... args)
 		{
@@ -178,9 +178,9 @@ namespace Rapture
 			return foreach_t<T...>::template iterate<Functor, Cond>(forward<A>(args)...);
 		}
 
-		template<typename Functor, class ... A, useif <
+		template<typename Functor, class ... A, useif<
 			!is_empty<decltype(Functor::template iterate<H>(declval<A>()...))>::value
-			> endif
+			>
 		>
 		static inline void iterate(A &&... args)
 		{

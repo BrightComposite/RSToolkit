@@ -50,7 +50,7 @@ namespace Rapture
 
 		Contents() {}
 
-		template<class ... A, useif <can_construct_contents<T, A...>::value> endif>
+		template<class ... A, useif<can_construct_contents<T, A...>::value>>
 		Contents(A &&... args) :
 			Contents(contents_types<T>(), forward<A>(args)...) {}
 

@@ -61,9 +61,9 @@ namespace Rapture
 			static const uint index = shader_index;						\
 			static const ShaderType shader = ShaderType::shader_type;	\
 																		\
-			template<class ... A, useif <								\
+			template<class ... A, useif<								\
 				can_construct_contents<name, A...>::value				\
-				> endif													\
+				>													\
 			>															\
 			void set(A &&... args)										\
 			{															\

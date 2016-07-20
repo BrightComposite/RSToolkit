@@ -31,11 +31,11 @@ namespace Rapture
     class Exception : public runtime_error
     {
     public:
-		template<class H, class ... T, useif <
+		template<class H, class ... T, useif<
 			not_based_on<H, exception>::value,
 			can_construct<String, H>::value,
 			can_construct<String, T>::value...
-			> endif
+			>
 		>
 		Exception(H && head, T &&... tail) : runtime_error(""), data(forward<H>(head))
 		{
@@ -46,9 +46,9 @@ namespace Rapture
 		Exception(const Exception & except) : runtime_error(except), data(except.data) {}
 		Exception(Exception && except) : runtime_error(forward<Exception>(except)), data(move(except.data)) {}
 
-		template<class ... A, useif <
+		template<class ... A, useif<
 			can_construct<String, A>::value...
-			> endif
+			>
 		 >
 		Exception(const exception & except, A &&... args) : runtime_error(""), data(except.what())
 		{

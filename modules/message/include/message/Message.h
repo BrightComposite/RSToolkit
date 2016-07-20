@@ -37,7 +37,7 @@ namespace Rapture
 		template<class T>
 		struct Message : Rapture::Message, Rapture::Contents<T>
 		{
-			template<class ... A, useif <can_construct_contents<T, A...>::value> endif>
+			template<class ... A, useif<can_construct_contents<T, A...>::value>>
 			Message(const Subject * source, A &&... args) : Rapture::Message(source), Rapture::Contents<T>(forward<A>(args)...) {}
 		};
 	}

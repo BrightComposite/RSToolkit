@@ -16,8 +16,6 @@
 namespace Rapture
 {
 	class Graphics3D;
-	class Mesh;
-	class IndexedMesh;
 
 	class VertexData : public data<const void>
 	{
@@ -57,10 +55,9 @@ namespace Rapture
 	class VertexBuffer : public Shared
 	{
 	public:
-		VertexBuffer(VertexLayout * layout, const VertexData & vd, VertexTopology topology = VertexTopology::Triangles) : layout(layout), verticesCount(static_cast<uint>(vd.size / layout->stride)) {}
+		VertexBuffer(VertexLayout * layout, const VertexData & vd) : layout(layout), verticesCount(static_cast<uint>(vd.size / layout->stride)) {}
 
 		virtual void apply() const = 0;
-		virtual void draw(const Mesh * mesh) const = 0;
 
 		VertexLayout * layout;
 		uint verticesCount;
@@ -72,7 +69,6 @@ namespace Rapture
 		IndexBuffer(const VertexIndices & indices) : size(static_cast<uint>(indices.size())) {}
 
 		virtual void apply() const = 0;
-		virtual void draw(const IndexedMesh * mesh) const = 0;
 
 		uint size;
 	};
@@ -80,11 +76,10 @@ namespace Rapture
 	class Mesh : public Shared
 	{
 	public:
-		Mesh(Graphics3D * graphics, const Handle<VertexBuffer> & vbuffer, uint stride, uint verticesLocation = 0) : graphics(graphics), vbuffer(vbuffer), stride(stride), verticesLocation(verticesLocation) {}
+		Mesh(const Handle<VertexBuffer> & vbuffer, VertexTopology topology, uint stride, uint verticesLocation = 0) : vbuffer(vbuffer), stride(stride), verticesLocation(verticesLocation) {}
 
-		virtual api(graphics) void draw() const;
+		virtual api(graphics) void draw() const = 0;
 
-		Graphics3D * graphics;
 		Handle<VertexBuffer> vbuffer;
 		uint stride, verticesLocation;
 	};
@@ -92,9 +87,7 @@ namespace Rapture
 	class IndexedMesh : public Mesh
 	{
 	public:
-		IndexedMesh(Graphics3D * graphics, const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, uint stride, uint verticesLocation = 0, uint indicesLocation = 0) : Mesh(graphics, vbuffer, stride, verticesLocation), ibuffer(ibuffer), indicesLocation(indicesLocation) {}
-
-		virtual api(graphics) void draw() const override;
+		IndexedMesh(const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, VertexTopology topology, uint stride, uint verticesLocation = 0, uint indicesLocation = 0) : Mesh(vbuffer, topology, stride, verticesLocation), ibuffer(ibuffer), indicesLocation(indicesLocation) {}
 
 		Handle<IndexBuffer> ibuffer;
 		uint indicesLocation;

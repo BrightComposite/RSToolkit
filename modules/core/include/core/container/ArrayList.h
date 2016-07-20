@@ -41,18 +41,18 @@ namespace Rapture
 		std::sort(v.begin(), v.end());
 	}
 
-	template<typename Pred, typename T, useif <
+	template<typename Pred, typename T, useif<
 		is_callable<Pred, const T &, const T &>::value
-		> endif
+		>
 	>
 	void sort(array_list<T> & v)
 	{
 		std::sort(v.begin(), v.end(), Pred());
 	}
 
-	template<typename T, typename Pred, useif <
+	template<typename T, typename Pred, useif<
 		is_callable<Pred, const T &, const T &>::value
-		> endif
+		>
 	>
 	void sort(array_list<T> & v, Pred pred)
 	{

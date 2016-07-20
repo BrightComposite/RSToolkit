@@ -17,7 +17,7 @@ start_module(
 	RaptureFreeType    "freetype"
 )
 
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+if(${USE_DIRECT3D} EQUAL 1)
     require_module(RaptureDirect3D11 "direct3d")
 else()
     require_module(RaptureOpenGL3_3 "opengl")

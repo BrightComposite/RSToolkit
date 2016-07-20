@@ -57,10 +57,10 @@ namespace Rapture
 			return instance().decoders[type];
 		}
 
-		template<class Decoder, useif <
+		template<class Decoder, useif<
 			based_on<Decoder, Singleton<Decoder>>::value,
 			based_on<Decoder, FontDecoder>::value
-			> endif
+			>
 		>
 		static void setDecoder(const string & type, Type<Decoder> = {})
 		{

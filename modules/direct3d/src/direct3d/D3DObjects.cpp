@@ -50,30 +50,33 @@ namespace Rapture
 			);
 		}
 
-		D3DVertexBuffer::D3DVertexBuffer(D3DGraphics * graphics, VertexLayout * layout, const VertexData & vd, VertexTopology topology) : VertexBuffer(layout, vd, topology), graphics(graphics)
+		D3DMeshTrait::D3DMeshTrait(D3DGraphics * graphics, VertexTopology t) : graphics(graphics)
+		{
+			switch(t)
+			{
+				case VertexTopology::Triangles:
+					topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+					break;
+
+				case VertexTopology::TriangleStrip:
+					topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+					break;
+
+				case VertexTopology::Lines:
+					topology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+					break;
+
+				case VertexTopology::LineStrip:
+					topology = D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
+					break;
+			};
+		}
+
+		D3DVertexBuffer::D3DVertexBuffer(D3DGraphics * graphics, VertexLayout * layout, const VertexData & vd) : VertexBuffer(layout, vd), graphics(graphics)
 		{
 			if(vd.size % layout->stride != 0)
 				throw Exception("Size of vertex buffer doesn't matches its vertex input layout");
 			
-			switch(topology)
-			{
-				case VertexTopology::Triangles:
-					this->topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-					break;
-
-				case VertexTopology::TriangleStrip:
-					this->topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
-					break;
-
-				case VertexTopology::Lines:
-					this->topology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
-					break;
-
-				case VertexTopology::LineStrip:
-					this->topology = D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
-					break;
-			};
-
 			D3D11_BUFFER_DESC bd;
 			ZeroMemory(&bd, sizeof(bd));
 			bd.Usage = D3D11_USAGE_DEFAULT;
@@ -97,12 +100,6 @@ namespace Rapture
 			uint offset = 0;
 
 			graphics->context->IASetVertexBuffers(0, 1, &handle, &stride, &offset);
-			graphics->context->IASetPrimitiveTopology(topology);
-		}
-
-		void D3DVertexBuffer::draw(const Mesh * mesh) const
-		{
-			graphics->context->Draw(verticesCount - mesh->verticesLocation, mesh->verticesLocation);
 		}
 
 		D3DIndexBuffer::D3DIndexBuffer(D3DGraphics * graphics, const VertexIndices & indices) : IndexBuffer(indices), graphics(graphics)
@@ -130,14 +127,24 @@ namespace Rapture
 			graphics->context->IASetIndexBuffer(handle, DXGI_FORMAT_R16_UINT, 0);
 		}
 
-		void D3DIndexBuffer::draw(const IndexedMesh * mesh) const
+		void D3DMesh::draw() const
 		{
-			graphics->context->DrawIndexed(size - mesh->indicesLocation, mesh->indicesLocation, mesh->verticesLocation);
+			graphics->bind(vbuffer);
+			graphics->context->IASetPrimitiveTopology(topology);
+			graphics->context->Draw(vbuffer->verticesCount - verticesLocation, verticesLocation);
 		}
 
-		D3DShader<ShaderType::Common>::D3DShader(D3DShaderProgram * program) : program(program) {}
+		void D3DIndexedMesh::draw() const
+		{
+			graphics->bind(vbuffer);
+			graphics->bind(ibuffer);
+			graphics->context->IASetPrimitiveTopology(topology);
+			graphics->context->DrawIndexed(ibuffer->size - indicesLocation, indicesLocation, verticesLocation);
+		}
 
-		void D3DShader<ShaderType::Common>::read(const String & filename, Handle<ShaderCode> & out)
+		D3DShader::D3DShader(D3DShaderProgram * program) : program(program) {}
+
+		void D3DShader::read(const String & filename, Handle<ShaderCode> & out)
 		{
 			ComHandle<ID3DBlob> code;
 
@@ -149,7 +156,7 @@ namespace Rapture
 			out.init(code->GetBufferPointer(), code->GetBufferSize());
 		}
 
-		void D3DShader<ShaderType::Common>::compile(const String & filename, const String & entrance, const String & shaderModel, Handle<ShaderCode> & out)
+		void D3DShader::compile(const String & filename, const String & entrance, const String & shaderModel, Handle<ShaderCode> & out)
 		{
 			ComHandle<ID3DBlob> code;
 			DWORD flags = D3DCOMPILE_ENABLE_STRICTNESS;
@@ -166,7 +173,7 @@ namespace Rapture
 
 		//#define COMPILE_SHADERS
 
-		D3DShader<ShaderType::Vertex>::D3DShader(D3DShaderProgram * program, const String & path, ShaderCodeState state) : D3DShader<ShaderType::Common>(program)
+		D3DVertexShader::D3DVertexShader(D3DShaderProgram * program, const String & path, ShaderCodeState state) : D3DShader(program)
 		{
 			Handle<ShaderCode> code;
 
@@ -184,18 +191,12 @@ namespace Rapture
 			init(code);
 		}
 
-		D3DShader<ShaderType::Vertex>::D3DShader(D3DShaderProgram * program, const Handle<ShaderCode> & code) : D3DShader<ShaderType::Common>(program)
+		D3DVertexShader::D3DVertexShader(D3DShaderProgram * program, const Handle<ShaderCode> & code) : D3DShader(program)
 		{
 			init(code);
 		}
 
-		void D3DShader<ShaderType::Vertex>::apply() const
-		{
-			program->layout->apply();
-			program->graphics->context->VSSetShader(id, nullptr, 0);
-		}
-
-		void D3DShader<ShaderType::Vertex>::init(const Handle<ShaderCode> & code)
+		void D3DVertexShader::init(const Handle<ShaderCode> & code)
 		{
 			HRESULT hr = S_OK;
 
@@ -207,7 +208,7 @@ namespace Rapture
 			program->layout->accept(code);
 		}
 
-		D3DShader<ShaderType::Pixel>::D3DShader(D3DShaderProgram * program, const String & path, ShaderCodeState state) : D3DShader<ShaderType::Common>(program)
+		D3DPixelShader::D3DPixelShader(D3DShaderProgram * program, const String & path, ShaderCodeState state) : D3DShader(program)
 		{
 			Handle<ShaderCode> code;
 
@@ -225,17 +226,12 @@ namespace Rapture
 			init(code);
 		}
 
-		D3DShader<ShaderType::Pixel>::D3DShader(D3DShaderProgram * program, const Handle<ShaderCode> & code) : D3DShader<ShaderType::Common>(program)
+		D3DPixelShader::D3DPixelShader(D3DShaderProgram * program, const Handle<ShaderCode> & code) : D3DShader(program)
 		{
 			init(code);
 		}
 
-		void D3DShader<ShaderType::Pixel>::apply() const
-		{
-			program->graphics->context->PSSetShader(id, nullptr, 0);
-		}
-
-		void D3DShader<ShaderType::Pixel>::init(const Handle<ShaderCode> & code)
+		void D3DPixelShader::init(const Handle<ShaderCode> & code)
 		{
 			com_assert(
 				program->graphics->device->CreatePixelShader(code->ptr, code->size, nullptr, &id),

@@ -37,9 +37,9 @@ namespace Rapture
 	pp_seq_foreach(op_operator_getter, ~, OPS_ALL)
 
 #define inherit_operator(op, types)										\
-	template<class ... A, class B = pp_tuple_elem(1, types), useif <	\
+	template<class ... A, class B = pp_tuple_elem(1, types), useif<	\
 		op(pp_op_getter)<B>::value										\
-		> endif															\
+		>															\
 	>																	\
 	pp_tuple_elem(0, types) & operator op(pp_op_sign) (A &&... args)	\
 	{																	\
@@ -58,7 +58,7 @@ namespace Rapture
 															\
 	public:													\
 		template<class ... A,								\
-			useif <can_construct<Base, A...>::value> endif	\
+			useif<can_construct<Base, A...>::value>	\
 		>													\
 		Name(A &&... a) : Base(std::forward<A>(a)...) {}	\
 															\

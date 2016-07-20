@@ -27,13 +27,13 @@ namespace std
 
 namespace Rapture
 {
-	template<class T, useif <is_callable<std::hash<T>, const T &>::value> endif>
+	template<class T, useif<is_callable<std::hash<T>, const T &>::value>>
 	size_t hash(const T & value);
 
-	template<class T, useif <is_callable<std::hash<T>, const T &>::value> endif>
+	template<class T, useif<is_callable<std::hash<T>, const T &>::value>>
 	size_t ptr_hash(const T * value);
 
-	template<class T, skipif <is_callable<std::hash<T>, const T &>::value> endif>
+	template<class T, skipif<is_callable<std::hash<T>, const T &>::value>>
 	size_t ptr_hash(const T * value);
 
 	template<class T, bool isPod = std::is_pod<T>::value>
@@ -42,7 +42,7 @@ namespace Rapture
 		size_t _hashValue;
 
 	public:
-		template<typename ... A, useif <can_construct<T, A...>::value> endif>
+		template<typename ... A, useif<can_construct<T, A...>::value>>
 		Hashed(A &&... args) : T(forward<A>(args)...), _hashValue(std::hash<Hashed>()(static_cast<const T &>(*this))) {}
 
 		Hashed(const Hashed & val) : T(val), _hashValue(val._hashValue) {}
@@ -64,7 +64,7 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class A, skipif <based_on<A, Hashed>::value> endif>
+		template<class A, skipif<based_on<A, Hashed>::value>>
 		Hashed & operator = (A && val)
 		{
 			T::operator = (forward<A>(val));
@@ -183,19 +183,19 @@ namespace Rapture
 		}
 	};
 
-	template<class T, useif_t>
+	template<class T, used_t>
 	size_t hash(const T & value)
 	{
 		return std::hash<T>()(value);
 	}
 
-	template<class T, useif_t>
+	template<class T, used_t>
 	size_t ptr_hash(const T * value)
 	{
 		return value != nullptr ? std::hash<T>()(*value) : 0;
 	}
 
-	template<class T, skipif_t>
+	template<class T, skipped_t>
 	size_t ptr_hash(const T * value)
 	{
 		return reinterpret_cast<size_t>(value);

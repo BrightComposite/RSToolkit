@@ -29,6 +29,12 @@
 
 //---------------------------------------------------------------------------
 
+#ifdef _DEBUG
+#define DEBUG_DX
+#endif
+
+//---------------------------------------------------------------------------
+
 namespace Rapture
 {
 	using std::thread;
@@ -36,10 +42,11 @@ namespace Rapture
 	namespace Direct3D11
 	{
 		class D3DGraphics;
-		class D3DGraphics;
+		class D3DImage;
 		class D3DVertexLayout;
-		class D3DMesh;
-		class D3DIndexedMesh;
+
+		class D3DVertexShader;
+		class D3DPixelShader;
 	}
 
 	link_class(direct3d11, Direct3D11::D3DGraphics, Class<Graphics3D>);
@@ -65,6 +72,9 @@ namespace Rapture
 			using Graphics3D::init;
 			using Graphics3D::bind;
 			using Graphics3D::draw;
+
+			api(direct3d11) void bind(const D3DVertexShader * shader);
+			api(direct3d11) void bind(const D3DPixelShader * shader);
 
 			virtual api(direct3d11) void clip(const IntRect & rect) override;
 			virtual api(direct3d11) void present() const override;
@@ -95,24 +105,22 @@ namespace Rapture
 			ComHandle<IDXGIFactory2, D3DGraphics> dxgiFactory;
 
 		protected:
-			friend_graphics_provider(D3DGraphics);
-
 			api(direct3d11) D3DGraphics();
 			virtual api(direct3d11) ~D3DGraphics();
 
 			virtual api(direct3d11) Handle<VertexLayout> createVertexLayout(const string & fingerprint) override;
-			virtual api(direct3d11) Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data, VertexTopology topology) override;
+			virtual api(direct3d11) Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) override;
 			virtual api(direct3d11) Handle<IndexBuffer> createIndexBuffer(const VertexIndices & indices) override;
 
 			virtual api(direct3d11) UniqueHandle<UniformAdapter> createUniformAdapter(ShaderType shader, int index, size_t size) override;
 
 			virtual api(direct3d11) void initFacilities() override;
 
-			template<class Program, class ... A, useif <
+			template<class Program, class ... A, useif<
 				is_shader_program<Program>::value,
 				can_construct<Handle<ShaderCode>, A>::value...,
 				can_construct<Program, D3DGraphics *, VertexLayout *, ShaderCodeSet *>::value
-				> endif
+				>
 			>
 			void setShaderProgram(const string & id, VertexLayout * layout, A &&... args)
 			{
@@ -121,6 +129,9 @@ namespace Rapture
 
 			api(direct3d11) void initDevice();
 			api(direct3d11) void initShaders();
+
+			const D3DVertexShader * _vshader;
+			const D3DPixelShader * _pshader;
 
 			D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_NULL;
 			D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
@@ -177,13 +188,11 @@ namespace Rapture
 			virtual ~D3DVertexBuffer() {}
 
 			virtual api(direct3d11) void apply() const override;
-			virtual api(direct3d11) void draw(const Mesh * mesh) const override;
 
 		protected:
-			api(direct3d11) D3DVertexBuffer(D3DGraphics * graphics, VertexLayout * layout, const VertexData & vd, VertexTopology topology);
+			api(direct3d11) D3DVertexBuffer(D3DGraphics * graphics, VertexLayout * layout, const VertexData & vd);
 
 			D3DGraphics * graphics;
-			D3D_PRIMITIVE_TOPOLOGY topology;
 			ComHandle<ID3D11Buffer> handle;
 		};
 
@@ -195,13 +204,38 @@ namespace Rapture
 			virtual ~D3DIndexBuffer() {}
 
 			virtual api(direct3d11) void apply() const override;
-			virtual api(direct3d11) void draw(const IndexedMesh * mesh) const override;
 
 		protected:
 			api(direct3d11) D3DIndexBuffer(D3DGraphics * graphics, const VertexIndices & indices);
 
 			D3DGraphics * graphics;
 			ComHandle<ID3D11Buffer> handle;
+		};
+
+		class D3DMeshTrait
+		{
+		public:
+			api(direct3d11) D3DMeshTrait(D3DGraphics * graphics, VertexTopology topology);
+
+		protected:
+			D3D_PRIMITIVE_TOPOLOGY topology;
+			D3DGraphics * graphics;
+		};
+
+		class D3DMesh : public Mesh, public D3DMeshTrait
+		{
+		public:
+			D3DMesh(D3DGraphics * graphics, const Handle<VertexBuffer> & vbuffer, VertexTopology topology, uint stride, uint verticesLocation) : Mesh(vbuffer, topology, stride, verticesLocation), D3DMeshTrait(graphics, topology) {}
+
+			virtual api(direct3d11) void draw() const override;
+		};
+
+		class D3DIndexedMesh : public IndexedMesh, public D3DMeshTrait
+		{
+		public:
+			D3DIndexedMesh(D3DGraphics * graphics, const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, VertexTopology topology, uint stride, uint verticesLocation, uint indicesLocation) : IndexedMesh(vbuffer, ibuffer, topology, stride, verticesLocation, indicesLocation), D3DMeshTrait(graphics, topology) {}
+
+			virtual api(direct3d11) void draw() const override;
 		};
 
 //---------------------------------------------------------------------------
@@ -224,6 +258,7 @@ namespace Rapture
 		};
 
 //---------------------------------------------------------------------------
+		
 		class D3DShaderProgram : public ShaderProgram
 		{
 		public:
@@ -233,17 +268,7 @@ namespace Rapture
 			VertexLayout * layout;
 		};
 
-		template<ShaderType type>
-		class D3DShader {};
-
-		enum class ShaderCodeState
-		{
-			Raw,
-			Compiled
-		};
-
-		template<>
-		class D3DShader<ShaderType::Common>
+		class D3DShader : public Shader
 		{
 		public:
 			api(direct3d11) D3DShader(D3DShaderProgram * program);
@@ -255,33 +280,33 @@ namespace Rapture
 			D3DShaderProgram * program;
 		};
 
-		template<>
-		class D3DShader<ShaderType::Vertex> : public Shader<ShaderType::Vertex>, public D3DShader<ShaderType::Common>
+		class D3DVertexShader : public D3DShader
 		{
+			friend class D3DGraphics;
+
 			api(direct3d11) void init(const Handle<ShaderCode> & code);
 
 		public:
-			api(direct3d11) D3DShader(D3DShaderProgram * program, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
-			api(direct3d11) D3DShader(D3DShaderProgram * program, const Handle<ShaderCode> & code);
-			virtual ~D3DShader() {}
+			api(direct3d11) D3DVertexShader(D3DShaderProgram * program, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
+			api(direct3d11) D3DVertexShader(D3DShaderProgram * program, const Handle<ShaderCode> & code);
+			virtual ~D3DVertexShader() {}
 
-			virtual api(direct3d11) void apply() const override;
-
+		protected:
 			ComHandle<ID3D11VertexShader> id;
 		};
 
-		template<>
-		class D3DShader<ShaderType::Pixel> : public Shader<ShaderType::Pixel>, public D3DShader<ShaderType::Common>
+		class D3DPixelShader : public D3DShader
 		{
+			friend class D3DGraphics;
+
 			api(direct3d11) void init(const Handle<ShaderCode> & code);
 
 		public:
-			api(direct3d11) D3DShader(D3DShaderProgram * program, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
-			api(direct3d11) D3DShader(D3DShaderProgram * program, const Handle<ShaderCode> & code);
-			virtual ~D3DShader() {}
+			api(direct3d11) D3DPixelShader(D3DShaderProgram * program, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
+			api(direct3d11) D3DPixelShader(D3DShaderProgram * program, const Handle<ShaderCode> & code);
+			virtual ~D3DPixelShader() {}
 
-			virtual api(direct3d11) void apply() const override;
-
+		protected:
 			ComHandle<ID3D11PixelShader> id;
 		};
 
@@ -361,7 +386,7 @@ namespace Rapture
 			UISpace * _space;
 		};
 
-		class TextureSurface : virtual public RenderTargetSurface
+		class TextureSurface : public RenderTargetSurface
 		{
 			friend class D3DGraphics;
 
@@ -400,8 +425,8 @@ namespace Rapture
 			}
 
 		protected:
-			Handle<D3DShader<ShaderType::Vertex>> vs;
-			Handle<D3DShader<ShaderType::Pixel>> ps;
+			Handle<D3DVertexShader> vs;
+			Handle<D3DPixelShader> ps;
 		};
 	}
 

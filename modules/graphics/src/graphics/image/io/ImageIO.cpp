@@ -3,7 +3,6 @@
 #include <graphics/image/io/ImageIO.h>
 
 #include <iostream>
-#include <stack>
 
 //---------------------------------------------------------------------------
 
@@ -13,18 +12,16 @@ namespace Rapture
 	using std::ofstream;
 	using std::ios_base;
 
-	using std::stack;
-
 	void ImageIO::load(ImageData * output, const path & filepath)
 	{
 		using namespace boost::filesystem;
 
 		if(!exists(filepath))
-			throw Exception("File ", filepath.string(), " doesn't exist!");
+			throw Exception("File ", filepath.c_str(), " doesn't exist!");
 
 		OwnedByteData raw(static_cast<size_t>(file_size(filepath)));
 
-		ifstream input(filepath.string(), ios_base::binary);
+		ifstream input(filepath.c_str(), ios_base::binary);
 		input.read(reinterpret_cast<char *>(raw.ptr), raw.size);
 		input.close();
 
@@ -36,7 +33,7 @@ namespace Rapture
 		OwnedByteData raw;
 		write(&raw, get_extension(filepath), image);
 
-		ofstream output(filepath.string(), ios_base::binary | ios_base::trunc);
+		ofstream output(filepath.c_str(), ios_base::binary | ios_base::trunc);
 		output.write(reinterpret_cast<char *>(raw.ptr), raw.size);
 		output.close();
 	}

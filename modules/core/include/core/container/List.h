@@ -37,18 +37,18 @@ namespace Rapture
 		l.sort();
 	}
 
-	template<typename Pred, typename T, useif <
+	template<typename Pred, typename T, useif<
 		is_callable<Pred, const T &, const T &>::value
-		> endif
+		>
 	>
 	void sort(list<T> & l)
 	{
 		l.sort(Pred());
 	}
 
-	template<typename T, typename Pred, useif <
+	template<typename T, typename Pred, useif<
 		is_callable<Pred, const T &, const T &>::value
-		> endif
+		>
 	>
 	void sort(list<T> & l, Pred pred)
 	{

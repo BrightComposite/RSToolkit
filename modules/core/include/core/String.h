@@ -172,7 +172,7 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class T, useif <can_construct<String, T>::value> endif>
+		template<class T, useif<can_construct<String, T>::value>>
 		String & operator = (T && value)
 		{
 			return operator = (String(forward<T>(value)));
@@ -216,18 +216,18 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class T, useif <
+		template<class T, useif<
 			can_construct<String, T>::value,
 			not_same_type<String, T>::value,
 			not_same_type<WideString, T>::value
-			> endif
+			>
 		>
 		String & operator += (T && value)
 		{
 			return operator += (String(forward<T>(value)));
 		}
 
-		template<class T, useif <can_construct<String, T>::value> endif>
+		template<class T, useif<can_construct<String, T>::value>>
 		String & operator << (T && value)
 		{
 			return operator += (forward<T>(value));
@@ -340,21 +340,21 @@ namespace Rapture
 
 		String & flood(size_t start, size_t count, char sym, char limiter = '\0');
 
-		template<class T, class ... A, useif <
-				can_construct<String, T>::value,
-				can_construct<String, A>::value...
+		template<class T, class ... A, useif<
+			can_construct<String, T>::value,
+			can_construct<String, A>::value...
 			>
-			endif>
+		>
 		static inline String assemble(T && value, A &&... others)
 		{
 			return String(forward<T>(value)).add(forward<A>(others)...);
 		}
 
-		template<class T, class ... A, useif <
+		template<class T, class ... A, useif<
 			can_construct<String, T>::value,
 			can_construct<String, A>::value...
 			>
-			endif>
+		>
 		String & add(T && value, A &&... others)
 		{
 			operator += (forward<T>(value));
@@ -569,9 +569,9 @@ namespace Rapture
 		>
 		WideString(T value) : WideString(std::to_wstring(value)) {}
 
-		template<class T, useif <
+		template<class T, useif<
 			can_wstr_print<T>::value
-			> endif
+			>
 		>
 		WideString(const T & obj) : WideString()
 		{
@@ -631,7 +631,7 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class T, useif <can_construct<WideString, T>::value> endif>
+		template<class T, useif<can_construct<WideString, T>::value>>
 		WideString & operator = (const T & value)
 		{
 			return operator = (WideString(value));
@@ -673,13 +673,13 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class T, useif <can_construct<WideString, T>::value> endif>
+		template<class T, useif<can_construct<WideString, T>::value>>
 		WideString & operator += (const T & value)
 		{
 			return operator += (WideString(value));
 		}
 
-		template<class T, useif <can_construct<WideString, T>::value> endif>
+		template<class T, useif<can_construct<WideString, T>::value>>
 		WideString & operator << (const T & value)
 		{
 			return operator += (value);
@@ -792,7 +792,7 @@ namespace Rapture
 
 		WideString & flood(size_t start, size_t count, wchar_t sym, wchar_t limiter = '\0');
 
-		template<class T, class ... A, useif <
+		template<class T, class ... A, useif<
 			can_construct<WideString, T>::value,
 			can_construct<WideString, A>::value...
 			>
@@ -802,7 +802,7 @@ namespace Rapture
 			return WideString(forward<T>(value)).add(forward<A>(others)...);
 		}
 
-		template<class T, class ... A, useif <
+		template<class T, class ... A, useif<
 			can_construct<WideString, T>::value,
 			can_construct<WideString, A>::value...
 			>
@@ -968,25 +968,25 @@ namespace Rapture
 	template<class T>
 	struct printer {};
 
-	template<class T, useif <can_str_print<T>::value> endif>
+	template<class T, useif<can_str_print<T>::value>>
 	inline void print(String & target, const Handle<T> & object)
 	{
 		target << *object;
 	}
 
-	template<class T, selectif(0) <can_wstr_print<T>::value> endif>
+	template<class T, selectif(0)<can_wstr_print<T>::value>>
 	inline void print(WideString & target, const Handle<T> & object)
 	{
 		target << *object;
 	}
 
-	template<class T, selectif(1) <can_str_print<T>::value, !can_wstr_print<T>::value> endif>
+	template<class T, selectif(1)<can_str_print<T>::value, !can_wstr_print<T>::value>>
 	inline void print(WideString & target, const Handle<T> & object)
 	{
 		target << *object;
 	}
 
-	template<class T, useif <can_str_print<T>::value> endif>
+	template<class T, useif<can_str_print<T>::value>>
 	inline String print(const T & object)
 	{
 		String target;
@@ -995,7 +995,7 @@ namespace Rapture
 		return target;
 	}
 
-	template<class T, selectif(0) <can_wstr_print<T>::value> endif>
+	template<class T, selectif(0)<can_wstr_print<T>::value>>
 	inline WideString wprint(const T & object)
 	{
 		WideString target;
@@ -1004,7 +1004,7 @@ namespace Rapture
 		return target;
 	}
 
-	template<class T, selectif(1) <can_str_print<T>::value, !can_wstr_print<T>::value> endif>
+	template<class T, selectif(1)<can_str_print<T>::value, !can_wstr_print<T>::value>>
 	inline WideString wprint(const T & object)
 	{
 		return widen(print(object));

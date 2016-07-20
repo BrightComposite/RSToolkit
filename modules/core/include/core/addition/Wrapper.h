@@ -74,7 +74,7 @@ namespace Rapture
 			return wrap_method(pointer(), method);
 		}
 
-		template<typename V, useif <std::is_member_pointer<V>::value> endif>
+		template<typename V, useif<std::is_member_pointer<V>::value>>
 		inline V & operator ->* (V T::*member) const
 		{
 			return pointer()->*member;
@@ -115,7 +115,7 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class ... A, useif <can_construct<T, A...>::value> endif>
+		template<class ... A, useif<can_construct<T, A...>::value>>
 		static inline Wrapper create(A && ... args)
 		{
 			return T(forward<A>(args)...);
@@ -161,7 +161,7 @@ namespace Rapture
 			return *this;
 		}
 		
-		template<class ... A, useif <can_construct<T, A...>::value> endif>
+		template<class ... A, useif<can_construct<T, A...>::value>>
 		static inline Wrapper create(A && ... args)
 		{
 			return new T(forward<A>(args)...);
@@ -227,7 +227,7 @@ namespace Rapture
 			return wrap_method(pointer(), method);
 		}
 
-		template<typename V, useif <std::is_member_pointer<V>::value> endif>
+		template<typename V, useif<std::is_member_pointer<V>::value>>
 		inline const V & operator ->* (V T::*member) const
 		{
 			return pointer()->*member;
@@ -268,7 +268,7 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class ... A, useif <can_construct<T, A...>::value> endif>
+		template<class ... A, useif<can_construct<T, A...>::value>>
 		static inline Wrapper create(A && ... args)
 		{
 			return T(forward<A>(args)...);
@@ -314,7 +314,7 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class ... A, useif <can_construct<T, A...>::value> endif>
+		template<class ... A, useif<can_construct<T, A...>::value>>
 		static inline Wrapper create(A && ... args)
 		{
 			return new T(forward<A>(args)...);

@@ -88,9 +88,9 @@ namespace Rapture
 	*		Used to select types we need from a template function
 	*
 	*  Usage:
-	*		useif <same_type<target, type>::value> endif
-	*		useif <based_on<target, base_type>::value> endif
-	*		useif <same_types<tuple<target>, tuple<types>>::value> endif
+	*		useif<same_type<target, type>::value>
+	*		useif<based_on<target, base_type>::value>
+	*		useif<same_types<tuple<target>, tuple<types>>::value>
 	*/
 	template<class T, class U>
 	declare_bool_struct(same_type, is_same<decay_t<T>, decay_t<U>>::value);

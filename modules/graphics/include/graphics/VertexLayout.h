@@ -31,7 +31,7 @@ namespace Rapture
 		enum Type : int
 		{
 			Position = 0,
-			GenericColor    = 1,
+			Color    = 1,
 			Normal   = 2,
 			Texcoord = 3
 		};
@@ -44,7 +44,7 @@ namespace Rapture
 		static api(graphics) VertexElement pos2;
 		static api(graphics) VertexElement pos3;
 		static api(graphics) VertexElement color3;
-		static api(graphics) VertexElement Color;
+		static api(graphics) VertexElement color4;
 		static api(graphics) VertexElement secondaryColor3;
 		static api(graphics) VertexElement secondaryColor4;
 		static api(graphics) VertexElement tex;

@@ -39,18 +39,18 @@ namespace Rapture
 		Rect(const Rect & r) :
 			left(r.left), top(r.top), right(r.right), bottom(r.bottom) {}
 
-		template<typename Tl, typename Tt, typename Tr, typename Tb, useif <
+		template<typename Tl, typename Tt, typename Tr, typename Tb, useif<
 			std::is_pod<Tl>::value && std::is_pod<Tt>::value && std::is_pod<Tr>::value && std::is_pod<Tb>::value
-			> endif
+			>
 		>
         Rect(Tl left, Tt top, Tr right, Tb bottom) :
 			left(static_cast<T>(left)), top(static_cast<T>(top)), right(static_cast<T>(right)), bottom(static_cast<T>(bottom)) {}
 
-		template<typename Tw, typename Th, useif <std::is_pod<Tw>::value && std::is_pod<Th>::value> endif>
+		template<typename Tw, typename Th, useif<std::is_pod<Tw>::value && std::is_pod<Th>::value>>
 		Rect(Tw w, Th h) :
 			left(static_cast<T>(0)), top(static_cast<T>(0)), right(static_cast<T>(w)), bottom(static_cast<T>(h)) {}
 
-		template<typename U, useif <not_same_type<T, U>::value> endif>
+		template<typename U, useif<not_same_type<T, U>::value>>
 		explicit Rect(const Rect<U> & r) :
 			left(static_cast<T>(r.left)), top(static_cast<T>(r.top)), right(static_cast<T>(r.right)), bottom(static_cast<T>(r.bottom)) {}
 
@@ -70,7 +70,7 @@ namespace Rapture
 		Rect(const Size<U> & sz) :
 			left(static_cast<T>(0)), top(static_cast<T>(0)), right(static_cast<T>(sz.x)), bottom(static_cast<T>(sz.y)) {}
 
-		template<typename U, typename V, useif <std::is_pod<U>::value && std::is_pod<V>::value> endif>
+		template<typename U, typename V, useif<std::is_pod<U>::value && std::is_pod<V>::value>>
 		Rect(const initializer_list<U> & pt, const initializer_list<V> & sz) :
 			left(static_cast<T>(pt.begin()[0])),
 			top(static_cast<T>(pt.begin()[1])),

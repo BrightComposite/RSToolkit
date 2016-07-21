@@ -63,7 +63,7 @@ namespace Rapture
 																		\
 			template<class ... A, useif<								\
 				can_construct_contents<name, A...>::value				\
-				>													\
+				>														\
 			>															\
 			void set(A &&... args)										\
 			{															\

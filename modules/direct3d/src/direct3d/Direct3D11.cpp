@@ -265,22 +265,40 @@ namespace Rapture
 			Graphics3D::initFacilities();
 		}
 
-		void D3DGraphics::bind(const D3DShader<ShaderType::Vertex> * shader)
+		void D3DGraphics::bind(const D3DVertexShader * shader)
 		{
 			if(_vshader != shader)
 			{
 				_vshader = shader;
-				shader->program->layout->apply();
-				context->VSSetShader(shader->id, nullptr, 0);
+				_vshader->program->layout->apply();
+				context->VSSetShader(_vshader->id, nullptr, 0);
 			}
 		}
 
-		void D3DGraphics::bind(const D3DShader<ShaderType::Pixel> * shader)
+		void D3DGraphics::bind(const D3DPixelShader * shader)
 		{
 			if(_pshader != shader)
 			{
 				_pshader = shader;
-				context->PSSetShader(shader->id, nullptr, 0);
+				context->PSSetShader(_pshader->id, nullptr, 0);
+			}
+		}
+
+		void D3DGraphics::bind(const VertexBuffer * buffer)
+		{
+			if(_vbuffer != buffer)
+			{
+				_vbuffer = buffer;
+				_vbuffer->apply();
+			}
+		}
+
+		void D3DGraphics::bind(const IndexBuffer * buffer)
+		{
+			if(_ibuffer != buffer)
+			{
+				_ibuffer = buffer;
+				_ibuffer->apply();
 			}
 		}
 
@@ -306,6 +324,16 @@ namespace Rapture
 		Handle<IndexBuffer> D3DGraphics::createIndexBuffer(const VertexIndices & indices)
 		{
 			return Handle<D3DIndexBuffer, D3DGraphics>(this, indices);
+		}
+
+		Handle<Mesh> D3DGraphics::createMesh(const Handle<VertexBuffer> & buffer, VertexTopology topology, uint verticesLocation)
+		{
+			return Handle<D3DMesh>(this, buffer, topology, verticesLocation);
+		}
+
+		Handle<IndexedMesh> D3DGraphics::createMesh(const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology, uint verticesLocation, uint indicesLocation)
+		{
+			return Handle<D3DIndexedMesh>(this, buffer, createIndexBuffer(indices), topology, verticesLocation, indicesLocation);
 		}
 
 		UniqueHandle<UniformAdapter> D3DGraphics::createUniformAdapter(ShaderType shader, int index, size_t size)

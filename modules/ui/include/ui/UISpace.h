@@ -211,8 +211,8 @@ namespace Rapture
 
 #define WS_SIMPLE (WS_POPUP | WS_CLIPCHILDREN | WS_MINIMIZEBOX)
 
-	HWND createEmptyWindowHandle();
-	HWND createWindowHandle(const IntRect & rect, const wstring & caption, const wstring & windowClass, WNDPROC wndProc);
+	api(ui) HWND createEmptyWindowHandle();
+	api(ui) HWND createWindowHandle(const IntRect & rect, const wstring & caption, const wstring & windowClass, WNDPROC wndProc);
 }
 
 //---------------------------------------------------------------------------

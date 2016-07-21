@@ -31,8 +31,6 @@ namespace Rapture
 		static api(graphics) VertexData cube;
 		static api(graphics) VertexData texcube;
 		static api(graphics) VertexData colorcube;
-
-		uint start = 0;
 	};
 
 	class VertexIndices : public array_list<uint16_t>
@@ -76,18 +74,18 @@ namespace Rapture
 	class Mesh : public Shared
 	{
 	public:
-		Mesh(const Handle<VertexBuffer> & vbuffer, VertexTopology topology, uint stride, uint verticesLocation = 0) : vbuffer(vbuffer), stride(stride), verticesLocation(verticesLocation) {}
+		Mesh(const Handle<VertexBuffer> & vbuffer, VertexTopology topology, uint verticesLocation = 0) : vbuffer(vbuffer), verticesLocation(verticesLocation) {}
 
 		virtual api(graphics) void draw() const = 0;
 
 		Handle<VertexBuffer> vbuffer;
-		uint stride, verticesLocation;
+		uint verticesLocation;
 	};
 
 	class IndexedMesh : public Mesh
 	{
 	public:
-		IndexedMesh(const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, VertexTopology topology, uint stride, uint verticesLocation = 0, uint indicesLocation = 0) : Mesh(vbuffer, topology, stride, verticesLocation), ibuffer(ibuffer), indicesLocation(indicesLocation) {}
+		IndexedMesh(const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, VertexTopology topology, uint verticesLocation = 0, uint indicesLocation = 0) : Mesh(vbuffer, topology, verticesLocation), ibuffer(ibuffer), indicesLocation(indicesLocation) {}
 
 		Handle<IndexBuffer> ibuffer;
 		uint indicesLocation;

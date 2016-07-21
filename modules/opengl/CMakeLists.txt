@@ -38,6 +38,77 @@ add_module_sources(
 			GLObjects.cpp
 			GLSurfaces.cpp
 			OpenGL3_3.cpp
+
+			START_SECTION shaders
+				Shaders.cpp
+			END_SECTION
+		END_SECTION
+)
+
+add_shaders(
+	GLSL
+	resources Resources include Includes
+	opengl/shaders
+	Shaders.h
+		START_SECTION 2d
+			START_SECTION rect
+				vs.glsl
+				fs.glsl
+			END_SECTION
+
+			START_SECTION ellipse
+				vs.glsl
+				fs.glsl
+			END_SECTION
+
+			START_SECTION figure
+				vs.glsl
+				fs.glsl
+			END_SECTION
+
+			START_SECTION image
+				vs.glsl
+				fs.glsl
+			END_SECTION
+
+			START_SECTION text
+				vs.glsl
+				fs.glsl
+			END_SECTION
+
+			START_SECTION wired
+				START_SECTION rect
+					vs.glsl
+					fs.glsl
+				END_SECTION
+
+				START_SECTION ellipse
+					vs.glsl
+					fs.glsl
+				END_SECTION
+			END_SECTION
+		END_SECTION
+
+		START_SECTION 3d
+			START_SECTION basic
+				vs.glsl
+				fs.glsl
+			END_SECTION
+
+			START_SECTION color
+				vs.glsl
+				fs.glsl
+			END_SECTION
+
+			START_SECTION multicolor
+				vs.glsl
+				fs.glsl
+			END_SECTION
+
+			START_SECTION texture
+				vs.glsl
+				fs.glsl
+			END_SECTION
 		END_SECTION
 )
 

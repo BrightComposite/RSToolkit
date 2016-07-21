@@ -71,8 +71,6 @@ namespace Rapture
 		using Graphics::draw;
 
 		api(graphics) void bind(const Handle<Texture> & texture, uint index);
-		api(graphics) void bind(const VertexBuffer * buffer);
-		api(graphics) void bind(const IndexBuffer * buffer);
 
 		virtual api(graphics) void rectangle(const IntRect & rect) override final;
 		virtual api(graphics) void ellipse(const IntRect & rect) override final;
@@ -88,17 +86,27 @@ namespace Rapture
 		api(graphics) VertexLayout * getVertexLayout(const string & fingerprint);
 		api(graphics) const Handle<ShaderProgram> & getShaderProgram(const string & id);
 
-		api(graphics) Handle<Mesh> createMesh(VertexLayout * layout, const VertexData & data, VertexTopology topology = VertexTopology::Triangles);
-		api(graphics) Handle<IndexedMesh> createIndexedMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles, uint indicesLocation = 0);
+		virtual Handle<Mesh> createMesh(const Handle<VertexBuffer> & buffer, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0) = 0;
+		virtual Handle<IndexedMesh> createMesh(const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0, uint indicesLocation = 0) = 0;
 
-		Handle<Mesh> Graphics3D::createMesh(const string & fingerprint, const VertexData & data, VertexTopology topology = VertexTopology::Triangles)
+		Handle<Mesh> Graphics3D::createMesh(VertexLayout * layout, const VertexData & data, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0)
 		{
-			return createMesh(getVertexLayout(fingerprint), data, topology);
+			return createMesh(createVertexBuffer(layout, data), topology, verticesLocation);
 		}
 
-		Handle<IndexedMesh> Graphics3D::createIndexedMesh(const string & fingerprint, const VertexData & data, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles, uint indicesLocation = 0)
+		Handle<IndexedMesh> Graphics3D::createMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0, uint indicesLocation = 0)
 		{
-			return createIndexedMesh(getVertexLayout(fingerprint), data, indices, topology, indicesLocation);
+			return createMesh(createVertexBuffer(layout, data), indices, topology, verticesLocation, indicesLocation);
+		}
+
+		Handle<Mesh> Graphics3D::createMesh(const string & fingerprint, const VertexData & data, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0)
+		{
+			return createMesh(getVertexLayout(fingerprint), data, topology, verticesLocation);
+		}
+
+		Handle<IndexedMesh> Graphics3D::createMesh(const string & fingerprint, const VertexData & data, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0, uint indicesLocation = 0)
+		{
+			return createMesh(getVertexLayout(fingerprint), data, indices, topology, verticesLocation, indicesLocation);
 		}
 
 		float depth()
@@ -203,9 +211,6 @@ namespace Rapture
 
 		UnorderedMap<string, VertexLayout> vertexLayouts;
 		UnorderedMap<string, ShaderProgram> shaderPrograms;
-
-		Handle<const VertexBuffer> _vbuffer;
-		Handle<const IndexBuffer> _ibuffer;
 	};
 }
 

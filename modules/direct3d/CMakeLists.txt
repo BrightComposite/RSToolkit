@@ -45,9 +45,11 @@ add_module_sources(
 )
 
 add_shaders(
+	HLSL
 	resources Resources
 	include Includes
 	direct3d/shaders
+	Shaders.h
 		START_SECTION 2d
 			START_SECTION rect
 				vs.fx

@@ -47,6 +47,8 @@ namespace Rapture
 
 		class D3DVertexShader;
 		class D3DPixelShader;
+		class D3DVertexBuffer;
+		class D3DIndexBuffer;
 	}
 
 	link_class(direct3d11, Direct3D11::D3DGraphics, Class<Graphics3D>);
@@ -75,6 +77,8 @@ namespace Rapture
 
 			api(direct3d11) void bind(const D3DVertexShader * shader);
 			api(direct3d11) void bind(const D3DPixelShader * shader);
+			api(direct3d11) void bind(const VertexBuffer * buffer);
+			api(direct3d11) void bind(const IndexBuffer * buffer);
 
 			virtual api(direct3d11) void clip(const IntRect & rect) override;
 			virtual api(direct3d11) void present() const override;
@@ -86,6 +90,9 @@ namespace Rapture
 			virtual api(direct3d11) Handle<Image> createImage(const ImageData & data) override;
 			virtual api(direct3d11) Handle<Surface> createSurface(UISpace * space) override;
 			virtual api(direct3d11) Handle<Surface> createSurface(const IntSize & size, Handle<Image> & image) override;
+
+			virtual api(direct3d11) Handle<Mesh> createMesh(const Handle<VertexBuffer> & buffer, VertexTopology topology, uint verticesLocation) override;
+			virtual api(direct3d11) Handle<IndexedMesh> createMesh(const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology, uint verticesLocation, uint indicesLocation) override;
 
 			virtual Handle<GraphicsDebug> getDebug() const override
 			{
@@ -132,6 +139,9 @@ namespace Rapture
 
 			const D3DVertexShader * _vshader;
 			const D3DPixelShader * _pshader;
+
+			const VertexBuffer * _vbuffer;
+			const IndexBuffer * _ibuffer;
 
 			D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_NULL;
 			D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
@@ -183,6 +193,7 @@ namespace Rapture
 		class D3DVertexBuffer : public VertexBuffer
 		{
 			friend_owned_handle(D3DVertexBuffer, D3DGraphics);
+			friend class D3DGraphics;
 
 		public:
 			virtual ~D3DVertexBuffer() {}
@@ -199,6 +210,7 @@ namespace Rapture
 		class D3DIndexBuffer : public IndexBuffer
 		{
 			friend_owned_handle(D3DIndexBuffer, D3DGraphics);
+			friend class D3DGraphics;
 
 		public:
 			virtual ~D3DIndexBuffer() {}
@@ -225,7 +237,7 @@ namespace Rapture
 		class D3DMesh : public Mesh, public D3DMeshTrait
 		{
 		public:
-			D3DMesh(D3DGraphics * graphics, const Handle<VertexBuffer> & vbuffer, VertexTopology topology, uint stride, uint verticesLocation) : Mesh(vbuffer, topology, stride, verticesLocation), D3DMeshTrait(graphics, topology) {}
+			D3DMesh(D3DGraphics * graphics, const Handle<VertexBuffer> & vbuffer, VertexTopology topology, uint verticesLocation) : Mesh(vbuffer, topology, verticesLocation), D3DMeshTrait(graphics, topology) {}
 
 			virtual api(direct3d11) void draw() const override;
 		};
@@ -233,7 +245,7 @@ namespace Rapture
 		class D3DIndexedMesh : public IndexedMesh, public D3DMeshTrait
 		{
 		public:
-			D3DIndexedMesh(D3DGraphics * graphics, const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, VertexTopology topology, uint stride, uint verticesLocation, uint indicesLocation) : IndexedMesh(vbuffer, ibuffer, topology, stride, verticesLocation, indicesLocation), D3DMeshTrait(graphics, topology) {}
+			D3DIndexedMesh(D3DGraphics * graphics, const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, VertexTopology topology, uint verticesLocation, uint indicesLocation) : IndexedMesh(vbuffer, ibuffer, topology, verticesLocation, indicesLocation), D3DMeshTrait(graphics, topology) {}
 
 			virtual api(direct3d11) void draw() const override;
 		};

@@ -11,7 +11,7 @@ function(escape_regular OUT_STR STR)
 endfunction()
 
 if(WIN32)
-	function(add_shaders RES_DIR RES_GROUP INC_DIR INC_GROUP SHADERS_ROOT)
+	function(add_shaders SHADER_LANG RES_DIR RES_GROUP INC_DIR INC_GROUP SHADERS_ROOT OUTPUT_HEADER)
 		set(ROOT_DIR ${PROJECT_SOURCE_DIR})
 
 		set_module_sources(OUT_SHADERS_LIST
@@ -23,11 +23,21 @@ if(WIN32)
 
 		set(INCLUDE_ENTRIES)
 
-		foreach(src_entry ${ARGN})
-			string(REPLACE ".fx" ".inc" inc_entry ${src_entry})
-			list(APPEND INCLUDE_ENTRIES ${inc_entry})
-		endforeach()
+		if("${SHADER_LANG}" STREQUAL "HLSL")
+			foreach(src_entry ${ARGN})
+				string(REGEX REPLACE "\\.fx$" ".inc" inc_entry ${src_entry})
+				list(APPEND INCLUDE_ENTRIES ${inc_entry})
+			endforeach()
+		elseif("${SHADER_LANG}" STREQUAL "GLSL")
+			foreach(src_entry ${ARGN})
+				string(REGEX REPLACE "\\.glsl$" ".inc" inc_entry ${src_entry})
+				list(APPEND INCLUDE_ENTRIES ${inc_entry})
+			endforeach()
+		endif()
 
+		set(OUTPUT_HEADER_CONTENTS)
+		set(VARIABLES_LIST)
+		
 		foreach(shader ${OUT_SHADERS_LIST})
 			get_filename_component(FileName ${shader} NAME_WE)
 			get_filename_component(FileDir ${shader} DIRECTORY)
@@ -35,7 +45,12 @@ if(WIN32)
 			escape_regular(res_root ${ROOT_DIR}/${RES_DIR})
 			string(REGEX REPLACE ${res_root} "" ShaderPath ${FileDir})
 
-			set(InputFile ${RES_DIR}${ShaderPath}/${FileName}.fx) # Input shader
+			if("${SHADER_LANG}" STREQUAL "HLSL")
+				set(InputFile ${RES_DIR}${ShaderPath}/${FileName}.fx) # Input shader
+			elseif("${SHADER_LANG}" STREQUAL "GLSL")
+				set(InputFile ${RES_DIR}${ShaderPath}/${FileName}.glsl) # Input shader
+			endif()
+			
 			set(OutputFile ${INC_DIR}${ShaderPath}/${FileName}.inc) # Output .inc file
 
 			# Get type of shader to compile (vs, ps)
@@ -49,6 +64,8 @@ if(WIN32)
 
 			escape_regular(shaders_root ${SHADERS_ROOT})
 			string(REGEX REPLACE ${shaders_root} "" ShaderPath ${ShaderPath})
+			
+			set(OUTPUT_HEADER_CONTENTS "${OUTPUT_HEADER_CONTENTS}\r\n#include \"${ShaderPath}/${FileName}.inc\"")
 
 			if("${ShaderPath}" MATCHES "^[\\/]+")
 				string(REGEX REPLACE "^[\\/]+" "" ShaderPath ${ShaderPath})
@@ -57,9 +74,12 @@ if(WIN32)
 			string(REGEX REPLACE "[\\/]" _ ShaderId ${ShaderPath}/${FileName})
 			string(REGEX REPLACE "[^a-zA-Z0-9_]" "" ShaderId ${ShaderId})
 
+			set(OutputVariable shader_code_${ShaderId})
+			set(VARIABLES_LIST "${VARIABLES_LIST},\r\n${OutputVariable}")
+			
 			add_custom_command(
 				OUTPUT ${OutputFile}
-				COMMAND call ${CMAKE_COMMAND} -D Input=${InputFile} -D Output=${OutputFile} -D ShaderType=${ShaderType} -D ShaderId=${ShaderId} -P "${RAPTURE_TOOLS}/compile-shader.cmake"
+				COMMAND call ${CMAKE_COMMAND} -D Input=${InputFile} -D Output=${OutputFile} -D ShaderType=${ShaderType} -D OutputVariable=${OutputVariable} -D ShaderLang=${SHADER_LANG} -P "${RAPTURE_TOOLS}/compile-shader.cmake"
 				MAIN_DEPENDENCY ${InputFile}
 				COMMENT ""
 				WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

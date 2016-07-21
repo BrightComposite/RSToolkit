@@ -490,7 +490,7 @@ namespace Rapture
 		bool isIntegral(int radix = 10)
 		{
 			size_t i;
-			absorb() std::stoi(*this, &i, radix);
+			std::stoi(*this, &i, radix);
 
 			return i == size();
 		}
@@ -498,7 +498,7 @@ namespace Rapture
 		bool isFloating()
 		{
 			size_t i;
-			absorb() std::stof(*this, &i);
+			std::stof(*this, &i);
 
 			return i == size();
 		}
@@ -942,7 +942,7 @@ namespace Rapture
 		{
 			const wchar_t * ptr = this->data();
 			wchar_t * end;
-			absorb() wcstol(ptr, &end, radix);
+			wcstol(ptr, &end, radix);
 
 			return *end == '\0';
 		}
@@ -951,7 +951,7 @@ namespace Rapture
 		{
 			const wchar_t * ptr = this->data();
 			wchar_t * end;
-			absorb() wcstod(ptr, &end);
+			wcstod(ptr, &end);
 
 			return *end == '\0';
 		}

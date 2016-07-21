@@ -219,7 +219,7 @@ namespace Rapture
 	template<class G>
 	struct CommonGraphicsProvider
 	{
-		static inline Handle<G, CommonGraphicsProvider<G>> provide()
+		static inline Handle<G> provide()
 		{
 			Handle<G, CommonGraphicsProvider<G>> graphics(nothing);
 			graphics->initFacilities();

@@ -20,11 +20,9 @@ namespace Rapture
 
 		void GLVertexLayout::apply()
 		{
-			//graphics->_vertexAttributes.reserve(elements.size());
-
 			float * pointer = 0;
 
-			for(int i = 0; i < elements.size(); ++i)
+			for(size_t i = 0; i < elements.size(); ++i)
 			{
 				auto units = elements[i]->units;
 				glEnableVertexAttribArray(i);
@@ -37,10 +35,38 @@ namespace Rapture
 
 		void GLGraphics::VertexAttributes::reserve(uint count)
 		{
-			for(int i = 0; i < _count; ++i)
+			for(uint i = 0; i < _count; ++i)
 				glDisableVertexAttribArray(i);
 
 			_count = count;
+		}
+
+		GLVertexBuffer::GLVertexBuffer(GLGraphics * graphics, VertexLayout * layout, const VertexData & vd) : VertexBuffer(layout, vd)
+		{
+			if(vd.size % layout->stride != 0)
+				throw Exception("Size of vertex buffer doesn't matches its vertex input layout");
+
+			glGenBuffers(1, &handle);
+			glBindBuffer(GL_ARRAY_BUFFER, handle);
+			glBufferData(GL_ARRAY_BUFFER, vd.size, vd.ptr, GL_STATIC_DRAW);
+		}
+
+		void GLVertexBuffer::apply() const
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, handle);
+			layout->apply();
+		}
+
+		GLIndexBuffer::GLIndexBuffer(GLGraphics * graphics, const VertexIndices & indices) : IndexBuffer(indices), graphics(graphics)
+		{
+			glGenBuffers(1, &handle);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint), indices.data(), GL_STATIC_DRAW);
+		}
+
+		void GLIndexBuffer::apply() const
+		{
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
 		}
 
 		GLMeshTrait::GLMeshTrait(GLGraphics * graphics, VertexTopology t) : graphics(graphics)
@@ -63,54 +89,43 @@ namespace Rapture
 					topology = GL_LINE_STRIP;
 					break;
 			}
+
+			glGenVertexArrays(1, &id);
+			glBindVertexArray(id);
 		}
 
-		GLVertexBuffer::GLVertexBuffer(GLGraphics * graphics, VertexLayout * layout, const VertexData & vd) : VertexBuffer(layout, vd)
+		GLMesh::GLMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vbuffer, VertexTopology topology, uint verticesLocation) : Mesh(vbuffer, topology, verticesLocation), GLMeshTrait(graphics, topology)
 		{
-			if(vd.size % layout->stride != 0)
-				throw Exception("Size of vertex buffer doesn't matches its vertex input layout");
-
-			glGenBuffers(1, &handle);
-			glBufferData(GL_ARRAY_BUFFER, vd.size, vd.ptr, GL_STATIC_DRAW);
-		}
-
-		void GLVertexBuffer::apply() const
-		{
-			glBindBuffer(GL_ARRAY_BUFFER, handle);
-		}
-
-		GLIndexBuffer::GLIndexBuffer(GLGraphics * graphics, const VertexIndices & indices) : IndexBuffer(indices), graphics(graphics)
-		{
-			glGenBuffers(1, &handle);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint), indices.data(), GL_STATIC_DRAW);
-		}
-
-		void GLIndexBuffer::apply() const
-		{
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
+			vbuffer->apply();
 		}
 
 		void GLMesh::draw() const
 		{
-			graphics->bind(vbuffer);
+			graphics->bind(this);
 			glDrawArrays(topology, verticesLocation, vbuffer->verticesCount - verticesLocation);
+		}
+
+		GLIndexedMesh::GLIndexedMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, VertexTopology topology, uint verticesLocation, uint indicesLocation) : IndexedMesh(vbuffer, ibuffer, topology, verticesLocation, indicesLocation), GLMeshTrait(graphics, topology)
+		{
+			vbuffer->apply();
+			ibuffer->apply();
 		}
 
 		void GLIndexedMesh::draw() const
 		{
-			graphics->bind(vbuffer);
-			graphics->bind(ibuffer);
-			glDrawElements(topology, ibuffer->size, GL_UNSIGNED_INT, reinterpret_cast<void *>(verticesLocation));
+			graphics->bind(this);
+			glDrawElements(topology, ibuffer->size, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(indicesLocation));
 		}
 
-		GLShaderProgram::GLShaderProgram(GLGraphics * graphics, VertexLayout * layout) : graphics(graphics), layout(layout)
+		GLShaderProgram::GLShaderProgram(GLGraphics * graphics, VertexLayout * layout) : graphics(graphics), layout(layout), id(glCreateProgram())
 		{
-			GLuint prog = glCreateProgram();
+			if(id == 0)
+				throw Exception("Can't create new GLSL program!");
 
-			if(prog == 0)
-				throw Exception("in Shader Operator: Can't create new program!");
-
-			id = prog;
+			for(size_t i = 0; i < layout->elements.size(); ++i)
+			{
+				glBindAttribLocation(id, i, GLVertexLayout::attributes[layout->elements[i]->type]);
+			}
 		}
 
 		GLShaderProgram::~GLShaderProgram()
@@ -127,7 +142,7 @@ namespace Rapture
 		GLShader::GLShader(GLShaderProgram * program, const String & path, ShaderCodeState state, GLenum type) : program(program), id(glCreateShader(type))
 		{
 			if(id == 0)
-				throw Exception("in Shader Operator: Can't create new shader!");
+				throw Exception("Can't create new GLSL shader!");
 
 			switch(state)
 			{
@@ -145,7 +160,6 @@ namespace Rapture
 		{
 			if(id == 0)
 				throw Exception("in Shader Operator: Can't create new shader!");
-
 		}
 
 		GLShader::~GLShader()
@@ -181,7 +195,7 @@ namespace Rapture
 			input.read(reinterpret_cast<char *>(source->ptr), source->size);
 			input.close();
 
-			if(!initRaw(source, type));
+			if(!initRaw(source, type))
 				throw Exception("Can't compile GLSL shader! File: ", filepath.c_str());
 		}
 
@@ -212,7 +226,7 @@ namespace Rapture
 			input.read(reinterpret_cast<char *>(source->ptr), source->size);
 			input.close();
 
-			if(!initCompiled(source, type));
+			if(!initCompiled(source, type))
 				throw Exception("Can't load compiled GLSL shader! File: ", filepath.c_str());
 		}
 
@@ -242,195 +256,86 @@ namespace Rapture
 
 		GLPixelShader::GLPixelShader(GLShaderProgram * program, const Handle<ShaderCode> & code) : GLShader(program, code, GL_FRAGMENT_SHADER) {}
 
-		GLImage::GLImage(GLGraphics * graphics, uint width, uint height) : Image(graphics, width, height, ImageFormat::bgra), _ctx(graphics)
+		GLImage::GLImage(GLGraphics * graphics, uint width, uint height) : Image(graphics, width, height, ImageFormat::bgra), _graphics(graphics)
 		{
-			GL11_TEXTURE2D_DESC texDesc;
-
-			ZeroMemory(&texDesc, sizeof(texDesc));
-
-			texDesc.Width = _size.x;
-			texDesc.Height = _size.y;
-			texDesc.ArraySize = 1;
-			texDesc.MipLevels = 1;
-			texDesc.BindFlags = GL11_BIND_RENDER_TARGET | GL11_BIND_SHADER_RESOURCE;
-			texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-			texDesc.SampleDesc.Count = 1;
-			texDesc.SampleDesc.Quality = 0;
-			texDesc.Usage = GL11_USAGE_DEFAULT;
-			texDesc.CPUAccessFlags = 0;
-			texDesc.MiscFlags = 0;
-
-			com_assert(
-				graphics->device->CreateTexture2D(&texDesc, nullptr, &_handle)
-			);
-
-			com_assert(
-				graphics->device->CreateShaderResourceView(_handle, nullptr, &_resource)
-			);
-
-			GL11_SAMPLER_DESC sampDesc;
-			ZeroMemory(&sampDesc, sizeof(sampDesc));
-			sampDesc.Filter = GL11_FILTER_MIN_MAG_MIP_LINEAR;
-			sampDesc.AddressU = GL11_TEXTURE_ADDRESS_WRAP;
-			sampDesc.AddressV = GL11_TEXTURE_ADDRESS_WRAP;
-			sampDesc.AddressW = GL11_TEXTURE_ADDRESS_WRAP;
-			sampDesc.ComparisonFunc = GL11_COMPARISON_NEVER;
-			sampDesc.MinLOD = 0;
-			sampDesc.MaxLOD = GL11_FLOAT32_MAX;
-
-			com_assert(
-				graphics->device->CreateSamplerState(&sampDesc, &_state)
-			);
 		}
 
-		GLImage::GLImage(GLGraphics * graphics, const ImageData & data) : Image(graphics, data), _ctx(graphics)
+		GLImage::GLImage(GLGraphics * graphics, const ImageData & data) : Image(graphics, data), _graphics(graphics)
 		{
-			GL11_TEXTURE2D_DESC texDesc;
-			ZeroMemory(&texDesc, sizeof(GL11_TEXTURE2D_DESC));
+			uint w  = umath::round2pow(_size.x);
+			uint h = umath::round2pow(_size.y);
 
-			texDesc.Width = _size.x;
-			texDesc.Height = _size.y;
-			texDesc.ArraySize = 1;
-			texDesc.MipLevels = 1;
-			texDesc.BindFlags = GL11_BIND_SHADER_RESOURCE;
-			texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-			texDesc.SampleDesc.Count = 1;
-			texDesc.SampleDesc.Quality = 0;
-			texDesc.Usage = GL11_USAGE_DEFAULT;
-			texDesc.CPUAccessFlags = 0;
-			texDesc.MiscFlags = 0;
+			_scale[0] = float(_size.x) / float(w);
+			_scale[1] = float(_size.y) / float(h);
+
+			int internalformat;
+			int format;
+
+			auto newData = handle<ImageData>();
 
 			switch(_format)
 			{
 				case ImageFormat::grayscale:
-					texDesc.Format = DXGI_FORMAT_R8_UNORM;
+					internalformat = GL_R8;
+					format = GL_LUMINANCE;
 					break;
 
 				case ImageFormat::grayscale_alpha:
-					texDesc.Format = DXGI_FORMAT_R8G8_UNORM;
+					internalformat = GL_RG8;
+					format = GL_LUMINANCE_ALPHA;
 					break;
 
 				case ImageFormat::bgra:
-					texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+					internalformat = GL_RGBA8;
+					format = GL_BGRA;
 					break;
 
 				default:
-					texDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+					internalformat = GL_RGBA8;
+					format = GL_RGBA;
 					_format = ImageFormat::rgba;
+					data.convert(newData, _format);
 			}
 
-			auto newData = handle<ImageData>();
-			data.convert(newData, _format);
+			glActiveTexture(GL_TEXTURE0);
+			glGenTextures(1, &_id);
+			glBindTexture(GL_TEXTURE_2D, _id);
 
-			GL11_SUBRESOURCE_DATA texInitData;
-			ZeroMemory(&texInitData, sizeof(GL11_SUBRESOURCE_DATA));
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-			texInitData.pSysMem = newData->ptr;
-			texInitData.SysMemPitch = _size.x * preferredBpp(_format);
-			texInitData.SysMemSlicePitch = texInitData.SysMemPitch;
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-			com_assert(
-				graphics->device->CreateTexture2D(&texDesc, &texInitData, &_handle)
-			);
-
-			com_assert(
-				graphics->device->CreateShaderResourceView(_handle, nullptr, &_resource)
-			);
-
-			GL11_SAMPLER_DESC sampDesc;
-			ZeroMemory(&sampDesc, sizeof(sampDesc));
-			sampDesc.Filter = GL11_FILTER_MIN_MAG_MIP_LINEAR;
-			sampDesc.AddressU = GL11_TEXTURE_ADDRESS_WRAP;
-			sampDesc.AddressV = GL11_TEXTURE_ADDRESS_WRAP;
-			sampDesc.AddressW = GL11_TEXTURE_ADDRESS_WRAP;
-			sampDesc.ComparisonFunc = GL11_COMPARISON_NEVER;
-			sampDesc.MinLOD = 0;
-			sampDesc.MaxLOD = GL11_FLOAT32_MAX;
-
-			com_assert(
-				graphics->device->CreateSamplerState(&sampDesc, &_state)
-			);
+			glTexImage2D(GL_TEXTURE_2D, 0, internalformat, w, h, 0, format, GL_UNSIGNED_BYTE, newData->ptr);
 		}
 
 		void GLImage::apply() const
 		{
-			_ctx->context->PSSetShaderResources(0, 1, &_resource);
-			_ctx->context->PSSetSamplers(0, 1, &_state);
+			glBindTexture(0, _id);
 		}
 
 		void GLImage::requestData(ImageData * output) const
 		{
 			if(output == nullptr)
 				throw Exception("Output image buffer should be not-null!");
-
-			ComHandle<IGL11Texture2D> texture;
-			GL11_TEXTURE2D_DESC texDesc;
-
-			ComHandle<IGL11Resource> res;
-			ComHandle<IGL11Texture2D> ownTexture;
-
-			_handle->GetDesc(&texDesc);
-
-			texDesc.BindFlags = 0;
-			texDesc.CPUAccessFlags = GL11_CPU_ACCESS_READ;
-			texDesc.Usage = GL11_USAGE_STAGING;
-
-			com_assert(
-				_ctx->device->CreateTexture2D(&texDesc, nullptr, &texture)
-			);
-
-			_ctx->context->CopyResource(texture, _handle);
-
-			GL11_MAPPED_SUBRESOURCE resource;
-			com_assert(
-				_ctx->context->Map(texture, 0, GL11_MAP_READ, 0, &resource)
-			);
-
-			output->area = _size;
-			output->format = ImageFormat::rgba;
-
-			const uint pitch = output->width() * 4;
-
-			output->alloc();
-
-			byte * src = static_cast<byte *>(resource.pData);
-			byte * dst = output->ptr;
-
-			for(uint y = 0; y < output->height(); ++y, src += resource.RowPitch, dst += pitch)
-				memcpy(dst, src, pitch);
-
-			_ctx->context->Unmap(texture, 0);
 		}
 
-		GLUniformAdapter::GLUniformAdapter(GLGraphics * graphics, ShaderType shader, int index, size_t size) : graphics(graphics), index(index)
+		GLUniformAdapter::GLUniformAdapter(GLGraphics * graphics, ShaderType shader, int index, size_t size) : _graphics(graphics), _index(index), _size(size)
 		{
-			GL11_BUFFER_DESC bd;
-			ZeroMemory(&bd, sizeof(bd));
+			OwnedByteData data(size);
 
-			bd.Usage = GL11_USAGE_DEFAULT;
-			bd.ByteWidth = static_cast<uint>(size);
-			bd.BindFlags = GL11_BIND_CONSTANT_BUFFER;
-			bd.CPUAccessFlags = 0;
-
-			com_assert(
-				graphics->device->CreateBuffer(&bd, NULL, &buffer), "Can't create uniform buffer"
-			);
-
-			switch(shader)
-			{
-				case ShaderType::Vertex:
-					graphics->context->VSSetConstantBuffers(index, 1, &buffer);
-					break;
-
-				case ShaderType::Pixel:
-					graphics->context->PSSetConstantBuffers(index, 1, &buffer);
-					break;
-			}
+			glGenBuffers(1, &_buffer);
+			glBindBufferBase(GL_UNIFORM_BUFFER, _index, _buffer);
+			glBufferData(GL_UNIFORM_BUFFER, size, data.ptr, GL_STATIC_DRAW);
 		}
 
 		void GLUniformAdapter::update(const void * data)
 		{
-			graphics->context->UpdateSubresource(buffer, 0, NULL, data, 0, 0);
+			glBindBufferBase(GL_UNIFORM_BUFFER, _index, _buffer);
+			void * ptr = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
+			memcpy(ptr, data, _size);
+			glUnmapBuffer(GL_UNIFORM_BUFFER);
 		}
 	}
 }

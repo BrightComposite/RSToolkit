@@ -39,6 +39,7 @@ namespace Rapture
 		class GLImage;
 		class GLVertexLayout;
 		class GLShaderProgram;
+		class GLMeshTrait;
 	}
 
 	link_class(opengl3_3, OpenGL3_3::GLGraphics, Class<Graphics3D>);
@@ -75,6 +76,7 @@ namespace Rapture
 			using Graphics3D::draw;
 
 			api(opengl3_3) void bind(const GLShaderProgram * program);
+			api(opengl3_3) void bind(const GLMeshTrait * mesh);
 
 			virtual api(opengl3_3) void clip(const IntRect & rect) override;
 			virtual api(opengl3_3) void present() const override;
@@ -86,6 +88,9 @@ namespace Rapture
 			virtual api(opengl3_3) Handle<Image> createImage(const ImageData & data) override;
 			virtual api(opengl3_3) Handle<Surface> createSurface(UISpace * space) override;
 			virtual api(opengl3_3) Handle<Surface> createSurface(const IntSize & size, Handle<Image> & image) override;
+
+			virtual api(opengl3_3) Handle<Mesh> createMesh(const Handle<VertexBuffer> & buffer, VertexTopology topology, uint verticesLocation) override;
+			virtual api(opengl3_3) Handle<IndexedMesh> createMesh(const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology, uint verticesLocation, uint indicesLocation) override;
 
 			virtual Handle<GraphicsDebug> getDebug() const override
 			{
@@ -139,6 +144,7 @@ namespace Rapture
 
 			VertexAttributes _vertexAttributes;
 			const GLShaderProgram * _shaderProgram;
+			const GLMeshTrait * _mesh;
 		};
 
 		//---------------------------------------------------------------------------
@@ -157,7 +163,7 @@ namespace Rapture
 		protected:
 			float _scale[2];
 			uint  _id;
-			GLGraphics * _ctx;
+			GLGraphics * _graphics;
 		};
 
 		//---------------------------------------------------------------------------
@@ -218,10 +224,13 @@ namespace Rapture
 
 		class GLMeshTrait
 		{
+			friend class GLGraphics;
+
 		public:
 			api(opengl3_3) GLMeshTrait(GLGraphics * graphics, VertexTopology topology);
 
 		protected:
+			uint id;
 			uint topology;
 			GLGraphics * graphics;
 		};
@@ -229,7 +238,7 @@ namespace Rapture
 		class GLMesh : public Mesh, public GLMeshTrait
 		{
 		public:
-			GLMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vbuffer, VertexTopology topology, uint stride, uint verticesLocation) : Mesh(vbuffer, topology, stride, verticesLocation), GLMeshTrait(graphics, topology) {}
+			api(opengl3_3) GLMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vbuffer, VertexTopology topology, uint verticesLocation);
 
 			virtual api(opengl3_3) void draw() const;
 		};
@@ -237,7 +246,7 @@ namespace Rapture
 		class GLIndexedMesh : public IndexedMesh, public GLMeshTrait
 		{
 		public:
-			GLIndexedMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, VertexTopology topology, uint stride, uint verticesLocation, uint indicesLocation) : IndexedMesh(vbuffer, ibuffer, topology, stride, verticesLocation, indicesLocation), GLMeshTrait(graphics, topology) {}
+			api(opengl3_3) GLIndexedMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, VertexTopology topology, uint verticesLocation, uint indicesLocation);
 
 			virtual api(opengl3_3) void draw() const override;
 		};
@@ -254,11 +263,12 @@ namespace Rapture
 			virtual api(opengl3_3) void update(const void * data) override;
 
 		protected:
-			api(opengl3_3) GLUniformAdapter(GLGraphics * graphics, ShaderType shader, uint index, uint size);
+			api(opengl3_3) GLUniformAdapter(GLGraphics * graphics, ShaderType shader, int index, uint size);
 
-			uint buffer;
-			uint index;
-			GLGraphics * ctx;
+			uint _buffer;
+			int _index;
+			uint _size;
+			GLGraphics * _graphics;
 		};
 
 		//---------------------------------------------------------------------------

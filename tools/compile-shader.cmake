@@ -24,5 +24,12 @@ cmake_minimum_required(VERSION 3.0)
 		endif()
 	endif()
 		
-	execute_process(COMMAND fxc /nologo "/T${ShaderType}_4_0" /Zpr /Fh ${Output} /Vn shader_code_${ShaderId} ${Input})
+	if("${ShaderLang}" STREQUAL "HLSL")
+		execute_process(COMMAND fxc /nologo "/T${ShaderType}_4_0" /Zpr /Fh ${Output} /Vn ${OutputVariable} ${Input})
+	elseif("${ShaderLang}" STREQUAL "GLSL")
+		file(READ ${Input} Contents)
+		set(Contents "static const char ${OutputVariable}[] = R\"SHADER(\r\n${Contents}\r\n)SHADER\"\;")
+		file(WRITE ${Output} ${Contents})
+	endif()
+	
 	file(WRITE ${TimestampFile} ${Timestamp})

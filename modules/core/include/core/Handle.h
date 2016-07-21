@@ -28,6 +28,11 @@ namespace Rapture
 	template<class T>
 	struct PointerDeleter
 	{
+		static void free(T * ptr)
+		{
+			delete ptr;
+		}
+
 		void operator()(T * ptr)
 		{
 			delete ptr;
@@ -310,7 +315,7 @@ namespace Rapture
 				--_shared->_refs;
 
 				if(_shared->_refs <= 0)
-					delete _shared;
+					PointerDeleter<T>::free(_shared);
 			}
 		}
 
@@ -648,7 +653,7 @@ namespace Rapture
 				--_shared->_refs;
 
 				if(_shared->_refs <= 0)
-					delete _shared;
+					PointerDeleter<T>::free(_shared);
 			}
 		}
 

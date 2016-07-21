@@ -6,6 +6,7 @@
 
 //---------------------------------------------------------------------------
 
+#pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "msimg32.lib")
 #pragma comment(lib, "winmm.lib")
@@ -175,6 +176,15 @@ namespace Rapture
 			}
 		}
 
+		void GLGraphics::bind(const GLMeshTrait * mesh)
+		{
+			if(_mesh != mesh)
+			{
+				_mesh = mesh;
+				glBindVertexArray(mesh->id);
+			}
+		}
+
 		void GLGraphics::printInfo() {}
 		void GLGraphics::printDebug() {}
 		void GLGraphics::checkForErrors() {}
@@ -197,6 +207,16 @@ namespace Rapture
 		Handle<IndexBuffer> GLGraphics::createIndexBuffer(const VertexIndices & indices)
 		{
 			return Handle<GLIndexBuffer, GLGraphics>(this, indices);
+		}
+
+		Handle<Mesh> GLGraphics::createMesh(const Handle<VertexBuffer> & buffer, VertexTopology topology, uint verticesLocation)
+		{
+			return Handle<GLMesh>(this, buffer, topology, verticesLocation);
+		}
+
+		Handle<IndexedMesh> GLGraphics::createMesh(const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology, uint verticesLocation, uint indicesLocation)
+		{
+			return Handle<GLIndexedMesh>(this, buffer, createIndexBuffer(indices), topology, verticesLocation, indicesLocation);
 		}
 
 		UniqueHandle<UniformAdapter> GLGraphics::createUniformAdapter(ShaderType shader, int index, size_t size)

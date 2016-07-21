@@ -2,9 +2,10 @@
  *
  */
 
-cbuffer Color : register(b1)
+cbuffer Color : register(b0)
 {
 	float4 color;
+	float lineWidth;
 };
 
 struct VS_OUTPUT

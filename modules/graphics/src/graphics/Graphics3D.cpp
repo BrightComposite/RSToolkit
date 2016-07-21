@@ -8,28 +8,25 @@ namespace Rapture
 {
 	implement_link(Graphics3D);
 
-	static const float quad2dData[] =
-	{
+	VertexData VertexData::quad2d({
 		-1.0f,  1.0f,
 		 1.0f,  1.0f,
 		 1.0f, -1.0f,
 	    -1.0f,  1.0f,
 		 1.0f, -1.0f,
 		-1.0f, -1.0f
-	};
+	});
 
-	static const float texquad2dData[] =
-	{
+	VertexData VertexData::texquad2d({
 		-1.0f,  1.0f,	0.0f, 0.0f,
 		 1.0f,  1.0f,	1.0f, 0.0f,
 		 1.0f, -1.0f,	1.0f, 1.0f,
 	    -1.0f,  1.0f,	0.0f, 0.0f,
 		 1.0f, -1.0f,	1.0f, 1.0f,
 		-1.0f, -1.0f,	0.0f, 1.0f
-	};
+	});
 
-	static const float linequad2dData[] =
-	{
+	VertexData VertexData::linequad2d({
 		-1.0f,  1.0f,
 	 	 1.0f,  1.0f,
 		 1.0f,  1.0f,
@@ -38,30 +35,27 @@ namespace Rapture
 		-1.0f, -1.0f,
 		-1.0f, -1.0f,
 		-1.0f,  1.0f
-	};
+	});
 
-	static const float quad3dData[] =
-	{
+	VertexData VertexData::quad3d({
 		-1.0f,  1.0f, 0.0f,
 		 1.0f,  1.0f, 0.0f,
 		 1.0f, -1.0f, 0.0f,
 		-1.0f,  1.0f, 0.0f,
 		 1.0f, -1.0f, 0.0f,
 		-1.0f, -1.0f, 0.0f
-	};
+	});
 
-	static const float texquad3dData[] =
-	{
+	VertexData VertexData::texquad3d({
 		-1.0f,  1.0f, 0.0f,		0.0f, 0.0f,
 		 1.0f,  1.0f, 0.0f,		1.0f, 0.0f,
 		 1.0f, -1.0f, 0.0f,		1.0f, 1.0f,
 		-1.0f,  1.0f, 0.0f,		0.0f, 0.0f,
 		 1.0f, -1.0f, 0.0f,		1.0f, 1.0f,
 		-1.0f, -1.0f, 0.0f,		0.0f, 1.0f
-	};
+	});
 
-	static const float linequad3dData[] =
-	{
+	VertexData VertexData::linequad3d({
 		-1.0f,  1.0f, 0.0f,
 		 1.0f,  1.0f, 0.0f,
 		 1.0f,  1.0f, 0.0f,
@@ -70,10 +64,9 @@ namespace Rapture
 		-1.0f, -1.0f, 0.0f,
 		-1.0f, -1.0f, 0.0f,
 		-1.0f,  1.0f, 0.0f
-	};
+	});
 
-	static const float cubeData[] =
-	{
+	VertexData VertexData::cube({
 		/* Front  */ -1.0, -1.0,  1.0, /**/  1.0, -1.0,  1.0, /**/  1.0,  1.0,  1.0, /**/ -1.0,  1.0,  1.0,
 		/*  Back  */ -1.0, -1.0, -1.0, /**/ -1.0,  1.0, -1.0, /**/  1.0,  1.0, -1.0, /**/  1.0, -1.0, -1.0,
 
@@ -82,10 +75,9 @@ namespace Rapture
 
 		/* Right  */  1.0, -1.0, -1.0, /**/  1.0,  1.0, -1.0, /**/  1.0,  1.0,  1.0, /**/  1.0, -1.0,  1.0,
 		/*  Left  */ -1.0, -1.0, -1.0, /**/ -1.0, -1.0,  1.0, /**/ -1.0,  1.0,  1.0, /**/ -1.0,  1.0, -1.0
-	};
+	});
 
-	static const float texcubeData[] =
-	{
+	VertexData VertexData::texcube({
 		/* Front  */ -1.0, -1.0,  1.0,   1.0,  1.0, /**/  1.0, -1.0,  1.0,   0.0,  1.0, /**/  1.0,  1.0,  1.0,   0.0,  0.0, /**/ -1.0,  1.0,  1.0,   1.0,  0.0,
 		/*  Back  */ -1.0, -1.0, -1.0,   0.0,  1.0, /**/ -1.0,  1.0, -1.0,   0.0,  0.0, /**/  1.0,  1.0, -1.0,   1.0,  0.0, /**/  1.0, -1.0, -1.0,   1.0,  1.0,
 
@@ -94,10 +86,9 @@ namespace Rapture
 
 		/* Right  */  1.0, -1.0, -1.0,   0.0,  1.0, /**/  1.0,  1.0, -1.0,   0.0,  0.0, /**/  1.0,  1.0,  1.0,   1.0,  0.0, /**/  1.0, -1.0,  1.0,   1.0,  1.0,
 		/*  Left  */ -1.0, -1.0, -1.0,   1.0,  1.0, /**/ -1.0, -1.0,  1.0,   0.0,  1.0, /**/ -1.0,  1.0,  1.0,   0.0,  0.0, /**/ -1.0,  1.0, -1.0,   1.0,  0.0
-	};
+	});
 
-	static const float colorcubeData[] =
-	{
+	VertexData VertexData::colorcube({
 		/* Front  */ -1.0, -1.0,  1.0,   0.0,  0.0,  1.0,  1.0, /**/  1.0, -1.0,  1.0,   0.0,  0.0,  1.0,  1.0, /**/  1.0,  1.0,  1.0,   0.0,  0.0,  1.0,  1.0, /**/ -1.0,  1.0,  1.0,   0.0,  0.0,  1.0,  1.0,
 		/*  Back  */ -1.0, -1.0, -1.0,   1.0,  1.0,  0.0,  1.0, /**/ -1.0,  1.0, -1.0,   1.0,  1.0,  0.0,  1.0, /**/  1.0,  1.0, -1.0,   1.0,  1.0,  0.0,  1.0, /**/  1.0, -1.0, -1.0,   1.0,  1.0,  0.0,  1.0,
 
@@ -106,7 +97,7 @@ namespace Rapture
 
 		/* Right  */  1.0, -1.0, -1.0,   1.0,  0.0,  0.0,  1.0, /**/  1.0,  1.0, -1.0,   1.0,  0.0,  0.0,  1.0, /**/  1.0,  1.0,  1.0,   1.0,  0.0,  0.0,  1.0, /**/  1.0, -1.0,  1.0,   1.0,  0.0,  0.0,  1.0,
 		/*  Left  */ -1.0, -1.0, -1.0,   0.0,  1.0,  1.0,  1.0, /**/ -1.0, -1.0,  1.0,   0.0,  1.0,  1.0,  1.0, /**/ -1.0,  1.0,  1.0,   0.0,  1.0,  1.0,  1.0, /**/ -1.0,  1.0, -1.0,   0.0,  1.0,  1.0,  1.0
-	};
+	});
 
 #define indices(o, x0, x1, x2, x3, x4, x5) x0 + o, x1 + o, x2 + o, x3 + o, x4 + o, x5 + o
 
@@ -133,16 +124,6 @@ namespace Rapture
 	};
 
 #undef indices
-
-	VertexData VertexData::quad2d(quad2dData);
-	VertexData VertexData::texquad2d(texquad2dData);
-	VertexData VertexData::linequad2d(linequad2dData);
-	VertexData VertexData::quad3d(quad3dData);
-	VertexData VertexData::texquad3d(texquad3dData);
-	VertexData VertexData::linequad3d(linequad3dData);
-	VertexData VertexData::cube(cubeData);
-	VertexData VertexData::texcube(texcubeData);
-	VertexData VertexData::colorcube(colorcubeData);
 
 	VertexElement VertexElement::pos2("p2", VertexElement::Position, 0, 2);
 	VertexElement VertexElement::pos3("p3", VertexElement::Position, 0, 3);
@@ -189,24 +170,6 @@ namespace Rapture
 
 		_textures[index] = texture;
 		texture->apply();
-	}
-
-	void Graphics3D::bind(const VertexBuffer * buffer)
-	{
-		if(_vbuffer != buffer)
-		{
-			_vbuffer = buffer;
-			_vbuffer->apply();
-		}
-	}
-
-	void Graphics3D::bind(const IndexBuffer * buffer)
-	{
-		if(_ibuffer != buffer)
-		{
-			_ibuffer = buffer;
-			_ibuffer->apply();
-		}
 	}
 
 	void Graphics3D::rectangle(const IntRect & rect)
@@ -337,17 +300,12 @@ namespace Rapture
 
 	const Handle<ShaderProgram> & Graphics3D::getShaderProgram(const string & id)
 	{
-		return shaderPrograms[id];
-	}
+		auto & program = shaderPrograms[id];
 
-	Handle<Mesh> Graphics3D::createMesh(VertexLayout * layout, const VertexData & data, VertexTopology topology)
-	{
-		return Handle<Mesh>(this, createVertexBuffer(layout, data), topology, data.start);
-	}
+		if(program == nullptr)
+			throw Exception("Can't find program with id: ", id);
 
-	Handle<IndexedMesh> Graphics3D::createIndexedMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, VertexTopology topology, uint indicesLocation)
-	{
-		return Handle<IndexedMesh>(this, createVertexBuffer(layout, data), createIndexBuffer(indices), topology, data.start, indicesLocation);
+		return program;
 	}
 
 	void Graphics3D::initFacilities()
@@ -362,13 +320,15 @@ namespace Rapture
 		meshes2d.texquad = createMesh(p2t, VertexData::texquad2d);
 		meshes2d.linequad = createMesh(p2, VertexData::linequad2d, VertexTopology::Lines);
 
+		auto cubeVB = createVertexBuffer(p3, VertexData::cube);
+
 		meshes3d.quad = createMesh(p3, VertexData::quad3d);
 		meshes3d.texquad = createMesh(p3t, VertexData::texquad3d);
 		meshes3d.linequad = createMesh(p2, VertexData::linequad3d, VertexTopology::Lines);
-		meshes3d.cube = createIndexedMesh(p3, VertexData::cube, VertexIndices::cube);
-		meshes3d.texcube = createIndexedMesh(p3t, VertexData::texcube, VertexIndices::cube);
-		meshes3d.colorcube = createIndexedMesh(p3c4, VertexData::colorcube, VertexIndices::cube);
-		meshes3d.linecube = createIndexedMesh(p3, VertexData::cube, VertexIndices::linecube, VertexTopology::Lines);
+		meshes3d.cube = createMesh(cubeVB, VertexIndices::cube);
+		meshes3d.texcube = createMesh(p3t, VertexData::texcube, VertexIndices::cube);
+		meshes3d.colorcube = createMesh(p3c4, VertexData::colorcube, VertexIndices::cube);
+		meshes3d.linecube = createMesh(cubeVB, VertexIndices::linecube, VertexTopology::Lines);
 
 		techniques2d.rectangle.init(getShaderProgram("2d/rect"));
 		techniques2d.ellipse.init(getShaderProgram("2d/ellipse"));

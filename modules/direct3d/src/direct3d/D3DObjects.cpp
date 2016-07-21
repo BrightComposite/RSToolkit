@@ -17,6 +17,9 @@ namespace Rapture
 
 		void D3DVertexLayout::accept(const ShaderCode * code)
 		{
+			if(handle != nullptr)
+				return;
+
 			static const DXGI_FORMAT formats[] = {
 				DXGI_FORMAT_UNKNOWN,
 				DXGI_FORMAT_R32_FLOAT,
@@ -31,9 +34,6 @@ namespace Rapture
 				"NORMAL",
 				"TEXCOORD"
 			};
-
-			if(handle != nullptr)
-				return;
 
 			array_list<D3D11_INPUT_ELEMENT_DESC> descs;
 			uint stride = 0;
@@ -108,7 +108,7 @@ namespace Rapture
 			ZeroMemory(&bd, sizeof(bd));
 
 			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = static_cast<uint>(size) * 2;
+			bd.ByteWidth = static_cast<uint>(size * sizeof(uint16_t));
 			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 			bd.CPUAccessFlags = 0;
 

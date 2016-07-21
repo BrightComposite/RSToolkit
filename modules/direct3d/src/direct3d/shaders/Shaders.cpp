@@ -2,36 +2,6 @@
 
 #include <direct3d/Direct3D11.h>
 
-#include <direct3d/shaders/2d/rect/vs.inc>
-#include <direct3d/shaders/2d/rect/ps.inc>
-
-#include <direct3d/shaders/2d/ellipse/vs.inc>
-#include <direct3d/shaders/2d/ellipse/ps.inc>
-
-#include <direct3d/shaders/2d/wired/rect/vs.inc>
-#include <direct3d/shaders/2d/wired/rect/ps.inc>
-
-#include <direct3d/shaders/2d/wired/ellipse/vs.inc>
-#include <direct3d/shaders/2d/wired/ellipse/ps.inc>
-
-#include <direct3d/shaders/2d/figure/vs.inc>
-#include <direct3d/shaders/2d/figure/ps.inc>
-
-#include <direct3d/shaders/2d/image/vs.inc>
-#include <direct3d/shaders/2d/image/ps.inc>
-
-#include <direct3d/shaders/2d/text/vs.inc>
-#include <direct3d/shaders/2d/text/ps.inc>
-
-#include <direct3d/shaders/3d/color/vs.inc>
-#include <direct3d/shaders/3d/color/ps.inc>
-
-#include <direct3d/shaders/3d/multicolor/vs.inc>
-#include <direct3d/shaders/3d/multicolor/ps.inc>
-
-#include <direct3d/shaders/3d/texture/vs.inc>
-#include <direct3d/shaders/3d/texture/ps.inc>
-
 //---------------------------------------------------------------------------
 
 namespace Rapture
@@ -40,6 +10,36 @@ namespace Rapture
 	{
 		void D3DGraphics::initShaders()
 		{
+			#include <direct3d/shaders/2d/rect/vs.inc>
+			#include <direct3d/shaders/2d/rect/ps.inc>
+
+			#include <direct3d/shaders/2d/ellipse/vs.inc>
+			#include <direct3d/shaders/2d/ellipse/ps.inc>
+
+			#include <direct3d/shaders/2d/wired/rect/vs.inc>
+			#include <direct3d/shaders/2d/wired/rect/ps.inc>
+
+			#include <direct3d/shaders/2d/wired/ellipse/vs.inc>
+			#include <direct3d/shaders/2d/wired/ellipse/ps.inc>
+
+			#include <direct3d/shaders/2d/figure/vs.inc>
+			#include <direct3d/shaders/2d/figure/ps.inc>
+
+			#include <direct3d/shaders/2d/image/vs.inc>
+			#include <direct3d/shaders/2d/image/ps.inc>
+
+			#include <direct3d/shaders/2d/text/vs.inc>
+			#include <direct3d/shaders/2d/text/ps.inc>
+
+			#include <direct3d/shaders/3d/color/vs.inc>
+			#include <direct3d/shaders/3d/color/ps.inc>
+
+			#include <direct3d/shaders/3d/multicolor/vs.inc>
+			#include <direct3d/shaders/3d/multicolor/ps.inc>
+
+			#include <direct3d/shaders/3d/texture/vs.inc>
+			#include <direct3d/shaders/3d/texture/ps.inc>
+
 			auto p2  = getVertexLayout("p2");
 			auto p2t = getVertexLayout("p2 t");
 			auto p3  = getVertexLayout("p3");

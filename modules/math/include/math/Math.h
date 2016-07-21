@@ -147,6 +147,16 @@ namespace Rapture
 		{
 			return v;
 		}
+
+		static inline T round2pow(const T & v)
+		{
+			T i = 1;
+
+			while(i < v)
+				i <<= 1;
+
+			return i;
+		}
 	};
 
 	template<class T>
@@ -269,9 +279,13 @@ namespace Rapture
 
 	using FloatMath = Math<float>;
 	using DoubleMath = Math<double>;
+	using IntMath = Math<int>;
+	using UintMath = Math<uint>;
 
 	using fmath = FloatMath;
 	using dmath = DoubleMath;
+	using imath = IntMath;
+	using umath = UintMath;
 
 	enum class RelativePosition
 	{

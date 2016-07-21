@@ -35,9 +35,6 @@ if(WIN32)
 			endforeach()
 		endif()
 
-		set(OUTPUT_HEADER_CONTENTS)
-		set(VARIABLES_LIST)
-		
 		foreach(shader ${OUT_SHADERS_LIST})
 			get_filename_component(FileName ${shader} NAME_WE)
 			get_filename_component(FileDir ${shader} DIRECTORY)
@@ -65,8 +62,6 @@ if(WIN32)
 			escape_regular(shaders_root ${SHADERS_ROOT})
 			string(REGEX REPLACE ${shaders_root} "" ShaderPath ${ShaderPath})
 			
-			set(OUTPUT_HEADER_CONTENTS "${OUTPUT_HEADER_CONTENTS}\r\n#include \"${ShaderPath}/${FileName}.inc\"")
-
 			if("${ShaderPath}" MATCHES "^[\\/]+")
 				string(REGEX REPLACE "^[\\/]+" "" ShaderPath ${ShaderPath})
 			endif()
@@ -75,7 +70,6 @@ if(WIN32)
 			string(REGEX REPLACE "[^a-zA-Z0-9_]" "" ShaderId ${ShaderId})
 
 			set(OutputVariable shader_code_${ShaderId})
-			set(VARIABLES_LIST "${VARIABLES_LIST},\r\n${OutputVariable}")
 			
 			add_custom_command(
 				OUTPUT ${OutputFile}

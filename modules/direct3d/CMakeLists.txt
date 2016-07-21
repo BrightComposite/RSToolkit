@@ -20,97 +20,76 @@ start_module(
 	RaptureUI "ui"
 )
 
-set_module_folder(modules)
+start_sources(modules)
+	group(include Headers)
+		sources(
+			direct3d/
+				Direct3D11.h
+				..
+			graphics/
+				Provider.h
+		)
 
-add_module_sources(
-	SRC_GROUP include Headers
-		START_SECTION direct3d
-			Direct3D11.h
-		END_SECTION
+	group(src Sources)
+		sources(
+			direct3d/
+				D3DObjects.cpp
+				D3DSurfaces.cpp
+				Direct3D11.cpp
 
-		START_SECTION graphics
-			Provider.h
-		END_SECTION
+				shaders/
+					Shaders.cpp
+		)
 
-	SRC_GROUP src Sources
-		START_SECTION direct3d
-			D3DObjects.cpp
-			D3DSurfaces.cpp
-			Direct3D11.cpp
-
-			START_SECTION shaders
-				Shaders.cpp
-			END_SECTION
-		END_SECTION
-)
-
-add_shaders(
-	HLSL
-	resources Resources
-	include Includes
-	direct3d/shaders
-	Shaders.h
-		START_SECTION 2d
-			START_SECTION rect
-				vs.fx
-				ps.fx
-			END_SECTION
-
-			START_SECTION ellipse
-				vs.fx
-				ps.fx
-			END_SECTION
-
-			START_SECTION figure
-				vs.fx
-				ps.fx
-			END_SECTION
-
-			START_SECTION image
-				vs.fx
-				ps.fx
-			END_SECTION
-
-			START_SECTION text
-				vs.fx
-				ps.fx
-			END_SECTION
-
-			START_SECTION wired
-				START_SECTION rect
-					vs.fx
-					ps.fx
-				END_SECTION
-
-				START_SECTION ellipse
-					vs.fx
-					ps.fx
-				END_SECTION
-			END_SECTION
-		END_SECTION
-
-		START_SECTION 3d
-			START_SECTION basic
-				vs.fx
-				ps.fx
-			END_SECTION
-
-			START_SECTION color
-				vs.fx
-				ps.fx
-			END_SECTION
-
-			START_SECTION multicolor
-				vs.fx
-				ps.fx
-			END_SECTION
-
-			START_SECTION texture
-				vs.fx
-				ps.fx
-			END_SECTION
-		END_SECTION
-)
+	group(resources Resources)
+		shaders(HLSL direct3d/shaders
+			2d/
+				rect/
+					vs.fx ps.fx
+					..
+				ellipse/
+					vs.fx ps.fx
+					..
+				figure/
+					vs.fx ps.fx
+					..
+				image/
+					vs.fx ps.fx
+					..
+				text/
+					vs.fx ps.fx
+					..
+				wired/
+					rect/
+						vs.fx ps.fx
+						..
+					ellipse/
+						vs.fx ps.fx
+						..
+			.
+			3d/
+				basic/
+					vs.fx ps.fx
+					..
+				color/
+					vs.fx ps.fx
+					..
+				multicolor/
+					vs.fx ps.fx
+					..
+				texture/
+					vs.fx ps.fx
+		)
+		
+		output(SHADERS_OUTPUT)
+	end_shaders()
+	
+	#group(include Includes)
+	#sources(
+	#	direct3d/shaders/
+	#		${SHADERS_OUTPUT}
+	#)
+end_sources()
 
 end_module()
 

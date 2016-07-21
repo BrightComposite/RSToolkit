@@ -4,6 +4,8 @@
 
 cmake_minimum_required(VERSION 3.0)
 
+#--------------------------------------------------------
+
 if(WIN32)
 	set(CMAKE_SHARED_LIBRARY_PREFIX "" CACHE INTERNAL "Cmake shared lib prefix")
 endif ()
@@ -13,8 +15,6 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 else()
 	set(MODULE_ARCH x86 CACHE INTERNAL "Project architecture")
 endif()
-
-#--------------------------------------------------------
 
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
 	set(OUTPUT_ROOT ${RAPTURE_ROOT}/build-vs-${MODULE_ARCH} CACHE PATH "Output root")
@@ -28,7 +28,10 @@ set(MODULES_ROOT ${RAPTURE_ROOT}/modules CACHE PATH "Modules root")
 
 set(BINARY_OUTPUT ${RAPTURE_ROOT}/bin/${MODULE_ARCH} CACHE PATH "Binary output")
 set(LIBRARY_OUTPUT ${RAPTURE_ROOT}/bin/${MODULE_ARCH} CACHE PATH "Library output")
+
 set(THIRD_PARTY ${RAPTURE_ROOT}/third-party CACHE PATH "Third-party directory")
+
+#--------------------------------------------------------
 
 function(set_output_dir DIR TYPE)
 	get_filename_component(REAL_DIR ${DIR} REALPATH)
@@ -50,10 +53,14 @@ link_directories(${RAPTURE_ROOT}/lib/${MODULE_ARCH})
 link_directories(${RAPTURE_ROOT}/lib/${MODULE_ARCH}/release)
 link_directories(${RAPTURE_ROOT}/lib/${MODULE_ARCH}/debug)
 
+#--------------------------------------------------------
+
 set(MODULE_TYPES APPLICATION;SHARED;LIBRARY;INLINE CACHE INTERNAL "Module types" FORCE)
 
-if(NOT ";${GUARD_BLOCKS};" MATCHES ";PROJECT_TOOL_GUARD;")
-	set(GUARD_BLOCKS ${GUARD_BLOCKS};PROJECT_TOOL_GUARD CACHE INTERNAL "Guard blocks" FORCE)
+#--------------------------------------------------------
+
+if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
+	set(GUARD_BLOCKS ${GUARD_BLOCKS};MODULE_TOOL_GUARD CACHE INTERNAL "Guard blocks" FORCE)
 
 #--------------------------------------------------------
 #	Functions

@@ -116,156 +116,57 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		endif()
 	endfunction()
 
-#	set_module_sources function.
+	function(group path name)
+		string(REPLACE / \\ path ${path})
+		set(CURRENT_SOURCE_GROUP_PATH ${path} CACHE INTERNAL "")
+		set(CURRENT_SOURCE_GROUP_NAME ${name} CACHE INTERNAL "")
+	endfunction()
+	
+#	collect_files function.
 #	Usage:
-#		set_module_sources(<output list>
-#			SRC_GROUP <subdirectory> <source group section>
-#				START_SECTION <relative path>
-#					[filename...]
-#				END_SECTION
-#				[START_SECTION <relative path> [filename...] END_SECTION ...]
-#			[SRC_GROUP <subdirectory> <source group section>
-#				...
-#			]
-#		)
+#		collect_files(<output list> <tree...>)
 
-	function(set_module_sources OUT_LIST)
-		set(FULL_SRC_LIST)
+	function(collect_files out)
+		set(source_list)
 
-		set(SECTION_POS 0)
-		set(SECTION_PATH "")
-		set(SUBSECTIONS 0)
+		set(dir "")
+		set(root ${PROJECT_SOURCE_DIR}/${CURRENT_SOURCE_GROUP_PATH})
 
-		set(GROUP_POS 0)
-		set(GROUP_ROOT "")
-		set(GROUP_TYPE "")
-
-		set(ROOT_DIR ${PROJECT_SOURCE_DIR})
-
-		foreach(SRC_ENTRY ${ARGN})
-			if(${SRC_ENTRY} STREQUAL "START_SECTION" OR ${SRC_ENTRY} STREQUAL "END_SECTION" OR ${SRC_ENTRY} STREQUAL "SRC_GROUP") # Check if new section or group is defined here
-
-				# Check correctness of function usage
-
-				if(${SRC_ENTRY} STREQUAL "START_SECTION")
-					if(${SECTION_POS} GREATER 0)
-						message(FATAL_ERROR "Incorrect usage of 'add_module_sources' function! The new section is defined before the end of the previous section header!")
-					elseif(${GROUP_POS} GREATER 0)
-						message(FATAL_ERROR "Incorrect usage of 'add_module_sources' function! The new section is defined before the end of group header!")
-					endif()
-
-					set(SECTION_POS 1)
-					math(EXPR SUBSECTIONS "${SUBSECTIONS} + 1")
-
-				elseif(${SRC_ENTRY} STREQUAL "SRC_GROUP")
-					if(${SUBSECTIONS} GREATER 0)
-						message(FATAL_ERROR "Incorrect usage of 'add_module_sources' function! Can't declare next source group inside subsection!")
-					elseif(${GROUP_POS} GREATER 0)
-						message(FATAL_ERROR "Incorrect usage of 'add_module_sources' function! The new group is defined before the end of the previous group header!")
-					elseif(${SECTION_POS} GREATER 0)
-						message(FATAL_ERROR "Incorrect usage of 'add_module_sources' function! The new group is defined before the end of section header!")
-					endif()
-
-					set(GROUP_POS 1)
-					set(SECTION_PATH "")
-					set(SUBSECTIONS 0)
-
-				elseif(${SRC_ENTRY} STREQUAL "END_SECTION")
-					if(${SUBSECTIONS} EQUAL 0)
-						message(FATAL_ERROR "Incorrect usage of 'add_module_sources' function! Unexpected end of section!")
-					endif()
-
-					list(LENGTH SRC_LIST_${SUBSECTIONS} SRC_COUNT)
-
-					if(NOT SRC_COUNT EQUAL 0)
-						if("${SECTION_PATH}" STREQUAL "" OR "${SECTION_PATH}" STREQUAL "/")
-							source_group(${GROUP_TYPE} FILES ${SRC_LIST_${SUBSECTIONS}})
-						else()
-							string(REPLACE / \\ GROUP_PATH ${SECTION_PATH})
-							source_group(${GROUP_TYPE}\\${GROUP_PATH} FILES ${SRC_LIST_${SUBSECTIONS}})
-						endif()
-
-						set(FULL_SRC_LIST ${FULL_SRC_LIST} ${SRC_LIST_${SUBSECTIONS}})
-						set(SRC_LIST_${SUBSECTIONS})
-					endif()
-
-					math(EXPR SUBSECTIONS "${SUBSECTIONS} - 1")
-					get_filename_component(SECTION_PATH "${SECTION_PATH}" DIRECTORY)
-				endif()
-			elseif(${SECTION_POS} EQUAL 1)	# Check if we are reading section path
-				if("${SECTION_PATH}" STREQUAL "" OR "${SECTION_PATH}" STREQUAL "/")
-					set(SECTION_PATH ${SRC_ENTRY})
+		foreach(entry ${ARGN})
+			if(${entry} MATCHES ".*/" OR ${entry} MATCHES ".*\\")
+				string(REGEX REPLACE "[/\\]$" "" entry ${entry})
+				string(REPLACE "\\" "/" entry ${entry})
+				set(dir ${dir}/${entry})
+			else()
+				if(NOT ${dir} STREQUAL "")
+					set(source ${dir}/${entry})
 				else()
-					set(SECTION_PATH ${SECTION_PATH}/${SRC_ENTRY})
+					set(source ${entry})
 				endif()
 
-				if(${SECTION_PATH} STREQUAL SRC_ROOT)
-					set(SECTION_PATH "")
+				if(NOT EXISTS ${root}/${source})
+					create_source(${root} ${source})
 				endif()
 
-				set(SECTION_POS 0)
-
-			elseif(${GROUP_POS} EQUAL 1)	# Check if we are reading group root
-				set(GROUP_ROOT ${SRC_ENTRY})
-				set(GROUP_POS 2)
-
-			elseif(${GROUP_POS} EQUAL 2) 	# Check if we are reading group type
-				set(GROUP_TYPE ${SRC_ENTRY})
-				set(GROUP_POS 0)
-
-			else() # Add new source to the current group and section
-				if(NOT ${SECTION_PATH} STREQUAL "")
-					set(NEW_SOURCE ${SECTION_PATH}/${SRC_ENTRY})
-				else()
-					set(NEW_SOURCE ${SRC_ENTRY})
-				endif()
-
-				set(SRC_ROOT ${ROOT_DIR}/${GROUP_ROOT})
-
-				if(NOT EXISTS ${SRC_ROOT}/${NEW_SOURCE})
-					create_source(${SRC_ROOT} ${NEW_SOURCE})
-				endif()
-
-				set(SRC_LIST_${SUBSECTIONS} ${SRC_LIST_${SUBSECTIONS}} ${SRC_ROOT}/${NEW_SOURCE})
+				list(APPEND source_list ${root}/${source})
 			endif()
 		endforeach()
 
-		if(${SUBSECTIONS} GREATER 0)
-			message(FATAL_ERROR "Incorrect usage of 'add_module_sources' function! End of section was not found!")
+		list(LENGTH source_list source_count)
+
+		if(NOT ${source_count} EQUAL 0)
+			source_group(${CURRENT_SOURCE_GROUP_NAME} FILES ${source_list})
 		endif()
 
-		list(LENGTH SRC_LIST_${SUBSECTIONS} SRC_COUNT)
-
-		if(NOT SRC_COUNT EQUAL 0)
-			if(NOT ${SECTION_PATH} STREQUAL "")
-				string(REPLACE / \\ GROUP_PATH ${SECTION_PATH})
-				source_group(${GROUP_TYPE}\\${GROUP_PATH} FILES ${SRC_LIST_${SUBSECTIONS}})
-			else()
-				source_group(${GROUP_TYPE} FILES ${SRC_LIST_${SUBSECTIONS}})
-			endif()
-
-			list(APPEND FULL_SRC_LIST ${SRC_LIST_${SUBSECTIONS}})
-			set(SRC_LIST_${SUBSECTIONS})
-		endif()
-
-		set(${OUT_LIST} ${FULL_SRC_LIST} PARENT_SCOPE)
+		set(${out} ${source_list} PARENT_SCOPE)
 	endfunction()
 
-#	add_module_sources function.
+#	files function.
 #	Usage:
-#		add_module_sources(
-#			SRC_GROUP <subdirectory> <source group section>
-#				START_SECTION <relative path>
-#					[filename...]
-#				END_SECTION
-#				[START_SECTION <relative path> [filename...] END_SECTION ...]
-#			[SRC_GROUP <subdirectory> <source group section>
-#				...
-#			]
-#		)
+#		files(<tree...>)
 
-	function(add_module_sources)
-		set_module_sources(OUT_LIST ${ARGN})
+	function(files)
+		collect_files(OUT_LIST ${ARGN})
 		set(${PROJECT_NAME}_SOURCES ${${PROJECT_NAME}_SOURCES};${OUT_LIST} CACHE INTERNAL "${PROJECT_NAME} sources" FORCE)
 	endfunction()
 
@@ -313,9 +214,9 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		set(MESSAGES_INDENTATION ${MESSAGES_INDENTATION_TEMP} CACHE STRING "Dependency list indentation" FORCE)
 	endfunction()
 
-#	require_modules function.
+#	dependencies function.
 
-	function(require_modules)
+	function(dependencies)
 		set(MODULE_NAME)
 
 		foreach(ENTRY ${ARGN})
@@ -328,9 +229,9 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		endforeach()
 	endfunction()
 
-#	start_module function.
+#	module function.
 
-	function(start_module type)
+	function(module type)
 		if(NOT ";${GUARD_BLOCKS};" MATCHES ";${PROJECT_NAME}_GUARD;")
 			set(GUARD_BLOCKS ${GUARD_BLOCKS};${PROJECT_NAME}_GUARD CACHE INTERNAL "Guard blocks" FORCE)
 		endif()
@@ -348,10 +249,6 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		endif()
 
 		set(${PROJECT_NAME}_MODULE_TYPE ${type} CACHE STRING "${PROJECT_NAME} module type" FORCE)
-
-		if(NOT "${ARGN}" STREQUAL "")
-			require_modules(${ARGN})
-		endif()
 	endfunction()
 
 #	collect_dependencies function.
@@ -374,21 +271,21 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		endif()
 	endfunction()
 
-#	set_module_folder function
+#	sources function
 
-	function(set_module_folder folder)
+	function(sources folder)
 		set(${PROJECT_NAME}_FOLDER ${folder} CACHE STRING "${PROJECT_NAME} folder" FORCE)
 	endfunction()
 
-#	set_module_api_key function.
+#	api function.
 
-	function(set_module_api_key key)
+	function(api key)
 		set(${PROJECT_NAME}_API_KEY ${key} CACHE STRING "${PROJECT_NAME} api key" FORCE)
 	endfunction()
 
-#	set_module_api_export function.
+#	api_export function.
 
-	function(set_module_api_export MODULE)
+	function(api_export MODULE)
 		if(NOT "${${MODULE}_API_KEY}" STREQUAL "")
 			set(module rapture_${${MODULE}_API_KEY})
 		else()
@@ -402,9 +299,9 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		endif()
 	endfunction()
 
-#	set_module_api_import function.
+#	api_import function.
 
-	function(set_module_api_import MODULE)
+	function(api_import MODULE)
 		if(NOT "${${MODULE}_API_KEY}" STREQUAL "")
 			set(module rapture_${${MODULE}_API_KEY})
 		else()
@@ -418,9 +315,9 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		endif()
 	endfunction()
 
-#	end_module function.
+#	endmodule function.
 
-	function(end_module)
+	function(endmodule)
 		if("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "APPLICATION")
 			add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
 		elseif("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "SHARED")
@@ -446,13 +343,13 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 		add_module_include_dirs(${PROJECT_SOURCE_DIR}/include)
 		add_module_libraries(${${PROJECT_NAME}_MODULE_DEPENDENCIES})
-		set_module_api_export(${PROJECT_NAME})
+		api_export(${PROJECT_NAME})
 
 		collect_dependencies(DEPENDENCIES ${PROJECT_NAME})
 
 		foreach(DEPENDENCY_NAME ${DEPENDENCIES})
 			if("${${DEPENDENCY_NAME}_MODULE_TYPE}" STREQUAL "SHARED")
-				set_module_api_import(${DEPENDENCY_NAME})
+				api_import(${DEPENDENCY_NAME})
 			endif()
 		endforeach()
 	endfunction()

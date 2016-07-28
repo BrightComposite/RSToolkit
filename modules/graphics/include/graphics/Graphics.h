@@ -78,6 +78,8 @@ namespace Rapture
 		Graphics() { setclass(Graphics); }
 		virtual ~Graphics() {}
 
+		virtual void checkForErrors() {}
+
 		virtual Handle<GraphicsDebug> getDebug() const = 0;
 
 		api(graphics) Surface * surface();

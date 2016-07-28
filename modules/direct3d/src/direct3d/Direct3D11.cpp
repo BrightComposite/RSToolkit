@@ -265,22 +265,23 @@ namespace Rapture
 			Graphics3D::initFacilities();
 		}
 
-		void D3DGraphics::bind(const D3DVertexShader * shader)
+		void D3DGraphics::bind(const D3DShader * shader, ShaderType type)
 		{
-			if(_vshader != shader)
-			{
-				_vshader = shader;
-				_vshader->program->layout->apply();
-				context->VSSetShader(_vshader->id, nullptr, 0);
-			}
-		}
+			auto & place = _shaders[type];
 
-		void D3DGraphics::bind(const D3DPixelShader * shader)
-		{
-			if(_pshader != shader)
+			if(place != shader)
 			{
-				_pshader = shader;
-				context->PSSetShader(_pshader->id, nullptr, 0);
+				place = shader;
+
+				switch(type)
+				{
+					case ShaderType::Vertex:
+						context->VSSetShader(shader != nullptr ? &*static_cast<const D3DVertexShader *>(shader)->id : nullptr, nullptr, 0);
+						break;
+					case ShaderType::Pixel:
+						context->PSSetShader(shader != nullptr ? &*static_cast<const D3DPixelShader *>(shader)->id : nullptr, nullptr, 0);
+						break;
+				}
 			}
 		}
 
@@ -336,7 +337,7 @@ namespace Rapture
 			return Handle<D3DIndexedMesh>(this, buffer, createIndexBuffer(indices), topology, verticesLocation, indicesLocation);
 		}
 
-		UniqueHandle<UniformAdapter> D3DGraphics::createUniformAdapter(ShaderType shader, int index, size_t size)
+		UniqueHandle<UniformAdapter> D3DGraphics::createUniformAdapter(const char * name, ShaderType shader, int index, size_t size)
 		{
 			return UniqueHandle<D3DUniformAdapter, D3DGraphics>(this, shader, index, size);
 		}

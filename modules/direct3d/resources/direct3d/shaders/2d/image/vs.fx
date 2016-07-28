@@ -1,6 +1,6 @@
 /**
-*
-*/
+ *	!layout: p2 t
+ */
 
 cbuffer Area : register(b4)
 {

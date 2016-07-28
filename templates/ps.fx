@@ -2,7 +2,7 @@
  *
  */
 
-cbuffer Color : register(b0)
+cbuffer BrushOptions : register(b0)
 {
 	float4 color;
 	float lineWidth;

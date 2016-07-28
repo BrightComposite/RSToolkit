@@ -10,19 +10,19 @@ include(${RAPTURE_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-start_module(
-	SHARED
-    RaptureGraphics "graphics"
-    RaptureMessage "message"
-	RaptureApplication "application"
-	RapturePlatform "platform"
-)
+module(SHARED)
+	dependencies(
+		RaptureGraphics		"graphics"
+		RaptureMessage		"message"
+		RaptureApplication	"application"
+		RapturePlatform		"platform"
+	)
 
-set_module_folder(modules)
-
-add_module_sources(
-	SRC_GROUP include Headers
-		START_SECTION ui
+	sources(modules)
+		domain(ui)
+		
+		group(include Headers)
+		files(
 			Cursor.h
 			Panel.h
 			Text.h
@@ -31,19 +31,18 @@ add_module_sources(
 			WidgetEnum.h
 			WidgetMessages.h
 			Window.h
-		END_SECTION
+		)
 
-	SRC_GROUP src Sources
-		START_SECTION ui
+		group(src Sources)
+		files(
 			Cursor.cpp
 			Panel.cpp
 			Text.cpp
 			UISpace.cpp
 			Widget.cpp
 			Window.cpp
-		END_SECTION
-)
-
-end_module()
+		)
+	endsources()
+endmodule()
 
 #--------------------------------------------------------

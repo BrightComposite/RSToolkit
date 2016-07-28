@@ -45,8 +45,7 @@ namespace Rapture
 		class D3DImage;
 		class D3DVertexLayout;
 
-		class D3DVertexShader;
-		class D3DPixelShader;
+		class D3DShader;
 		class D3DVertexBuffer;
 		class D3DIndexBuffer;
 	}
@@ -75,8 +74,7 @@ namespace Rapture
 			using Graphics3D::bind;
 			using Graphics3D::draw;
 
-			api(direct3d11) void bind(const D3DVertexShader * shader);
-			api(direct3d11) void bind(const D3DPixelShader * shader);
+			api(direct3d11) void bind(const D3DShader * shader, ShaderType type);
 			api(direct3d11) void bind(const VertexBuffer * buffer);
 			api(direct3d11) void bind(const IndexBuffer * buffer);
 
@@ -119,26 +117,15 @@ namespace Rapture
 			virtual api(direct3d11) Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) override;
 			virtual api(direct3d11) Handle<IndexBuffer> createIndexBuffer(const VertexIndices & indices) override;
 
-			virtual api(direct3d11) UniqueHandle<UniformAdapter> createUniformAdapter(ShaderType shader, int index, size_t size) override;
+			virtual api(direct3d11) UniqueHandle<UniformAdapter> createUniformAdapter(const char * name, ShaderType shader, int index, size_t size) override;
 
 			virtual api(direct3d11) void initFacilities() override;
 
-			template<class Program, class ... A, useif<
-				is_shader_program<Program>::value,
-				can_construct<Handle<ShaderCode>, A>::value...,
-				can_construct<Program, D3DGraphics *, VertexLayout *, ShaderCodeSet *>::value
-				>
-			>
-			void setShaderProgram(const string & id, VertexLayout * layout, A &&... args)
-			{
-				shaderPrograms[id] = handle<Program>(this, layout, createCodeSet({handle<ShaderCode>(forward<A>(args))...}));
-			}
-
 			api(direct3d11) void initDevice();
 			api(direct3d11) void initShaders();
+			api(direct3d11) void setShaderProgram(const string & id, const Handle<ShaderCodeSet> & codeSet);
 
-			const D3DVertexShader * _vshader;
-			const D3DPixelShader * _pshader;
+			map<ShaderType, const D3DShader *> _shaders;
 
 			const VertexBuffer * _vbuffer;
 			const IndexBuffer * _ibuffer;
@@ -274,16 +261,24 @@ namespace Rapture
 		class D3DShaderProgram : public ShaderProgram
 		{
 		public:
-			D3DShaderProgram(D3DGraphics * graphics, VertexLayout * layout) : graphics(graphics), layout(layout) {}
+			api(direct3d11) D3DShaderProgram(D3DGraphics * graphics, const Handle<ShaderCodeSet> & codeSet);
+			api(direct3d11) ~D3DShaderProgram();
+
+			virtual api(direct3d11) void apply() const override;
 
 			D3DGraphics * graphics;
-			VertexLayout * layout;
+			D3DVertexLayout * layout;
+
+		protected:
+			Map<ShaderType, D3DShader> _shaders;
 		};
 
 		class D3DShader : public Shader
 		{
 		public:
 			api(direct3d11) D3DShader(D3DShaderProgram * program);
+
+			virtual void apply() const = 0;
 
 		protected:
 			api(direct3d11) void read(const String & filename, Handle<ShaderCode> & out);
@@ -303,6 +298,8 @@ namespace Rapture
 			api(direct3d11) D3DVertexShader(D3DShaderProgram * program, const Handle<ShaderCode> & code);
 			virtual ~D3DVertexShader() {}
 
+			virtual api(direct3d11) void apply() const;
+
 		protected:
 			ComHandle<ID3D11VertexShader> id;
 		};
@@ -317,6 +314,8 @@ namespace Rapture
 			api(direct3d11) D3DPixelShader(D3DShaderProgram * program, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
 			api(direct3d11) D3DPixelShader(D3DShaderProgram * program, const Handle<ShaderCode> & code);
 			virtual ~D3DPixelShader() {}
+
+			virtual api(direct3d11) void apply() const;
 
 		protected:
 			ComHandle<ID3D11PixelShader> id;
@@ -411,34 +410,6 @@ namespace Rapture
 
 		protected:
 			Handle<D3DImage> _texture;
-		};
-
-		//---------------------------------------------------------------------------
-
-		class VPShaderProgram : public D3DShaderProgram
-		{
-		public:
-			VPShaderProgram(D3DGraphics * graphics, VertexLayout * layout, const string & filename, ShaderCodeState state = ShaderCodeState::Compiled) : D3DShaderProgram(graphics, layout),
-				vs(this, filename, state),
-				ps(this, filename, state)
-			{}
-
-			VPShaderProgram(D3DGraphics * graphics, VertexLayout * layout, const Handle<ShaderCodeSet> & codeSet) : D3DShaderProgram(graphics, layout),
-				vs(this, codeSet->code.at(ShaderType::Vertex)),
-				ps(this, codeSet->code.at(ShaderType::Pixel))
-			{}
-
-			virtual ~VPShaderProgram() {}
-
-			virtual void apply() const override
-			{
-				graphics->bind(vs);
-				graphics->bind(ps);
-			}
-
-		protected:
-			Handle<D3DVertexShader> vs;
-			Handle<D3DPixelShader> ps;
 		};
 	}
 

@@ -10,25 +10,18 @@ include(${RAPTURE_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-start_module(
-	SHARED
-	RaptureUI "ui"
-)
+module(SHARED)
+	dependencies(RaptureUI "ui")
 
-set_module_folder(modules)
+	sources(modules)
+		domain(interaction)
+		
+		group(include Headers)
+		files(MouseManipulator.h)
 
-add_module_sources(
-	SRC_GROUP include Headers
-		START_SECTION interaction
-			MouseManipulator.h
-		END_SECTION
-
-	SRC_GROUP src Sources
-		START_SECTION interaction
-			MouseManipulator.cpp
-		END_SECTION
-)
-
-end_module()
+		group(src Sources)
+		files(MouseManipulator.cpp)
+	endsources()
+endmodule()
 
 #--------------------------------------------------------

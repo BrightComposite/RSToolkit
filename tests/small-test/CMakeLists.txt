@@ -10,21 +10,14 @@ include(${RAPTURE_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-start_module(
-	APPLICATION
-    RaptureCore "core"
-)
+module(APPLICATION)
+	dependencies(RaptureCore "core")
 
-set_module_folder(tests)
-
-add_module_sources(
-	SRC_GROUP src Sources
-		START_SECTION SRC_ROOT
-			small-test.cpp
-		END_SECTION
-)
-
-end_module()
+	sources(tests)
+		group(src Sources)
+		files(small-test.cpp)
+	endsources()
+endmodule()
 
 load_third_party(vld)
 

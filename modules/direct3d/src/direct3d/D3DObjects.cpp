@@ -208,6 +208,11 @@ namespace Rapture
 			program->layout->accept(code);
 		}
 
+		void D3DVertexShader::apply() const
+		{
+			;
+		}
+
 		D3DPixelShader::D3DPixelShader(D3DShaderProgram * program, const String & path, ShaderCodeState state) : D3DShader(program)
 		{
 			Handle<ShaderCode> code;
@@ -237,6 +242,11 @@ namespace Rapture
 				program->graphics->device->CreatePixelShader(code->ptr, code->size, nullptr, &id),
 				"Can't create pixel shader!"
 			);
+		}
+
+		void D3DPixelShader::apply() const
+		{
+			program->graphics->context->PSSetShader(id, nullptr, 0);
 		}
 
 		D3DImage::D3DImage(D3DGraphics * graphics, uint width, uint height) : Image(graphics, width, height, ImageFormat::bgra), _ctx(graphics)
@@ -428,6 +438,71 @@ namespace Rapture
 		void D3DUniformAdapter::update(const void * data)
 		{
 			graphics->context->UpdateSubresource(buffer, 0, NULL, data, 0, 0);
+		}
+
+		D3DShaderProgram::D3DShaderProgram(D3DGraphics * graphics, const Handle<ShaderCodeSet> & set) : graphics(graphics), layout(layout)
+		{
+			auto i = set->code.find(ShaderType::Vertex);
+
+			if(i == set->code.end())
+				throw Exception("Shader program must contain vertex shader");
+
+			auto & vscode = i->second;
+			_shaders[ShaderType::Vertex] = handle<D3DVertexShader>(this, vscode);
+
+			i = set->code.find(ShaderType::Pixel);
+			_shaders[ShaderType::Pixel] = i != set->code.end() ? handle<D3DPixelShader>(this, i->second) : nullptr;
+
+			ComHandle<ID3D11ShaderReflection> reflection;
+
+			com_assert(
+				D3DReflect(vscode->ptr, vscode->size, __uuidof(ID3D11ShaderReflection), reflection.pointer())
+			);
+
+			D3D11_SHADER_DESC shaderDesc;
+			reflection->GetDesc( &shaderDesc );
+
+			array_list<D3D11_INPUT_ELEMENT_DESC> descs;
+
+			for(uint i = 0; i< shaderDesc.InputParameters; i++ )
+			{
+				D3D11_SIGNATURE_PARAMETER_DESC paramDesc;
+				reflection->GetInputParameterDesc(i, &paramDesc );
+
+				// fill out input element desc
+				D3D11_INPUT_ELEMENT_DESC elementDesc;
+				elementDesc.SemanticName = paramDesc.SemanticName;
+				elementDesc.SemanticIndex = paramDesc.SemanticIndex;
+				elementDesc.InputSlot = 0;
+				elementDesc.AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+				elementDesc.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+				elementDesc.InstanceDataStepRate = 0;   
+
+				if(paramDesc.Mask == 1)
+					elementDesc.Format = DXGI_FORMAT_R32_FLOAT;
+				else if(paramDesc.Mask <= 3)
+					elementDesc.Format = DXGI_FORMAT_R32G32_FLOAT;
+				else if(paramDesc.Mask <= 7)
+					elementDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+				else if(paramDesc.Mask <= 15)
+					elementDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+				descs.push_back(elementDesc);
+			}       
+
+			com_assert(
+				graphics->device->CreateInputLayout(descs.data(), static_cast<uint>(descs.size()), vscode->ptr, vscode->size, pInputLayout)
+			);
+		}
+
+		D3DShaderProgram::~D3DShaderProgram() {}
+
+		void D3DShaderProgram::apply() const
+		{
+			layout->apply();
+
+			for(auto & s : _shaders)
+				graphics->bind(s.second, s.first);
 		}
 	}
 }

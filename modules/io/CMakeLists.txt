@@ -10,23 +10,15 @@ include(${RAPTURE_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-start_module(
-	INLINE
-	RaptureMeta "meta"
-)
+module(INLINE)
+	dependencies(RaptureMeta "meta")
 
-set_module_folder(modules)
-
-add_module_sources(
-	SRC_GROUP include Headers
-		START_SECTION io
-			FileSystem.h
-		END_SECTION
-)
-
-#--------------------------------------------------------
-
-end_module()
+	sources(modules)
+		domain(io)
+		group(include Headers)
+		files(FileSystem.h)
+	endsources()
+endmodule()
 
 setup_third_party(boost COMPONENT filesystem)
 setup_third_party(boost COMPONENT system)

@@ -33,7 +33,8 @@ namespace Rapture
 			Position = 0,
 			Color    = 1,
 			Normal   = 2,
-			Texcoord = 3
+			Texcoord = 3,
+			Max
 		};
 
 		string id;
@@ -50,10 +51,34 @@ namespace Rapture
 		static api(graphics) VertexElement tex;
 		static api(graphics) VertexElement normal;
 
+		static api(graphics) void writeKey(String & out, Type type, uint units);
+
 	protected:
 		VertexElement(const string & id, Type type, uint index, uint units) : Precached<string, VertexElement>(id),
 			id(id), type(type), index(index), units(units) {}
 	};
+
+	inline void print(String & s, VertexElement::Type type)
+	{
+		switch(type)
+		{
+			case VertexElement::Position:
+				s << "p";
+				return;
+			case VertexElement::Color:
+				s << "c";
+				return;
+			case VertexElement::Normal:
+				s << "n";
+				return;
+			case VertexElement::Texcoord:
+				s << "t";
+				return;
+			default:
+				s << "?";
+				return;
+		}
+	}
 
 //---------------------------------------------------------------------------
 

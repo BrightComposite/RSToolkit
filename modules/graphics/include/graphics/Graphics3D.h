@@ -152,13 +152,13 @@ namespace Rapture
 		template<class T, typename ... A, useif<is_uniform<T>::value, can_construct_contents<T, A...>::value>>
 		void updateUniform(A && ... args)
 		{
-			uniforms.require<T>(this)->set(forward<A>(args)...);
+			_uniforms.require<T>(this)->set(forward<A>(args)...);
 		}
 
 		template<class T, useif<is_uniform<T>::value>>
 		void updateUniform(const Contents<T> & contents)
 		{
-			uniforms.require<T>(this)->set(contents);
+			_uniforms.require<T>(this)->set(contents);
 		}
 
 		Techniques2D techniques2d;
@@ -183,34 +183,24 @@ namespace Rapture
 		virtual Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) = 0;
 		virtual Handle<IndexBuffer> createIndexBuffer(const VertexIndices & indices) = 0;
 
-		virtual UniqueHandle<UniformAdapter> createUniformAdapter(ShaderType shader, int index, size_t size) = 0;
-
-		static Handle<ShaderCodeSet> createCodeSet(const initializer_list<Handle<ShaderCode>> & list)
-		{
-			Handle<ShaderCodeSet> set(nothing);
-
-			for(size_t i = 0; i < list.size(); ++i)
-				set->code.insert({static_cast<ShaderType>(i), *(list.begin() + i)});
-
-			return set;
-		}
+		virtual UniqueHandle<UniformAdapter> createUniformAdapter(const char * name, ShaderType shader, int index, size_t size) = 0;
 
 		template<class T, useif<is_uniform<T>::value>>
 		Handle<T, Graphics3D> & init(Handle<T, Graphics3D> & uniform)
 		{
-			return uniform.init(createUniformAdapter(T::shader, T::index, sizeof(Contents<T>)));
+			return uniform.init(createUniformAdapter(T::name(), T::shader, T::index, sizeof(Contents<T>)));
 		}
 
 		float _depth = 1.0f;
 		StateHandle<bool> _depthTestMode {false};
 		StateHandle<bool> _blendMode {false};
 
-		UniformSet uniforms;
+		UniformSet _uniforms;
 
 		ArrayList<Texture> _textures;
 
-		UnorderedMap<string, VertexLayout> vertexLayouts;
-		UnorderedMap<string, ShaderProgram> shaderPrograms;
+		UnorderedMap<string, VertexLayout> _vertexLayouts;
+		UnorderedMap<string, ShaderProgram> _shaderPrograms;
 	};
 }
 

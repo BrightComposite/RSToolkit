@@ -1,5 +1,5 @@
 #--------------------------------------------------------
-#	Rapture State cmake project facilities
+#	Rapture State cmake module facilities
 #--------------------------------------------------------
 
 cmake_minimum_required(VERSION 3.0)
@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.0)
 
 if(WIN32)
 	set(CMAKE_SHARED_LIBRARY_PREFIX "" CACHE INTERNAL "Cmake shared lib prefix")
-endif ()
+endif()
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 	set(MODULE_ARCH x64 CACHE INTERNAL "Project architecture")
@@ -82,6 +82,16 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		set(${out} ${NAME} PARENT_SCOPE)
 	endfunction()
 
+	function(escape_regular OUT_STR STR)
+		string(REPLACE "\\" "\\\\" BUF "${STR}")
+		string(REPLACE "/" "\\/" BUF "${BUF}")
+		string(REPLACE "+" "\\+" BUF "${BUF}")
+		string(REPLACE "." "\\." BUF "${BUF}")
+		string(REPLACE ":" "\\:" BUF "${BUF}")
+
+		set(${OUT_STR} ${BUF} PARENT_SCOPE)
+	endfunction()
+
 #	create_source function.
 
 	function(create_source SRC_ROOT SRC_PATH)
@@ -104,7 +114,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 		set(TEMPLATE_FILE ${RAPTURE_ROOT}/templates/${filename}${SRC_EXT})
 		set(TEMPLATE_FILE_EXT ${RAPTURE_ROOT}/templates/_${SRC_EXT})
-
+		
 		message(STATUS "Create new source file ${SRC_FULLPATH}...")
 
 		if(EXISTS ${TEMPLATE_FILE})
@@ -116,10 +126,56 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		endif()
 	endfunction()
 
+#	group function
+
 	function(group path name)
+		if("${path}" STREQUAL "")
+			message(FATAL_ERROR "The group path may not be empty!")
+		endif()
+
 		string(REPLACE / \\ path ${path})
-		set(CURRENT_SOURCE_GROUP_PATH ${path} CACHE INTERNAL "")
-		set(CURRENT_SOURCE_GROUP_NAME ${name} CACHE INTERNAL "")
+		set(CURRENT_SOURCE_GROUP_PATH ${path} CACHE STRING "" FORCE)
+		set(CURRENT_SOURCE_GROUP_NAME ${name} CACHE STRING "" FORCE)
+		
+		if(NOT ";${${PROJECT_NAME}_SOURCE_GROUPS};" MATCHES ";${path};")
+			set(${PROJECT_NAME}_SOURCE_GROUPS ${${PROJECT_NAME}_SOURCE_GROUPS};${path} CACHE INTERNAL "" FORCE)
+		endif()
+		
+	endfunction()
+	
+#	domain function
+
+	function(domain path)
+		string(REPLACE \\ / path ${path})
+		set(CURRENT_SOURCE_DOMAIN ${path} CACHE STRING "" FORCE)
+	endfunction()
+	
+#	set_source function
+
+	function(set_source out dir source)
+		string(REGEX REPLACE "/$" "" dir "${dir}")
+		if("${dir}" STREQUAL "")
+			set(${out} ${source} PARENT_SCOPE)
+		else()
+			set(${out} ${dir}/${source} PARENT_SCOPE)
+		endif()
+	endfunction()
+	
+#	flush_sources function
+
+	function(flush_sources dir)
+		if(NOT "${ARGN}" STREQUAL "")
+			string(REGEX REPLACE "/$" "" dir "${dir}")
+			string(REPLACE / \\ dir "${dir}")
+			
+			if("${dir}" STREQUAL "")
+				source_group(${CURRENT_SOURCE_GROUP_NAME} FILES ${ARGN})
+			else()
+				source_group(${CURRENT_SOURCE_GROUP_NAME}\\${dir} FILES ${ARGN})
+			endif()
+			
+			set(CURRENT_SOURCE_LIST ${CURRENT_SOURCE_LIST} ${ARGN} CACHE INTERNAL "" FORCE)
+		endif()	
 	endfunction()
 	
 #	collect_files function.
@@ -128,37 +184,50 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 	function(collect_files out)
 		set(source_list)
-
-		set(dir "")
+		set(dir)
+		set(CURRENT_SOURCE_LIST CACHE INTERNAL "" FORCE)
 		set(root ${PROJECT_SOURCE_DIR}/${CURRENT_SOURCE_GROUP_PATH})
 
 		foreach(entry ${ARGN})
-			if(${entry} MATCHES ".*/" OR ${entry} MATCHES ".*\\")
-				string(REGEX REPLACE "[/\\]$" "" entry ${entry})
+			if("${entry}" MATCHES ".*/$" OR "${entry}" MATCHES ".*\\$")
+				flush_sources(${CURRENT_SOURCE_DOMAIN}/${dir} ${dir_list})
+				set(dir_list)
+				
 				string(REPLACE "\\" "/" entry ${entry})
-				set(dir ${dir}/${entry})
-			else()
-				if(NOT ${dir} STREQUAL "")
-					set(source ${dir}/${entry})
+				string(REGEX REPLACE "/$" "" entry ${entry})
+				
+				if("${dir}" STREQUAL "")
+					set(dir ${entry})
 				else()
-					set(source ${entry})
+					set(dir ${dir}/${entry})
 				endif()
+				string(REPLACE "//" "/" dir ${dir})
+			elseif("${entry}" STREQUAL "..")
+				flush_sources(${CURRENT_SOURCE_DOMAIN}/${dir} ${dir_list})
+				set(dir_list)
+				get_filename_component(dir ${dir} DIRECTORY)
+				
+				if("${dir}" STREQUAL "/")
+					set(dir)
+				endif()
+			elseif("${entry}" STREQUAL ".")
+				flush_sources(${CURRENT_SOURCE_DOMAIN}/${dir} ${dir_list})
+				set(dir_list)
+				set(dir)
+			else()
+				set_source(source ${CURRENT_SOURCE_DOMAIN}/${dir} ${entry})
 
-				if(NOT EXISTS ${root}/${source})
+				if(NOT EXISTS "${root}/${source}")
 					create_source(${root} ${source})
 				endif()
 
-				list(APPEND source_list ${root}/${source})
+				list(APPEND dir_list ${root}/${source})
 			endif()
 		endforeach()
 
-		list(LENGTH source_list source_count)
-
-		if(NOT ${source_count} EQUAL 0)
-			source_group(${CURRENT_SOURCE_GROUP_NAME} FILES ${source_list})
-		endif()
-
-		set(${out} ${source_list} PARENT_SCOPE)
+		flush_sources(${CURRENT_SOURCE_DOMAIN}/${dir} ${dir_list})
+		set(${out} ${CURRENT_SOURCE_LIST} PARENT_SCOPE)
+		set(${PROJECT_NAME}_SOURCES ${${PROJECT_NAME}_SOURCES};${CURRENT_SOURCE_LIST} CACHE INTERNAL "${PROJECT_NAME} sources" FORCE)
 	endfunction()
 
 #	files function.
@@ -166,8 +235,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 #		files(<tree...>)
 
 	function(files)
-		collect_files(OUT_LIST ${ARGN})
-		set(${PROJECT_NAME}_SOURCES ${${PROJECT_NAME}_SOURCES};${OUT_LIST} CACHE INTERNAL "${PROJECT_NAME} sources" FORCE)
+		collect_files(_ ${ARGN})
 	endfunction()
 
 #	add_module_include_dirs function.
@@ -202,7 +270,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 	function(require_module name path)
 		set(MESSAGES_INDENTATION_TEMP ${MESSAGES_INDENTATION})
-		set(MESSAGES_INDENTATION "${MESSAGES_INDENTATION}  " CACHE STRING "Dependency list indentation" FORCE)
+		set(MESSAGES_INDENTATION "${MESSAGES_INDENTATION}  " CACHE STRING "Messages indentation" FORCE)
 		message("${MESSAGES_INDENTATION}> Depends on \"${name}\"")
 
 		set(${PROJECT_NAME}_MODULE_DEPENDENCIES ${${PROJECT_NAME}_MODULE_DEPENDENCIES};${name} CACHE INTERNAL "${PROJECT_NAME} module dependencies" FORCE)
@@ -211,7 +279,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			add_subdirectory("${MODULES_ROOT}/${path}" "${OUTPUT_ROOT}/${path}")
 		endif()
 
-		set(MESSAGES_INDENTATION ${MESSAGES_INDENTATION_TEMP} CACHE STRING "Dependency list indentation" FORCE)
+		set(MESSAGES_INDENTATION ${MESSAGES_INDENTATION_TEMP} CACHE STRING "Messages indentation" FORCE)
 	endfunction()
 
 #	dependencies function.
@@ -275,6 +343,18 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 	function(sources folder)
 		set(${PROJECT_NAME}_FOLDER ${folder} CACHE STRING "${PROJECT_NAME} folder" FORCE)
+		
+		set(CURRENT_SOURCE_DOMAIN CACHE STRING "" FORCE)
+		set(CURRENT_SOURCE_GROUP_PATH src CACHE STRING "" FORCE)
+		set(CURRENT_SOURCE_GROUP_NAME Sources CACHE STRING "" FORCE)
+	endfunction()
+
+#	endsources function
+
+	function(endsources)
+		set(CURRENT_SOURCE_DOMAIN CACHE STRING "" FORCE)
+		set(CURRENT_SOURCE_GROUP_PATH src CACHE STRING "" FORCE)
+		set(CURRENT_SOURCE_GROUP_NAME Sources CACHE STRING "" FORCE)
 	endfunction()
 
 #	api function.
@@ -341,7 +421,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 		target_compile_options(${PROJECT_NAME} PRIVATE ${COMPILE_OPTIONS})
 
-		add_module_include_dirs(${PROJECT_SOURCE_DIR}/include)
+		add_module_include_dirs(${${PROJECT_NAME}_SOURCE_GROUPS})
 		add_module_libraries(${${PROJECT_NAME}_MODULE_DEPENDENCIES})
 		api_export(${PROJECT_NAME})
 

@@ -1,4 +1,4 @@
-//---------------------------------------------------------------------------
+﻿//---------------------------------------------------------------------------
 
 #include <opengl/OpenGL3_3.h>
 #include <iostream>
@@ -26,7 +26,7 @@ namespace Rapture
 			{
 				auto units = elements[i]->units;
 				glEnableVertexAttribArray(i);
-				glVertexAttribPointer(i, units * sizeof(float), GL_FLOAT, GL_FALSE, units, pointer);
+				glVertexAttribPointer(i, units, GL_FLOAT, GL_FALSE, 0, pointer);
 				pointer += units;
 			}
 		}
@@ -37,7 +37,7 @@ namespace Rapture
 		{
 			for(uint i = 0; i < _count; ++i)
 				glDisableVertexAttribArray(i);
-
+			 
 			_count = count;
 		}
 
@@ -49,6 +49,7 @@ namespace Rapture
 			glGenBuffers(1, &handle);
 			glBindBuffer(GL_ARRAY_BUFFER, handle);
 			glBufferData(GL_ARRAY_BUFFER, vd.size, vd.ptr, GL_STATIC_DRAW);
+			graphics->checkForErrors();
 		}
 
 		void GLVertexBuffer::apply() const
@@ -62,6 +63,7 @@ namespace Rapture
 			glGenBuffers(1, &handle);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint), indices.data(), GL_STATIC_DRAW);
+			graphics->checkForErrors();
 		}
 
 		void GLIndexBuffer::apply() const
@@ -91,42 +93,114 @@ namespace Rapture
 			}
 
 			glGenVertexArrays(1, &id);
-			glBindVertexArray(id);
 		}
 
 		GLMesh::GLMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vbuffer, VertexTopology topology, uint verticesLocation) : Mesh(vbuffer, topology, verticesLocation), GLMeshTrait(graphics, topology)
 		{
+			glBindVertexArray(id);
 			vbuffer->apply();
+			glBindVertexArray(0);
 		}
 
 		void GLMesh::draw() const
 		{
 			graphics->bind(this);
 			glDrawArrays(topology, verticesLocation, vbuffer->verticesCount - verticesLocation);
+			graphics->bind(null<GLMeshTrait>());
 		}
 
 		GLIndexedMesh::GLIndexedMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, VertexTopology topology, uint verticesLocation, uint indicesLocation) : IndexedMesh(vbuffer, ibuffer, topology, verticesLocation, indicesLocation), GLMeshTrait(graphics, topology)
 		{
+			glBindVertexArray(id);
 			vbuffer->apply();
 			ibuffer->apply();
+			glBindVertexArray(0);
 		}
 
 		void GLIndexedMesh::draw() const
 		{
 			graphics->bind(this);
 			glDrawElements(topology, ibuffer->size, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(indicesLocation));
+			graphics->bind(null<GLMeshTrait>());
 		}
 
-		GLShaderProgram::GLShaderProgram(GLGraphics * graphics, VertexLayout * layout) : graphics(graphics), layout(layout), id(glCreateProgram())
+		GLShaderProgram::GLShaderProgram(GLGraphics * graphics, const string & filename, VertexLayout * layout, ShaderCodeState state) : GLShaderProgram(graphics, layout)
 		{
 			if(id == 0)
 				throw Exception("Can't create new GLSL program!");
+		}
+
+		GLShaderProgram::GLShaderProgram(GLGraphics * graphics, const string & key, VertexLayout * layout, const ShaderCodeSet & codeSet, ShaderCodeState state) : GLShaderProgram(graphics, layout)
+		{
+			using namespace std;
+
+			if(id == 0)
+				throw Exception("Can't create new GLSL program (", key, ")");
+
+		#ifdef GL_DEBUG
+			cout << "Compile shader program \"" << key << "\"" << endl;
+		#endif
+
+			string attr;
 
 			for(size_t i = 0; i < layout->elements.size(); ++i)
 			{
-				glBindAttribLocation(id, i, GLVertexLayout::attributes[layout->elements[i]->type]);
+				auto & e = layout->elements[i];
+				attr = GLVertexLayout::attributes[e->type];
+
+				if(e->index > 0)
+					attr += (e->index + 1);
+
+				glBindAttribLocation(id, i, attr.c_str());
 			}
+
+			for(auto & c : codeSet)
+			{
+				auto & shader = _shaders[c.first];
+				shader.init(this, c.second, state, glShaderType(c.first));
+				glAttachShader(id, shader->id);
+			}
+
+			graphics->checkForErrors();
+
+			glLinkProgram(id);
+
+			int status;
+			glGetProgramiv(id, GL_LINK_STATUS, &status);
+
+			if(status == GL_FALSE)
+			{
+			#ifdef GL_DEBUG
+				int l = 0;
+				glGetProgramiv(id, GL_INFO_LOG_LENGTH, &l);
+
+				if(l == 0)
+					return;
+
+				owned_data<char> buffer(l + 1);
+
+				glGetProgramInfoLog(id, l, nullptr, buffer.ptr);
+				buffer[l] = '\0';
+
+				cout << buffer.ptr << endl;
+			#endif
+
+				throw Exception("Can't link shader program!");
+			}
+
+			for(auto & b : graphics->_uniformBindings)
+			{
+				auto block_index = glGetUniformBlockIndex(id, b.name);
+
+				if(block_index > 0)
+					glUniformBlockBinding(id, block_index, b.index);
+			}
+
+			glUseProgram(id);
+			graphics->checkForErrors();
 		}
+
+		GLShaderProgram::GLShaderProgram(GLGraphics * graphics, VertexLayout * layout) : graphics(graphics), id(glCreateProgram()), layout(layout) {}
 
 		GLShaderProgram::~GLShaderProgram()
 		{
@@ -156,10 +230,21 @@ namespace Rapture
 			}
 		}
 
-		GLShader::GLShader(GLShaderProgram * program, const Handle<ShaderCode> & code, GLenum type) : program(program), id(glCreateShader(type))
+		GLShader::GLShader(GLShaderProgram * program, const Handle<ShaderCode> & code, ShaderCodeState state, GLenum type) : program(program), id(glCreateShader(type))
 		{
 			if(id == 0)
 				throw Exception("in Shader Operator: Can't create new shader!");
+
+			switch(state)
+			{
+				case ShaderCodeState::Raw:
+					initRaw(code, type);
+					break;
+
+				case ShaderCodeState::Compiled:
+					//initCompiled(code, type);
+					break;
+			}
 		}
 
 		GLShader::~GLShader()
@@ -195,8 +280,7 @@ namespace Rapture
 			input.read(reinterpret_cast<char *>(source->ptr), source->size);
 			input.close();
 
-			if(!initRaw(source, type))
-				throw Exception("Can't compile GLSL shader! File: ", filepath.c_str());
+			initRaw(source, type);
 		}
 
 		void GLShader::read(const String & filename, GLenum type)
@@ -226,35 +310,63 @@ namespace Rapture
 			input.read(reinterpret_cast<char *>(source->ptr), source->size);
 			input.close();
 
-			if(!initCompiled(source, type))
-				throw Exception("Can't load compiled GLSL shader! File: ", filepath.c_str());
+			initCompiled(source, type);
 		}
 
-		bool GLShader::initRaw(const Handle<ShaderCode> & source, GLenum type)
+		void GLShader::initRaw(const Handle<ShaderCode> & source, GLenum type)
 		{
-			GLint status;
+			using namespace std;
+
 			GLint size = static_cast<GLint>(source->size);
+
+		#ifdef GL_DEBUG
+			switch(type)
+			{
+				case GL_VERTEX_SHADER:
+					cout << "Compile vertex shader" << endl;
+					break;
+
+				case GL_FRAGMENT_SHADER:
+					cout << "Compile fragment shader" << endl;
+					break;
+
+				default:
+					cout << "Compile shader" << endl;
+			}
+		#endif
 
 			glShaderSource(id, 1, (const GLchar **)&source->ptr, &size);
 			glCompileShader(id);
 
+			GLint status;
 			glGetShaderiv(id, GL_COMPILE_STATUS, &status);
 
-			return status == GL_TRUE;
+			if(status == GL_FALSE)
+			{
+			#ifdef GL_DEBUG
+				using namespace std;
+
+				int l = 0;
+				glGetShaderiv(id, GL_INFO_LOG_LENGTH, &l);
+
+				if(l != 0)
+				{
+					owned_data<char> buffer(l + 1);
+
+					glGetShaderInfoLog(id, l, nullptr, buffer.ptr);
+					buffer[l] = '\0';
+
+					cout << buffer.ptr << endl;
+				}
+			#endif
+
+				throw Exception("Can't compile GLSL shader!");
+			}
 		}
 
-		bool GLShader::initCompiled(const Handle<ShaderCode> & code, GLenum type)
+		void GLShader::initCompiled(const Handle<ShaderCode> & code, GLenum type)
 		{
-			return false;
 		}
-
-		GLVertexShader::GLVertexShader(GLShaderProgram * program, const String & path, ShaderCodeState state) : GLShader(program, path, state, GL_VERTEX_SHADER) {}
-
-		GLVertexShader::GLVertexShader(GLShaderProgram * program, const Handle<ShaderCode> & code) : GLShader(program, code, GL_VERTEX_SHADER) {}
-
-		GLPixelShader::GLPixelShader(GLShaderProgram * program, const String & path, ShaderCodeState state) : GLShader(program, path, state, GL_FRAGMENT_SHADER) {}
-
-		GLPixelShader::GLPixelShader(GLShaderProgram * program, const Handle<ShaderCode> & code) : GLShader(program, code, GL_FRAGMENT_SHADER) {}
 
 		GLImage::GLImage(GLGraphics * graphics, uint width, uint height) : Image(graphics, width, height, ImageFormat::bgra), _graphics(graphics)
 		{
@@ -308,11 +420,13 @@ namespace Rapture
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
 			glTexImage2D(GL_TEXTURE_2D, 0, internalformat, w, h, 0, format, GL_UNSIGNED_BYTE, newData->ptr);
+			graphics->checkForErrors();
 		}
 
 		void GLImage::apply() const
 		{
 			glBindTexture(0, _id);
+			_graphics->checkForErrors();
 		}
 
 		void GLImage::requestData(ImageData * output) const
@@ -323,17 +437,19 @@ namespace Rapture
 
 		GLUniformAdapter::GLUniformAdapter(GLGraphics * graphics, ShaderType shader, int index, size_t size) : _graphics(graphics), _index(index), _size(size)
 		{
-			OwnedByteData data(size);
-
 			glGenBuffers(1, &_buffer);
 			glBindBufferBase(GL_UNIFORM_BUFFER, _index, _buffer);
-			glBufferData(GL_UNIFORM_BUFFER, size, data.ptr, GL_STATIC_DRAW);
+			glBufferData(GL_UNIFORM_BUFFER, size, nullptr, GL_STATIC_DRAW);
+			graphics->checkForErrors();
 		}
 
 		void GLUniformAdapter::update(const void * data)
 		{
 			glBindBufferBase(GL_UNIFORM_BUFFER, _index, _buffer);
 			void * ptr = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
+
+			assert(ptr);
+
 			memcpy(ptr, data, _size);
 			glUnmapBuffer(GL_UNIFORM_BUFFER);
 		}

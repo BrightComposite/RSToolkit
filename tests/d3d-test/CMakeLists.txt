@@ -10,30 +10,25 @@ include(${RAPTURE_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-start_module(
-	APPLICATION
-    RaptureApplication "application"
-	RaptureDirect3D11  "direct3d"
-	RaptureFreeImage   "freeimage"
-	RaptureFreeType    "freetype"
-)
+module(APPLICATION)
+	dependencies(
+		RaptureApplication "application"
+		RaptureDirect3D11  "direct3d"
+		RaptureFreeImage   "freeimage"
+		RaptureFreeType    "freetype"
+	)
 
-set_module_folder(tests)
-
-add_module_sources(
-	SRC_GROUP src Sources
-		START_SECTION SRC_ROOT
-			matrix-test.h
-		END_SECTION
-
-	SRC_GROUP src Sources
-		START_SECTION SRC_ROOT
+	sources(tests)
+		group(include Headers)
+		files(matrix-test.h)
+		
+		group(src Sources)
+		files(
 			d3d-test.cpp
 			second.cpp
-		END_SECTION
-)
-
-end_module()
+		)
+	endsources()
+endmodule()
 
 load_third_party(vld)
 

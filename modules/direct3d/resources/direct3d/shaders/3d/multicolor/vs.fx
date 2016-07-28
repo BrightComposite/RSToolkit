@@ -1,6 +1,6 @@
 /**
-*
-*/
+ *	!layout: p3 c4
+ */
 
 cbuffer Model : register(b1)
 {

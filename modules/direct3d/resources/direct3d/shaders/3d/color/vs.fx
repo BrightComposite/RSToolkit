@@ -1,5 +1,5 @@
 /**
- *
+ *	!layout: p3
  */
 
 cbuffer Model : register(b1)

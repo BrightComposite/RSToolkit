@@ -11,7 +11,7 @@ cmake_minimum_required(VERSION 3.0)
 #--------------------------------------------------------
 
 set(GUARD_BLOCKS CACHE INTERNAL "Guard blocks" FORCE)
-set(DEPENDENCIES_LIST_INDENTATION CACHE STRING "Dependency list indentation" FORCE)
+set(MESSAGES_INDENTATION "" CACHE STRING "Messages indentation" FORCE)
 
 get_filename_component(RAPTURE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/.. ABSOLUTE)
 set(RAPTURE_ROOT ${RAPTURE_ROOT} CACHE PATH "Rapture state engine root directory")

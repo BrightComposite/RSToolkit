@@ -10,17 +10,17 @@ include(${RAPTURE_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-start_module(
-	SHARED
-	RaptureMath "math"
-	RaptureIO "io"
-)
+module(SHARED)
+	dependencies(
+		RaptureMath "math"
+		RaptureIO "io"
+	)
 
-set_module_folder(modules)
-
-add_module_sources(
-	SRC_GROUP include Headers
-		START_SECTION graphics
+	sources(modules)
+		domain(graphics)
+		
+		group(include Headers)
+		files(
 			Color.h
 			GraphicModel.h
 			Graphics.h
@@ -32,48 +32,39 @@ add_module_sources(
 			Uniform.h
 			VertexLayout.h
 
-			START_SECTION image
+			image/
 				Image.h
 				ImageData.h
 
-				START_SECTION io
+				io/
 					ImageIO.h
-				END_SECTION
-			END_SECTION
-
-			START_SECTION font
+			.
+			font/
 				Font.h
 
-				START_SECTION io
+				io/
 					FontIO.h
-				END_SECTION
-			END_SECTION
-		END_SECTION
+			)
 
-	SRC_GROUP src Sources
-		START_SECTION graphics
+		group(src Sources)
+		files(
 			Graphics.cpp
 			Graphics3D.cpp
 
-			START_SECTION image
+			image/
 				Image.cpp
 				ImageData.cpp
 
-				START_SECTION io
+				io/
 					ImageIO.cpp
-				END_SECTION
-			END_SECTION
-
-			START_SECTION text
+			.
+			font/
 				Font.cpp
 
-				START_SECTION io
+				io/
 					FontIO.cpp
-				END_SECTION
-			END_SECTION
-		END_SECTION
-)
-
-end_module()
+			)
+	endsources()
+endmodule()
 
 #--------------------------------------------------------

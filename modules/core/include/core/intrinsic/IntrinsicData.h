@@ -113,7 +113,7 @@ namespace Rapture
 	struct alignas(sizeof(intrin_t<T, N>)) IntrinData
 	{
 		typedef intrin_t<T, N> type;
-		typedef T inner[N];
+		typedef array<T, N> inner;
 		typedef IntrinData<T, N / sz> unit;
 
 		static const size_t stride = sizeof(intrin_base_t<T, N>);
@@ -123,6 +123,9 @@ namespace Rapture
 			inner data;
 			type v;
 		};
+
+		member_cast(v, type);
+		member_cast(data, inner);
 
 		IntrinData() {}
 		IntrinData(const type & v)
@@ -140,26 +143,6 @@ namespace Rapture
 		{
 			intrin_cvt(v, this->v);
 			return *this;
-		}
-
-		operator type & ()
-		{
-			return v;
-		}
-
-		operator const type & () const
-		{
-			return v;
-		}
-
-		operator inner & ()
-		{
-			return data;
-		}
-
-		operator const inner & () const
-		{
-			return data;
 		}
 
 		unit & operator [] (size_t index)
@@ -199,14 +182,21 @@ namespace Rapture
 	struct alignas(sizeof(intrin_t<T, 2>)) IntrinData<T, 2, 0>
 	{
 		typedef intrin_t<T, 2> type;
-		typedef T inner[2];
+		typedef array<T, 2> inner;
 
 		union
 		{
 			inner data;
 			type v;
-			T x, y;
+
+			struct
+			{
+				T x, y;
+			};
 		};
+
+		member_cast(v, type);
+		member_cast(data, inner);
 
 		IntrinData() {}
 		IntrinData(const type & v)
@@ -226,26 +216,6 @@ namespace Rapture
 			return *this;
 		}
 
-		operator type & ()
-		{
-			return v;
-		}
-
-		operator const type & () const
-		{
-			return v;
-		}
-
-		operator inner & ()
-		{
-			return data;
-		}
-
-		operator const inner & () const
-		{
-			return data;
-		}
-
 		template<int I, useif<(I < 2)>>
 		static inline T get(const IntrinData & in)
 		{
@@ -263,7 +233,7 @@ namespace Rapture
 	struct alignas(sizeof(intrin_t<T, 4>)) IntrinData<T, 4, sz>
 	{
 		typedef intrin_t<T, 4> type;
-		typedef T inner[4];
+		typedef array<T, 4> inner;
 		typedef IntrinData<T, 4 / sz> unit;
 
 		static const size_t stride = sizeof(intrin_base_t<T, 4>);
@@ -272,8 +242,15 @@ namespace Rapture
 		{
 			inner data;
 			type v;
-			T x, y, z, w;
+
+			struct
+			{
+				T x, y, z, w;
+			};
 		};
+
+		member_cast(v, type);
+		member_cast(data, inner);
 
 		IntrinData() {}
 
@@ -292,26 +269,6 @@ namespace Rapture
 		{
 			intrin_cvt(v, this->v);
 			return *this;
-		}
-
-		operator type & ()
-		{
-			return v;
-		}
-
-		operator const type & () const
-		{
-			return v;
-		}
-
-		operator inner & ()
-		{
-			return data;
-		}
-
-		operator const inner & () const
-		{
-			return data;
 		}
 
 		unit & operator [] (size_t index)
@@ -351,17 +308,29 @@ namespace Rapture
 	struct alignas(sizeof(intrin_t<T, 4>)) IntrinData<T, 4, 0>
 	{
 		typedef intrin_t<T, 4> type;
-		typedef T inner[4];
+		typedef array<T, 4> inner;
 
 		union
 		{
 			inner data;
 			type v;
-			T x, y, z, w;
+			
+			struct
+			{
+				T x, y, z, w;
+			};
 		};
+
+		member_cast(v, type);
+		member_cast(data, inner);
 
 		IntrinData() {}
 		IntrinData(const type & v) : v(v) {}
+
+		void * operator new (size_t size)
+		{
+			return _mm_malloc(size, sizeof(T) * 4);
+		}
 
 		IntrinData & operator = (const type & v)
 		{
@@ -369,24 +338,24 @@ namespace Rapture
 			return *this;
 		}
 
-		operator type & ()
+		T & operator [] (size_t index)
 		{
-			return v;
+			return data[index];
 		}
 
-		operator const type & () const
+		const T & operator [] (size_t index) const
 		{
-			return v;
+			return data[index];
 		}
 
-		operator inner & ()
+		T & operator [] (int index)
 		{
-			return data;
+			return data[index];
 		}
 
-		operator const inner & () const
+		const T & operator [] (int index) const
 		{
-			return data;
+			return data[index];
 		}
 
 		template<int I, useif<(I < 4)>>

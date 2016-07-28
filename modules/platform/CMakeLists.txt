@@ -10,33 +10,30 @@ include(${RAPTURE_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-start_module(
-	SHARED
-	RaptureMath "math"
-)
+module(SHARED)
+	dependencies(RaptureMath "math")
 
-set_module_folder(modules)
+	sources(modules)
 
-if(WIN32)
-add_module_sources(
-	SRC_GROUP include Headers
-		START_SECTION windows
+	if(WIN32)
+		domain(windows)
+		
+		group(include Headers)
+		files(
 			ComException.h
 			ComHandle.h
 			Message.h
 			PointAdapter.h
 			RectAdapter.h
-		END_SECTION
+			)
 
-	SRC_GROUP src Sources
-		START_SECTION windows
-			Message.cpp
-		END_SECTION
-)
-elseif(UNIX)
+		group(src Sources)
+		files(Message.cpp)
+	elseif(UNIX)
 
-endif()
-
-end_module()
+	endif()
+	
+	endsources()
+endmodule()
 
 #--------------------------------------------------------

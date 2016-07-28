@@ -10,13 +10,12 @@ include(${RAPTURE_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-start_module(INLINE)
-
-set_module_folder(modules)
-
-add_module_sources(
-	SRC_GROUP include Headers
-		START_SECTION meta
+module(INLINE)
+	sources(modules)
+		domain(meta)
+		
+		group(include Headers)
+		files(
 			Adapt.h
 			Bitmask.h
 			BoolTypes.h
@@ -28,10 +27,9 @@ add_module_sources(
 			Sfinae.h
 			Types.h
 			UseIf.h
-		END_SECTION
-)
-
-end_module()
+		)
+	endsources()
+endmodule()
 
 load_third_party(boost COMPONENT preprocessor)
 

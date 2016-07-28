@@ -4,6 +4,8 @@
 
 #include <ui/UISpace.h>
 
+#include <iostream>
+
 //---------------------------------------------------------------------------
 
 #pragma comment(lib, "opengl32.lib")
@@ -109,10 +111,10 @@ namespace Rapture
 				::DestroyWindow(_wnd);
 		}
 
-		static bool setPixelFormat(HDC dc)
+		void GLGraphics::setPixelFormat(HDC dc)
 		{
 			if(dc == nullptr)
-				return false;
+				throw Exception("Can't set pixel format, device context is null!");
 
 			PIXELFORMATDESCRIPTOR pfd;
 			memset(&pfd, 0, sizeof(pfd));
@@ -131,10 +133,112 @@ namespace Rapture
 				format = 1;
 
 				if(::DescribePixelFormat(dc, format, sizeof(pfd), &pfd) == FALSE)
-					return false;
+					throw Exception("Can't describe pixel format!");
 			}
 
-			return ::SetPixelFormat(dc, format, &pfd) == TRUE;
+			if(::SetPixelFormat(dc, format, &pfd) != TRUE)
+				throw Exception("Can't set pixel format! Call to SetPixelFormat failed");
+		}
+
+		void APIENTRY glDebugCallbackFunc(uint source, uint type, uint id, uint severity, int length, const char * message, void * userParam)
+		{
+			string sev, t, src;
+
+			switch(severity)
+			{
+				case GL_DEBUG_SEVERITY_LOW:
+					sev = "low";
+					break;
+
+				case GL_DEBUG_SEVERITY_MEDIUM:
+					sev = "medium";
+					break;
+
+				case GL_DEBUG_SEVERITY_HIGH:
+					sev = "high";
+					break;
+
+				default:
+					sev = String::hex(severity);
+			}
+
+			switch(type)
+			{
+				case GL_DEBUG_TYPE_ERROR:
+					t = "Error";
+					break;
+
+				case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+					t = "Deprecated behavior";
+					break;
+
+				case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+					t = "Undefined behavior";
+					break;
+
+				case GL_DEBUG_TYPE_PORTABILITY:
+					t = "Portability";
+					break;
+
+				case GL_DEBUG_TYPE_PERFORMANCE:
+					t = "Performance";
+					break;
+
+				case GL_DEBUG_TYPE_OTHER:
+					t = "Other";
+					break;
+
+				case GL_DEBUG_TYPE_MARKER:
+					t = "Marker";
+					break;
+
+				case GL_DEBUG_TYPE_PUSH_GROUP:
+					t = "Push group";
+					break;
+
+				case GL_DEBUG_TYPE_POP_GROUP:
+					t = "Pop group";
+					break;
+
+				default:
+					t = String::assemble("Unknown (", String::hex(type), ")");
+			}
+
+			switch(source)
+			{
+				case GL_DEBUG_SOURCE_API:
+					src = "API";
+					break;
+
+				case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+					src = "Window system";
+					break;
+
+				case GL_DEBUG_SOURCE_SHADER_COMPILER:
+					src = "Shader compiler";
+					break;
+
+				case GL_DEBUG_SOURCE_THIRD_PARTY:
+					src = "3rd party";
+					break;
+
+				case GL_DEBUG_SOURCE_APPLICATION:
+					src = "Application";
+					break;
+
+				default:
+					src = String::assemble("Unknown (", String::hex(source), ")");
+			}
+
+			//if(severity != 0)
+			{
+				using namespace std;
+
+				cout << "--" << endl;
+				cout << "OpenGL debugger message:" << endl;
+				cout << "\tGROUP: " << t << ", SEVERITY: " << sev << ", ID: 0x" << hex << id << dec << ", SOURCE: " << src << endl;
+				cout << "\tTEXT: \"" << message << "\"" << endl << endl;
+			}
 		}
 
 		void GLGraphics::initDevice()
@@ -154,17 +258,34 @@ namespace Rapture
 			if(error > 0)
 				throw Exception("Can't initialize GLEW! ", (const char *)glewGetErrorString(error));
 
+			checkForErrors();
+
+			glEnable(GL_DEPTH_TEST);
 			glDepthFunc(GL_LESS);
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			glEnable(GL_CULL_FACE);
-			glEnable(GL_SCISSOR_TEST);
+			//glEnable(GL_BLEND);
+			//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			//glEnable(GL_CULL_FACE);
+			//glEnable(GL_SCISSOR_TEST);
+
+		#ifdef GL_DEBUG
+			glEnable(GL_DEBUG_OUTPUT);
+			glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+			if(glDebugMessageCallback != nullptr)
+				glDebugMessageCallback(glDebugCallbackFunc, nullptr);
+			else
+			{
+				using namespace std;
+				cout << "glDebugMessageCallback is not supported" << endl;
+			}
+		#endif
 		}
 
 		void GLGraphics::initFacilities()
 		{
 			initShaders();
 			Graphics3D::initFacilities();
+			checkForErrors();
 		}
 
 		void GLGraphics::bind(const GLShaderProgram * program)
@@ -181,13 +302,25 @@ namespace Rapture
 			if(_mesh != mesh)
 			{
 				_mesh = mesh;
-				glBindVertexArray(mesh->id);
+				glBindVertexArray(mesh != nullptr ? mesh->id : 0);
 			}
 		}
 
 		void GLGraphics::printInfo() {}
 		void GLGraphics::printDebug() {}
-		void GLGraphics::checkForErrors() {}
+
+		void GLGraphics::checkForErrors()
+		{
+			GLenum error = glGetError();
+
+			if(error == GL_NO_ERROR)
+				return;
+
+			if(glErrorStringREGAL != nullptr)
+				throw Exception("OpenGL error: ", glErrorStringREGAL(error));
+			else
+				throw Exception("OpenGL error, code: ", String::hex(error));
+		}
 
 		Handle<Image> GLGraphics::createImage(const ImageData & data)
 		{
@@ -219,8 +352,21 @@ namespace Rapture
 			return Handle<GLIndexedMesh>(this, buffer, createIndexBuffer(indices), topology, verticesLocation, indicesLocation);
 		}
 
-		UniqueHandle<UniformAdapter> GLGraphics::createUniformAdapter(ShaderType shader, int index, size_t size)
+		UniqueHandle<UniformAdapter> GLGraphics::createUniformAdapter(const char * name, ShaderType shader, int index, size_t size)
 		{
+			_uniformBindings.emplace_back(name, index);
+
+			for(auto & p : _shaderPrograms)
+			{
+				auto program = handle_cast<GLShaderProgram>(valueof(p));
+				auto block_index = glGetUniformBlockIndex(program->id, name);
+
+				if(block_index != GL_INVALID_INDEX)
+					glUniformBlockBinding(program->id, block_index, index);
+			}
+
+			checkForErrors();
+
 			return UniqueHandle<GLUniformAdapter, GLGraphics>(this, shader, index, size);
 		}
 

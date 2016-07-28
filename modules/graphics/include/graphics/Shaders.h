@@ -18,7 +18,7 @@ namespace Rapture
 
 	enum class ShaderType : int
 	{
-		Common = -1,
+		Unknown = -1,
 		Vertex = 0, // vertex shader
 		Fragment = 1, // fragment shader (OpenGL)
 		Pixel = 1, // pixel shader (Direct3D)
@@ -42,12 +42,7 @@ namespace Rapture
 {
 	subclass(ShaderCode, owned_data<void>);
 
-	struct ShaderCodeSet : Shared
-	{
-		Map<ShaderType, ShaderCode> code;
-	};
-
-	typedef Map<string, ShaderCodeSet> ShaderMap;
+	using ShaderCodeSet = Map<ShaderType, ShaderCode>;
 
 //---------------------------------------------------------------------------
 
@@ -88,6 +83,8 @@ namespace Rapture
 	{
 	public:
 		virtual ~Shader() {}
+
+		virtual void apply() const {}
 	};
 
 	template<class T>
@@ -99,8 +96,8 @@ namespace Rapture
 	{
 		switch(type)
 		{
-			case ShaderType::Common:
-				s << "Common";
+			case ShaderType::Unknown:
+				s << "Unknown";
 				return;
 
 			case ShaderType::Vertex:

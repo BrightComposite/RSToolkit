@@ -62,6 +62,18 @@ namespace Rapture
 			return h;
 		}
 
+		static auto begin()
+		{
+			auto & _cache = cache();
+			return _cache.cbegin();
+		}
+
+		static auto end()
+		{
+			auto & _cache = cache();
+			return _cache.cend();
+		}
+
 	protected:
 		Precached(const K & key)
 		{

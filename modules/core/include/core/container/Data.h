@@ -294,9 +294,9 @@ namespace Rapture
 	public:
 		data() : ptr(nullptr), size(0) {}
 		data(const data & rd) : ptr(rd.ptr), size(rd.size) {}
-		data(const void * ptr, size_t size) : ptr(ptr), size(size) {}
+		data(const void * const ptr, size_t size) : ptr(ptr), size(size) {}
 		template<typename T>
-		data(const T * ptr, size_t size) : ptr(ptr), size(size * sizeof(T)) {}
+		data(const T * const ptr, size_t size) : ptr(ptr), size(size * sizeof(T)) {}
 		template<typename T>
 		data(const array_list<T> & v) : ptr(v.data()), size(v.size() * sizeof(T)) {}
 		template<typename T, size_t N>
@@ -336,8 +336,9 @@ namespace Rapture
 		template<class T>
 		owned_data(const owned_data<T> & rd) : Base(Memory<T>::copy(rd.ptr, rd.size), rd.size) {}
 		owned_data(size_t size) : Base(Memory<void>::allocate(size), size) {}
-		template<class T>
-		owned_data(const T * ptr, size_t size) : Base(Memory<T>::copy(ptr, size), size * sizeof(T)) {}
+		template<class T, useif<not_same_type<T, void>::value>>
+		owned_data(const T * const ptr, size_t size) : Base(Memory<T>::copy(ptr, size), size * sizeof(T)) {}
+		owned_data(const void * const ptr, size_t size) : Base(Memory<void>::copy(ptr, size), size) {}
 		template<class T>
 		owned_data(const array_list<T> & v) : Base(Memory<T>::copy(v.data(), v.size()), v.size() * sizeof(T)) {}
 		template<class T, size_t N>

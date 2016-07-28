@@ -15,6 +15,7 @@
 #include <array>
 #include <cctype>
 #include <string>
+#include <sstream>
 
 #include <core/algorithm/lookup3.h>
 
@@ -45,6 +46,14 @@ namespace Rapture
 	struct can_str_print;
 	template<class T>
 	struct can_wstr_print;
+	template<class T>
+	struct can_stream_print;
+	template<class T>
+	struct can_wstream_print;
+	template<class T>
+	struct can_stream_read;
+	template<class T>
+	struct can_wstream_read;
 	template<class ... T>
 	struct can_string_assemble;
 	template<class ... T>
@@ -113,11 +122,11 @@ namespace Rapture
 
 		String(byte value) : String(static_cast<int>(value)) {}
 
-		template<class T, class U = T, typename = decltype(std::to_string(declval<U>()))>
+		template<class T, class U = T, typename = decltype(std::to_string(declval<U>())), skipif<std::is_enum<U>::value>>
 		String(T value) : String(std::to_string(value)) {}
 
-		template<class T, typename = decltype(print(declval<String &>(), declval<T>()))>
-		String(const T & obj) : String() { print(*this, obj); }
+		template<class T, useif<can_str_print<T &&>::value>>
+		String(T && value) : String() { print(*this, forward<T>(value)); }
 
 		String(const char * s1, size_t l1, const char * s2, size_t l2) : string(string(s1, l1) + string(s2, l2))
 		{
@@ -340,6 +349,30 @@ namespace Rapture
 
 		String & flood(size_t start, size_t count, char sym, char limiter = '\0');
 
+		template<class T, useif<can_stream_print<T>::value>>
+		static inline String bin(T value)
+		{
+			std::ostringstream s;
+			s << std::bin << std::showbase << value;
+			return s.str();
+		}
+
+		template<class T, useif<can_stream_print<T>::value>>
+		static inline String oct(T value)
+		{
+			std::ostringstream s;
+			s << std::oct << std::showbase << value;
+			return s.str();
+		}
+
+		template<class T, useif<can_stream_print<T>::value>>
+		static inline String hex(T value)
+		{
+			std::ostringstream s;
+			s << std::hex << std::showbase << value;
+			return s.str();
+		}
+
 		template<class T, class ... A, useif<
 			can_construct<String, T>::value,
 			can_construct<String, A>::value...
@@ -491,7 +524,7 @@ namespace Rapture
 		{
 			size_t i;
 			std::stoi(*this, &i, radix);
-
+			
 			return i == size();
 		}
 
@@ -792,6 +825,30 @@ namespace Rapture
 
 		WideString & flood(size_t start, size_t count, wchar_t sym, wchar_t limiter = '\0');
 
+		template<class T, useif<can_wstream_print<T>::value>>
+		static inline WideString bin(T value)
+		{
+			std::wostringstream s;
+			s << std::bin << std::showbase << value;
+			return s.str();
+		}
+
+		template<class T, useif<can_wstream_print<T>::value>>
+		static inline WideString oct(T value)
+		{
+			std::wostringstream s;
+			s << std::oct << std::showbase << value;
+			return s.str();
+		}
+
+		template<class T, useif<can_wstream_print<T>::value>>
+		static inline WideString hex(T value)
+		{
+			std::wostringstream s;
+			s << std::hex << std::showbase << value;
+			return s.str();
+		}
+
 		template<class T, class ... A, useif<
 			can_construct<WideString, T>::value,
 			can_construct<WideString, A>::value...
@@ -1037,15 +1094,29 @@ namespace Rapture
 	template<class T, class StringType>
 	struct is_str_printable<T, StringType, true> : false_type {};
 
+	template<class T, class StreamType>
+	struct is_stream_printable : is_same<StreamType &, decltype(declval<StreamType &>() << declval<T>())> {};
+
+	template<class T, class StreamType>
+	struct is_stream_readable : is_same<StreamType &, decltype(declval<StreamType &>() >> declval<T>())> {};
+
 	template<class T>
 	struct can_str_print : is_str_printable<T, String> {};
-
 	template<class T>
 	struct can_wstr_print : is_str_printable<T, WideString> {};
 
+	template<class T>
+	struct can_stream_print : is_stream_printable<T, std::ostream> {};
+	template<class T>
+	struct can_wstream_print : is_stream_printable<T, std::wostream> {};
+
+	template<class T>
+	struct can_stream_read : is_stream_readable<T, std::istream> {};
+	template<class T>
+	struct can_wstream_read : is_stream_readable<T, std::wistream> {};
+
 	template<class ... T>
 	struct can_string_assemble : is_true<can_construct<String, T>::value...> {};
-
 	template<class ... T>
 	struct can_wstring_assemble : is_true<can_construct<WideString, T>::value...> {};
 

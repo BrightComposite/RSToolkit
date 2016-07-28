@@ -3,6 +3,8 @@
 #include <opengl/OpenGL3_3.h>
 #include <ui/UISpace.h>
 
+#include <iostream>
+
 //---------------------------------------------------------------------------
 
 namespace Rapture
@@ -77,10 +79,22 @@ namespace Rapture
 			};
 
 			_deviceCtx = ::GetDC(_space->handle());
+			GLGraphics::setPixelFormat(_deviceCtx);
+
 			_renderCtx = wglCreateContextAttribsARB(_deviceCtx, _graphics->context(), attribs);
 
-			apply();
-			_graphics->bind(this);
+			if(_renderCtx == nullptr)
+			{
+				switch(GetLastError())
+				{
+					case ERROR_INVALID_VERSION_ARB:
+						throw Exception("Can't create render context! Invalid version");
+					case ERROR_INVALID_PROFILE_ARB:
+						throw Exception("Can't create render context! Invalid profile");
+				}
+
+				throw Exception("Can't create render context!");
+			}
 		}
 
 		void UISurface::releaseRenderTarget()

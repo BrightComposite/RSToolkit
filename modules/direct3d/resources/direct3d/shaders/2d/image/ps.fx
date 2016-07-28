@@ -2,14 +2,14 @@
  *
  */
 
+Texture2D tex;
+SamplerState state;
+
 struct VS_OUTPUT
 {
 	float4 position : SV_POSITION;
 	float2 texcoord : TEXCOORD;
 };
-
-Texture2D tex;
-SamplerState state;
 
 float4 main(VS_OUTPUT input) : SV_Target
 {

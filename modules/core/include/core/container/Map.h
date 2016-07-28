@@ -49,6 +49,30 @@ namespace Rapture
 	public:
 		using map<K, Handle<V, Owner...>, Hasher>::map;
 	};
+
+	template<class I>
+	auto keyof(I & it) -> decltype(it->first) &
+	{
+		return it->first;
+	}
+
+	template<class I>
+	auto valueof(I & it) -> decltype(it->second) &
+	{
+		return it->second;
+	}
+
+	template<class I>
+	auto keyof(I & it) -> decltype(it.first) &
+	{
+		return it.first;
+	}
+
+	template<class I>
+	auto valueof(I & it) -> decltype(it.second) &
+	{
+		return it.second;
+	}
 }
 
 //---------------------------------------------------------------------------

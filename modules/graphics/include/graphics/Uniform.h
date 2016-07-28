@@ -45,45 +45,50 @@ namespace Rapture
 
 	using UniformSet = Morpher<Uniform, Graphics3D>;
 
-#define uniform_class(name, shader_index, shader_type, components)		\
+#define uniform_class(U, shader_index, shader_type, components)			\
 	namespace Uniforms													\
 	{																	\
-		class name;														\
+		class U;														\
 	}																	\
 																		\
-	aligned_contents(Uniforms::name, alignas(16), components)			\
+	aligned_contents(Uniforms::U, alignas(16), components)				\
 																		\
 	namespace Uniforms													\
 	{																	\
-		class name : public Uniform										\
+		class U : public Uniform										\
 		{																\
 		public:															\
 			static const uint index = shader_index;						\
 			static const ShaderType shader = ShaderType::shader_type;	\
 																		\
+			static const char * name()									\
+			{															\
+				return #U;												\
+			}															\
+																		\
 			template<class ... A, useif<								\
-				can_construct_contents<name, A...>::value				\
+				can_construct_contents<U, A...>::value					\
 				>														\
 			>															\
 			void set(A &&... args)										\
 			{															\
-				_adapter->update(Contents<name>(forward<A>(args)...));	\
+				_adapter->update(Contents<U>(forward<A>(args)...));		\
 			}															\
 																		\
-			void set(const Contents<name> & contents)					\
+			void set(const Contents<U> & contents)						\
 			{															\
 				_adapter->update(contents);								\
 			}															\
 																		\
 		protected:														\
-			friend_owned_handle(name, Graphics3D);						\
+			friend_owned_handle(U, Graphics3D);							\
 																		\
-			name(UniqueHandle<UniformAdapter> && a) :					\
+			U(UniqueHandle<UniformAdapter> && a) :						\
 				Uniform(forward<UniqueHandle<UniformAdapter>>(a)) {}	\
 		};																\
 	}																	\
 																		\
-	create_morph_type(graphics, Uniforms::name)
+	create_morph_type(graphics, Uniforms::U)
 
 	uniform_class
 	(

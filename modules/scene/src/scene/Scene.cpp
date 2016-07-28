@@ -175,15 +175,17 @@ namespace Rapture
 			_camera->updateProjection();
 	}
 
-	void Scene::draw(Graphics3D & graphics, const IntRect & viewport) const
+	void Scene::draw(Graphics3D & g, const IntRect & viewport) const
 	{
 		for(auto & drawable : _opaque)
-			drawable->draw(graphics, viewport, _camera ? _camera->zoom() : 0.0f);
+		{
+			drawable->draw(g, viewport, _camera ? _camera->zoom() : 0.0f);
+		}
 
-		auto dt = hold(graphics.depthTestState(), false);
+		auto dt = hold(g.depthTestState(), false);
 
 		for(auto & drawable : _transparent)
-			drawable->draw(graphics, viewport, _camera ? _camera->zoom() : 0.0f);
+			drawable->draw(g, viewport, _camera ? _camera->zoom() : 0.0f);
 	}
 
 	void Scene::setTickLength(milliseconds length)

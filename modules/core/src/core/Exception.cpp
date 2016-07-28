@@ -3,6 +3,7 @@
 #include <core/Exception.h>
 
 #include <windows.h>
+#include <iostream>
 
 //---------------------------------------------------------------------------
 
@@ -12,7 +13,9 @@ namespace Rapture
 {
 	void viewException(const exception & ex)
 	{
+		using namespace std;
 		//MessageBoxA(0, ex.what(), "Exception", MB_ICONERROR);
+		cout << "EXCEPTION: " << ex.what() << endl;
 	}
 
 	String stdError()

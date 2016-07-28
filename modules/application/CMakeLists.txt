@@ -10,29 +10,28 @@ include(${RAPTURE_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-start_module(
-	SHARED
-	RaptureCore "core"
-	RapturePlatform "platform"
-)
+module(SHARED)
+	dependencies(
+		RaptureCore "core"
+		RapturePlatform "platform"
+	)
 
-set_module_folder(modules)
-
-add_module_sources(
-	SRC_GROUP include Headers
-		START_SECTION application
+	sources(modules)
+		domain(application)
+		
+		group(include Headers)
+		files(
 			Application.h
 			Starter.h
 			ThreadLoop.h
-		END_SECTION
+			)
 
-	SRC_GROUP src Sources
-		START_SECTION application
+		group(src Sources)
+		files(
 			Application.cpp
 			ThreadLoop.cpp
-		END_SECTION
-)
-
-end_module()
+			)
+	endsources()
+endmodule()
 
 #--------------------------------------------------------

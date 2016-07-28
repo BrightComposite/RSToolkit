@@ -134,6 +134,17 @@ namespace Rapture
 	VertexElement VertexElement::secondaryColor3("s3", VertexElement::Color, 1, 3);
 	VertexElement VertexElement::secondaryColor4("s4", VertexElement::Color, 1, 4);
 
+	void VertexElement::writeKey(String & out, VertexElement::Type type, uint units)
+	{
+		String id(type);
+		id << units;
+
+		if(!VertexElement::has(id))
+			throw Exception("There is no vertex element with such signature: ", id);
+
+		out << id;
+	}
+
 	void GraphicModel::draw(int pass) const
 	{
 		graphics->updateUniform<Uniforms::Model>(getTransform().output());
@@ -290,7 +301,7 @@ namespace Rapture
 
 	VertexLayout * Graphics3D::getVertexLayout(const string & fingerprint)
 	{
-		auto & layout = vertexLayouts[fingerprint];
+		auto & layout = _vertexLayouts[fingerprint];
 
 		if(layout == nullptr)
 			layout = createVertexLayout(fingerprint);
@@ -300,7 +311,7 @@ namespace Rapture
 
 	const Handle<ShaderProgram> & Graphics3D::getShaderProgram(const string & id)
 	{
-		auto & program = shaderPrograms[id];
+		auto & program = _shaderPrograms[id];
 
 		if(program == nullptr)
 			throw Exception("Can't find program with id: ", id);
@@ -375,9 +386,9 @@ namespace Rapture
 		techniques3d.texture = nullptr;
 
 		_textures.clear();
-		shaderPrograms.clear();
-		uniforms.clear();
-		vertexLayouts.clear();
+		_shaderPrograms.clear();
+		_uniforms.clear();
+		_vertexLayouts.clear();
 	}
 
 	void Graphics3D::updateBrushState()

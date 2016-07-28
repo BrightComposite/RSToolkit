@@ -88,7 +88,7 @@ namespace Rapture
 			z(zx, zy, zz, zw),
 			w(wx, wy, wz, ww)
 		{}
-
+		
 		Matrix & operator = (const Matrix & matrix)
 		{
 			Memory<T>::move(m, matrix.m);
@@ -601,9 +601,9 @@ namespace Rapture
 		Vector<T> sine, cosine;
 		VectorMath<T>::sincos(euler, sine, cosine);
 
-		Vector<T> x = sine.template shuffle<0, 0, 0, 0>(cosine).template blend<0, 1, 1, 0>(Vector<T>::positiveY);	// [ sx, 1, 0, cx ]
-		Vector<T> y = sine.template shuffle<1, 1, 1, 1>(cosine).template blend<0, 1, 1, 0>(Vector<T>::positiveY);	// [ sy, 1, 0, cy ]
-		Vector<T> z = sine.template shuffle<2, 2, 2, 2>(cosine).template blend<0, 1, 1, 0>(Vector<T>::positiveY).template shuffle<3, 0, 1, 2>(); // [ cz, sz, 1, 0 ]
+		Vector<T> x = sine.template shuffle<0, 0, 0, 0>(cosine).template blend<0, 1, 1, 0>(Vector<T>::positiveY);									// [ sx, 1, 0, cx ]
+		Vector<T> y = sine.template shuffle<1, 1, 1, 1>(cosine).template blend<0, 1, 1, 0>(Vector<T>::positiveY);									// [ sy, 1, 0, cy ]
+		Vector<T> z = sine.template shuffle<2, 2, 2, 2>(cosine).template blend<0, 1, 1, 0>(Vector<T>::positiveY).template shuffle<3, 0, 1, 2>();	// [ cz, sz, 1, 0 ]
 
 		Vector<T> yz = y.template shuffle<0, 0, 3, 2>().negateZ() * z;	// [ sy * cz, sy * sz, -cy, 0 ]
 		Vector<T> mz = z.template shuffle<1, 0, 2, 3>().negateX();		// [ -sz, cz, 1, 0 ]
@@ -647,7 +647,7 @@ namespace Rapture
 			d.maskX().template blend<0, 0, 0, 1>(t.spreadX()),	// 2/w |  0  |  0  | -(x0+x1)/w
 			d.maskY().template blend<0, 0, 0, 1>(t.spreadY()),	//  0  | 2/h |  0  | -(y0+y1)/h
 			d.maskZ().template blend<0, 0, 0, 1>(t.spreadZ()),	//  0  |  0  | 2/l | -(z0+z1)/l
-			Vector<T>::positiveW						//  0  |  0  |  0  |    1
+			Vector<T>::positiveW								//  0  |  0  |  0  |    1
 		};
 	}
 
@@ -662,9 +662,9 @@ namespace Rapture
 		d *= Vector<T>::two;
 
 		return {
-			d.maskX(),									//    2/w    |     0     |     0    | 0
-			d.maskY(),									//     0     |    2/h    |     0    | 0
-			d.maskZ(),									//     0     |     0     |    2/l   | 0
+			d.maskX(),											//    2/w    |     0     |     0    | 0
+			d.maskY(),											//     0     |    2/h    |     0    | 0
+			d.maskZ(),											//     0     |     0     |    2/l   | 0
 			t.template blend<0, 0, 0, 1>(Vector<T>::positiveW)	//-(x0+x1)/w |-(y0+y1)/h |-(z0+z1)/l| 1
 		};
 	}
@@ -677,10 +677,10 @@ namespace Rapture
 		const Vector<T> v = {f * aspect, f, z, -z0 * z};
 
 		return {
-			v.maskX(),				// f/a | 0 | 0 |  0
-			v.maskY(),				//  0  | f | 0 |  0
+			v.maskX(),						// f/a | 0 | 0 |  0
+			v.maskY(),						//  0  | f | 0 |  0
 			v.template mask<0, 0, 1, 1>(),	//  0  | 0 | z |-z0*z
-			Vector<T>::positiveZ	//  0  | 0 | 1 |  0
+			Vector<T>::positiveZ			//  0  | 0 | 1 |  0
 		};
 	}
 
@@ -692,10 +692,10 @@ namespace Rapture
 		const Vector<T> v = {f * aspect, f, z, -z0 * z};
 
 		return {
-			v.maskX(),									// f*a | 0 |  0  | 0
-			v.maskY(),									//  0  | f |  0  | 0
+			v.maskX(),											// f*a | 0 |  0  | 0
+			v.maskY(),											//  0  | f |  0  | 0
 			v.template blend<1, 1, 0, 1>(Vector<T>::positiveW),	//  0  | 0 |  z  | 1
-			v.spreadW().maskZ(),						//  0  | 0 |-z0*z| 0
+			v.spreadW().maskZ(),								//  0  | 0 |-z0*z| 0
 		};
 	}
 

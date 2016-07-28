@@ -1,56 +1,29 @@
+#--------------------------------------------------------
+#	Rapture State cmake shader facilities
+#--------------------------------------------------------
+
 cmake_minimum_required(VERSION 3.0)
 
-function(escape_regular OUT_STR STR)
-	string(REPLACE "\\" "\\\\" BUF "${STR}")
-	string(REPLACE "/" "\\/" BUF "${BUF}")
-	string(REPLACE "+" "\\+" BUF "${BUF}")
-	string(REPLACE "." "\\." BUF "${BUF}")
-	string(REPLACE ":" "\\:" BUF "${BUF}")
-
-	set(${OUT_STR} ${BUF} PARENT_SCOPE)
-endfunction()
+#--------------------------------------------------------
 
 if(WIN32)
-	function(add_shaders SHADER_LANG RES_DIR RES_GROUP INC_DIR INC_GROUP SHADERS_ROOT OUTPUT_HEADER)
-		set(ROOT_DIR ${PROJECT_SOURCE_DIR})
+	function(shaders lang)
+		collect_files(shaders_list ${ARGN})
 
-		set_module_sources(OUT_SHADERS_LIST
-			SRC_GROUP ${RES_DIR} ${RES_GROUP}
-				START_SECTION ${SHADERS_ROOT}
-					${ARGN}
-				END_SECTION
-		)
-
-		set(INCLUDE_ENTRIES)
-
-		if("${SHADER_LANG}" STREQUAL "HLSL")
-			foreach(src_entry ${ARGN})
-				string(REGEX REPLACE "\\.fx$" ".inc" inc_entry ${src_entry})
-				list(APPEND INCLUDE_ENTRIES ${inc_entry})
-			endforeach()
-		elseif("${SHADER_LANG}" STREQUAL "GLSL")
-			foreach(src_entry ${ARGN})
-				string(REGEX REPLACE "\\.glsl$" ".inc" inc_entry ${src_entry})
-				list(APPEND INCLUDE_ENTRIES ${inc_entry})
-			endforeach()
-		endif()
-
-		foreach(shader ${OUT_SHADERS_LIST})
+		foreach(shader ${shaders_list})
 			get_filename_component(FileName ${shader} NAME_WE)
 			get_filename_component(FileDir ${shader} DIRECTORY)
 
-			escape_regular(res_root ${ROOT_DIR}/${RES_DIR})
-			string(REGEX REPLACE ${res_root} "" ShaderPath ${FileDir})
-
-			if("${SHADER_LANG}" STREQUAL "HLSL")
-				set(InputFile ${RES_DIR}${ShaderPath}/${FileName}.fx) # Input shader
-			elseif("${SHADER_LANG}" STREQUAL "GLSL")
-				set(InputFile ${RES_DIR}${ShaderPath}/${FileName}.glsl) # Input shader
+			 # Input shader
+			if("${lang}" STREQUAL "HLSL")
+				set(InputFile ${FileDir}/${FileName}.fx) 
+			elseif("${lang}" STREQUAL "GLSL")
+				set(InputFile ${FileDir}/${FileName}.glsl)
 			endif()
 			
-			set(OutputFile ${INC_DIR}${ShaderPath}/${FileName}.inc) # Output .inc file
+			set(OutputFile ${FileDir}/${FileName}.inc) # Output .inc file
 
-			# Get type of shader to compile (vs, ps)
+			# Get type of shader to compile (vs, ps/fs)
 
 			string(LENGTH ${FileName} FileLen)
 			math(EXPR FileLen "${FileLen} - 2")
@@ -59,42 +32,103 @@ if(WIN32)
 
 			# Add the command that will process each single file
 
-			escape_regular(shaders_root ${SHADERS_ROOT})
-			string(REGEX REPLACE ${shaders_root} "" ShaderPath ${ShaderPath})
-			
-			if("${ShaderPath}" MATCHES "^[\\/]+")
-				string(REGEX REPLACE "^[\\/]+" "" ShaderPath ${ShaderPath})
+			if("${CURRENT_SOURCE_GROUP_PATH}" STREQUAL "")
+				string(REPLACE "${PROJECT_SOURCE_DIR}" "" ShaderPath ${FileDir})
+			else()
+				string(REPLACE "${PROJECT_SOURCE_DIR}/${CURRENT_SOURCE_GROUP_PATH}" "" ShaderPath ${FileDir})
 			endif()
-
-			string(REGEX REPLACE "[\\/]" _ ShaderId ${ShaderPath}/${FileName})
-			string(REGEX REPLACE "[^a-zA-Z0-9_]" "" ShaderId ${ShaderId})
-
-			set(OutputVariable shader_code_${ShaderId})
 			
+			string(REGEX REPLACE "^[\\/]+" "" ShaderPath ${ShaderPath})
+			
+			if(NOT "${CURRENT_SOURCE_DOMAIN}" STREQUAL "")
+				string(REPLACE "${CURRENT_SOURCE_DOMAIN}/" "" ShaderId ${ShaderPath})
+			endif()
+			
+			string(REGEX REPLACE "[\\/]" _ ShaderGroup ${ShaderId})
+			string(REGEX REPLACE "[^a-zA-Z0-9_]" "" ShaderGroup ${ShaderGroup})
+
+			set(OutputVariable shader_code_${ShaderGroup})
+			
+			if(NOT ";${CURRENT_SHADERS_LIST};" MATCHES ";${ShaderGroup};")
+				set(CURRENT_SHADERS_LIST ${CURRENT_SHADERS_LIST};${ShaderGroup} CACHE INTERNAL "" FORCE)
+				set(${ShaderGroup}_id ${ShaderId} CACHE INTERNAL "" FORCE)
+				set(${ShaderGroup}_path ${ShaderPath} CACHE INTERNAL "" FORCE)
+			endif()
+			
+			set(${ShaderGroup}_types ${${ShaderGroup}_types} ${ShaderType} CACHE INTERNAL "" FORCE)
+
 			add_custom_command(
 				OUTPUT ${OutputFile}
-				COMMAND call ${CMAKE_COMMAND} -D Input=${InputFile} -D Output=${OutputFile} -D ShaderType=${ShaderType} -D OutputVariable=${OutputVariable} -D ShaderLang=${SHADER_LANG} -P "${RAPTURE_TOOLS}/compile-shader.cmake"
+				COMMAND call ${CMAKE_COMMAND} -D RAPTURE_ROOT=${RAPTURE_ROOT} -D Input=${InputFile} -D Output=${OutputFile} -D ShaderType=${ShaderType} -D OutputVariable=${OutputVariable} -D ShaderLang=${lang} -P "${RAPTURE_TOOLS}/shaders/compile-shader.cmake"
 				MAIN_DEPENDENCY ${InputFile}
 				COMMENT ""
 				WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 				VERBATIM
 				)
 		endforeach()
-
-		add_module_sources(
-			SRC_GROUP ${INC_DIR} ${INC_GROUP}
-				START_SECTION ${SHADERS_ROOT}
-					${INCLUDE_ENTRIES}
-				END_SECTION
-		)
-
-		set(${PROJECT_NAME}_SOURCES ${${PROJECT_NAME}_SOURCES};${OUT_SHADERS_LIST} CACHE INTERNAL "${PROJECT_NAME} sources" FORCE)
+	endfunction()
+	
+	function(shaders_output out)
+		set(TEMPLATE_FILE "${RAPTURE_ROOT}/templates/private/fx_include.h")
+		set(HEADER_FILE   "${RAPTURE_ROOT}/templates/private/fx_header.h")
+		set(INCLUDES)
+		
+		foreach(ShaderGroup ${CURRENT_SHADERS_LIST})
+			set(ShaderPath ${${ShaderGroup}_path})
+			set(ShaderId ${${ShaderGroup}_id})
+			
+			set(ShaderCodeUnits)
+			
+			foreach(ShaderType ${${ShaderGroup}_types})
+				if("${ShaderType}" STREQUAL "vs")
+					set(SHADER_TYPE RFX_VERTEX_SHADER)
+				elseif("${ShaderType}" STREQUAL "ps" OR "${ShaderType}" STREQUAL "fs")
+					set(SHADER_TYPE RFX_FRAGMENT_SHADER)
+				elseif("${ShaderType}" STREQUAL "gs")
+					set(SHADER_TYPE RFX_GEOMETRY_SHADER)
+				endif()
+				
+				if("${INCLUDES}" STREQUAL "")
+					set(INCLUDES "#include <${ShaderPath}/${ShaderType}.inc>")
+				else()
+					set(INCLUDES "${INCLUDES}\n#include <${ShaderPath}/${ShaderType}.inc>")
+				endif()
+				
+				if("${ShaderCodeUnits}" STREQUAL "")
+					set(ShaderCodeUnits "{shader_code_${ShaderGroup}_${ShaderType}, ${SHADER_TYPE}}")
+				else()
+					set(ShaderCodeUnits "${ShaderCodeUnits}, {shader_code_${ShaderGroup}_${ShaderType}, ${SHADER_TYPE}}")
+				endif()
+			endforeach()
+			
+			set(${ShaderGroup}_types CACHE INTERNAL "" FORCE)
+			set(ShaderCodeUnits "\tstatic const RFX_SHADER_CODE_UNIT shader_code_${ShaderGroup}[]{${ShaderCodeUnits}};\n")
+				
+			if("${CONTENTS}" STREQUAL "")
+				set(CONTENTS "${ShaderCodeUnits}")
+			else()
+				set(CONTENTS "${CONTENTS}${ShaderCodeUnits}")
+			endif()
+			
+			set(ShaderSet "\t\t{\"${ShaderId}\", shader_code_${ShaderGroup}_layout, shader_code_${ShaderGroup}}")
+			
+			if("${ShaderSetArray}" STREQUAL "")
+				set(ShaderSetArray "${ShaderSet}")
+			else()
+				set(ShaderSetArray "${ShaderSetArray},\n${ShaderSet}")
+			endif()
+		endforeach()
+		
+		file(READ ${HEADER_FILE} HEADER)
+		set(CONTENTS "${HEADER}\n${CONTENTS}\n\tstatic const RFX_SHADER_CODE_SET shaders[] {\n${ShaderSetArray}\n\t};")
+		set(HEADER)
+		
+		collect_files(outfile ${out})
+		configure_file(${TEMPLATE_FILE} ${outfile})
+		set(CURRENT_SHADERS_LIST CACHE INTERNAL "" FORCE)
 	endfunction()
 else()
-	function(add_shaders RES_DIR RES_GROUP INC_DIR INC_GROUP SHADERS_ROOT)
-		add_module_sources(OUT_SHADERS_LIST
-			SRC_GROUP ${RES_DIR} ${RES_GROUP}
-				${ARGN}
-		)
+	function(shaders lang)
+		collect_files(shaders_list ${ARGN})
 	endfunction()
 endif()

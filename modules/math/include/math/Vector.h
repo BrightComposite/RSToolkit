@@ -58,14 +58,16 @@ namespace Rapture
 		member_cast(data, Data);
 		member_cast(intrinsic, IntrinType);
 
-		Vector() : data(identity.data) {}
-		Vector(const Vector & v) : data(v.data) {}
+		Vector() : intrinsic(identity.intrinsic) {}
+		Vector(const Vector & v) : intrinsic(v.intrinsic) {}
 		Vector(const Data & data) : data(data) {}
-		Vector(Vector && v) : data(move(v.data)) {}
+		Vector(const IntrinType & v) : intrinsic(v) {}
+		Vector(Vector && v) : intrinsic(move(v.intrinsic)) {}
 		Vector(Data && data) : data(std::forward<Data>(data)) {}
+		Vector(IntrinType && v) : intrinsic(move(v)) {}
 
 		template<class U, useif<!is_same<T, U>::value>>
-		Vector(const Vector<U> & v) : data(intrin_cvt<IntrinType>(v.intrinsic)) {}
+		Vector(const Vector<U> & v) : intrinsic(intrin_cvt<IntrinType>(v.intrinsic)) {}
 
 		template<class U, useif<can_cast<U, Vector>::value>>
 		Vector(const U & v)
@@ -75,23 +77,28 @@ namespace Rapture
 
 		Vector(const T * v)
 		{
-			Intrin::load(v, data);
+			Intrin::load(v, intrinsic);
 		}
 
 		Vector(T value)
 		{
-			Intrin::fill(value, data);
+			Intrin::fill(value, intrinsic);
 		}
 
 		Vector(T x, T y, T z, T w = 0)
 		{
-			Intrin::load(x, y, z, w, data);
+			Intrin::load(x, y, z, w, intrinsic);
 		}
 
 		Vector & operator = (const Vector & v)
 		{
-			data = v.data;
+			intrinsic = v.intrinsic;
 			return *this;
+		}
+
+		void * operator new (size_t size)
+		{
+			return _mm_malloc(size, sizeof(T) * 4);
 		}
 
 		template<class U, useif<can_cast<U, Vector>::value>>
@@ -103,109 +110,109 @@ namespace Rapture
 
 		Vector & set(const T * v)
 		{
-			Intrin::load(v, data);
+			Intrin::load(v, intrinsic);
 			return *this;
 		}
 
 		Vector & set(T x, T y, T z, T w)
 		{
-			Intrin::load(x, y, z, w, data);
+			Intrin::load(x, y, z, w, intrinsic);
 			return *this;
 		}
 
 		Vector & fill(T value)
 		{
-			Intrin::fill(value, data);
+			Intrin::fill(value, intrinsic);
 			return *this;
 		}
 
 		Vector operator + () const
 		{
-			return data;
+			return intrinsic;
 		}
 
 		Vector operator - () const
 		{
-			return Intrin::negate(data);
+			return Intrin::negate(intrinsic);
 		}
 
-		auto & abs()
+		Vector & abs()
 		{
-			Intrin::abs(data, data);
+			Intrin::abs(intrinsic, intrinsic);
 			return *this;
 		}
 
-		auto & round()
+		Vector & round()
 		{
-			Intrin::round(data, data);
+			Intrin::round(intrinsic, intrinsic);
 			return *this;
 		}
 
-		auto & invert()
+		Vector & invert()
 		{
-			Intrin::invert(data, data);
+			Intrin::invert(intrinsic, intrinsic);
 			return *this;
 		}
 
 		Vector rounded() const
 		{
-			return Intrin::round(data);
+			return Intrin::round(intrinsic);
 		}
 
 		Vector inverse() const
 		{
-			return Intrin::invert(data);
+			return Intrin::invert(intrinsic);
 		}
 
 		void getRounded(Vector & vec) const
 		{
-			Intrin::round(data, vec.data);
+			Intrin::round(intrinsic, vec.intrinsic);
 		}
 
 		void getInverse(Vector & vec) const
 		{
-			Intrin::invert(data, vec.data);
+			Intrin::invert(intrinsic, vec.intrinsic);
 		}
 
-		auto & __vectorcall operator += (const Data & v)
+		Vector & operator += (const Vector & v)
 		{
-			Intrin::add(data, v, data);
+			Intrin::add(intrinsic, v, intrinsic);
 			return *this;
 		}
 
-		auto & __vectorcall operator -= (const Data & v)
+		Vector & operator -= (const Vector & v)
 		{
-			Intrin::sub(data, v, data);
+			Intrin::sub(intrinsic, v, intrinsic);
 			return *this;
 		}
 
-		auto & __vectorcall operator *= (const Data & v)
+		Vector & operator *= (const Vector & v)
 		{
-			Intrin::mul(data, v, data);
+			Intrin::mul(intrinsic, v, intrinsic);
 			return *this;
 		}
 
-		auto & __vectorcall operator /= (const Data & v)
+		Vector & operator /= (const Vector & v)
 		{
-			Intrin::div(data, v, data);
+			Intrin::div(intrinsic, v, intrinsic);
 			return *this;
 		}
 
 		Vector & operator += (T value)
 		{
-			Intrin::add(data, Intrin::fill(value), data);
+			Intrin::add(intrinsic, Intrin::fill(value), intrinsic);
 			return *this;
 		}
 
 		Vector & operator -= (T value)
 		{
-			Intrin::sub(data, Intrin::fill(value), data);
+			Intrin::sub(intrinsic, Intrin::fill(value), intrinsic);
 			return *this;
 		}
 
 		Vector & operator *= (T k)
 		{
-			Intrin::mul(data, Intrin::fill(k), data);
+			Intrin::mul(intrinsic, Intrin::fill(k), intrinsic);
 			return *this;
 		}
 
@@ -214,51 +221,51 @@ namespace Rapture
 			if(k == 0)
 				return *this = VectorMath<T>::infinity;
 
-			Intrin::div(data, Intrin::fill(k), data);
+			Intrin::div(intrinsic, Intrin::fill(k), intrinsic);
 			return *this;
 		}
 
-		Vector operator & (const Data & v) const
+		Vector operator & (const Vector & v) const
 		{
-			return Intrin::bit_and(data, v);
+			return Intrin::bit_and(intrinsic, v);
 		}
 
-		Vector operator | (const Data & v) const
+		Vector operator | (const Vector & v) const
 		{
-			return Intrin::bit_or(data, v);
+			return Intrin::bit_or(intrinsic, v);
 		}
 
-		Vector operator ^ (const Data & v) const
+		Vector operator ^ (const Vector & v) const
 		{
-			return Intrin::bit_xor(data, v);
+			return Intrin::bit_xor(intrinsic, v);
 		}
 
-		Vector dot(const Data & v) const
+		Vector dot(const Vector & v) const
 		{
-			return Intrin::fillsum(Intrin::mul(data, v));
+			return Intrin::fillsum(Intrin::mul(intrinsic, v));
 		}
 
-		T dot1(const Data & v) const
+		T dot1(const Vector & v) const
 		{
-			return Intrin::sum(Intrin::mul(data, v));
+			return Intrin::sum(Intrin::mul(intrinsic, v));
 		}
 
-		Vector cross(const Data & v) const
+		Vector cross(const Vector & v) const
 		{
 			return Intrin::sub(
-				Intrin::mul(Intrin::template shuffle<1, 2, 0, 3>(data), Intrin::template shuffle<2, 0, 1, 3>(v)),
-				Intrin::mul(Intrin::template shuffle<2, 0, 1, 3>(data), Intrin::template shuffle<1, 2, 0, 3>(v))
+				Intrin::mul(Intrin::template shuffle<1, 2, 0, 3>(intrinsic), Intrin::template shuffle<2, 0, 1, 3>(v)),
+				Intrin::mul(Intrin::template shuffle<2, 0, 1, 3>(intrinsic), Intrin::template shuffle<1, 2, 0, 3>(v))
 			);
 		}
 
-		bool operator == (const Data & v) const
+		bool operator == (const Vector & v) const
 		{
-			return Intrin::equal(data, v);
+			return Intrin::equal(intrinsic, v);
 		}
 
-		bool operator != (const Data & v) const
+		bool operator != (const Vector & v) const
 		{
-			return Intrin::notequal(data, v);
+			return Intrin::notequal(intrinsic, v);
 		}
 
 		T & operator [] (size_t index)
@@ -283,12 +290,12 @@ namespace Rapture
 
 		T magnitudeSq() const
 		{
-			return dot1(data);
+			return dot1(intrinsic);
 		}
 
 		Vector magnitudeSqVector() const
 		{
-			return dot(data);
+			return dot(intrinsic);
 		}
 
 		T magnitude() const
@@ -303,55 +310,55 @@ namespace Rapture
 
 		Vector & normalize() &
 		{
-			Intrin::div(data, magnitudeVector(), data);
+			Intrin::div(intrinsic, magnitudeVector(), intrinsic);
 			return *this;
 		}
 
 		Vector && normalize() &&
 		{
-			Intrin::div(data, magnitudeVector(), data);
+			Intrin::div(intrinsic, magnitudeVector(), intrinsic);
 			return std::forward<Vector>(*this);
 		}
 
 		Vector normalized() const
 		{
-			return Intrin::div(data, Intrin::fill(magnitude()));
+			return Intrin::div(intrinsic, Intrin::fill(magnitude()));
 		}
 
 		inline T max() const
 		{
-			Data v = Intrin::abs(data);
+			Vector v = Intrin::abs(intrinsic);
 			return std::max({v.x, v.y, v.z});
 		}
 
 		inline Vector abs() const
 		{
-			return Intrin::abs(data);
+			return Intrin::abs(intrinsic);
 		}
 
 		inline Vector sqr() const
 		{
-			return Intrin::sqr(data);
+			return Intrin::sqr(intrinsic);
 		}
 
 		inline T sum() const
 		{
-			return Intrin::sum(data);
+			return Intrin::sum(intrinsic);
 		}
 
-		inline T distanceToSq(const Data & p) const
+		inline T distanceToSq(const Vector & p) const
 		{
-			return Intrin::sum(Intrin::sqr(Intrin::sub(data, p)));
+			return Intrin::sum(Intrin::sqr(Intrin::sub(intrinsic, p)));
 		}
 
-		inline auto distanceTo(const Data & p) const
+		inline auto distanceTo(const Vector & p) const
 		{
 			return std::sqrt(distanceToSq(p));
 		}
 
-		inline T distanceToAxis(const Data & p, int Axis) const
+		inline T distanceToAxis(const Vector & p, int axis) const
 		{
-			return std::abs(v[Axis] - p[Axis]);
+			return std::abs(v[axis] - p[axis]);
 		}
 
 		inline int getMainAxis() const
@@ -362,13 +369,13 @@ namespace Rapture
 		template<byte X, byte Y, byte Z, byte W, useif<(X < 2 && Y < 2 && Z < 2 && W < 2)>>
 		Vector mask() const // select some components (e.g. if X == 1 then result.x = v.x else result.x = 0)
 		{
-			return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(X, Y, Z, W)>::get(), data);
+			return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(X, Y, Z, W)>::get(), intrinsic);
 		}
 
 		template<uint Axis, useif<(Axis < 4)>>
 		Vector maskAxis() const // set all components of a array_list to zero except of one
 		{
-			return Intrin::bit_and(VectorMaskAxis<T, bitmask<Axis>::value>::get(), data);
+			return Intrin::bit_and(VectorMaskAxis<T, bitmask<Axis>::value>::get(), intrinsic);
 		}
 
 		Vector maskX() const
@@ -394,7 +401,7 @@ namespace Rapture
 		template<uint Axis, useif<(Axis < 4)>>
 		Vector clearAxis() const // set a single component to zero
 		{
-			return Intrin::bit_and(VectorMaskAxis<T, 0xF ^ bitmask<Axis>::value>::get(), data);
+			return Intrin::bit_and(VectorMaskAxis<T, 0xF ^ bitmask<Axis>::value>::get(), intrinsic);
 		}
 
 		Vector clearX() const
@@ -420,13 +427,13 @@ namespace Rapture
 		template<byte X, byte Y, byte Z, byte W, useif<(X < 2 && Y < 2 && Z < 2 && W < 2)>>
 		Vector negate() const // negate some components (e.g. if X == 1 then result.x = -v.x else result.x = v.x)
 		{
-			return Intrin::bit_xor(VectorSignAxis<T, mk_mask4(X, Y, Z, W)>::get(), data);
+			return Intrin::bit_xor(VectorSignAxis<T, mk_mask4(X, Y, Z, W)>::get(), intrinsic);
 		}
 
 		template<uint Axis, useif<(Axis < 4)>>
 		Vector negateAxis() const // negate one component
 		{
-			return Intrin::bit_xor(VectorSignAxis<T, bitmask<Axis>::value>::get(), data);
+			return Intrin::bit_xor(VectorSignAxis<T, bitmask<Axis>::value>::get(), intrinsic);
 		}
 
 		Vector negateX() const
@@ -536,41 +543,41 @@ namespace Rapture
 			return *this;
 		}
 
-		Vector & clamp(const Vector<T> & low, const Vector<T> & high)
+		Vector & clamp(const Vector & low, const Vector & high)
 		{
-			data = Intrin::min(Intrin::max(data, low), high);
+			data = Intrin::min(Intrin::max(intrinsic, low), high);
 			return *this;
 		}
 
 		template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
 		inline Vector shuffle() const
 		{
-			return Intrin::template shuffle<A, B, C, D>(data);
+			return Intrin::template shuffle<A, B, C, D>(intrinsic);
 		}
 
 		template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
-		inline Vector shuffle(const Data & v) const
+		inline Vector shuffle(const Vector & v) const
 		{
-			return Intrin::template shuffle2<A, B, C, D>(data, v);
+			return Intrin::template shuffle2<A, B, C, D>(intrinsic, v);
 		}
 
 		template<byte A, byte B, byte C, byte D, useif<(A < 2 && B < 2 && C < 2 && D < 2)>>
-		inline Vector blend(const Data & v) const
+		inline Vector blend(const Vector & v) const
 		{
-			return Intrin::template blend<A, B, C, D>(data, v);
+			return Intrin::template blend<A, B, C, D>(intrinsic, v);
 		}
 
-		static inline Vector minimum(const Data & v1, const Data & v2)
+		static inline Vector minimum(const Vector & v1, const Vector & v2)
 		{
 			return Intrin::min(v1, v2);
 		}
 
-		static inline Vector maximum(const Data & v1, const Data & v2)
+		static inline Vector maximum(const Vector & v1, const Vector & v2)
 		{
 			return Intrin::max(v1, v2);
 		}
 
-		static inline int compare(const Data & v1, const Data & v2)
+		static inline int compare(const Vector & v1, const Vector & v2)
 		{
 			return static_cast<int>(Intrin::sum(Intrin::sub(v1, v2)));
 		}

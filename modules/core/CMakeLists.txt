@@ -10,42 +10,38 @@ include(${RAPTURE_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-start_module(
-	SHARED
-	RaptureMeta "meta"
-)
+module(SHARED)
+	dependencies(RaptureMeta "meta")
 
-set_module_folder(modules)
-
-add_module_sources(
-	SRC_GROUP include Headers
-		START_SECTION core
+	sources(modules)
+		domain(core)
+		
+		group(include Headers)
+		files(
 			Class.h
 			Component.h
-            Exception.h
+			Exception.h
 			Handle.h
-            Hash.h
+			Hash.h
 			Morpher.h
 			Object.h
 			String.h
-
-			START_SECTION addition
+					
+			addition/
 				Cached.h
 				Contents.h
 				Named.h
 				Singleton.h
 				State.h
 				Wrapper.h
-			END_SECTION
-
-			START_SECTION algorithm
+				..
+			algorithm/
 				crc32.h
 				lookup3.h
-			END_SECTION
-
-			START_SECTION container
+				..
+			container/
 				ArrayList.h
-                Container.h
+				Container.h
 				Data.h
 				List.h
 				Map.h
@@ -53,49 +49,41 @@ add_module_sources(
 				Set.h
 				Stack.h
 				StaticMap.h
-			END_SECTION
-
-			START_SECTION function
+				..
+			function/
 				Function.h
 				Thread.h
-			END_SECTION
-
-			START_SECTION intrinsic
+				..
+			intrinsic/
 				Intrinsic.h
 				IntrinsicCvt.h
 				IntrinsicData.h
-			END_SECTION
-
-			START_SECTION memory
+				..
+			memory/
 				BlockPool.h
 				Memory.h
 				PagePool.h
 				UnsafeBlockPool.h
 
-				START_SECTION allocator
+				allocator/
 					AlignedAllocator.h
 					DefaultAllocator.h
 					PoolAllocator.h
-				END_SECTION
-			END_SECTION
-		END_SECTION
+			)
 
-	SRC_GROUP src Sources
-		START_SECTION core
+		group(src Sources)
+		files(
 			Core.cpp
 			Exception.cpp
 			String.cpp
-
-			START_SECTION algorithm
+					
+			algorithm/
 				lookup3.cpp
-			END_SECTION
-
-			START_SECTION intrinsic
+				..
+			intrinsic/
 				Intrinsic.cpp
-			END_SECTION
-		END_SECTION
-)
-
-end_module()
+			)
+	endsources()
+endmodule()
 
 #--------------------------------------------------------

@@ -27,6 +27,10 @@
 #include <gl/glxew.h>
 #endif // _WIN32
 
+#ifdef _DEBUG
+#define GL_DEBUG
+#endif
+
 //---------------------------------------------------------------------------
 
 namespace Rapture
@@ -38,6 +42,7 @@ namespace Rapture
 		class GLGraphics;
 		class GLImage;
 		class GLVertexLayout;
+		class GLShader;
 		class GLShaderProgram;
 		class GLMeshTrait;
 	}
@@ -52,12 +57,21 @@ namespace Rapture
 		typedef GLXContext Context;
 	#endif // _WIN32
 
+		struct GLUniformBinding
+		{
+			GLUniformBinding(const char * name, int index) : name(name), index(index) {}
+
+			const char * name;
+			int index;
+		};
+
 		//---------------------------------------------------------------------------
 
 		class GLGraphics : public Graphics3D
 		{
 			friend_graphics_provider(GLGraphics);
 			friend class GLVertexLayout;
+			friend class GLShaderProgram;
 
 		public:
 			struct ContextAttributes
@@ -83,7 +97,7 @@ namespace Rapture
 
 			virtual api(opengl3_3) void printInfo();
 			virtual api(opengl3_3) void printDebug();
-			virtual api(opengl3_3) void checkForErrors();
+			virtual api(opengl3_3) void checkForErrors() override;
 
 			virtual api(opengl3_3) Handle<Image> createImage(const ImageData & data) override;
 			virtual api(opengl3_3) Handle<Surface> createSurface(UISpace * space) override;
@@ -102,6 +116,8 @@ namespace Rapture
 				return _context;
 			}
 
+			static api(opengl3_3) void setPixelFormat(HDC dc);
+
 		protected:
 			api(opengl3_3) GLGraphics();
 			virtual api(opengl3_3) ~GLGraphics();
@@ -110,20 +126,9 @@ namespace Rapture
 			virtual api(opengl3_3) Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) override;
 			virtual api(opengl3_3) Handle<IndexBuffer> createIndexBuffer(const VertexIndices & indices) override;
 
-			virtual api(opengl3_3) UniqueHandle<UniformAdapter> createUniformAdapter(ShaderType shader, int index, size_t size) override;
+			virtual api(opengl3_3) UniqueHandle<UniformAdapter> createUniformAdapter(const char * name, ShaderType shader, int index, size_t size) override;
 
 			virtual api(opengl3_3) void initFacilities() override;
-
-			template<class Program, class ... A, useif<
-				is_shader_program<Program>::value,
-				can_construct<Handle<ShaderCode>, A>::value...,
-				can_construct<Program, GLGraphics *, VertexLayout *, ShaderCodeSet *>::value
-				>
-			>
-			void setShaderProgram(const string & id, VertexLayout * layout, A &&... args)
-			{
-				shaderPrograms[id] = handle<Program>(this, layout, createCodeSet({handle<ShaderCode>(forward<A>(args))...}));
-			}
 
 		private:
 			api(opengl3_3) void initDevice();
@@ -142,6 +147,7 @@ namespace Rapture
 				uint _count = 0;
 			};
 
+			array_list<GLUniformBinding> _uniformBindings;
 			VertexAttributes _vertexAttributes;
 			const GLShaderProgram * _shaderProgram;
 			const GLMeshTrait * _mesh;
@@ -273,10 +279,24 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
+		inline GLenum glShaderType(ShaderType type)
+		{
+			switch(type)
+			{
+				case ShaderType::Vertex:
+					return GL_VERTEX_SHADER;
+				case ShaderType::Fragment:
+					return GL_FRAGMENT_SHADER;
+				default:
+					return 0;
+			}
+		}
+
 		class GLShaderProgram : public ShaderProgram
 		{
 		public:
-			api(opengl3_3) GLShaderProgram(GLGraphics * graphics, VertexLayout * layout);
+			api(opengl3_3) GLShaderProgram(GLGraphics * graphics, const string & filename, VertexLayout * layout, ShaderCodeState state = ShaderCodeState::Raw);
+			api(opengl3_3) GLShaderProgram(GLGraphics * graphics, const string & key, VertexLayout * layout, const ShaderCodeSet & codeSet, ShaderCodeState state = ShaderCodeState::Raw);
 			api(opengl3_3) ~GLShaderProgram();
 
 			virtual void apply() const override;
@@ -284,41 +304,30 @@ namespace Rapture
 			GLGraphics * graphics;
 			VertexLayout * layout;
 			GLuint id = 0;
+
+		protected:
+			api(opengl3_3) GLShaderProgram(GLGraphics * graphics, VertexLayout * layout);
+
+			Map<ShaderType, GLShader> _shaders;
 		};
 
 		class GLShader : public Shader
 		{
+			friend class GLShaderProgram;
+
 		public:
 			api(opengl3_3) GLShader(GLShaderProgram * program, const String & path, ShaderCodeState state, GLenum type);
-			api(opengl3_3) GLShader(GLShaderProgram * program, const Handle<ShaderCode> & code, GLenum type);
+			api(opengl3_3) GLShader(GLShaderProgram * program, const Handle<ShaderCode> & code, ShaderCodeState state, GLenum type);
 			virtual api(opengl3_3) ~GLShader();
 
 		protected:
 			api(opengl3_3) void read(const String & filename, GLenum type);
 			api(opengl3_3) void compile(const String & filename, GLenum type);
-			api(opengl3_3) bool initRaw(const Handle<ShaderCode> & code, GLenum type);
-			api(opengl3_3) bool initCompiled(const Handle<ShaderCode> & code, GLenum type);
+			api(opengl3_3) void initRaw(const Handle<ShaderCode> & code, GLenum type);
+			api(opengl3_3) void initCompiled(const Handle<ShaderCode> & code, GLenum type);
 		
 			GLShaderProgram * program;
 			GLuint id;
-		};
-
-		class GLVertexShader : public GLShader
-		{
-		public:
-			api(opengl3_3) GLVertexShader(GLShaderProgram * program, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
-			api(opengl3_3) GLVertexShader(GLShaderProgram * program, const Handle<ShaderCode> & code);
-
-			virtual ~GLVertexShader() {}
-		};
-
-		class GLPixelShader : public GLShader
-		{
-		public:
-			api(opengl3_3) GLPixelShader(GLShaderProgram * program, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
-			api(opengl3_3) GLPixelShader(GLShaderProgram * program, const Handle<ShaderCode> & code);
-
-			virtual ~GLPixelShader() {}
 		};
 
 		//---------------------------------------------------------------------------
@@ -404,28 +413,6 @@ namespace Rapture
 
 		protected:
 			Handle<GLImage> _texture;
-		};
-
-		//---------------------------------------------------------------------------
-
-		class VPShaderProgram : public GLShaderProgram
-		{
-		public:
-			VPShaderProgram(GLGraphics * graphics, VertexLayout * layout, const string & filename, ShaderCodeState state = ShaderCodeState::Compiled) : GLShaderProgram(graphics, layout),
-				vs(this, filename, state),
-				ps(this, filename, state)
-			{}
-
-			VPShaderProgram(GLGraphics * graphics, VertexLayout * layout, const Handle<ShaderCodeSet> & codeSet) : GLShaderProgram(graphics, layout),
-				vs(this, codeSet->code.at(ShaderType::Vertex)),
-				ps(this, codeSet->code.at(ShaderType::Fragment))
-			{}
-
-			virtual ~VPShaderProgram() {}
-
-		protected:
-			Handle<GLVertexShader> vs;
-			Handle<GLPixelShader> ps;
 		};
 	}
 

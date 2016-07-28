@@ -99,6 +99,12 @@ namespace Rapture
 		using inner = IntrinData<int, 4>;
 		using type = typename inner::type;
 
+	#ifdef UNALIGNED_VECTORS
+		using in_type = type;
+	#else
+		using in_type = const type &;
+	#endif
+
 		static const inner maximum;
 		static const inner signmask;
 		static const size_t size = sizeof(inner);
@@ -133,7 +139,7 @@ namespace Rapture
 			return {_mm_set_epi32(data[0], data[1], data[2], data[3])};
 		}
 
-		static inline void __vectorcall store(const type & in, inner & out)
+		static inline void __vectorcall store(in_type in, inner & out)
 		{
 			_mm_store_si128(&out.v, in);
 		}
@@ -143,7 +149,7 @@ namespace Rapture
 			out = _mm_setzero_si128();
 		}
 
-		static inline inner __vectorcall zero()
+		static inline type __vectorcall zero()
 		{
 			return {_mm_setzero_si128()};
 		}
@@ -153,47 +159,42 @@ namespace Rapture
 			out = _mm_set1_epi32(val);
 		}
 
-		static inline void __vectorcall fill(int val, inner & out)
-		{
-			out = {_mm_set1_epi32(val)};
-		}
-
-		static inline inner __vectorcall fill(int val)
+		static inline type __vectorcall fill(int val)
 		{
 			return {_mm_set1_epi32(val)};
 		}
 
-		static inline void __vectorcall add(const type & a, const type & b, type & out)
+		static inline void __vectorcall add(in_type a, in_type b, type & out)
 		{
 			out = _mm_add_epi32(a, b);
 		}
 
-		static inline inner __vectorcall add(const type & a, const type & b)
+		static inline type __vectorcall add(in_type a, in_type b)
 		{
 			return {_mm_add_epi32(a, b)};
 		}
 
-		static inline void __vectorcall sub(const type & a, const type & b, type & out)
+		static inline void __vectorcall sub(in_type a, in_type b, type & out)
 		{
 			out = _mm_sub_epi32(a, b);
 		}
 
-		static inline inner __vectorcall sub(const type & a, const type & b)
+		static inline type __vectorcall sub(in_type a, in_type b)
 		{
 			return {_mm_sub_epi32(a, b)};
 		}
 
-		static inline void __vectorcall mul(const type & a, const type & b, type & out)
+		static inline void __vectorcall mul(in_type a, in_type b, type & out)
 		{
 			out = _mm_mul_epi32(a, b);
 		}
 
-		static inline inner __vectorcall mul(const type & a, const type & b)
+		static inline type __vectorcall mul(in_type a, in_type b)
 		{
 			return {_mm_mul_epi32(a, b)};
 		}
 
-		static inline void __vectorcall div(const type & a, const type & b, type & out)
+		static inline void __vectorcall div(in_type a, in_type b, type & out)
 		{
 			_mm_insert_epi32(out, _mm_extract_epi32(a, 3) / _mm_extract_epi32(b, 3), 3);
 			_mm_insert_epi32(out, _mm_extract_epi32(a, 2) / _mm_extract_epi32(b, 2), 2);
@@ -201,7 +202,7 @@ namespace Rapture
 			_mm_insert_epi32(out, _mm_extract_epi32(a, 0) / _mm_extract_epi32(b, 0), 0);
 		}
 
-		static inline inner __vectorcall div(const type & a, const type & b)
+		static inline type __vectorcall div(in_type a, in_type b)
 		{
 			return {_mm_set_epi32(
 				_mm_extract_epi32(a, 3) / _mm_extract_epi32(b, 3),
@@ -211,17 +212,17 @@ namespace Rapture
 			)};
 		}
 
-		static inline void __vectorcall sqr(const type & a, type & out)
+		static inline void __vectorcall sqr(in_type a, type & out)
 		{
 			out = _mm_mul_epi32(a, a);
 		}
 
-		static inline inner __vectorcall sqr(const type & a)
+		static inline type __vectorcall sqr(in_type a)
 		{
 			return {_mm_mul_epi32(a, a)};
 		}
 
-		static inline void __vectorcall invert(const type & a, type & out)
+		static inline void __vectorcall invert(in_type a, type & out)
 		{
 			_mm_insert_epi32(out, 1 / _mm_extract_epi32(a, 3), 3);
 			_mm_insert_epi32(out, 1 / _mm_extract_epi32(a, 2), 2);
@@ -229,7 +230,7 @@ namespace Rapture
 			_mm_insert_epi32(out, 1 / _mm_extract_epi32(a, 0), 0);
 		}
 
-		static inline inner __vectorcall invert(const type & a)
+		static inline type __vectorcall invert(in_type a)
 		{
 			return {_mm_set_epi32(
 				1 / _mm_extract_epi32(a, 3),
@@ -239,189 +240,189 @@ namespace Rapture
 				)};
 		}
 
-		static inline void __vectorcall min(const type & a, const type & b, type & out)
+		static inline void __vectorcall min(in_type a, in_type b, type & out)
 		{
 			out = _mm_min_epi32(a, b);
 		}
 
-		static inline inner __vectorcall min(const type & a, const type & b)
+		static inline type __vectorcall min(in_type a, in_type b)
 		{
 			return _mm_min_epi32(a, b);
 		}
 
-		static inline void __vectorcall max(const type & a, const type & b, type & out)
+		static inline void __vectorcall max(in_type a, in_type b, type & out)
 		{
 			out = _mm_max_epi32(a, b);
 		}
 
-		static inline inner __vectorcall max(const type & a, const type & b)
+		static inline type __vectorcall max(in_type a, in_type b)
 		{
 			return _mm_max_epi32(a, b);
 		}
 
-		static inline void __vectorcall hadd2(const type & a, const type & b, type & out)
+		static inline void __vectorcall hadd2(in_type a, in_type b, type & out)
 		{
 			out = _mm_hadd_epi32(a, b);
 		}
 
-		static inline inner __vectorcall hadd2(const type & a, const type & b)
+		static inline type __vectorcall hadd2(in_type a, in_type b)
 		{
 			return {_mm_hadd_epi32(a, b)};
 		}
 
-		static inline void __vectorcall hadd(const type & a, type & out)
+		static inline void __vectorcall hadd(in_type a, type & out)
 		{
 			out = _mm_hadd_epi32(a, _mm_setzero_si128());
 		}
 
-		static inline inner __vectorcall hadd(const type & a)
+		static inline type __vectorcall hadd(in_type a)
 		{
 			return {_mm_hadd_epi32(a, _mm_setzero_si128())};
 		}
 
-		static inline int __vectorcall sum(const type & a)
+		static inline int __vectorcall sum(in_type a)
 		{
 			type v = _mm_hadd_epi32(a, a);
 			v = _mm_hadd_epi32(v, v);
 			return _mm_cvtsi128_si32(v);
 		}
 
-		static inline void __vectorcall fillsum(const type & a, type & out)
+		static inline void __vectorcall fillsum(in_type a, type & out)
 		{
 			out = _mm_hadd_epi32(a, a);
 			out = _mm_hadd_epi32(out, out);
 		}
 
-		static inline inner __vectorcall fillsum(const type & a)
+		static inline type __vectorcall fillsum(in_type a)
 		{
 			type v = _mm_hadd_epi32(a, a);
 			return _mm_hadd_epi32(v, v);
 		}
 
-		static inline void __vectorcall sqrt(const type & a, type & out)
+		static inline void __vectorcall sqrt(in_type a, type & out)
 		{
 			out = _mm_cvtps_ph(_mm_sqrt_ps(_mm_cvtph_ps(a)), 0);
 		}
 
-		static inline inner __vectorcall sqrt(const type & a)
+		static inline type __vectorcall sqrt(in_type a)
 		{
 			return {_mm_cvtps_ph(_mm_sqrt_ps(_mm_cvtph_ps(a)), 0)};
 		}
 
-		static inline void __vectorcall bit_and(const type & a, const type & b, type & out)
+		static inline void __vectorcall bit_and(in_type a, in_type b, type & out)
 		{
 			out = _mm_and_si128(a, b);
 		}
 
-		static inline inner __vectorcall bit_and(const type & a, const type & b)
+		static inline type __vectorcall bit_and(in_type a, in_type b)
 		{
 			return {_mm_and_si128(a, b)};
 		}
 
-		static inline void __vectorcall bit_or(const type & a, const type & b, type & out)
+		static inline void __vectorcall bit_or(in_type a, in_type b, type & out)
 		{
 			out = _mm_or_si128(a, b);
 		}
 
-		static inline inner __vectorcall bit_or(const type & a, const type & b)
+		static inline type __vectorcall bit_or(in_type a, in_type b)
 		{
 			return {_mm_or_si128(a, b)};
 		}
 
-		static inline void __vectorcall bit_andnot(const type & a, const type & b, type & out)
+		static inline void __vectorcall bit_andnot(in_type a, in_type b, type & out)
 		{
 			out = _mm_andnot_si128(a, b);
 		}
 
-		static inline inner __vectorcall bit_andnot(const type & a, const type & b)
+		static inline type __vectorcall bit_andnot(in_type a, in_type b)
 		{
 			return {_mm_andnot_si128(a, b)};
 		}
 
-		static inline void __vectorcall bit_xor(const type & a, const type & b, type & out)
+		static inline void __vectorcall bit_xor(in_type a, in_type b, type & out)
 		{
 			out = _mm_xor_si128(a, b);
 		}
 
-		static inline inner __vectorcall bit_xor(const type & a, const type & b)
+		static inline type __vectorcall bit_xor(in_type a, in_type b)
 		{
 			return {_mm_xor_si128(a, b)};
 		}
 
-		static inline bool __vectorcall equal(const type & a, const type & b)
+		static inline bool __vectorcall equal(in_type a, in_type b)
 		{
 			return (_mm_movemask_epi8(_mm_cmpeq_epi32(a, b)) & 0x8888) == 0x8888;
 		}
 
-		static inline bool __vectorcall notequal(const type & a, const type & b)
+		static inline bool __vectorcall notequal(in_type a, in_type b)
 		{
 			return (_mm_movemask_epi8(_mm_cmpeq_epi32(a, b)) & 0x8888) != 0x8888;
 		}
 
-		static inline void __vectorcall cmple(const type & a, const type & b, type & out)
+		static inline void __vectorcall cmple(in_type a, in_type b, type & out)
 		{
 			out = bit_xor(_mm_cmpgt_epi32(a, b), maximum);
 		}
 
-		static inline inner __vectorcall cmple(const type & a, const type & b)
+		static inline type __vectorcall cmple(in_type a, in_type b)
 		{
 			return {bit_xor(_mm_cmpgt_epi32(a, b), maximum)};
 		}
 
-		static inline void __vectorcall abs(const type & a, type & out)
+		static inline void __vectorcall abs(in_type a, type & out)
 		{
 			out = bit_andnot(signmask, a);
 		}
 
-		static inline inner __vectorcall abs(const type & a)
+		static inline type __vectorcall abs(in_type a)
 		{
 			return {bit_andnot(signmask, a)};
 		}
 
-		static inline void __vectorcall sign(const type & a, type & out)
+		static inline void __vectorcall sign(in_type a, type & out)
 		{
 			out = bit_and(signmask, a);
 		}
 
-		static inline inner __vectorcall sign(const type & a)
+		static inline type __vectorcall sign(in_type a)
 		{
 			return {bit_and(signmask, a)};
 		}
 
-		static inline void __vectorcall negate(const type & a, type & out)
+		static inline void __vectorcall negate(in_type a, type & out)
 		{
 			out = bit_xor(signmask, a);
 		}
 
-		static inline inner __vectorcall negate(const type & a)
+		static inline type __vectorcall negate(in_type a)
 		{
 			return {bit_xor(signmask, a)};
 		}
 
-		static inline void __vectorcall reverse(const type & a, type & out)
+		static inline void __vectorcall reverse(in_type a, type & out)
 		{
 			out = shuffle<3, 2, 1, 0>(a);
 		}
 
-		static inline inner __vectorcall reverse(const type & a)
+		static inline type __vectorcall reverse(in_type a)
 		{
 			return {shuffle<3, 2, 1, 0>(a)};
 		}
 
 		template<byte A, byte B, byte C, byte D, useif<(A < 2 && B < 2 && C < 2 && D < 2)>>
-		static inline void __vectorcall blend(const type & a, const type & b, type & out)
+		static inline void __vectorcall blend(in_type a, in_type b, type & out)
 		{
 			out = _mm_blend_epi32(a, b, mk_mask4(A, B, C, D));
 		}
 
 		template<byte A, byte B, byte C, byte D, useif<(A < 2 && B < 2 && C < 2 && D < 2)>>
-		static inline inner __vectorcall blend(const type & a, const type & b)
+		static inline type __vectorcall blend(in_type a, in_type b)
 		{
 			return {_mm_blend_epi32(a, b, mk_mask4(A, B, C, D))};
 		}
 
 		template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
-		static inline void __vectorcall shuffle2(const type & a, const type & b, type & out)
+		static inline void __vectorcall shuffle2(in_type a, in_type b, type & out)
 		{
 			out = _mm_blend_epi32(
 				_mm_shuffle_epi32(a, mk_shuffle_4(A, B, 0, 0)),
@@ -431,7 +432,7 @@ namespace Rapture
 		}
 
 		template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
-		static inline inner __vectorcall shuffle2(const type & a, const type & b)
+		static inline type __vectorcall shuffle2(in_type a, in_type b)
 		{
 			return {_mm_blend_epi32(
 				_mm_shuffle_epi32(a, mk_shuffle_4(A, B, 0, 0)),
@@ -441,13 +442,13 @@ namespace Rapture
 		}
 
 		template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
-		static inline void __vectorcall shuffle(const type & a, type & out)
+		static inline void __vectorcall shuffle(in_type a, type & out)
 		{
 			out = _mm_shuffle_epi32(a, mk_shuffle_4(A, B, C, D));
 		}
 
 		template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
-		static inline inner __vectorcall shuffle(const type & a)
+		static inline type __vectorcall shuffle(in_type a)
 		{
 			return {_mm_shuffle_epi32(a, mk_shuffle_4(A, B, C, D))};
 		}
@@ -462,7 +463,13 @@ namespace Rapture
 		static const bool implemented = true;
 
 		using inner = IntrinData<float, 4>;
-		using type = inner::type;
+		using type = typename inner::type;
+
+	#ifdef UNALIGNED_VECTORS
+		using in_type = type;
+	#else
+		using in_type = const type &;
+	#endif
 
 		static const inner signmask;
 		static const inner nofrac;
@@ -470,12 +477,12 @@ namespace Rapture
 
 		static inline void __vectorcall load(const inner & in, type & out)
 		{
-			out = _mm_load_ps(in);
+			out = _mm_load_ps(in.data.data());
 		}
 
 		static inline inner __vectorcall load(const inner & in)
 		{
-			return {_mm_load_ps(in)};
+			return {_mm_load_ps(in.data.data())};
 		}
 
 		static inline void __vectorcall load(const float & a, const float & b, const float & c, const float & d, type & out)
@@ -503,9 +510,9 @@ namespace Rapture
 			return {_mm_set_ps(data[3], data[2], data[1], data[0])};
 		}
 
-		static inline void __vectorcall store(const type & in, inner & out)
+		static inline void __vectorcall store(in_type in, inner & out)
 		{
-			_mm_store_ps(out, in);
+			_mm_store_ps(out.data.data(), in);
 		}
 
 		static inline void __vectorcall zero(type & out)
@@ -513,7 +520,7 @@ namespace Rapture
 			out = _mm_setzero_ps();
 		}
 
-		static inline inner __vectorcall zero()
+		static inline type __vectorcall zero()
 		{
 			return {_mm_setzero_ps()};
 		}
@@ -523,262 +530,262 @@ namespace Rapture
 			out = _mm_set_ps1(val);
 		}
 
-		static inline inner __vectorcall fill(float val)
+		static inline type __vectorcall fill(float val)
 		{
 			return {_mm_set_ps1(val)};
 		}
 
-		static inline void __vectorcall add(const type & a, const type & b, type & out)
+		static inline void __vectorcall add(in_type a, in_type b, type & out)
 		{
 			out = _mm_add_ps(a, b);
 		}
 
-		static inline inner __vectorcall add(const type & a, const type & b)
+		static inline type __vectorcall add(in_type a, in_type b)
 		{
 			return {_mm_add_ps(a, b)};
 		}
 
-		static inline void __vectorcall addx(const type & a, const type & b, type & out)
+		static inline void __vectorcall addx(in_type a, in_type b, type & out)
 		{
 			out = _mm_add_ss(a, b);
 		}
 
-		static inline inner __vectorcall addx(const type & a, const type & b)
+		static inline type __vectorcall addx(in_type a, in_type b)
 		{
 			return {_mm_add_ss(a, b)};
 		}
 
-		static inline void __vectorcall sub(const type & a, const type & b, type & out)
+		static inline void __vectorcall sub(in_type a, in_type b, type & out)
 		{
 			out = _mm_sub_ps(a, b);
 		}
 
-		static inline inner __vectorcall sub(const type & a, const type & b)
+		static inline type __vectorcall sub(in_type a, in_type b)
 		{
 			return {_mm_sub_ps(a, b)};
 		}
 
-		static inline void __vectorcall mul(const type & a, const type & b, type & out)
+		static inline void __vectorcall mul(in_type a, in_type b, type & out)
 		{
 			out = _mm_mul_ps(a, b);
 		}
 
-		static inline inner __vectorcall mul(const type & a, const type & b)
+		static inline type __vectorcall mul(in_type a, in_type b)
 		{
 			return {_mm_mul_ps(a, b)};
 		}
 
-		static inline void __vectorcall div(const type & a, const type & b, type & out)
+		static inline void __vectorcall div(in_type a, in_type b, type & out)
 		{
 			out = _mm_div_ps(a, b);
 		}
 
-		static inline inner __vectorcall div(const type & a, const type & b)
+		static inline type __vectorcall div(in_type a, in_type b)
 		{
 			return {_mm_div_ps(a, b)};
 		}
 
-		static inline void __vectorcall sqr(const type & a, type & out)
+		static inline void __vectorcall sqr(in_type a, type & out)
 		{
 			out = _mm_mul_ps(a, a);
 		}
 
-		static inline inner __vectorcall sqr(const type & a)
+		static inline type __vectorcall sqr(in_type a)
 		{
 			return {_mm_mul_ps(a, a)};
 		}
 
-		static inline void __vectorcall invert(const type & a, type & out)
+		static inline void __vectorcall invert(in_type a, type & out)
 		{
 			type tmp = _mm_rcp_ps(a);
 			out = sub(add(tmp, tmp), mul(a, mul(tmp, tmp)));
 		}
 
-		static inline inner __vectorcall invert(const type & a)
+		static inline type __vectorcall invert(in_type a)
 		{
 			type tmp = _mm_rcp_ps(a);
 			return sub(add(tmp, tmp), mul(a, mul(tmp, tmp)));
 		}
 
-		static inline void __vectorcall min(const type & a, const type & b, type & out)
+		static inline void __vectorcall min(in_type a, in_type b, type & out)
 		{
 			out = _mm_min_ps(a, b);
 		}
 
-		static inline inner __vectorcall min(const type & a, const type & b)
+		static inline type __vectorcall min(in_type a, in_type b)
 		{
 			return _mm_min_ps(a, b);
 		}
 
-		static inline void __vectorcall max(const type & a, const type & b, type & out)
+		static inline void __vectorcall max(in_type a, in_type b, type & out)
 		{
 			out = _mm_max_ps(a, b);
 		}
 
-		static inline inner __vectorcall max(const type & a, const type & b)
+		static inline type __vectorcall max(in_type a, in_type b)
 		{
 			return _mm_max_ps(a, b);
 		}
 
-		static inline void __vectorcall hadd2(const type & a, const type & b, type & out)
+		static inline void __vectorcall hadd2(in_type a, in_type b, type & out)
 		{
 			out = _mm_hadd_ps(a, b);
 		}
 
-		static inline inner __vectorcall hadd2(const type & a, const type & b)
+		static inline type __vectorcall hadd2(in_type a, in_type b)
 		{
 			return {_mm_hadd_ps(a, b)};
 		}
 
-		static inline void __vectorcall hadd(const type & a, type & out)
+		static inline void __vectorcall hadd(in_type a, type & out)
 		{
 			out = _mm_hadd_ps(a, a);
 		}
 
-		static inline inner __vectorcall hadd(const type & a)
+		static inline type __vectorcall hadd(in_type a)
 		{
 			return {_mm_hadd_ps(a, a)};
 		}
 
-		static inline float __vectorcall sum(const type & a)
+		static inline float __vectorcall sum(in_type a)
 		{
 			type v = _mm_hadd_ps(a, a);
 			v = _mm_hadd_ps(v, v);
 			return _mm_cvtss_f32(v);
 		}
 
-		static inline void __vectorcall fillsum(const type & a, type & out)
+		static inline void __vectorcall fillsum(in_type a, type & out)
 		{
 			out = _mm_hadd_ps(a, a);
 			out = _mm_hadd_ps(out, out);
 		}
 
-		static inline inner __vectorcall fillsum(const type & a)
+		static inline type __vectorcall fillsum(in_type a)
 		{
 			type v = _mm_hadd_ps(a, a);
 			return _mm_hadd_ps(v, v);
 		}
 
-		static inline void __vectorcall sqrt(const type & a, type & out)
+		static inline void __vectorcall sqrt(in_type a, type & out)
 		{
 			out = _mm_sqrt_ps(a);
 		}
 
-		static inline inner __vectorcall sqrt(const type & a)
+		static inline type __vectorcall sqrt(in_type a)
 		{
 			return {_mm_sqrt_ps(a)};
 		}
 
-		static inline void __vectorcall bit_and(const type & a, const type & b, type & out)
+		static inline void __vectorcall bit_and(in_type a, in_type b, type & out)
 		{
 			out = _mm_and_ps(a, b);
 		}
 
-		static inline inner __vectorcall bit_and(const type & a, const type & b)
+		static inline type __vectorcall bit_and(in_type a, in_type b)
 		{
 			return {_mm_and_ps(a, b)};
 		}
 
-		static inline void __vectorcall bit_or(const type & a, const type & b, type & out)
+		static inline void __vectorcall bit_or(in_type a, in_type b, type & out)
 		{
 			out = _mm_or_ps(a, b);
 		}
 
-		static inline inner __vectorcall bit_or(const type & a, const type & b)
+		static inline type __vectorcall bit_or(in_type a, in_type b)
 		{
 			return {_mm_or_ps(a, b)};
 		}
 
-		static inline void __vectorcall bit_andnot(const type & a, const type & b, type & out)
+		static inline void __vectorcall bit_andnot(in_type a, in_type b, type & out)
 		{
 			out = _mm_andnot_ps(a, b);
 		}
 
-		static inline inner __vectorcall bit_andnot(const type & a, const type & b)
+		static inline type __vectorcall bit_andnot(in_type a, in_type b)
 		{
 			return {_mm_andnot_ps(a, b)};
 		}
 
-		static inline void __vectorcall bit_xor(const type & a, const type & b, type & out)
+		static inline void __vectorcall bit_xor(in_type a, in_type b, type & out)
 		{
 			out = _mm_xor_ps(a, b);
 		}
 
-		static inline inner __vectorcall bit_xor(const type & a, const type & b)
+		static inline type __vectorcall bit_xor(in_type a, in_type b)
 		{
 			return {_mm_xor_ps(a, b)};
 		}
 
-		static inline bool __vectorcall equal(const type & a, const type & b)
+		static inline bool __vectorcall equal(in_type a, in_type b)
 		{
 			return _mm_movemask_ps(_mm_cmpeq_ps(a, b)) == 0xf;
 		}
 
-		static inline bool __vectorcall notequal(const type & a, const type & b)
+		static inline bool __vectorcall notequal(in_type a, in_type b)
 		{
 			return _mm_movemask_ps(_mm_cmpeq_ps(a, b)) != 0xf;
 		}
 
-		static inline void __vectorcall cmple(const type & a, const type & b, type & out)
+		static inline void __vectorcall cmple(in_type a, in_type b, type & out)
 		{
 			out = _mm_cmple_ps(a, b);
 		}
 
-		static inline inner __vectorcall cmple(const type & a, const type & b)
+		static inline type __vectorcall cmple(in_type a, in_type b)
 		{
 			return {_mm_cmple_ps(a, b)};
 		}
 
-		static inline void __vectorcall abs(const type & a, type & out)
+		static inline void __vectorcall abs(in_type a, type & out)
 		{
 			out = bit_andnot(signmask, a);
 		}
 
-		static inline inner __vectorcall abs(const type & a)
+		static inline type __vectorcall abs(in_type a)
 		{
 			return {bit_andnot(signmask, a)};
 		}
 
-		static inline void __vectorcall sign(const type & a, type & out)
+		static inline void __vectorcall sign(in_type a, type & out)
 		{
 			out = bit_and(signmask, a);
 		}
 
-		static inline inner __vectorcall sign(const type & a)
+		static inline type __vectorcall sign(in_type a)
 		{
 			return {bit_and(signmask, a)};
 		}
 
-		static inline void __vectorcall round(const type & a, type & out)
+		static inline void __vectorcall round(in_type a, type & out)
 		{
 			auto v = bit_or (nofrac, sign(a));
 			auto mask = cmple(abs(a), nofrac);
 			out = bit_xor(bit_and (sub(add(a, v), v), mask), bit_andnot(mask, a));
 		}
 
-		static inline inner __vectorcall round(const type & a)
+		static inline type __vectorcall round(in_type a)
 		{
 			auto v = bit_or(nofrac, sign(a));
 			auto mask = cmple(abs(a), nofrac);
 			return {bit_xor(bit_and(sub(add(a, v), v), mask), bit_andnot(mask, a))};
 		}
 
-		static inline void __vectorcall negate(const type & a, type & out)
+		static inline void __vectorcall negate(in_type a, type & out)
 		{
 			out = bit_xor(signmask, a);
 		}
 
-		static inline inner __vectorcall negate(const type & a)
+		static inline type __vectorcall negate(in_type a)
 		{
 			return {bit_xor(signmask, a)};
 		}
 
-		static inline void __vectorcall reverse(const type & a, type & out)
+		static inline void __vectorcall reverse(in_type a, type & out)
 		{
 			out = _mm_reverse_ps(a);
 		}
 
-		static inline inner __vectorcall reverse(const type & a)
+		static inline type __vectorcall reverse(in_type a)
 		{
 			return {_mm_reverse_ps(a)};
 		}
@@ -787,7 +794,7 @@ namespace Rapture
 			(A < 2 && B < 2 && C < 2 && D < 2)
 			>
 		>
-		static inline void __vectorcall blend(const type & a, const type & b, type & out)
+		static inline void __vectorcall blend(in_type a, in_type b, type & out)
 		{
 			out = _mm_blend_ps(a, b, mk_mask4(A, B, C, D));
 		}
@@ -796,7 +803,7 @@ namespace Rapture
 			(A < 2 && B < 2 && C < 2 && D < 2)
 			>
 		>
-		static inline inner __vectorcall blend(const type & a, const type & b)
+		static inline type __vectorcall blend(in_type a, in_type b)
 		{
 			return _mm_blend_ps(a, b, mk_mask4(A, B, C, D));
 		}
@@ -805,7 +812,7 @@ namespace Rapture
 			(A < 4 && B < 4 && C < 4 && D < 4)
 			>
 		>
-		static inline void __vectorcall shuffle2(const type & a, const type & b, type & out)
+		static inline void __vectorcall shuffle2(in_type a, in_type b, type & out)
 		{
 			out = _mm_shuffle_ps(a, b, mk_shuffle_4(A, B, C, D));
 		}
@@ -814,7 +821,7 @@ namespace Rapture
 			(A < 4 && B < 4 && C < 4 && D < 4)
 			>
 		>
-		static inline inner __vectorcall shuffle2(const type & a, const type & b)
+		static inline type __vectorcall shuffle2(in_type a, in_type b)
 		{
 			return {_mm_shuffle_ps(a, b, mk_shuffle_4(A, B, C, D))};
 		}
@@ -823,7 +830,7 @@ namespace Rapture
 			(A < 4 && B < 4 && C < 4 && D < 4)
 			>
 		>
-		static inline void __vectorcall shuffle(const type & a, type & out)
+		static inline void __vectorcall shuffle(in_type a, type & out)
 		{
 			out = _mm_permute_ps(a, mk_shuffle_4(A, B, C, D));
 		}
@@ -832,7 +839,7 @@ namespace Rapture
 			(A < 4 && B < 4 && C < 4 && D < 4)
 			>
 		>
-		static inline inner __vectorcall shuffle(const type & a)
+		static inline type __vectorcall shuffle(in_type a)
 		{
 			return {_mm_permute_ps(a, mk_shuffle_4(A, B, C, D))};
 		}

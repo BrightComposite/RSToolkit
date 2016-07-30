@@ -5,6 +5,20 @@
 
 //---------------------------------------------------------------------------
 
+#ifdef GL_DEEP_DEBUG
+#undef GLEW_GET_FUN
+
+template<class T>
+static T get_gl_function(const char * name, T func)
+{
+	using namespace std;
+	cout << name << endl;
+	return func;
+}
+
+#define GLEW_GET_FUN(x) get_gl_function(#x, x)
+#endif
+
 namespace Rapture
 {
 	namespace OpenGL
@@ -26,30 +40,27 @@ namespace Rapture
 			{
 				auto units = elements[i]->units;
 				glEnableVertexAttribArray(i);
-				glVertexAttribPointer(i, units, GL_FLOAT, GL_FALSE, 0, pointer);
+				glVertexAttribPointer(i, units, GL_FLOAT, GL_FALSE, stride, pointer);
 				pointer += units;
 			}
 		}
 
 		void GLVertexLayout::accept(const ShaderCode * code) {}
 
-		void GLGraphics::VertexAttributes::reserve(uint count)
-		{
-			for(uint i = 0; i < _count; ++i)
-				glDisableVertexAttribArray(i);
-			 
-			_count = count;
-		}
-
 		GLVertexBuffer::GLVertexBuffer(GLGraphics * graphics, VertexLayout * layout, const VertexData & vd) : VertexBuffer(layout, vd)
 		{
-			if(vd.size % layout->stride != 0)
+			if(vd.size() % layout->units != 0)
 				throw Exception("Size of vertex buffer doesn't matches its vertex input layout");
 
 			glGenBuffers(1, &handle);
 			glBindBuffer(GL_ARRAY_BUFFER, handle);
-			glBufferData(GL_ARRAY_BUFFER, vd.size, vd.ptr, GL_STATIC_DRAW);
-			graphics->checkForErrors();
+			glBufferData(GL_ARRAY_BUFFER, vd.size() * sizeof(float), vd.data(), GL_STATIC_DRAW);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		}
+
+		GLVertexBuffer::~GLVertexBuffer()
+		{
+			glDeleteBuffers(1, &handle);
 		}
 
 		void GLVertexBuffer::apply() const
@@ -62,8 +73,13 @@ namespace Rapture
 		{
 			glGenBuffers(1, &handle);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint), indices.data(), GL_STATIC_DRAW);
-			graphics->checkForErrors();
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint16_t), indices.data(), GL_STATIC_DRAW);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		}
+
+		GLIndexBuffer::~GLIndexBuffer()
+		{
+			glDeleteBuffers(1, &handle);
 		}
 
 		void GLIndexBuffer::apply() const
@@ -71,7 +87,7 @@ namespace Rapture
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
 		}
 
-		GLMeshTrait::GLMeshTrait(GLGraphics * graphics, VertexTopology t) : graphics(graphics)
+		GLMeshTrait::GLMeshTrait(GLGraphics * graphics, VertexTopology t) : graphics(graphics), id(0)
 		{
 			switch(t)
 			{
@@ -95,7 +111,12 @@ namespace Rapture
 			glGenVertexArrays(1, &id);
 		}
 
-		GLMesh::GLMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vbuffer, VertexTopology topology, uint verticesLocation) : Mesh(vbuffer, topology, verticesLocation), GLMeshTrait(graphics, topology)
+		GLMeshTrait::~GLMeshTrait()
+		{
+			glDeleteVertexArrays(1, &id);
+		}
+
+		GLMesh::GLMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vb, VertexTopology topology, uint verticesLocation) : Mesh(vb, topology, verticesLocation), GLMeshTrait(graphics, topology)
 		{
 			glBindVertexArray(id);
 			vbuffer->apply();
@@ -104,12 +125,12 @@ namespace Rapture
 
 		void GLMesh::draw() const
 		{
-			graphics->bind(this);
+			glBindVertexArray(id);
 			glDrawArrays(topology, verticesLocation, vbuffer->verticesCount - verticesLocation);
-			graphics->bind(null<GLMeshTrait>());
+			glBindVertexArray(0);
 		}
 
-		GLIndexedMesh::GLIndexedMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, VertexTopology topology, uint verticesLocation, uint indicesLocation) : IndexedMesh(vbuffer, ibuffer, topology, verticesLocation, indicesLocation), GLMeshTrait(graphics, topology)
+		GLIndexedMesh::GLIndexedMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vb, const Handle<IndexBuffer> & ib, VertexTopology topology, uint verticesLocation, uint indicesLocation) : IndexedMesh(vb, ib, topology, verticesLocation, indicesLocation), GLMeshTrait(graphics, topology)
 		{
 			glBindVertexArray(id);
 			vbuffer->apply();
@@ -119,9 +140,10 @@ namespace Rapture
 
 		void GLIndexedMesh::draw() const
 		{
-			graphics->bind(this);
+			glBindVertexArray(id);
+			//glDrawArrays(topology, verticesLocation, vbuffer->verticesCount - verticesLocation);
 			glDrawElements(topology, ibuffer->size, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(indicesLocation));
-			graphics->bind(null<GLMeshTrait>());
+			glBindVertexArray(0);
 		}
 
 		GLShaderProgram::GLShaderProgram(GLGraphics * graphics, const string & filename, VertexLayout * layout, ShaderCodeState state) : GLShaderProgram(graphics, layout)
@@ -132,14 +154,21 @@ namespace Rapture
 
 		GLShaderProgram::GLShaderProgram(GLGraphics * graphics, const string & key, VertexLayout * layout, const ShaderCodeSet & codeSet, ShaderCodeState state) : GLShaderProgram(graphics, layout)
 		{
-			using namespace std;
-
 			if(id == 0)
 				throw Exception("Can't create new GLSL program (", key, ")");
+
+			using namespace std;
 
 		#ifdef GL_DEBUG
 			cout << "Compile shader program \"" << key << "\"" << endl;
 		#endif
+
+			for(auto & c : codeSet)
+			{
+				auto & shader = _shaders[c.first];
+				shader.init(this, c.second, state, glShaderType(c.first));
+				glAttachShader(id, shader->id);
+			}
 
 			string attr;
 
@@ -154,49 +183,39 @@ namespace Rapture
 				glBindAttribLocation(id, i, attr.c_str());
 			}
 
-			for(auto & c : codeSet)
-			{
-				auto & shader = _shaders[c.first];
-				shader.init(this, c.second, state, glShaderType(c.first));
-				glAttachShader(id, shader->id);
-			}
-
-			graphics->checkForErrors();
-
 			glLinkProgram(id);
+
+			auto loc = glGetAttribLocation(id, "position");
 
 			int status;
 			glGetProgramiv(id, GL_LINK_STATUS, &status);
 
-			if(status == GL_FALSE)
+		#ifdef GL_DEBUG
+			int l = 0;
+			glGetProgramiv(id, GL_INFO_LOG_LENGTH, &l);
+
+			if(l > 1)
 			{
-			#ifdef GL_DEBUG
-				int l = 0;
-				glGetProgramiv(id, GL_INFO_LOG_LENGTH, &l);
-
-				if(l == 0)
-					return;
-
 				owned_data<char> buffer(l + 1);
 
 				glGetProgramInfoLog(id, l, nullptr, buffer.ptr);
 				buffer[l] = '\0';
 
 				cout << buffer.ptr << endl;
-			#endif
-
-				throw Exception("Can't link shader program!");
 			}
+		#endif
+
+			if(status == GL_FALSE)
+				throw Exception("Can't link shader program!");
 
 			for(auto & b : graphics->_uniformBindings)
 			{
-				auto block_index = glGetUniformBlockIndex(id, b.name);
+				auto block = glGetUniformBlockIndex(id, b.name);
 
-				if(block_index > 0)
-					glUniformBlockBinding(id, block_index, b.index);
+				if(block != GL_INVALID_INDEX)
+					glUniformBlockBinding(id, block, b.index);
 			}
 
-			glUseProgram(id);
 			graphics->checkForErrors();
 		}
 
@@ -438,20 +457,25 @@ namespace Rapture
 		GLUniformAdapter::GLUniformAdapter(GLGraphics * graphics, ShaderType shader, int index, size_t size) : _graphics(graphics), _index(index), _size(size)
 		{
 			glGenBuffers(1, &_buffer);
-			glBindBufferBase(GL_UNIFORM_BUFFER, _index, _buffer);
-			glBufferData(GL_UNIFORM_BUFFER, size, nullptr, GL_STATIC_DRAW);
-			graphics->checkForErrors();
+			glBindBuffer(GL_UNIFORM_BUFFER, _buffer);
+			glBufferData(GL_UNIFORM_BUFFER, _size, nullptr, GL_STATIC_DRAW);
+		}
+
+		GLUniformAdapter::~GLUniformAdapter()
+		{
+			glDeleteBuffers(1, &_buffer);
 		}
 
 		void GLUniformAdapter::update(const void * data)
 		{
 			glBindBufferBase(GL_UNIFORM_BUFFER, _index, _buffer);
-			void * ptr = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
+			glBufferData(GL_UNIFORM_BUFFER, _size, data, GL_STATIC_DRAW);
+			/*void * ptr = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
 
 			assert(ptr);
 
 			memcpy(ptr, data, _size);
-			glUnmapBuffer(GL_UNIFORM_BUFFER);
+			glUnmapBuffer(GL_UNIFORM_BUFFER);*/
 		}
 	}
 }

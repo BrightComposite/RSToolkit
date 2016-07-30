@@ -13,9 +13,11 @@
 
 namespace Rapture
 {
-	class AlignedAllocator : public DefaultAllocator
+	struct AlignedAllocator : DefaultAllocator
 	{
-	public:
+		using DefaultAllocator::operator new;
+		using DefaultAllocator::operator delete;
+
 		void * operator new(size_t size, size_t alignment)
 		{
 			if((alignment & (alignment - 1)) == 0)
@@ -28,7 +30,6 @@ namespace Rapture
 			}
 			else
 				return nullptr;
-
 		}
 
 		void operator delete(void * ptr, size_t alignment)

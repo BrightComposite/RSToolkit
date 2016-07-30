@@ -191,7 +191,7 @@ namespace Rapture
 			return uniform.init(createUniformAdapter(T::name(), T::shader, T::index, sizeof(Contents<T>)));
 		}
 
-		float _depth = 1.0f;
+		float _depth = 0.0f;
 		StateHandle<bool> _depthTestMode {false};
 		StateHandle<bool> _blendMode {false};
 

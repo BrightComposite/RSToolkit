@@ -85,14 +85,16 @@ namespace Rapture
 	class VertexLayout : public Shared
 	{
 	public:
-		VertexLayout(const string & fingerprint) : fingerprint(fingerprint), stride(0)
+		VertexLayout(const string & fingerprint) : fingerprint(fingerprint), units(0)
 		{
 			for(const auto & key : split(fingerprint))
 			{
 				auto & vie = VertexElement::get(key);
 				elements.push_back(vie);
-				stride += vie->units * sizeof(float);
+				units += vie->units;
 			}
+
+			stride = units * sizeof(float);
 		}
 
 		virtual void apply() {}
@@ -100,6 +102,7 @@ namespace Rapture
 
 		string fingerprint;
 		array_list<VertexElement *> elements;
+		uint units;
 		uint stride;
 	};
 }

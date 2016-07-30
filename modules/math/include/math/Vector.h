@@ -10,6 +10,8 @@
 #include <math/Math.h>
 #include <core/intrinsic/Intrinsic.h>
 #include <core/String.h>
+#include <core/memory/Storage.h>
+#include <core/memory/allocator/AlignedAllocator.h>
 
 //---------------------------------------------------------------------------
 
@@ -34,7 +36,7 @@ namespace Rapture
 	using VectorConstants = MathConstants<Vector<T>>;
 
 	template<typename T>
-	struct alignas(sizeof(T) * 4) Vector
+	struct alignas(sizeof(T) * 4) Vector : AlignedAllocator
 	{
 		using Data = intrin_data<T, 4>;
 		using IntrinType = typename Data::type;
@@ -47,7 +49,6 @@ namespace Rapture
 				T x, y, z, w;
 			};
 
-			Data data;
 			IntrinType intrinsic;
 
 			array<T, 4> v;
@@ -55,19 +56,14 @@ namespace Rapture
 		};
 
 		member_cast(v, array<T, 4>);
-		member_cast(data, Data);
 		member_cast(intrinsic, IntrinType);
 
-		Vector() : intrinsic(identity.intrinsic) {}
-		Vector(const Vector & v) : intrinsic(v.intrinsic) {}
-		Vector(const Data & data) : data(data) {}
+		Vector() : intrinsic(identity) {}
+		Vector(const Vector & v) : intrinsic(v) {}
 		Vector(const IntrinType & v) : intrinsic(v) {}
-		Vector(Vector && v) : intrinsic(move(v.intrinsic)) {}
-		Vector(Data && data) : data(std::forward<Data>(data)) {}
-		Vector(IntrinType && v) : intrinsic(move(v)) {}
 
 		template<class U, useif<!is_same<T, U>::value>>
-		Vector(const Vector<U> & v) : intrinsic(intrin_cvt<IntrinType>(v.intrinsic)) {}
+		Vector(const Vector<U> & v) : intrinsic(intrin_cvt<IntrinType>(v)) {}
 
 		template<class U, useif<can_cast<U, Vector>::value>>
 		Vector(const U & v)
@@ -75,30 +71,20 @@ namespace Rapture
 			Cast<U, Vector>::cast(*this, v);
 		}
 
-		Vector(const T * v)
-		{
-			Intrin::load(v, intrinsic);
-		}
-
-		Vector(T value)
-		{
-			Intrin::fill(value, intrinsic);
-		}
-
-		Vector(T x, T y, T z, T w = 0)
-		{
-			Intrin::load(x, y, z, w, intrinsic);
-		}
+		Vector(const T * v) : intrinsic(Intrin::load(v)) {}
+		Vector(T value) : intrinsic(Intrin::fill(value)) {}
+		Vector(T x, T y, T z, T w = 0) : intrinsic(Intrin::load(x, y, z, w)) {}
 
 		Vector & operator = (const Vector & v)
 		{
-			intrinsic = v.intrinsic;
+			intrinsic = v;
 			return *this;
 		}
 
-		void * operator new (size_t size)
+		Vector & operator = (const IntrinType & v)
 		{
-			return _mm_malloc(size, sizeof(T) * 4);
+			intrinsic = v;
+			return *this;
 		}
 
 		template<class U, useif<can_cast<U, Vector>::value>>
@@ -110,19 +96,19 @@ namespace Rapture
 
 		Vector & set(const T * v)
 		{
-			Intrin::load(v, intrinsic);
+			intrinsic = Intrin::load(v);
 			return *this;
 		}
 
 		Vector & set(T x, T y, T z, T w)
 		{
-			Intrin::load(x, y, z, w, intrinsic);
+			intrinsic = Intrin::load(x, y, z, w);
 			return *this;
 		}
 
 		Vector & fill(T value)
 		{
-			Intrin::fill(value, intrinsic);
+			intrinsic = Intrin::fill(value);
 			return *this;
 		}
 
@@ -310,13 +296,13 @@ namespace Rapture
 
 		Vector & normalize() &
 		{
-			Intrin::div(intrinsic, magnitudeVector(), intrinsic);
+			intrinsic = Intrin::div(intrinsic, magnitudeVector());
 			return *this;
 		}
 
 		Vector && normalize() &&
 		{
-			Intrin::div(intrinsic, magnitudeVector(), intrinsic);
+			intrinsic = Intrin::div(intrinsic, magnitudeVector());
 			return std::forward<Vector>(*this);
 		}
 
@@ -545,7 +531,7 @@ namespace Rapture
 
 		Vector & clamp(const Vector & low, const Vector & high)
 		{
-			data = Intrin::min(Intrin::max(intrinsic, low), high);
+			intrinsic = Intrin::min(Intrin::max(intrinsic, low), high);
 			return *this;
 		}
 
@@ -599,7 +585,7 @@ namespace Rapture
 		static api(math) const Vector negativeZ;	// [  0,  0, -1,  0 ]
 		static api(math) const Vector negativeW;	// [  0,  0,  0, -1 ]
 
-		static api(math) const Vector & left;
+		static api(math) const Vector & right;
 		static api(math) const Vector & up;
 		static api(math) const Vector & forward;
 		static api(math) const Vector & identity;
@@ -609,9 +595,15 @@ namespace Rapture
 	using IntVector = Vector<int>;
 	using FloatVector = Vector<float>;
 
-	using bvec = ByteVector;
-	using ivec = IntVector;
-	using fvec = FloatVector;
+	using bytev = ByteVector;
+	using intv = IntVector;
+	using floatv = FloatVector;
+
+	template<class T>
+	using svec = Storage<Vector<T>>;
+	using bvec = Storage<ByteVector>;
+	using ivec = Storage<IntVector>;
+	using fvec = Storage<FloatVector>;
 
 #ifdef USE_AVX
 	using DoubleVector = Vector<double>;
@@ -791,157 +783,157 @@ namespace Rapture
 	template<typename T>
 	inline Vector<T> operator + (const Vector<T> & v1, const Vector<T> & v2)
 	{
-		return Intrinsic<T, 4>::add(v1.data, v2.data);
+		return Intrinsic<T, 4>::add(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator - (const Vector<T> & v1, const Vector<T> & v2)
 	{
-		return Intrinsic<T, 4>::sub(v1.data, v2.data);
+		return Intrinsic<T, 4>::sub(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator * (const Vector<T> & v1, const Vector<T> & v2)
 	{
-		return Intrinsic<T, 4>::mul(v1.data, v2.data);
+		return Intrinsic<T, 4>::mul(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator / (const Vector<T> & v1, const Vector<T> & v2)
 	{
-		return Intrinsic<T, 4>::div(v1.data, v2.data);
+		return Intrinsic<T, 4>::div(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator + (const Vector<T> & v1, const intrin_t<T, 4> & v2)
 	{
-		return Intrinsic<T, 4>::add(v1.data, v2);
+		return Intrinsic<T, 4>::add(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator - (const Vector<T> & v1, const intrin_t<T, 4> & v2)
 	{
-		return Intrinsic<T, 4>::sub(v1.data, v2);
+		return Intrinsic<T, 4>::sub(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator * (const Vector<T> & v1, const intrin_t<T, 4> & v2)
 	{
-		return Intrinsic<T, 4>::mul(v1.data, v2);
+		return Intrinsic<T, 4>::mul(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator / (const Vector<T> & v1, const intrin_t<T, 4> & v2)
 	{
-		return Intrinsic<T, 4>::div(v1.data, v2);
+		return Intrinsic<T, 4>::div(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator + (const Vector<T> & v1, const IntrinData<T, 4> & v2)
 	{
-		return Intrinsic<T, 4>::add(v1.data, v2);
+		return Intrinsic<T, 4>::add(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator - (const Vector<T> & v1, const IntrinData<T, 4> & v2)
 	{
-		return Intrinsic<T, 4>::sub(v1.data, v2);
+		return Intrinsic<T, 4>::sub(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator * (const Vector<T> & v1, const IntrinData<T, 4> & v2)
 	{
-		return Intrinsic<T, 4>::mul(v1.data, v2);
+		return Intrinsic<T, 4>::mul(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator / (const Vector<T> & v1, const IntrinData<T, 4> & v2)
 	{
-		return Intrinsic<T, 4>::div(v1.data, v2);
+		return Intrinsic<T, 4>::div(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator + (const intrin_t<T, 4> & v1, const Vector<T> & v2)
 	{
-		return Intrinsic<T, 4>::add(v1, v2.data);
+		return Intrinsic<T, 4>::add(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator - (const intrin_t<T, 4> & v1, const Vector<T> & v2)
 	{
-		return Intrinsic<T, 4>::sub(v1, v2.data);
+		return Intrinsic<T, 4>::sub(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator * (const intrin_t<T, 4> & v1, const Vector<T> & v2)
 	{
-		return Intrinsic<T, 4>::mul(v1, v2.data);
+		return Intrinsic<T, 4>::mul(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator / (const intrin_t<T, 4> & v1, const Vector<T> & v2)
 	{
-		return Intrinsic<T, 4>::div(v1, v2.data);
+		return Intrinsic<T, 4>::div(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator + (const IntrinData<T, 4> & v1, const Vector<T> & v2)
 	{
-		return Intrinsic<T, 4>::add(v1, v2.data);
+		return Intrinsic<T, 4>::add(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator - (const IntrinData<T, 4> & v1, const Vector<T> & v2)
 	{
-		return Intrinsic<T, 4>::sub(v1, v2.data);
+		return Intrinsic<T, 4>::sub(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator * (const IntrinData<T, 4> & v1, const Vector<T> & v2)
 	{
-		return Intrinsic<T, 4>::mul(v1, v2.data);
+		return Intrinsic<T, 4>::mul(v1, v2);
 	}
 
 	template<typename T>
 	inline Vector<T> operator / (const IntrinData<T, 4> & v1, const Vector<T> & v2)
 	{
-		return Intrinsic<T, 4>::div(v1, v2.data);
+		return Intrinsic<T, 4>::div(v1, v2);
 	}
 
 	template<typename T, typename U, useif<std::is_pod<U>>>
 	inline Vector<T> operator + (const Vector<T> & vec, U a)
 	{
-		return Intrinsic<T, 4>::add(vec.data, Intrinsic<T, 4>::fill(static_cast<T>(a)));
+		return Intrinsic<T, 4>::add(vec, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 	}
 
 	template<typename T, typename U, useif<std::is_pod<U>>>
 	inline Vector<T> operator - (const Vector<T> & vec, U a)
 	{
-		return Intrinsic<T, 4>::sub(vec.data, Intrinsic<T, 4>::fill(static_cast<T>(a)));
+		return Intrinsic<T, 4>::sub(vec, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 	}
 
 	template<typename T, typename U, useif<std::is_pod<U>>>
 	inline Vector<T> operator * (const Vector<T> & vec, U a)
 	{
-		return Intrinsic<T, 4>::mul(vec.data, Intrinsic<T, 4>::fill(static_cast<T>(a)));
+		return Intrinsic<T, 4>::mul(vec, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 	}
 
 	template<typename T, typename U, useif<std::is_pod<U>::value>>
 	inline Vector<T> operator / (const Vector<T> & vec, U a)
 	{
-		return Intrinsic<T, 4>::div(vec.data, Intrinsic<T, 4>::fill(static_cast<T>(a)));
+		return Intrinsic<T, 4>::div(vec, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 	}
 
 	template<typename T, typename U, useif<std::is_pod<U>::value>>
 	inline Vector<T> operator * (U a, const Vector<T> & vec)
 	{
-		return Intrinsic<T, 4>::mul(Intrinsic<T, 4>::fill(static_cast<T>(a)), vec.data);
+		return Intrinsic<T, 4>::mul(Intrinsic<T, 4>::fill(static_cast<T>(a)), vec.intrinsic);
 	}
 
 	template<typename T, typename U, useif<std::is_pod<U>::value>>
 	inline Vector<T> operator / (U a, const Vector<T> & vec)
 	{
-		return Intrinsic<T, 4>::div(Intrinsic<T, 4>::fill(static_cast<T>(a)), vec.data);
+		return Intrinsic<T, 4>::div(Intrinsic<T, 4>::fill(static_cast<T>(a)), vec.intrinsic);
 	}
 
 	template<typename T, typename U>
@@ -1002,6 +994,12 @@ namespace Rapture
 	inline void print(String & s, const Vector<T> & v)
 	{
 		s << String::assemble("(", v.x, ", ", v.y, ", ", v.z, ", ", v.w, ")");
+	}
+
+	template<class T>
+	inline void print(String & s, const Storage<Vector<T>> & v)
+	{
+		s << String::assemble("(", v->x, ", ", v->y, ", ", v->z, ", ", v->w, ")");
 	}
 
 	inline void print(String & s, const intrin_t<float, 4> & v)

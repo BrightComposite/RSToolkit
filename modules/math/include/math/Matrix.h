@@ -15,7 +15,7 @@
 namespace Rapture
 {
 	template<class T>
-    struct alignas(sizeof(T) * 4) Matrix
+    struct alignas(sizeof(T) * 4) Matrix : AlignedAllocator
     {
 		typedef intrin_data<T, 4> Data;
 		typedef intrin_data<T, 2> Pair;
@@ -59,14 +59,14 @@ namespace Rapture
 		member_cast(data, array<Data, 4>);
 		member_cast(a, array<array<T, 4>, 4>);
 
-		Matrix() : x {Vector<T>::positiveX}, y {Vector<T>::positiveY}, z {Vector<T>::positiveZ}, w {Vector<T>::positiveW} {}
+		Matrix() : x(Vector<T>::positiveX), y(Vector<T>::positiveY), z(Vector<T>::positiveZ), w(Vector<T>::positiveW) {}
 		Matrix(const Matrix & matrix) : x {matrix.x}, y {matrix.y}, z {matrix.z}, w {matrix.w} {}
 		Matrix(Matrix && matrix) : m {move(matrix.m)} {}
 
 		Matrix(const Matrix2x2<T> & m) : x {m.xx, m.xy, 0, 0}, y {m.yx, m.yy, 0, 0}, z {Vector<T>::positiveZ}, w {Vector<T>::positiveW} {}
 		Matrix(const Row (& v)[4]) : x {v[0]}, y {v[1]}, z {v[2]}, w {v[3]} {}
-		Matrix(const Data & x, const Data & y, const Data & z, const Data & w) : x {x}, y {y}, z {z}, w {w} {}
-		Matrix(const Data & x, const Data & y, const Data & z) : x {x}, y {y}, z {z}, w {Vector<T>::positiveW} {}
+		Matrix(const Row & x, const Row & y, const Row & z, const Row & w) : x {x}, y {y}, z {z}, w {w} {}
+		Matrix(const Row & x, const Row & y, const Row & z) : x {x}, y {y}, z {z}, w {Vector<T>::positiveW} {}
 
 		Matrix(const T(&m)[16]) :
 			x(m[0x0], m[0x1], m[0x2], m[0x3]),
@@ -292,8 +292,13 @@ namespace Rapture
 
 	using FloatMatrix = Matrix<float>;
 	using DoubleMatrix = Matrix<double>;
-	using fmat = Matrix<float>;
-	using dmat = Matrix<double>;
+	using floatm = FloatMatrix;
+	using doublem = DoubleMatrix;
+
+	template<class T>
+	using smat = Storage<Matrix<T>>;
+	using fmat = Storage<FloatMatrix>;
+	using dmat = Storage<DoubleMatrix>;
 
 	template<class T>
 	inline Matrix<T> operator + (const Matrix<T> & m1, const Matrix<T> & m2)
@@ -420,19 +425,18 @@ namespace Rapture
 	template<class T>
 	inline void Matrix<T>::getTransposition(Matrix<T> & mat) const
 	{
-		Matrix tmp {
-			rows[0].template shuffle<0, 1, 0, 1>(rows[1]),
-			rows[0].template shuffle<2, 3, 2, 3>(rows[1]),
-			rows[2].template shuffle<0, 1, 0, 1>(rows[3]),
-			rows[2].template shuffle<2, 3, 2, 3>(rows[3])
-		};
+		auto v0 = rows[0].template shuffle<0, 1, 0, 1>(rows[1]);
+		auto v1 = rows[0].template shuffle<2, 3, 2, 3>(rows[1]);
+		auto v2 = rows[2].template shuffle<0, 1, 0, 1>(rows[3]);
+		auto v3 = rows[2].template shuffle<2, 3, 2, 3>(rows[3]);
+
+		Matrix tmp {v0, v1, v2, v3};
 
 		mat[0] = tmp[0].template shuffle<0, 2, 0, 2>(tmp[2]);
 		mat[1] = tmp[0].template shuffle<1, 3, 1, 3>(tmp[2]);
 		mat[2] = tmp[1].template shuffle<0, 2, 0, 2>(tmp[3]);
 		mat[3] = tmp[1].template shuffle<1, 3, 1, 3>(tmp[3]);
 	}
-
 
 	template<class T>
 	inline Vector<T> Matrix<T>::transformPoint(const Vector<T> & v) const

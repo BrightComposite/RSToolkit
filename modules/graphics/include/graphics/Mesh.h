@@ -17,20 +17,20 @@ namespace Rapture
 {
 	class Graphics3D;
 
-	class VertexData : public data<const void>
+	class VertexData : public array_list<float>
 	{
 	public:
-		using data<const void>::data;
+		using array_list<float>::array_list;
 
-		static api(graphics) VertexData quad2d;
-		static api(graphics) VertexData texquad2d;
-		static api(graphics) VertexData linequad2d;
-		static api(graphics) VertexData quad3d;
-		static api(graphics) VertexData texquad3d;
-		static api(graphics) VertexData linequad3d;
-		static api(graphics) VertexData cube;
-		static api(graphics) VertexData texcube;
-		static api(graphics) VertexData colorcube;
+		static api(graphics) const VertexData quad2d;
+		static api(graphics) const VertexData texquad2d;
+		static api(graphics) const VertexData linequad2d;
+		static api(graphics) const VertexData quad3d;
+		static api(graphics) const VertexData texquad3d;
+		static api(graphics) const VertexData linequad3d;
+		static api(graphics) const VertexData cube;
+		static api(graphics) const VertexData texcube;
+		static api(graphics) const VertexData colorcube;
 	};
 
 	class VertexIndices : public array_list<uint16_t>
@@ -53,7 +53,7 @@ namespace Rapture
 	class VertexBuffer : public Shared
 	{
 	public:
-		VertexBuffer(VertexLayout * layout, const VertexData & vd) : layout(layout), verticesCount(static_cast<uint>(vd.size / layout->stride)) {}
+		VertexBuffer(VertexLayout * layout, const VertexData & vd) : layout(layout), verticesCount(static_cast<uint>(vd.size() / layout->units)) {}
 
 		virtual void apply() const = 0;
 

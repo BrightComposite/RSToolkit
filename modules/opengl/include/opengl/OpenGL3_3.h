@@ -138,19 +138,9 @@ namespace Rapture
 			HDC _device;
 			Context _context;
 
-			class VertexAttributes
-			{
-			public:
-				api(opengl3_3) void reserve(uint count);
-
-			protected:
-				uint _count = 0;
-			};
-
 			array_list<GLUniformBinding> _uniformBindings;
-			VertexAttributes _vertexAttributes;
-			const GLShaderProgram * _shaderProgram;
-			const GLMeshTrait * _mesh;
+			const GLShaderProgram * _shaderProgram = nullptr;
+			const GLMeshTrait * _mesh = nullptr;
 		};
 
 		//---------------------------------------------------------------------------
@@ -201,14 +191,13 @@ namespace Rapture
 			friend_owned_handle(GLVertexBuffer, GLGraphics);
 
 		public:
-			virtual ~GLVertexBuffer() {}
+			virtual api(opengl3_3) ~GLVertexBuffer();
 
 			virtual api(opengl3_3) void apply() const override;
 
 		protected:
 			api(opengl3_3) GLVertexBuffer(GLGraphics * graphics, VertexLayout * layout, const VertexData & vd);
 
-			uint topology;
 			uint handle;
 		};
 
@@ -217,7 +206,7 @@ namespace Rapture
 			friend_owned_handle(GLIndexBuffer, GLGraphics);
 
 		public:
-			virtual ~GLIndexBuffer() {}
+			virtual api(opengl3_3) ~GLIndexBuffer();
 
 			virtual api(opengl3_3) void apply() const override;
 
@@ -234,6 +223,7 @@ namespace Rapture
 
 		public:
 			api(opengl3_3) GLMeshTrait(GLGraphics * graphics, VertexTopology topology);
+			virtual api(opengl3_3) ~GLMeshTrait();
 
 		protected:
 			uint id;
@@ -264,7 +254,7 @@ namespace Rapture
 			friend_owned_handle(GLUniformAdapter, GLGraphics);
 
 		public:
-			virtual ~GLUniformAdapter() {}
+			virtual api(opengl3_3) ~GLUniformAdapter();
 
 			virtual api(opengl3_3) void update(const void * data) override;
 

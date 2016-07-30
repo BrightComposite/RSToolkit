@@ -42,29 +42,29 @@ namespace Rapture
 		return _clipRect;
 	}
 
-	const Color & Graphics::clearColor() const
+	const colorf & Graphics::clearColor() const
 	{
-		return *_clearColor;
+		return _clearColor->get();
 	}
 
-	const Color & Graphics::color() const
+	const colorf & Graphics::color() const
 	{
-		return *_color;
+		return _color->get();
 	}
 
 	int Graphics::fontSize() const
 	{
-		return *_fontSize;
+		return _fontSize->get();
 	}
 
 	int Graphics::lineWidth() const
 	{
-		return *_lineWidth;
+		return _lineWidth->get();
 	}
 
 	FillMode Graphics::fillMode() const
 	{
-		return *_fillMode;
+		return _fillMode->get();
 	}
 
 	void Graphics::setFontSize(int size)

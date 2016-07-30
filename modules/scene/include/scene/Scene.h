@@ -35,6 +35,9 @@ namespace Rapture
 	link_class(scene, WorldObject, Class<SceneObject>);
 	link_class(scene, OrientedObject, Class<WorldObject>);
 
+	using Position = fvec;
+	using Rotation = fquat;
+
 	class SceneObject : public Object
 	{
 		friend class Scene;
@@ -50,20 +53,20 @@ namespace Rapture
 			return _scene;
 		}
 
-		virtual const fvec & position() const
+		virtual const floatv & position() const
 		{
-			return fvec::identity;
+			return floatv::identity;
 		}
 
-		virtual const fquat & direction() const
+		virtual const floatq & rotation() const
 		{
-			return fquat::identity;
+			return floatq::identity;
 		}
 
-		virtual void setPosition(const fvec & pos) {}
-		virtual void setDirection(const fquat & dir) {}
-		virtual void move(const fvec & offset) {}
-		virtual void rotate(const fquat & rot) {}
+		virtual void setPosition(const floatv & pos) {}
+		virtual void setRotation(const floatq & rot) {}
+		virtual void move(const floatv & offset) {}
+		virtual void rotate(const floatq & rot) {}
 
 		void move(float x, float y, float z)
 		{
@@ -85,24 +88,24 @@ namespace Rapture
 			move({0, 0, z});
 		}
 
-		void rotate(const fvec & axis, float angle)
+		void rotate(const Position & axis, float angle)
 		{
 			rotate({axis, angle});
 		}
 
 		void rotateX(float angle)
 		{
-			rotate(fvec::positiveX, angle);
+			rotate(floatv::positiveX, angle);
 		}
 
 		void rotateY(float angle)
 		{
-			rotate(fvec::positiveY, angle);
+			rotate(floatv::positiveY, angle);
 		}
 
 		void rotateZ(float angle)
 		{
-			rotate(fvec::positiveZ, angle);
+			rotate(floatv::positiveZ, angle);
 		}
 
 	protected:
@@ -137,30 +140,30 @@ namespace Rapture
 		deny_copy(WorldObject);
 
 	public:
-		WorldObject(Scene * scene, const fvec & pos = fvec::identity) : SceneObject(scene), _pos(pos)
+		WorldObject(Scene * scene, const Position & pos = floatv::identity) : SceneObject(scene), _pos(pos)
 		{
 			setclass(WorldObject);
 		}
 
 		virtual ~WorldObject() {}
 
-		virtual const fvec & position() const override
+		virtual const floatv & position() const override
 		{
 			return _pos;
 		}
 
-		virtual void setPosition(const fvec & pos) override
+		virtual void setPosition(const floatv & pos) override
 		{
 			_pos = pos;
 		}
 
-		virtual void move(const fvec & offset) override
+		virtual void move(const floatv & offset) override
 		{
-			_pos += offset;
+			*_pos += offset;
 		}
 
 	protected:
-		fvec _pos;
+		Position _pos;
 	};
 
 	class OrientedObject : public WorldObject
@@ -168,35 +171,35 @@ namespace Rapture
 		deny_copy(OrientedObject);
 
 	public:
-		OrientedObject(Scene * scene, const fvec & pos = fvec::identity, const fquat & dir = fquat()) : WorldObject(scene, pos), _dir(dir)
+		OrientedObject(Scene * scene, const Position & pos = floatv::identity, const Rotation & rot = floatq::identity) : WorldObject(scene, pos), _rot(rot)
 		{
 			setclass(OrientedObject);
 		}
 
 		virtual ~OrientedObject() {}
 
-		virtual const fquat & direction() const override
+		virtual const floatq & rotation() const override
 		{
-			return _dir;
+			return _rot;
 		}
 
-		virtual void setDirection(const fquat & dir) override
+		virtual void setRotation(const floatq & rot) override
 		{
-			_dir = dir;
+			_rot = rot;
 		}
 
-		virtual void move(const fvec & offset) override
+		virtual void move(const floatv & offset) override
 		{
-			_pos += _dir.applyTo(offset);
+			*_pos += _rot->applyTo(offset);
 		}
 
-		virtual void rotate(const fquat & rot) override
+		virtual void rotate(const floatq & rot) override
 		{
-			_dir.rotateBy(rot);
+			_rot->rotateBy(rot);
 		}
 
 	protected:
-		fquat _dir;
+		Rotation _rot;
 	};
 
 	class Scene : public Object, public Named, public Connector

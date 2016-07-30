@@ -18,8 +18,10 @@
 !*.hpp
 !*.c
 !*.fx
+!*.glsl
 !*.cmake
 !*.bat
+!CMakeLists.txt
 !**/CMakeLists.txt
 !.gitignore
 !.gitattributes

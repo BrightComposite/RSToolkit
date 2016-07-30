@@ -1,27 +1,27 @@
 //---------------------------------------------------------------------------
 
-#include <opengl/shaders/2d/rect/vs.inc>
-#include <opengl/shaders/2d/rect/fs.inc>
-#include <opengl/shaders/2d/ellipse/vs.inc>
-#include <opengl/shaders/2d/ellipse/fs.inc>
-#include <opengl/shaders/2d/figure/vs.inc>
-#include <opengl/shaders/2d/figure/fs.inc>
-#include <opengl/shaders/2d/image/vs.inc>
-#include <opengl/shaders/2d/image/fs.inc>
-#include <opengl/shaders/2d/text/vs.inc>
-#include <opengl/shaders/2d/text/fs.inc>
-#include <opengl/shaders/2d/wired/rect/vs.inc>
-#include <opengl/shaders/2d/wired/rect/fs.inc>
-#include <opengl/shaders/2d/wired/ellipse/vs.inc>
-#include <opengl/shaders/2d/wired/ellipse/fs.inc>
-#include <opengl/shaders/3d/basic/vs.inc>
-#include <opengl/shaders/3d/basic/fs.inc>
-#include <opengl/shaders/3d/color/vs.inc>
-#include <opengl/shaders/3d/color/fs.inc>
-#include <opengl/shaders/3d/multicolor/vs.inc>
-#include <opengl/shaders/3d/multicolor/fs.inc>
-#include <opengl/shaders/3d/texture/vs.inc>
-#include <opengl/shaders/3d/texture/fs.inc>
+#include <opengl/shaders/2d/rect/vs.shader.inc>
+#include <opengl/shaders/2d/rect/fs.shader.inc>
+#include <opengl/shaders/2d/ellipse/vs.shader.inc>
+#include <opengl/shaders/2d/ellipse/fs.shader.inc>
+#include <opengl/shaders/2d/figure/vs.shader.inc>
+#include <opengl/shaders/2d/figure/fs.shader.inc>
+#include <opengl/shaders/2d/image/vs.shader.inc>
+#include <opengl/shaders/2d/image/fs.shader.inc>
+#include <opengl/shaders/2d/text/vs.shader.inc>
+#include <opengl/shaders/2d/text/fs.shader.inc>
+#include <opengl/shaders/2d/wired/rect/vs.shader.inc>
+#include <opengl/shaders/2d/wired/rect/fs.shader.inc>
+#include <opengl/shaders/2d/wired/ellipse/vs.shader.inc>
+#include <opengl/shaders/2d/wired/ellipse/fs.shader.inc>
+#include <opengl/shaders/3d/basic/vs.shader.inc>
+#include <opengl/shaders/3d/basic/fs.shader.inc>
+#include <opengl/shaders/3d/color/vs.shader.inc>
+#include <opengl/shaders/3d/color/fs.shader.inc>
+#include <opengl/shaders/3d/multicolor/vs.shader.inc>
+#include <opengl/shaders/3d/multicolor/fs.shader.inc>
+#include <opengl/shaders/3d/texture/vs.shader.inc>
+#include <opengl/shaders/3d/texture/fs.shader.inc>
 
 //---------------------------------------------------------------------------
 

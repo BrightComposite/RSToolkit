@@ -1,20 +1,17 @@
 //---------------------------------------------------------------------------
 
-#pragma once
-
-#ifndef MATRIX_TEST_H
-#define MATRIX_TEST_H
-
-//---------------------------------------------------------------------------
-
-#include <meta/Macro.h>
+#include <application/Starter.h>
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	int api(direct3dtest) matrixTest();
+	static Entrance open([]()
+    {
+        // PLACE YOUR CODE HERE! GOOD LUCK :)
+        
+        return 0;
+    });
 }
 
 //---------------------------------------------------------------------------
-#endif

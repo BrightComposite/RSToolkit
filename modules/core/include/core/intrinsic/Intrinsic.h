@@ -92,7 +92,7 @@ namespace Rapture
 	 *	Integer intrinsics
 	 */
 	template<>
-	struct api(core) Intrinsic<int, 4>
+	struct Intrinsic<int, 4>
 	{
 		static const bool implemented = true;
 
@@ -105,18 +105,19 @@ namespace Rapture
 		using in_type = const type &;
 	#endif
 
-		static const inner maximum;
-		static const inner signmask;
+		static api(core) const inner maximum;
+		static api(core) const inner signmask;
+
 		static const size_t size = sizeof(inner);
 
-		static inline void __vectorcall load(const inner & in, type & out)
+		static inline void __vectorcall load(const type & in, type & out)
 		{
-			out = _mm_load_si128(&in.v);
+			out = _mm_load_si128(&in);
 		}
 
-		static inline inner __vectorcall load(const inner & in)
+		static inline type __vectorcall load(const type & in)
 		{
-			return {_mm_load_si128(&in.v)};
+			return _mm_load_si128(&in);
 		}
 
 		static inline void __vectorcall load(const int & a, const int & b, const int & c, const int & d, type & out)
@@ -124,9 +125,9 @@ namespace Rapture
 			out = _mm_set_epi32(a, b, c, d);
 		}
 
-		static inline inner __vectorcall load(const int & a, const int & b, const int & c, const int & d)
+		static inline type __vectorcall load(const int & a, const int & b, const int & c, const int & d)
 		{
-			return {_mm_set_epi32(a, b, c, d)};
+			return _mm_set_epi32(a, b, c, d);
 		}
 
 		static inline void __vectorcall load(const int * data, type & out)
@@ -134,14 +135,19 @@ namespace Rapture
 			out = _mm_set_epi32(data[0], data[1], data[2], data[3]);
 		}
 
-		static inline inner __vectorcall load(const int * data)
+		static inline type __vectorcall load(const int * data)
 		{
-			return {_mm_set_epi32(data[0], data[1], data[2], data[3])};
+			return _mm_set_epi32(data[0], data[1], data[2], data[3]);
 		}
 
-		static inline void __vectorcall store(in_type in, inner & out)
+		static inline void __vectorcall store(in_type in, int * out)
 		{
-			_mm_store_si128(&out.v, in);
+			_mm_store_si128(reinterpret_cast<type *>(out), in);
+		}
+
+		static inline void __vectorcall store(in_type in, type & out)
+		{
+			_mm_store_si128(&out, in);
 		}
 
 		static inline void __vectorcall zero(type & out)
@@ -181,7 +187,7 @@ namespace Rapture
 
 		static inline type __vectorcall sub(in_type a, in_type b)
 		{
-			return {_mm_sub_epi32(a, b)};
+			return _mm_sub_epi32(a, b);
 		}
 
 		static inline void __vectorcall mul(in_type a, in_type b, type & out)
@@ -191,7 +197,7 @@ namespace Rapture
 
 		static inline type __vectorcall mul(in_type a, in_type b)
 		{
-			return {_mm_mul_epi32(a, b)};
+			return _mm_mul_epi32(a, b);
 		}
 
 		static inline void __vectorcall div(in_type a, in_type b, type & out)
@@ -204,12 +210,12 @@ namespace Rapture
 
 		static inline type __vectorcall div(in_type a, in_type b)
 		{
-			return {_mm_set_epi32(
+			return _mm_set_epi32(
 				_mm_extract_epi32(a, 3) / _mm_extract_epi32(b, 3),
 				_mm_extract_epi32(a, 2) / _mm_extract_epi32(b, 2),
 				_mm_extract_epi32(a, 1) / _mm_extract_epi32(b, 1),
 				_mm_extract_epi32(a, 0) / _mm_extract_epi32(b, 0)
-			)};
+			);
 		}
 
 		static inline void __vectorcall sqr(in_type a, type & out)
@@ -219,7 +225,7 @@ namespace Rapture
 
 		static inline type __vectorcall sqr(in_type a)
 		{
-			return {_mm_mul_epi32(a, a)};
+			return _mm_mul_epi32(a, a);
 		}
 
 		static inline void __vectorcall invert(in_type a, type & out)
@@ -458,7 +464,7 @@ namespace Rapture
 	 *	Float intrinsics
 	 */
 	template<>
-	struct api(core) Intrinsic<float, 4>
+	struct Intrinsic<float, 4>
 	{
 		static const bool implemented = true;
 
@@ -471,18 +477,19 @@ namespace Rapture
 		using in_type = const type &;
 	#endif
 
-		static const inner signmask;
-		static const inner nofrac;
+		static api(core) const inner signmask;
+		static api(core) const inner nofrac;
+
 		static const size_t size = sizeof(inner);
 
-		static inline void __vectorcall load(const inner & in, type & out)
+		static inline void __vectorcall load(const type & in, type & out)
 		{
-			out = _mm_load_ps(in.data.data());
+			out = _mm_load_ps(reinterpret_cast<const float *>(&in));
 		}
 
-		static inline inner __vectorcall load(const inner & in)
+		static inline type __vectorcall load(const type & in)
 		{
-			return {_mm_load_ps(in.data.data())};
+			return _mm_load_ps(reinterpret_cast<const float *>(&in));
 		}
 
 		static inline void __vectorcall load(const float & a, const float & b, const float & c, const float & d, type & out)
@@ -490,29 +497,34 @@ namespace Rapture
 			out = _mm_set_ps(d, c, b, a);
 		}
 
-		static inline inner __vectorcall load(const float & a, const float & b, const float & c, const float & d)
+		static inline type __vectorcall load(const float & a, const float & b, const float & c, const float & d)
 		{
-			return {_mm_set_ps(d, c, b, a)};
+			return _mm_set_ps(d, c, b, a);
 		}
 
-		static inline inner __vectorcall load(const __m64 & a, const __m64 & b)
+		static inline type __vectorcall load(const __m64 & a, const __m64 & b)
 		{
-			return {_mm_set_ps(_m_hi(b), _m_lo(b), _m_hi(a), _m_lo(a))};
+			return _mm_set_ps(_m_hi(b), _m_lo(b), _m_hi(a), _m_lo(a));
 		}
 
-		static inline void __vectorcall load(const float * data, type & out)
+		static inline void __vectorcall load(const float * in, type & out)
 		{
-			out = _mm_set_ps(data[3], data[2], data[1], data[0]);
+			out = _mm_load_ps(in);
 		}
 
-		static inline inner __vectorcall load(const float * data)
+		static inline type __vectorcall load(const float * in)
 		{
-			return {_mm_set_ps(data[3], data[2], data[1], data[0])};
+			return _mm_load_ps(in);
 		}
 
-		static inline void __vectorcall store(in_type in, inner & out)
+		static inline void __vectorcall store(in_type in, float * out)
 		{
-			_mm_store_ps(out.data.data(), in);
+			_mm_store_ps(out, in);
+		}
+
+		static inline void __vectorcall store(in_type in, type & out)
+		{
+			_mm_store_ps(reinterpret_cast<float *>(&out), in);
 		}
 
 		static inline void __vectorcall zero(type & out)
@@ -522,7 +534,7 @@ namespace Rapture
 
 		static inline type __vectorcall zero()
 		{
-			return {_mm_setzero_ps()};
+			return _mm_setzero_ps();
 		}
 
 		static inline void __vectorcall fill(float val, type & out)
@@ -532,7 +544,7 @@ namespace Rapture
 
 		static inline type __vectorcall fill(float val)
 		{
-			return {_mm_set_ps1(val)};
+			return _mm_set_ps1(val);
 		}
 
 		static inline void __vectorcall add(in_type a, in_type b, type & out)
@@ -542,7 +554,7 @@ namespace Rapture
 
 		static inline type __vectorcall add(in_type a, in_type b)
 		{
-			return {_mm_add_ps(a, b)};
+			return _mm_add_ps(a, b);
 		}
 
 		static inline void __vectorcall addx(in_type a, in_type b, type & out)
@@ -552,7 +564,7 @@ namespace Rapture
 
 		static inline type __vectorcall addx(in_type a, in_type b)
 		{
-			return {_mm_add_ss(a, b)};
+			return _mm_add_ss(a, b);
 		}
 
 		static inline void __vectorcall sub(in_type a, in_type b, type & out)
@@ -562,7 +574,7 @@ namespace Rapture
 
 		static inline type __vectorcall sub(in_type a, in_type b)
 		{
-			return {_mm_sub_ps(a, b)};
+			return _mm_sub_ps(a, b);
 		}
 
 		static inline void __vectorcall mul(in_type a, in_type b, type & out)
@@ -572,7 +584,7 @@ namespace Rapture
 
 		static inline type __vectorcall mul(in_type a, in_type b)
 		{
-			return {_mm_mul_ps(a, b)};
+			return _mm_mul_ps(a, b);
 		}
 
 		static inline void __vectorcall div(in_type a, in_type b, type & out)
@@ -582,7 +594,7 @@ namespace Rapture
 
 		static inline type __vectorcall div(in_type a, in_type b)
 		{
-			return {_mm_div_ps(a, b)};
+			return _mm_div_ps(a, b);
 		}
 
 		static inline void __vectorcall sqr(in_type a, type & out)
@@ -592,7 +604,7 @@ namespace Rapture
 
 		static inline type __vectorcall sqr(in_type a)
 		{
-			return {_mm_mul_ps(a, a)};
+			return _mm_mul_ps(a, a);
 		}
 
 		static inline void __vectorcall invert(in_type a, type & out)
@@ -634,7 +646,7 @@ namespace Rapture
 
 		static inline type __vectorcall hadd2(in_type a, in_type b)
 		{
-			return {_mm_hadd_ps(a, b)};
+			return _mm_hadd_ps(a, b);
 		}
 
 		static inline void __vectorcall hadd(in_type a, type & out)
@@ -644,7 +656,7 @@ namespace Rapture
 
 		static inline type __vectorcall hadd(in_type a)
 		{
-			return {_mm_hadd_ps(a, a)};
+			return _mm_hadd_ps(a, a);
 		}
 
 		static inline float __vectorcall sum(in_type a)
@@ -673,7 +685,7 @@ namespace Rapture
 
 		static inline type __vectorcall sqrt(in_type a)
 		{
-			return {_mm_sqrt_ps(a)};
+			return _mm_sqrt_ps(a);
 		}
 
 		static inline void __vectorcall bit_and(in_type a, in_type b, type & out)
@@ -683,7 +695,7 @@ namespace Rapture
 
 		static inline type __vectorcall bit_and(in_type a, in_type b)
 		{
-			return {_mm_and_ps(a, b)};
+			return _mm_and_ps(a, b);
 		}
 
 		static inline void __vectorcall bit_or(in_type a, in_type b, type & out)
@@ -693,7 +705,7 @@ namespace Rapture
 
 		static inline type __vectorcall bit_or(in_type a, in_type b)
 		{
-			return {_mm_or_ps(a, b)};
+			return _mm_or_ps(a, b);
 		}
 
 		static inline void __vectorcall bit_andnot(in_type a, in_type b, type & out)
@@ -703,7 +715,7 @@ namespace Rapture
 
 		static inline type __vectorcall bit_andnot(in_type a, in_type b)
 		{
-			return {_mm_andnot_ps(a, b)};
+			return _mm_andnot_ps(a, b);
 		}
 
 		static inline void __vectorcall bit_xor(in_type a, in_type b, type & out)
@@ -713,7 +725,7 @@ namespace Rapture
 
 		static inline type __vectorcall bit_xor(in_type a, in_type b)
 		{
-			return {_mm_xor_ps(a, b)};
+			return _mm_xor_ps(a, b);
 		}
 
 		static inline bool __vectorcall equal(in_type a, in_type b)
@@ -733,7 +745,7 @@ namespace Rapture
 
 		static inline type __vectorcall cmple(in_type a, in_type b)
 		{
-			return {_mm_cmple_ps(a, b)};
+			return _mm_cmple_ps(a, b);
 		}
 
 		static inline void __vectorcall abs(in_type a, type & out)
@@ -743,7 +755,7 @@ namespace Rapture
 
 		static inline type __vectorcall abs(in_type a)
 		{
-			return {bit_andnot(signmask, a)};
+			return bit_andnot(signmask, a);
 		}
 
 		static inline void __vectorcall sign(in_type a, type & out)
@@ -753,7 +765,7 @@ namespace Rapture
 
 		static inline type __vectorcall sign(in_type a)
 		{
-			return {bit_and(signmask, a)};
+			return bit_and(signmask, a);
 		}
 
 		static inline void __vectorcall round(in_type a, type & out)
@@ -767,7 +779,7 @@ namespace Rapture
 		{
 			auto v = bit_or(nofrac, sign(a));
 			auto mask = cmple(abs(a), nofrac);
-			return {bit_xor(bit_and(sub(add(a, v), v), mask), bit_andnot(mask, a))};
+			return bit_xor(bit_and(sub(add(a, v), v), mask), bit_andnot(mask, a));
 		}
 
 		static inline void __vectorcall negate(in_type a, type & out)
@@ -777,7 +789,7 @@ namespace Rapture
 
 		static inline type __vectorcall negate(in_type a)
 		{
-			return {bit_xor(signmask, a)};
+			return bit_xor(signmask, a);
 		}
 
 		static inline void __vectorcall reverse(in_type a, type & out)
@@ -787,7 +799,7 @@ namespace Rapture
 
 		static inline type __vectorcall reverse(in_type a)
 		{
-			return {_mm_reverse_ps(a)};
+			return _mm_reverse_ps(a);
 		}
 
 		template<byte A, byte B, byte C, byte D, useif<
@@ -823,7 +835,7 @@ namespace Rapture
 		>
 		static inline type __vectorcall shuffle2(in_type a, in_type b)
 		{
-			return {_mm_shuffle_ps(a, b, mk_shuffle_4(A, B, C, D))};
+			return _mm_shuffle_ps(a, b, mk_shuffle_4(A, B, C, D));
 		}
 
 		template<byte A, byte B, byte C, byte D, useif<
@@ -841,7 +853,7 @@ namespace Rapture
 		>
 		static inline type __vectorcall shuffle(in_type a)
 		{
-			return {_mm_permute_ps(a, mk_shuffle_4(A, B, C, D))};
+			return _mm_permute_ps(a, mk_shuffle_4(A, B, C, D));
 		}
 	};
 
@@ -851,15 +863,16 @@ namespace Rapture
 	 *	Double intrinsics
 	 */
 	template<>
-	struct api(core) Intrinsic<double, 4>
+	struct Intrinsic<double, 4>
 	{
 		static const bool implemented = true;
 
 		using inner = IntrinData<double, 4>;
 		using type = inner::type;
 
-		static const inner signmask;
-		static const inner nofrac;
+		static api(core) const inner signmask;
+		static api(core) const inner nofrac;
+
 		static const size_t size = sizeof(inner);
 
 		static inline void __vectorcall load(const inner & in, type & out)
@@ -1238,8 +1251,9 @@ namespace Rapture
 		using inner = IntrinData<byte, 4>;
 		using type = typename inner::type;
 
-		static const inner maximum;
-		static const inner signmask;
+		static api(core) const inner maximum;
+		static api(core) const inner signmask;
+
 		static const size_t size = sizeof(inner);
 
 		static inline void __vectorcall load(const inner & in, type & out)
@@ -1247,7 +1261,7 @@ namespace Rapture
 			out = in.v;
 		}
 
-		static inline inner __vectorcall load(const inner & in)
+		static inline type __vectorcall load(const inner & in)
 		{
 			return in.v;
 		}
@@ -1257,9 +1271,9 @@ namespace Rapture
 			out = {d, c, b, a};
 		}
 
-		static inline inner __vectorcall load(const byte & a, const byte & b, const byte & c, const byte & d)
+		static inline type __vectorcall load(const byte & a, const byte & b, const byte & c, const byte & d)
 		{
-			return __m32 {d, c, b, a};
+			return type {d, c, b, a};
 		}
 
 		static inline void __vectorcall load(const byte * data, type & out)
@@ -1267,9 +1281,9 @@ namespace Rapture
 			out = {data[3], data[2], data[1], data[0]};
 		}
 
-		static inline inner __vectorcall load(const byte * data)
+		static inline type __vectorcall load(const byte * data)
 		{
-			return __m32 {data[3], data[2], data[1], data[0]};
+			return type {data[3], data[2], data[1], data[0]};
 		}
 
 		static inline void __vectorcall store(const type & in, inner & out)
@@ -1282,9 +1296,9 @@ namespace Rapture
 			out.i = 0;
 		}
 
-		static inline inner __vectorcall zero()
+		static inline type __vectorcall zero()
 		{
-			return __m32{};
+			return type{};
 		}
 
 		static inline void __vectorcall fill(byte val, type & out)
@@ -1299,7 +1313,7 @@ namespace Rapture
 
 		static inline inner __vectorcall fill(byte val)
 		{
-			return __m32 {val, val, val, val};
+			return type {val, val, val, val};
 		}
 
 		static inline void __vectorcall add(const type & a, const type & b, type & out)
@@ -1309,7 +1323,7 @@ namespace Rapture
 
 		static inline inner __vectorcall add(const type & a, const type & b)
 		{
-			return __m32 {byte(a.x + b.x), byte(a.y + b.y), byte(a.z + b.z), byte(a.w + b.w)};
+			return type {byte(a.x + b.x), byte(a.y + b.y), byte(a.z + b.z), byte(a.w + b.w)};
 		}
 
 		static inline void __vectorcall sub(const type & a, const type & b, type & out)

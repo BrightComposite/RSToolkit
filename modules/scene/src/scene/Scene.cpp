@@ -147,13 +147,13 @@ namespace Rapture
 		{
 			case ProjectionMode::Ortho:
 			{
-				_scene->graphics().updateUniform<Uniforms::Projection>(fmat::orthot(-1.0f / aspect, 1.0f / aspect, -1.0f, 1.0f, -z, z));
+				_scene->graphics().updateUniform<Uniforms::Projection>(floatm::orthot(-1.0f / aspect, 1.0f / aspect, -1.0f, 1.0f, -z, z));
 				break;
 			}
 
 			case ProjectionMode::Perspective:
 			{
-				_scene->graphics().updateUniform<Uniforms::Projection>(fmat::perspectivet(_fov, aspect, 0.01f, 2 * z));
+				_scene->graphics().updateUniform<Uniforms::Projection>(floatm::perspectivet(_fov, aspect, 0.01f, 2 * z));
 				break;
 			}
 		}
@@ -182,7 +182,7 @@ namespace Rapture
 			drawable->draw(g, viewport, _camera ? _camera->zoom() : 0.0f);
 		}
 
-		auto dt = hold(g.depthTestState(), false);
+		//auto dt = hold(g.depthTestState(), false);
 
 		for(auto & drawable : _transparent)
 			drawable->draw(g, viewport, _camera ? _camera->zoom() : 0.0f);
@@ -211,6 +211,6 @@ namespace Rapture
 
 	void Camera::update()
 	{
-		_scene->graphics().updateUniform<Uniforms::View>(fmat::lookTo(_pos, _dir.forward(), fvec::up).transpose());
+		_scene->graphics().updateUniform<Uniforms::View>(floatm::lookTo(_pos, _rot->forward(), floatv::up).transpose());
 	}
 }

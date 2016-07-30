@@ -82,11 +82,10 @@ namespace Rapture
 	{
 		using T = color_data_t<datatype>;
 
-		ColorBase() : vector {} {}
-		ColorBase(const ColorBase & color) : vector {color.vector} {}
-		ColorBase(ColorBase && color) : vector {move(color.vector)} {}
-		ColorBase(const Vector<T> & vec) : vector {vec} {}
-		ColorBase(Vector<T> && vec) : vector {forward<Vector<T>>(vec)} {}
+		ColorBase() : data {} {}
+		ColorBase(const ColorBase & color) : data {color.data} {}
+		ColorBase(ColorBase && color) : data {move(color.data)} {}
+		ColorBase(const Vector<T> & vec) : data {vec.v} {}
 		ColorBase(const array<T, 4> & data) : data {data} {}
 		ColorBase(array<T, 4> && data) : data {forward<array<T, 4>>(data)} {}
 		ColorBase(T r, T g, T b, T a) : r(r), g(g), b(b), a(a) {}
@@ -95,7 +94,6 @@ namespace Rapture
 		{
 			array<T, 4> data;
 			T m[4];
-			Vector<T> vector;
 
 			struct
 			{
@@ -109,11 +107,10 @@ namespace Rapture
 	{
 		using T = color_data_t<datatype>;
 
-		ColorBase() : vector {} {}
-		ColorBase(const ColorBase & color) : vector {color.vector} {}
-		ColorBase(ColorBase && color) : vector {move(color.vector)} {}
-		ColorBase(const Vector<T> & vec) : vector {vec} {}
-		ColorBase(Vector<T> && vec) : vector {forward<Vector<T>>(vec)} {}
+		ColorBase() : data {} {}
+		ColorBase(const ColorBase & color) : data {color.data} {}
+		ColorBase(ColorBase && color) : data {move(color.data)} {}
+		ColorBase(const Vector<T> & vec) : data {vec.v} {}
 		ColorBase(const array<T, 4> & data) : data {data} {}
 		ColorBase(array<T, 4> && data) : data {forward<array<T, 4>>(data)} {}
 		ColorBase(T h, T s, T v, T a) : h(h), s(s), v(v), a(a) {}
@@ -122,7 +119,6 @@ namespace Rapture
 		{
 			array<T, 4> data;
 			T m[4];
-			Vector<T> vector;
 
 			struct
 			{
@@ -140,10 +136,9 @@ namespace Rapture
 
 		member_cast(this->m, array_t<T, 4>);
 		member_cast(this->data, array<T, 4>);
-		member_cast(this->vector, Vector<T>);
 
 		GenericColor() : Base {Traits::default_color()} {}
-		GenericColor(const GenericColor & color) : Base {color.vector} {}
+		GenericColor(const GenericColor & color) : Base {color.data} {}
 
 		template<class ... A, selectif(0)<sizeof...(A) == 3, std::is_convertible<A, T>::value...>>
 		GenericColor(A &&... args) : Base {adapt<T, A>(forward<A>(args))..., Traits::alpha()} {}
@@ -163,18 +158,18 @@ namespace Rapture
 
 		GenericColor & operator = (const GenericColor & color)
 		{
-			this->vector = color.vector;
+			this->data = color.data;
 			return *this;
 		}
 
 		bool operator == (const GenericColor & color) const
 		{
-			return this->vector == color.vector;
+			return this->data == color.data;
 		}
 
 		bool operator != (const GenericColor & color) const
 		{
-			return this->vector != color.vector;
+			return this->data != color.data;
 		}
 
 		T & operator [] (int index)
@@ -198,11 +193,13 @@ namespace Rapture
 		}
 	};
 
-	using Color  = GenericColor<ColorType::Float, ColorFormat::rgb>;
-	using colorf = GenericColor<ColorType::Float, ColorFormat::rgb>;
-	using colorb = GenericColor<ColorType::Byte,  ColorFormat::rgb>;
-	using rgb	 = GenericColor<ColorType::Byte,  ColorFormat::rgb>;
-	using hsv	 = GenericColor<ColorType::Float, ColorFormat::hsv>;
+	using colorf	= GenericColor<ColorType::Float, ColorFormat::rgb>;
+	using colorb	= GenericColor<ColorType::Byte,  ColorFormat::rgb>;
+	using floathsv	= GenericColor<ColorType::Float, ColorFormat::hsv>;
+
+	using Color		= colorf;
+	using rgb		= colorb;
+	using hsv		= floathsv;
 
 	template<class T>
 	struct is_color : false_type {};

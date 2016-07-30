@@ -86,8 +86,8 @@ namespace Rapture
 		api(graphics) const Viewport & viewport() const;
 
 		api(graphics) const IntRect & clipRect() const;
-		api(graphics) const Color & clearColor() const;
-		api(graphics) const Color & color() const;
+		api(graphics) const colorf & clearColor() const;
+		api(graphics) const colorf & color() const;
 
 		api(graphics) int fontSize() const;
 		api(graphics) int lineWidth() const;
@@ -173,20 +173,6 @@ namespace Rapture
 
 		virtual void present() const = 0;
 
-	protected:
-		virtual void initFacilities() {}
-		virtual void updateBrushState() {}
-
-		virtual api(graphics) void updateSurface();
-
-		template<class string_t>
-		static api(graphics) void draw(Graphics * graphics, const string_t & text, int x, int y, int & outx);
-
-		Surface * _surface;
-		Handle<Font> _font;
-
-		IntRect _clipRect {0.0f, 0.0f, 10000.0f, 10000.0f};
-
 		template<class T>
 		class BrushState : public State<T>
 		{
@@ -206,6 +192,20 @@ namespace Rapture
 
 			Graphics * graphics;
 		};
+
+	protected:
+		virtual void initFacilities() {}
+		virtual void updateBrushState() {}
+
+		virtual api(graphics) void updateSurface();
+
+		template<class string_t>
+		static api(graphics) void draw(Graphics * graphics, const string_t & text, int x, int y, int & outx);
+
+		Surface * _surface;
+		Handle<Font> _font;
+
+		IntRect _clipRect {0.0f, 0.0f, 10000.0f, 10000.0f};
 
 		template<class T>
 		using BrushStateHandle = Handle<BrushState<T>>;

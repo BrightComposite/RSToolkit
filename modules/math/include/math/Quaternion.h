@@ -17,7 +17,7 @@
 namespace Rapture
 {
 	template<typename T>
-	struct alignas(sizeof(T) * 4) Quaternion
+	struct alignas(sizeof(T) * 4) Quaternion : AlignedAllocator
 	{
 		using Data = intrin_data<T, 4>;
 		using IntrinType = typename Data::type;
@@ -41,11 +41,15 @@ namespace Rapture
 
 		member_cast(q, array<T, 4>);
 		member_cast(data, Data);
-		member_cast(intrinsic, IntrinType);
 
-		Quaternion() : data {VectorType::identity} {}
-		Quaternion(const Quaternion & q) : data {q.data} {}
-		Quaternion(T x, T y, T z, T w) : q {x, y, z, w} {}
+		Quaternion() : v(VectorType::identity) {}
+
+		Quaternion(const Quaternion & q) : v(q.v) {}
+
+		template<class U, useif<not_same_type<T, U>::value>>
+		Quaternion(const Quaternion<U> & q) : v(q.v) {}
+
+		Quaternion(T x, T y, T z, T w) : v {x, y, z, w} {}
 
 		Quaternion(T x, T y, T z)
 		{
@@ -53,13 +57,7 @@ namespace Rapture
 		}
 
 		Quaternion(const VectorType & v) : v {v} {}
-		Quaternion(VectorType && v) : v {std::forward<VectorType>(v)} {}
-
-		Quaternion(const Data & data) : data {data} {}
-		Quaternion(Data && data) : data {std::forward<Data>(data)} {}
-
-		template<class U, useif<!is_same<T, U>::value>>
-		Quaternion(const Quaternion<U> & q) : v(q.v) {}
+		Quaternion(const Data & data) : v {data} {}
 
 		template<class U, useif<can_cast<U, Quaternion>::value>>
 		Quaternion(const U & v)
@@ -72,7 +70,7 @@ namespace Rapture
 
 		Quaternion & operator = (const Quaternion & q)
 		{
-			data = q.data;
+			v = q.v;
 			return *this;
 		}
 
@@ -81,6 +79,16 @@ namespace Rapture
 		{
 			Cast<U, Quaternion>::cast(*this, q);
 			return *this;
+		}
+
+		operator IntrinType () const
+		{
+			return Intrin::load(data);
+		}
+
+		IntrinType intrin() const
+		{
+			return Intrin::load(data);
 		}
 
 		bool operator == (const Quaternion & q) const
@@ -103,21 +111,21 @@ namespace Rapture
 			return Intrin::negate(data);
 		}
 
-		Quaternion & set(const T * v)
+		Quaternion & set(const T * a)
 		{
-			Intrin::load(v, data);
+			v.set(a);
 			return *this;
 		}
 
 		Quaternion & set(T x, T y, T z, T w)
 		{
-			Intrin::load(x, y, z, w, data);
+			v.set(x, y, z, w);
 			return *this;
 		}
 
 		Quaternion & negate()
 		{
-			Intrin::negate(data, data);
+			Intrin::negate(intrinsic);
 			return *this;
 		}
 
@@ -173,9 +181,9 @@ namespace Rapture
 			//return std::move((*this * Quaternion(d) * inverse()).v);
 		}
 
-		VectorType left() const
+		VectorType right() const
 		{
-			return applyTo(VectorType::left);
+			return applyTo(VectorType::right);
 		}
 
 		VectorType up() const
@@ -294,11 +302,13 @@ namespace Rapture
 
 	using FloatQuaternion = Quaternion<float>;
 	using DoubleQuaternion = Quaternion<double>;
-	using fquat = Quaternion<float>;
-	using dquat = Quaternion<double>;
+	using floatq = Quaternion<float>;
+	using doubleq = Quaternion<double>;
 
 	template<class T>
-	using Rotation = Quaternion<T>;
+	using squat = Storage<Quaternion<T>>;
+	using fquat = Storage<Quaternion<float>>;
+	using dquat = Storage<Quaternion<double>>;
 
 	template<class T>
 	Quaternion<T> operator + (const Quaternion<T> & q1, const Quaternion<T> & q2)
@@ -320,8 +330,8 @@ namespace Rapture
 		//q2.w*q1.z + q2.z*q1.w + q2.x*q1.y - q2.y*q1.x
 		//q2.w*q1.w - q2.x*q1.x - q2.y*q1.y - q2.z*q1.z
 
-		const Vector<T> & v1 = q1.v;
-		const Vector<T> & v2 = q2.v;
+		Vector<T> v1 = q1.v;
+		Vector<T> v2 = q2.v;
 
 		return {
 			v2.spreadW() * v1 +

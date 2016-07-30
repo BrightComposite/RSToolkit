@@ -18,9 +18,9 @@
 namespace Rapture
 {
 	template<>
-	struct Cast<btVector3, fvec>
+	struct Cast<btVector3, floatv>
 	{
-		static inline void cast(fvec & out, const btVector3 & in)
+		static inline void cast(floatv & out, const btVector3 & in)
 		{
 			out.set(in);
 			out[3] = 1.0;
@@ -28,9 +28,9 @@ namespace Rapture
 	};
 
 	template<>
-	struct Cast<btQuaternion, fquat>
+	struct Cast<btQuaternion, floatq>
 	{
-		static inline void cast(fquat & out, const btQuaternion & in)
+		static inline void cast(floatq & out, const btQuaternion & in)
 		{
 			out.set(in);
 		}

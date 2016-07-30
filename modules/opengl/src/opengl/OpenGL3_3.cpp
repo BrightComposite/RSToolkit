@@ -36,6 +36,21 @@ namespace Rapture
 			}
 		};
 
+		class LineWidthState : public Graphics::BrushState<int>
+		{
+			using Base = typename Graphics::BrushState<int>;
+
+		public:
+			LineWidthState(GLGraphics * graphics) : Base(graphics, 1) {}
+
+		protected:
+			virtual void change() override
+			{
+				Base::change();
+				glLineWidth(float(_state));
+			}
+		};
+
 		class DepthTestState : public State<bool>
 		{
 		public:
@@ -49,7 +64,7 @@ namespace Rapture
 				else
 					glDisable(GL_DEPTH_TEST);
 
-				graphics->setDepth(1.0f);
+				graphics->setDepth(0.0f);
 			}
 
 			GLGraphics * graphics;
@@ -78,7 +93,7 @@ namespace Rapture
 		protected:
 			virtual void change() override
 			{
-				glClearColor(_state[0], _state[1], _state[2], _state[3]);
+				glClearColor(_state.r, _state.g, _state.b, _state.a);
 			}
 		};
 
@@ -89,6 +104,7 @@ namespace Rapture
 			initDevice();
 
 			_fillMode = handle<FillModeState>(this);
+			_lineWidth = handle<LineWidthState>(this);
 			_depthTestMode = handle<DepthTestState>(this);
 			_blendMode = handle<BlendState>(this);
 			_clearColor = handle<ClearColorState>(this);
@@ -99,7 +115,10 @@ namespace Rapture
 			wglMakeCurrent(nullptr, nullptr);
 
 			if(_context != nullptr)
+			{
+				wglMakeCurrent(nullptr, nullptr);
 				wglDeleteContext(_context);
+			}
 
 			if(_device != nullptr)
 			{
@@ -158,6 +177,11 @@ namespace Rapture
 					sev = "high";
 					break;
 
+				case GL_DEBUG_SEVERITY_NOTIFICATION:
+					return;
+					//sev = "notification";
+					//break;
+
 				default:
 					sev = String::hex(severity);
 			}
@@ -165,43 +189,43 @@ namespace Rapture
 			switch(type)
 			{
 				case GL_DEBUG_TYPE_ERROR:
-					t = "Error";
+					t = "error";
 					break;
 
 				case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-					t = "Deprecated behavior";
+					t = "deprecated behavior";
 					break;
 
 				case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-					t = "Undefined behavior";
+					t = "undefined behavior";
 					break;
 
 				case GL_DEBUG_TYPE_PORTABILITY:
-					t = "Portability";
+					t = "portability";
 					break;
 
 				case GL_DEBUG_TYPE_PERFORMANCE:
-					t = "Performance";
+					t = "performance";
 					break;
 
 				case GL_DEBUG_TYPE_OTHER:
-					t = "Other";
+					t = "other";
 					break;
 
 				case GL_DEBUG_TYPE_MARKER:
-					t = "Marker";
+					t = "marker";
 					break;
 
 				case GL_DEBUG_TYPE_PUSH_GROUP:
-					t = "Push group";
+					t = "push group";
 					break;
 
 				case GL_DEBUG_TYPE_POP_GROUP:
-					t = "Pop group";
+					t = "pop group";
 					break;
 
 				default:
-					t = String::assemble("Unknown (", String::hex(type), ")");
+					t = String::assemble("unknown (", String::hex(type), ")");
 			}
 
 			switch(source)
@@ -211,11 +235,11 @@ namespace Rapture
 					break;
 
 				case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-					src = "Window system";
+					src = "window system";
 					break;
 
 				case GL_DEBUG_SOURCE_SHADER_COMPILER:
-					src = "Shader compiler";
+					src = "shader compiler";
 					break;
 
 				case GL_DEBUG_SOURCE_THIRD_PARTY:
@@ -223,22 +247,19 @@ namespace Rapture
 					break;
 
 				case GL_DEBUG_SOURCE_APPLICATION:
-					src = "Application";
+					src = "application";
 					break;
 
 				default:
-					src = String::assemble("Unknown (", String::hex(source), ")");
+					src = String::assemble("unknown (", String::hex(source), ")");
 			}
 
-			//if(severity != 0)
-			{
-				using namespace std;
+			using namespace std;
 
-				cout << "--" << endl;
-				cout << "OpenGL debugger message:" << endl;
-				cout << "\tGROUP: " << t << ", SEVERITY: " << sev << ", ID: 0x" << hex << id << dec << ", SOURCE: " << src << endl;
-				cout << "\tTEXT: \"" << message << "\"" << endl << endl;
-			}
+			cout << "--------------------------------" << endl;
+			cout << "OpenGL debug:" << endl;
+			cout << "\tgroup: " << t << ", severity: " << sev << ", id: " << hex << showbase << id << dec << ", source: " << src << endl;
+			cout << message << endl << endl;
 		}
 
 		void GLGraphics::initDevice()
@@ -247,10 +268,10 @@ namespace Rapture
 			_device = ::GetDC(_wnd);
 			setPixelFormat(_device);
 
-			_context = wglCreateContext(_device);
+			auto _tmpcontext = wglCreateContext(_device);
 
-			if(_context == nullptr || wglMakeCurrent(_device, _context) == GL_FALSE)
-				throw Exception("Can't create OpenGL render context!");
+			if(_tmpcontext == nullptr || wglMakeCurrent(_device, _tmpcontext) == GL_FALSE)
+				throw Exception("Can't create initial OpenGL render context!");
 
 			glewExperimental = GL_TRUE;
 			GLenum error = glewInit();
@@ -258,14 +279,41 @@ namespace Rapture
 			if(error > 0)
 				throw Exception("Can't initialize GLEW! ", (const char *)glewGetErrorString(error));
 
-			checkForErrors();
+			int flags = 0;
 
+		#ifdef GL_DEBUG
+			flags |= WGL_CONTEXT_DEBUG_BIT_ARB;
+		#endif
+
+			int attribs[] = {
+				WGL_CONTEXT_MAJOR_VERSION_ARB, glGetInteger(GL_MAJOR_VERSION),
+				WGL_CONTEXT_MINOR_VERSION_ARB, glGetInteger(GL_MINOR_VERSION),
+				WGL_CONTEXT_FLAGS_ARB,         flags,
+				WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+				0
+			};
+
+			_context = wglCreateContextAttribsARB(_device, nullptr, attribs);
+
+			if(_context == nullptr || wglMakeCurrent(_device, _context) == GL_FALSE)
+				throw Exception("Can't create OpenGL render context!");
+
+			wglDeleteContext(_tmpcontext);
+
+			checkForErrors();
+			
 			glEnable(GL_DEPTH_TEST);
 			glDepthFunc(GL_LESS);
-			//glEnable(GL_BLEND);
-			//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			//glEnable(GL_CULL_FACE);
-			//glEnable(GL_SCISSOR_TEST);
+			glEnable(GL_SCISSOR_TEST);
+			
+			//glCullFace(GL_BACK);
+			//glFrontFace(GL_CW);
+
+			glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+			glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
 
 		#ifdef GL_DEBUG
 			glEnable(GL_DEBUG_OUTPUT);
@@ -279,6 +327,8 @@ namespace Rapture
 				cout << "glDebugMessageCallback is not supported" << endl;
 			}
 		#endif
+
+			checkForErrors();
 		}
 
 		void GLGraphics::initFacilities()
@@ -302,7 +352,6 @@ namespace Rapture
 			if(_mesh != mesh)
 			{
 				_mesh = mesh;
-				glBindVertexArray(mesh != nullptr ? mesh->id : 0);
 			}
 		}
 
@@ -313,12 +362,7 @@ namespace Rapture
 		{
 			GLenum error = glGetError();
 
-			if(error == GL_NO_ERROR)
-				return;
-
-			if(glErrorStringREGAL != nullptr)
-				throw Exception("OpenGL error: ", glErrorStringREGAL(error));
-			else
+			if(error != GL_NO_ERROR)
 				throw Exception("OpenGL error, code: ", String::hex(error));
 		}
 
@@ -358,11 +402,11 @@ namespace Rapture
 
 			for(auto & p : _shaderPrograms)
 			{
-				auto program = handle_cast<GLShaderProgram>(valueof(p));
-				auto block_index = glGetUniformBlockIndex(program->id, name);
+				auto id = handle_cast<GLShaderProgram>(valueof(p))->id;
+				auto block = glGetUniformBlockIndex(id, name);
 
-				if(block_index != GL_INVALID_INDEX)
-					glUniformBlockBinding(program->id, block_index, index);
+				if(block != GL_INVALID_INDEX)
+					glUniformBlockBinding(id, block, index);
 			}
 
 			checkForErrors();
@@ -391,7 +435,7 @@ namespace Rapture
 				return;
 
 			_clipRect = rect;
-			glScissor(_clipRect.left, _clipRect.top, _clipRect.width(), _clipRect.height());
+			glScissor(_clipRect.left, surface()->height() - _clipRect.bottom, _clipRect.width(), _clipRect.height());
 		}
 	}
 }

@@ -19,10 +19,6 @@
 #define ARCH_X86
 #endif // defined
 
-#if defined(ARCH_X86) && __cplusplus <= 201402L
-#define UNALIGNED_VECTORS
-#endif
-
 #define api(module) rapture_##module##_api
 
 #ifndef __min

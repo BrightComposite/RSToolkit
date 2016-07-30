@@ -34,7 +34,7 @@ namespace Rapture
 
 		void RenderTargetSurface::apply() const
 		{
-			wglMakeCurrent(_deviceCtx, _renderCtx);
+			wglMakeCurrent(_deviceCtx, _graphics->context());
 			glViewport(0, 0, width(), height());
 		}
 
@@ -45,7 +45,7 @@ namespace Rapture
 
 		void DepthSurface::apply() const
 		{
-			wglMakeCurrent(_deviceCtx, _renderCtx);
+			wglMakeCurrent(_deviceCtx, _graphics->context());
 			glViewport(0, 0, width(), height());
 		}
 
@@ -65,25 +65,10 @@ namespace Rapture
 
 		void UISurface::createRenderTarget()
 		{
-			int flags = WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB;
-
-		#ifdef GL_DEBUG
-			flags |= WGL_CONTEXT_DEBUG_BIT_ARB;
-		#endif
-
-			int attribs[7] = {
-				WGL_CONTEXT_MAJOR_VERSION_ARB, glGetInteger(GL_MAJOR_VERSION),
-				WGL_CONTEXT_MINOR_VERSION_ARB, glGetInteger(GL_MINOR_VERSION),
-				WGL_CONTEXT_FLAGS_ARB,         flags,
-				0
-			};
-
 			_deviceCtx = ::GetDC(_space->handle());
 			GLGraphics::setPixelFormat(_deviceCtx);
 
-			_renderCtx = wglCreateContextAttribsARB(_deviceCtx, _graphics->context(), attribs);
-
-			if(_renderCtx == nullptr)
+			if(wglMakeCurrent(_deviceCtx, _graphics->context()) == GL_FALSE)
 			{
 				switch(GetLastError())
 				{
@@ -99,18 +84,16 @@ namespace Rapture
 
 		void UISurface::releaseRenderTarget()
 		{
-			if(_renderCtx != nullptr)
-			{
-				if(_graphics->surface() == this)
-					wglMakeCurrent(nullptr, nullptr);
+			if(_graphics->surface() == this)
+				wglMakeCurrent(nullptr, nullptr);
 
-				wglDeleteContext(_renderCtx);
-				_renderCtx = nullptr;
-			}
+			::DeleteDC(_deviceCtx);
+			_deviceCtx = nullptr;
 		}
 		
 		void UISurface::present() const
 		{
+			glFlush();
 			SwapBuffers(_deviceCtx);
 		}
 
@@ -121,13 +104,13 @@ namespace Rapture
 			if(output == nullptr)
 				throw Exception("Output image buffer should be not-null!");
 
-			// TODO catch data here
+			// TODO catch data here:
 
 			void * data;
 			uint width, height;
 			uint rowPitch;
 
-			//
+			// ---------------------
 
 			output->area = {width, height};
 			output->format = ImageFormat::bgra;
@@ -146,16 +129,7 @@ namespace Rapture
 		void UISurface::resize()
 		{
 			glViewport(0, 0, width(), height());
-
-			/*
-			releaseRenderTarget();
-
-			com_assert(
-				_swapChain->ResizeBuffers(0, _space->width(), _space->height(), DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH)
-			);
-
-			createRenderTarget();
-			*/
+			_graphics->updateUniform<Uniforms::Viewport>(FloatSize {size()});
 		}
 
 		void UISurface::onUIResize(Handle<UIResizeMessage> & msg, UISpace & space)
@@ -164,8 +138,6 @@ namespace Rapture
 				return;
 
 			setSize({msg->width, msg->height});
-			_graphics->updateUniform<Uniforms::Viewport>(FloatSize {size()});
-
 			space.invalidate();
 		}
 

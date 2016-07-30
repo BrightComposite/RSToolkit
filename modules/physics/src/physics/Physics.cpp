@@ -13,13 +13,13 @@ namespace Rapture
 
 	void MotionState::getWorldTransform(btTransform & trans) const
 	{
-		trans.setRotation(physical->_object->direction().intrinsic);
+		trans.setRotation(physical->_object->rotation().intrinsic);
 		trans.setOrigin(physical->_object->position().intrinsic);
 	}
 
 	void MotionState::setWorldTransform(const btTransform & trans)
 	{
-		physical->_object->setDirection(trans.getRotation());
+		physical->_object->setRotation(trans.getRotation());
 		physical->_object->setPosition(trans.getOrigin());
 	}
 
@@ -32,7 +32,7 @@ namespace Rapture
 
 	void Physical::setLinearVelocity(const fvec & v)
 	{
-		_rigidBody->setLinearVelocity(v.intrinsic);
+		_rigidBody->setLinearVelocity(v->intrinsic);
 		_rigidBody->activate();
 	}
 

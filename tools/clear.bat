@@ -23,4 +23,6 @@ if %errors% gtr 0 (
 	echo -- Looks clear! No errors occured while clearing.
 )
 
-pause
+cd shaders
+call clear-output
+cd ..

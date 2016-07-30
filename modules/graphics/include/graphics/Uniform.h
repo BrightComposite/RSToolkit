@@ -100,19 +100,19 @@ namespace Rapture
 	uniform_class
 	(
 		Model, 1, Vertex,
-		(fmat, transform)
+		(floatm, transform)
 	);
 
 	uniform_class
 	(
 		View, 2, Vertex,
-		(fmat, transform)
+		(floatm, transform)
 	);
 
 	uniform_class
 	(
 		Projection, 3, Vertex,
-		(fmat, transform)
+		(floatm, transform)
 	);
 
 	uniform_class

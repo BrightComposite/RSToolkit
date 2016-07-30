@@ -46,7 +46,7 @@ namespace Rapture
 		template<class, class>
 		friend class Wrapper;
 
-		inline T * pointer() const
+		inline auto pointer() const
 		{
 			return static_cast<const Owner *>(this)->pointer();
 		}

@@ -262,8 +262,47 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 #	add_module function.
 
-	function(add_module path root)
-		add_subdirectory("${root}${path}" "${OUTPUT_ROOT}/${path}")
+	function(add_module PATH)
+		if("${PATH}" STREQUAL "")
+			message(FATAL_ERROR "Module path must be non-empty!")
+		endif()
+
+		set(DIR "${PATH}")
+		set(DOMAIN "${ARGV1}")
+
+		if(NOT "${DOMAIN}" STREQUAL "")
+			set(DIR "${DOMAIN}/${DIR}")
+		endif()
+
+		set(OUTPUT_DIR "${OUTPUT_ROOT}/${DIR}")
+		set(DIR "${RAPTURE_ROOT}/${DIR}")
+
+		message("${DIR}")
+		if(NOT EXISTS "${DIR}/CMakeLists.txt")
+			file(MAKE_DIRECTORY ${DIR})
+
+			set(TEMPLATE_FILE ${RAPTURE_ROOT}/templates/module/CMakeLists.txt)
+
+			if(NOT "${DOMAIN}" STREQUAL "")
+				set(TEMPLATE_FILE_DOMAIN ${RAPTURE_ROOT}/templates/module/${DOMAIN}/CMakeLists.txt)
+			endif()
+
+			message("${TEMPLATE_FILE}")
+			message("${TEMPLATE_FILE_DOMAIN}")
+
+			set(module_path ${PATH})
+			set(module_domain ${DOMAIN})
+
+			if(EXISTS "${TEMPLATE_FILE_DOMAIN}")
+				configure_file(${TEMPLATE_FILE_DOMAIN} ${DIR}/CMakeLists.txt @ONLY)
+			elseif(EXISTS "${TEMPLATE_FILE}")
+				configure_file(${TEMPLATE_FILE} ${DIR}/CMakeLists.txt @ONLY)
+			else()
+				message(FATAL_ERROR "Can't create new module \"${PATH}\"")
+			endif()
+		endif()
+
+		add_subdirectory("${DIR}" "${OUTPUT_DIR}")
 	endfunction()
 
 #	require_module function.

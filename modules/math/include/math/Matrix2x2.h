@@ -42,13 +42,12 @@ namespace Rapture
 			T a[4];
 			array<T, 4> m;
 			array<Row, 2> rows;
-			Data data;
 			IntrinType intrinsic;
 		};
 
-		Matrix2x2() : data {initial.data} {}
-		Matrix2x2(const Matrix2x2 & matrix) : data {matrix.data} {}
-		Matrix2x2(const Data & data) : data {data} {}
+		Matrix2x2() : intrinsic {initial.intrinsic} {}
+		Matrix2x2(const Matrix2x2 & matrix) : intrinsic {matrix.intrinsic} {}
+		Matrix2x2(const IntrinType & i) : intrinsic {i} {}
 
 		Matrix2x2(const T(&m)[4]) : a {m[0], m[1], m[2], m[3]} {}
 		Matrix2x2(const T(&v)[2][2]) : a {v[0][0], v[0][1], v[1][0], v[1][1]} {}
@@ -56,36 +55,36 @@ namespace Rapture
 
 		Matrix2x2 & operator = (const Matrix2x2 & matrix)
 		{
-			data = matrix.data;
+			intrinsic = matrix.intrinsic;
 			return *this;
 		}
 
 		void clear()
 		{
-			data = Vector<T>::zero.data;
+			intrinsic = Vector<T>::zero.intrinsic;
 		}
 
 		Matrix2x2 & identity()
 		{
-			data = initial.data;
+			intrinsic = initial.intrinsic;
 			return *this;
 		}
 
 		Matrix2x2 & identity(float a)
 		{
-			data = Intrin::load(a, 0, 0, a);
+			intrinsic = Intrin::load(a, 0, 0, a);
 			return *this;
 		}
 
 		Matrix2x2 & operator += (const Matrix2x2 & mat)
 		{
-			Intrin::add(data, mat.data, data);
+			Intrin::add(intrinsic, mat.intrinsic, intrinsic);
 			return *this;
 		}
 
 		Matrix2x2 & operator -= (const Matrix2x2 & mat)
 		{
-			Intrin::sub(data, mat.data, data);
+			Intrin::sub(intrinsic, mat.intrinsic, intrinsic);
 			return *this;
 		}
 
@@ -93,14 +92,14 @@ namespace Rapture
 		{
 			Intrin::add(
 				Intrin::mul(
-					Intrin::template shuffle<0, 0, 2, 2>(data),
-					Intrin::template shuffle<0, 1, 0, 1>(mat.data)
+					Intrin::template shuffle<0, 0, 2, 2>(intrinsic),
+					Intrin::template shuffle<0, 1, 0, 1>(mat.intrinsic)
 				),
 				Intrin::mul(
-					Intrin::template shuffle<1, 1, 3, 3>(data),
-					Intrin::template shuffle<2, 3, 2, 3>(mat.data)
+					Intrin::template shuffle<1, 1, 3, 3>(intrinsic),
+					Intrin::template shuffle<2, 3, 2, 3>(mat.intrinsic)
 				),
-				data
+				intrinsic
 			);
 
 			return *this;
@@ -108,13 +107,13 @@ namespace Rapture
 
 		Matrix2x2 & operator *= (T val)
 		{
-			Intrin::mul(data, Intrin::fill(val), data);
+			Intrin::mul(intrinsic, Intrin::fill(val), intrinsic);
 			return *this;
 		}
 
 		Matrix2x2 & operator /= (T val)
 		{
-			Intrin::div(data, Intrin::fill(val), data);
+			Intrin::div(intrinsic, Intrin::fill(val), intrinsic);
 			return *this;
 		}
 
@@ -168,16 +167,6 @@ namespace Rapture
 			return rows;
 		}
 
-		operator Data & ()
-		{
-			return data;
-		}
-
-		operator const Data & () const
-		{
-			return data;
-		}
-
 		operator IntrinType & ()
 		{
 			return intrinsic;
@@ -200,12 +189,12 @@ namespace Rapture
 
 		Matrix2x2 inverse() const
 		{
-			return {Intrin::div(Intrin::mul(Intrin::template shuffle<3, 1, 2, 0>(data), inversemask), Intrin::fill(determinant()))};
+			return Intrin::div(Intrin::mul(Intrin::template shuffle<3, 1, 2, 0>(intrinsic), inversemask), Intrin::fill(determinant()));
 		}
 
 		Matrix2x2 & invert()
 		{
-			Intrin::div(Intrin::mul(Intrin::template shuffle<3, 1, 2, 0>(data), inversemask), Intrin::fill(determinant()), data);
+			Intrin::div(Intrin::mul(Intrin::template shuffle<3, 1, 2, 0>(intrinsic), inversemask), Intrin::fill(determinant()), intrinsic);
 			return *this;
 		}
 

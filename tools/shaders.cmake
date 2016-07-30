@@ -21,7 +21,7 @@ if(WIN32)
 				set(InputFile ${FileDir}/${FileName}.glsl)
 			endif()
 			
-			set(OutputFile ${FileDir}/${FileName}.inc) # Output .inc file
+			set(OutputFile ${FileDir}/${FileName}.shader.inc) # Output .shader.inc file
 
 			# Get type of shader to compile (vs, ps/fs)
 
@@ -89,9 +89,9 @@ if(WIN32)
 				endif()
 				
 				if("${INCLUDES}" STREQUAL "")
-					set(INCLUDES "#include <${ShaderPath}/${ShaderType}.inc>")
+					set(INCLUDES "#include <${ShaderPath}/${ShaderType}.shader.inc>")
 				else()
-					set(INCLUDES "${INCLUDES}\n#include <${ShaderPath}/${ShaderType}.inc>")
+					set(INCLUDES "${INCLUDES}\n#include <${ShaderPath}/${ShaderType}.shader.inc>")
 				endif()
 				
 				if("${ShaderCodeUnits}" STREQUAL "")

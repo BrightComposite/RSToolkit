@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 3.0)
 set(GUARD_BLOCKS CACHE INTERNAL "Guard blocks" FORCE)
 set(MESSAGES_INDENTATION "" CACHE STRING "Messages indentation" FORCE)
 
-get_filename_component(RAPTURE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/.. ABSOLUTE)
+get_filename_component(RAPTURE_ROOT ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
 set(RAPTURE_ROOT ${RAPTURE_ROOT} CACHE PATH "Rapture state engine root directory")
 set(RAPTURE_TOOLS ${RAPTURE_ROOT}/tools CACHE PATH "Rapture tools directory")
 
@@ -33,19 +33,19 @@ endif()
 
 #add_definitions(-DUSE_AVX)
 
-add_module(tests/core-test ../)
+add_module(core tests)
+add_module(math tests)
 
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+#if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+	#set(USE_DIRECT3D 1 CACHE INTERNAL "Use direct3d flag")
+    #add_module(d3d tests)
+#else()
 	set(USE_DIRECT3D 0 CACHE INTERNAL "Use direct3d flag")
-    add_module(tests/d3d-test ../)
-else()
-	set(USE_DIRECT3D 0 CACHE INTERNAL "Use direct3d flag")
-endif()
+#endif()
 
-add_module(tests/ui-test ../)
-add_module(tests/small-test ../)
+add_module(ui tests)
 
-add_module(projects/independence ../)
-add_module(projects/BasicGame ../)
+add_module(independence projects)
+add_module(BasicGame projects)
 
 #--------------------------------------------------------

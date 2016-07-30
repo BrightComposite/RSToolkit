@@ -24,6 +24,10 @@
 #undef min
 #undef max
 
+#if defined(ARCH_X86) && __cplusplus <= 201402L
+#define UNALIGNED_VECTORS
+#endif
+
 //---------------------------------------------------------------------------
 
 namespace Rapture

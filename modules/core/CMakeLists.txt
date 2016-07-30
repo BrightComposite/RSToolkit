@@ -63,6 +63,7 @@ module(SHARED)
 				BlockPool.h
 				Memory.h
 				PagePool.h
+				Storage.h
 				UnsafeBlockPool.h
 
 				allocator/

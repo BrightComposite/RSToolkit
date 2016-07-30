@@ -18,9 +18,7 @@ cmake_minimum_required(VERSION 3.0)
 		endif()
 		
 		file(WRITE ${Output})
-	endif()
-	
-	if(EXISTS ${TimestampFile})
+	elseif(EXISTS ${TimestampFile})
 		file(READ ${TimestampFile} SavedTimestamp)
 		
 		if(${SavedTimestamp} STREQUAL ${Timestamp})

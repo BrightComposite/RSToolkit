@@ -93,6 +93,18 @@ namespace Rapture
 		}
 
 		template<size_t N>
+		static inline void move(array<T, N> & to, const T * from)
+		{
+			move(to.data(), from, N);
+		}
+
+		template<size_t N>
+		static inline void move(array<T, N> & to, const T(&from)[N])
+		{
+			move(to.data(), from, N);
+		}
+
+		template<size_t N>
 		static inline void move(array<T, N> & to, const array<T, N> & from)
 		{
 			move(to.data(), from.data(), N);

@@ -15,7 +15,7 @@ But, maybe, you can wish something more complex. Maybe... A video game? Haha, ga
 ### Graphics 
 The basis of every video game is the rendering system. The RaptureGraphics is the main part of this system in the RS-Toolkit. It provides the abstract classes which will allow you to draw different 2D and 3D objects. The RaptureOpenGL and the RaptureDirect3D modules contain the implementations for this abstract classes. And, of course you can use them not only for gamedev but in any project which requires visualisation.
 
-### Game world management
+### Virtual world
 Rendering of graphic objects is not the only thing we need in a video game. We need a place for these objects too. The RaptureScene includes the useful classes to create a virtual world where these objects can be placed in and managed effectively.
 
 ### Physics

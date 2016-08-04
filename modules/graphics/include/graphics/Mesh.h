@@ -17,7 +17,6 @@ namespace Rapture
 {
 	class Graphics3D;
 	class Mesh;
-	class InstancedMesh;
 
 	class VertexData : public array_list<float>
 	{
@@ -69,49 +68,76 @@ namespace Rapture
 		uint verticesCount;
 	};
 
-	class Mesh : public Shared
-	{
-	public:
-		Mesh(ArrayList<MeshBuffer> && buffers, uint verticesCount, uint verticesLocation) : buffers(move(buffers)), verticesLocation(verticesLocation), verticesCount(verticesCount) {}
-
-		virtual api(graphics) void draw() const = 0;
-
-	protected:
-		ArrayList<MeshBuffer> buffers;
-		VertexLayout * layout = nullptr;
-
-		uint verticesLocation;
-		uint verticesCount;
-	};
-
-	struct MeshInputLayout
-	{
-
-		size_t size;
-	};
-
 	class MeshInstance : public Shared
 	{
 	public:
-		MeshInstance(InstancedMesh * mesh, uint index) : mesh(mesh), index(index) {}
+		MeshInstance(Mesh * mesh, uint index) : mesh(mesh), index(index) {}
 
-		api(graphics) void setData(void * data);
+		virtual void setData(void * data) = 0;
 
-		InstancedMesh * mesh;
+		Mesh * mesh;
 		uint index;
 	};
 
-	class InstancedMesh : public Mesh
+	enum class MeshState
 	{
-	public:
-		InstancedMesh(MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && buffers, uint verticesCount, uint verticesLocation) : Mesh(move(buffers), verticesLocation, verticesCount), instanceLayout(instanceLayout) {}
+		Ready     = 1,
+		Indexed   = 2,
+		Instanced = 4
+	};
 
-		virtual MeshInstance * createInstance() = 0;
-		virtual void setData(uint index, void * data) = 0;
+	adapt_enum_flags(MeshState);
+
+	class MIDElement : public Shared
+	{
+		friend class VertexLayout;
+
+	public:
+		string key;
+		uint id;
+		uint index;
+		uint units;
 
 	protected:
-		MeshInputLayout * instanceLayout;
-		ArrayList<MeshInstance> instances;
+		MIDElement(const string & key, uint id, uint index, uint units) : key(key), id(id), index(index), units(units) {}
+	};
+
+	class MIDLayout : public Shared
+	{
+	public:
+		api(graphics) MIDLayout(Graphics3D * graphics, const string & fingerprint);
+
+		virtual void apply() {}
+
+		string fingerprint;
+		array_list<MIDElement *> elements;
+		uint units;
+		uint stride;
+	};
+
+	class Mesh : public Shared
+	{
+	public:
+		virtual Mesh * buffer(const Handle<VertexBuffer> & buffer) = 0;
+		virtual Mesh * indices(const VertexIndices & indices) = 0;
+		virtual Mesh * topology(VertexTopology topology) = 0;
+		virtual Mesh * ready() = 0;
+
+		virtual void draw() const = 0;
+
+		virtual Mesh * apply(MIDLayout *) = 0;
+		virtual MeshInstance * instance() const = 0;
+
+		void setLocation(uint location)
+		{
+			_verticesLocation = location;
+		}
+
+	protected:
+		uint _verticesLocation = 0;
+		uint _verticesCount = 0;
+		uint _state = 0;
+		VertexLayout * _layout = nullptr;
 	};
 }
 

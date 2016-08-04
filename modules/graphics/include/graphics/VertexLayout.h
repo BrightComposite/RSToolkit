@@ -85,17 +85,7 @@ namespace Rapture
 	class VertexLayout : public Shared
 	{
 	public:
-		VertexLayout(const string & fingerprint) : fingerprint(fingerprint), units(0)
-		{
-			for(const auto & key : split(fingerprint))
-			{
-				auto & vie = VertexElement::get(key);
-				elements.push_back(vie);
-				units += vie->units;
-			}
-
-			stride = units * sizeof(float);
-		}
+		api(graphics) VertexLayout(const string & fingerprint);
 
 		virtual void apply() {}
 		virtual void accept(const ShaderCode *) {}

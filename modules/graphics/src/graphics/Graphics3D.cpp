@@ -134,22 +134,54 @@ namespace Rapture
 	VertexElement VertexElement::secondaryColor3("s3", VertexElement::Color, 1, 3);
 	VertexElement VertexElement::secondaryColor4("s4", VertexElement::Color, 1, 4);
 
-	void VertexElement::writeKey(String & out, VertexElement::Type type, uint units)
-	{
-		String id(type);
-		id << units;
-
-		if(!VertexElement::has(id))
-			throw Exception("There is no vertex element with such signature: ", id);
-
-		out << id;
-	}
-
 	void UniformData::apply() const
 	{
 		adapter->bind(*this);
 	}
 
+	VertexLayout::VertexLayout(const string & fingerprint) : fingerprint(fingerprint), units(0)
+	{
+		for(const auto & key : split(fingerprint))
+		{
+			auto & vie = VertexElement::get(key);
+			elements.push_back(vie);
+			units += vie->units;
+		}
+
+		stride = units * sizeof(float);
+	}
+
+	MIDLayout::MIDLayout(Graphics3D * graphics, const string & fingerprint) : fingerprint(fingerprint), units(0)
+	{
+		for(const auto & key : split(fingerprint))
+		{
+			auto & e = graphics->getMIDElement(key);
+			elements.push_back(e);
+			units += e->units;
+		}
+
+		stride = units * sizeof(float);
+	}
+	/*
+	void MeshLayout::add(VertexLayout * l)
+	{
+		if(fingerprint.size() > 0)
+		{
+			layout = nullptr;
+			fingerprint += ' ' + l->fingerprint;
+			return;
+		}
+			
+		layout = l;
+		fingerprint = l->fingerprint;
+	}
+
+	void MeshLayout::update(Graphics3D * graphics)
+	{
+		if(layout == nullptr)
+			layout = graphics->getVertexLayout(fingerprint);
+	}
+	*/
 	void MeshInstance::setData(void * data)
 	{
 		mesh->setData(index, data);

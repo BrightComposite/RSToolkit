@@ -244,6 +244,9 @@ namespace Rapture
 			api(opengl3_3) GLMesh(GLGraphics * graphics, ArrayList<MeshBuffer> && buffers, VertexTopology topology, uint verticesCount, uint verticesLocation);
 
 			virtual api(opengl3_3) void draw() const;
+
+		protected:
+			uint _state;
 		};
 
 		class GLIndexedMesh : public Mesh, public GLIndexedMeshTrait

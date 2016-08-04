@@ -87,22 +87,27 @@ namespace Rapture
 		api(graphics) const Handle<ShaderProgram> & getShaderProgram(const string & id);
 
 		virtual Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) = 0;
+		virtual Handle<Mesh> createMesh() = 0;
 
-		virtual Handle<Mesh> createMesh(ArrayList<MeshBuffer> && buffers, uint verticesCount, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0) = 0;
-		inline  Handle<Mesh> createMesh(const Handle<VertexBuffer> & buffer, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0);
-		inline  Handle<Mesh> createMesh(VertexLayout * layout, const VertexData & data, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0);
-		
-		virtual Handle<Mesh> createMesh(ArrayList<MeshBuffer> && buffers, const VertexIndices & indices, uint verticesCount, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0) = 0;
-		inline  Handle<Mesh> createMesh(const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0);
-		inline  Handle<Mesh> createMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0);
-		
-		virtual Handle<InstancedMesh> createInstancedMesh(MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && buffers, uint verticesCount, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0) = 0;
-		inline  Handle<InstancedMesh> createInstancedMesh(MeshInputLayout * instanceLayout, const Handle<VertexBuffer> & buffer, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0);
-		inline  Handle<InstancedMesh> createInstancedMesh(MeshInputLayout * instanceLayout, VertexLayout * layout, const VertexData & data, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0);
-		
-		virtual Handle<InstancedMesh> createInstancedMesh(MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && buffers, const VertexIndices & indices, uint verticesCount, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0) = 0;
-		inline  Handle<InstancedMesh> createInstancedMesh(MeshInputLayout * instanceLayout, const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0);
-		inline  Handle<InstancedMesh> createInstancedMesh(MeshInputLayout * instanceLayout, VertexLayout * layout, const VertexData & data, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles, uint verticesLocation = 0);
+		Handle<Mesh> createMesh(const Handle<VertexBuffer> & buffer, VertexTopology topology = VertexTopology::Triangles)
+		{
+			return createMesh()->buffer(buffer)->topology(topology)->ready();
+		}
+
+		Handle<Mesh> createMesh(const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles)
+		{
+			return createMesh()->buffer(buffer)->indices(indices)->topology(topology)->ready();
+		}
+
+		Handle<Mesh> createMesh(VertexLayout * layout, const VertexData & data, VertexTopology topology)
+		{
+			return createMesh(createVertexBuffer(layout, data), topology);
+		}
+
+		Handle<Mesh> createMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, VertexTopology topology)
+		{
+			return createMesh(createVertexBuffer(layout, data), indices, topology);
+		}
 
 		float depth()
 		{
@@ -208,46 +213,6 @@ namespace Rapture
 		UnorderedMap<string, VertexLayout> _vertexLayouts;
 		UnorderedMap<string, ShaderProgram> _shaderPrograms;
 	};
-
-	Handle<Mesh> Graphics3D::createMesh(const Handle<VertexBuffer> & buffer, VertexTopology topology, uint verticesLocation)
-	{
-		return createMesh({{buffer}}, buffer->verticesCount, topology, verticesLocation);
-	}
-
-	Handle<Mesh> Graphics3D::createMesh(const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology, uint verticesLocation)
-	{
-		return createMesh({{buffer}}, indices, buffer->verticesCount, topology, verticesLocation);
-	}
-
-	Handle<InstancedMesh> Graphics3D::createInstancedMesh(MeshInputLayout * instanceLayout, const Handle<VertexBuffer> & buffer, VertexTopology topology, uint verticesLocation)
-	{
-		return createInstancedMesh(instanceLayout, {{buffer}}, buffer->verticesCount, topology, verticesLocation);
-	}
-
-	Handle<InstancedMesh> Graphics3D::createInstancedMesh(MeshInputLayout * instanceLayout, const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology, uint verticesLocation)
-	{
-		return createInstancedMesh(instanceLayout, {{buffer}}, indices, buffer->verticesCount, topology, verticesLocation);
-	}
-
-	Handle<Mesh> Graphics3D::createMesh(VertexLayout * layout, const VertexData & data, VertexTopology topology, uint verticesLocation)
-	{
-		return createMesh(createVertexBuffer(layout, data), topology, verticesLocation);
-	}
-
-	Handle<Mesh> Graphics3D::createMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, VertexTopology topology, uint verticesLocation)
-	{
-		return createMesh(createVertexBuffer(layout, data), indices, topology, verticesLocation);
-	}
-
-	Handle<InstancedMesh> Graphics3D::createInstancedMesh(MeshInputLayout * instanceLayout, VertexLayout * layout, const VertexData & data, VertexTopology topology, uint verticesLocation)
-	{
-		return createInstancedMesh(instanceLayout, createVertexBuffer(layout, data), topology, verticesLocation);
-	}
-
-	Handle<InstancedMesh> Graphics3D::createInstancedMesh(MeshInputLayout * instanceLayout, VertexLayout * layout, const VertexData & data, const VertexIndices & indices, VertexTopology topology, uint verticesLocation)
-	{
-		return createInstancedMesh(instanceLayout, createVertexBuffer(layout, data), indices, topology, verticesLocation);
-	}
 }
 
 //---------------------------------------------------------------------------

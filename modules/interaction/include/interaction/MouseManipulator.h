@@ -17,13 +17,9 @@ namespace Rapture
 	{
 	public:
 		api(interaction) MouseManipulator(Widget * w);
-		virtual ~MouseManipulator() {}
+		virtual api(interaction) ~MouseManipulator();
 
-		FloatPoint fetchData()
-		{
-			_wait = false;
-			return _delta;
-		}
+		api(interaction) FloatPoint fetchData();
 
 		api(interaction) void enable();
 		api(interaction) void disable();

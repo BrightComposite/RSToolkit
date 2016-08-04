@@ -63,11 +63,6 @@ namespace Rapture
 		return _camera;
 	}
 
-	void Scene::invalidate() const
-	{
-		space().invalidate(_widget);
-	}
-
 	void Scene::render() const
 	{
 		space().invalidate(_widget);
@@ -137,6 +132,8 @@ namespace Rapture
 
 	void Scene::draw(Graphics3D & g, const IntRect & viewport) const
 	{
+		g.updateUniformBuffers();
+
 		for(auto & drawable : _opaque)
 		{
 			drawable->draw(g, viewport, _camera ? _camera->zoom() : 0.0f);

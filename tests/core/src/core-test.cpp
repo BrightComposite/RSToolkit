@@ -71,7 +71,8 @@ namespace Rapture
 
 //---------------------------------------------------------------------------
 
-	message_class(DummyMessage,
+	message_class(
+		DummyMessage,
 		(int, value)
 	);
 

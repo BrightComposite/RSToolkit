@@ -303,6 +303,8 @@ namespace Rapture
 			virtual api(opengl3_3) ~GLUniformAdapter();
 
 			virtual api(opengl3_3) void update(const void * data) override;
+
+			virtual api(opengl3_3) void update() override;
 			virtual api(opengl3_3) void append(UniformData & data) override;
 			virtual api(opengl3_3) void bind(const UniformData & data) override;
 

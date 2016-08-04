@@ -28,6 +28,8 @@ namespace Rapture
 	using namespace std::chrono_literals;
 
 	using ticks_t = long long;
+	typedef std::chrono::high_resolution_clock clock;
+	typedef time_point<clock> time_marker;
 
 	link_class(scene, Scene, Class<Object>);
 	link_class(scene, SceneObject, Class<Object>);
@@ -250,9 +252,6 @@ namespace Rapture
 			virtual ~Component() {}
 		};
 
-		typedef std::chrono::high_resolution_clock clock;
-		typedef time_point<clock> time_marker;
-
 		api(scene) Scene(Widget * widget, const string & name = "unknown scene");
 		virtual ~Scene() {}
 
@@ -264,7 +263,6 @@ namespace Rapture
 
 		api(scene) void setCamera(Camera * camera);
 
-		api(scene) void invalidate() const;
 		api(scene) void render() const;
 
 		template<class Obj, class ... A, useif<based_on<Obj, SceneObject>::value, can_construct<Obj, Scene *, A...>::value>>

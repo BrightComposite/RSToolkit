@@ -112,10 +112,10 @@ namespace Rapture
 //---------------------------------------------------------------------------
 
 	template<typename T>
-	struct Type { Type() {} };
+	struct Type {};
 
 	template<typename ... T>
-	struct Types { Types() {} };
+	struct Types {};
 
 #define gettype(...) Type<__VA_ARGS__>()
 #define gettypes(...) Types<__VA_ARGS__>()

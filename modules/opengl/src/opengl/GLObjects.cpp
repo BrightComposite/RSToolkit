@@ -518,8 +518,8 @@ namespace Rapture
 		GLUniformAdapter::GLUniformAdapter(GLGraphics * graphics, ShaderType shader, int index, size_t size) : UniformAdapter(index, size), _graphics(graphics), _offset(0)
 		{
 			glGenBuffers(1, &_common);
-			glBindBuffer(GL_UNIFORM_BUFFER, _common);
-			glBufferData(GL_UNIFORM_BUFFER, _size, nullptr, GL_STATIC_DRAW);
+			glBindBufferBase(GL_UNIFORM_BUFFER, _index, _common);
+			glBufferData(GL_UNIFORM_BUFFER, _size, nullptr, GL_DYNAMIC_DRAW);
 		}
 
 		GLUniformAdapter::~GLUniformAdapter()
@@ -533,7 +533,16 @@ namespace Rapture
 		void GLUniformAdapter::update(const void * data)
 		{
 			glBindBufferBase(GL_UNIFORM_BUFFER, _index, _common);
-			glBufferData(GL_UNIFORM_BUFFER, _size, data, GL_STATIC_DRAW);
+			glBufferData(GL_UNIFORM_BUFFER, _size, data, GL_DYNAMIC_DRAW);
+		}
+
+		void GLUniformAdapter::update()
+		{
+			for(auto & b : _buffers)
+			{
+				glBindBufferBase(GL_UNIFORM_BUFFER, _index, b.handle);
+				glBufferData(GL_UNIFORM_BUFFER, b.data.size, b.data.ptr, GL_DYNAMIC_DRAW);
+			}
 		}
 
 		void GLUniformAdapter::append(UniformData & data)
@@ -547,11 +556,11 @@ namespace Rapture
 				_buffers.emplace_back();
 
 				auto & b = _buffers.back();
-				b.data.alloc(_size);
+				b.data.alloc(max_buffer_size);
 
 				glGenBuffers(1, &b.handle);
-				glBindBuffer(GL_UNIFORM_BUFFER, b.handle);
-				glBufferData(GL_UNIFORM_BUFFER, _size, nullptr, GL_STATIC_DRAW);
+				glBindBufferBase(GL_UNIFORM_BUFFER, _index, b.handle);
+				glBufferData(GL_UNIFORM_BUFFER, b.data.size, b.data.ptr, GL_DYNAMIC_DRAW);
 			}
 
 			auto & b = _buffers.back();
@@ -562,7 +571,7 @@ namespace Rapture
 			data.adapter = this;
 
 			_offset += _size + buffer_offset_alignment - 1;
-			_offset = _offset - (_offset % buffer_offset_alignment);
+			_offset -= _offset % buffer_offset_alignment;
 		}
 
 		void GLUniformAdapter::bind(const UniformData & data)

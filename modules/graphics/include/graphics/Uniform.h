@@ -24,6 +24,12 @@ namespace Rapture
 
 	struct UniformData : Shared
 	{
+		template<class U>
+		void fill(const Contents<U> & contents)
+		{
+			Memory<void>::move(data.ptr, contents.pointer(), data.size);
+		}
+
 		api(graphics) void apply() const;
 
 		uint buffer;
@@ -50,6 +56,8 @@ namespace Rapture
 		}
 
 		virtual void update(const void * data) = 0;
+
+		virtual void update() = 0;
 		virtual void append(UniformData & data) = 0;
 		virtual void bind(const UniformData & data) = 0;
 
@@ -98,7 +106,7 @@ namespace Rapture
 	uniform_class
 	(
 		BrushOptions, 0, Pixel,
-		(float4, color)
+		(Color, color)
 		(float, lineWidth)
 	);
 

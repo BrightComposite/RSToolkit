@@ -314,7 +314,7 @@ namespace Rapture
 
 			float delta = color[minmax.second] - color[minmax.first];
 
-			if(delta < FloatMath::eps)
+			if(delta < fmath::eps)
 				return;
 
 			out.h = std::fmod(minmax.second * third + (color[first[minmax.second]] - color[second[minmax.second]]) / delta + 1.0f, 1.0f);

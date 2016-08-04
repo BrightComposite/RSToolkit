@@ -14,6 +14,19 @@ namespace Rapture
 		connect(this, &MouseManipulator::onMouseUpdate, *w->space());
 	}
 
+	MouseManipulator::~MouseManipulator()
+	{
+		disable();
+	}
+
+	FloatPoint MouseManipulator::fetchData()
+	{
+		_wait = false;
+		auto t = _delta;
+		_delta *= 0.8f;
+		return t;
+	}
+
 	void MouseManipulator::onMouseUpdate(Handle<MouseUpdateMessage> & msg, UISpace & space)
 	{
 		if(_wait || !_enabled)
@@ -34,9 +47,11 @@ namespace Rapture
 
 			_old = current;
 
+			// remove peaks
 			_delta.x = fmath::clamp(_delta.x, -center.x * 0.4f, center.x * 0.4f);
 			_delta.y = fmath::clamp(_delta.y, -center.y * 0.4f, center.y * 0.4f);
 			
+			// increase smoothness
 			_delta.x = fmath::pow(_delta.x / center.x, 3) * center.x;
 			_delta.y = fmath::pow(_delta.y / center.y, 3) * center.y;
 		}
@@ -44,18 +59,14 @@ namespace Rapture
 
 	void MouseManipulator::enable()
 	{
-		if(_enabled)
-			return;
-
-		toggle();
+		if(!_enabled)
+			toggle();
 	}
 
 	void MouseManipulator::disable()
 	{
-		if(!_enabled)
-			return;
-
-		toggle();
+		if(_enabled)
+			toggle();
 	}
 	
 	void MouseManipulator::toggle()

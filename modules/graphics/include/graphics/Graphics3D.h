@@ -162,6 +162,12 @@ namespace Rapture
 			return uniformAdapter<T>()->append(data);
 		}
 
+		void updateUniformBuffers()
+		{
+			for(auto & a : _uniforms)
+				valueof(a)->update();
+		}
+
 		Techniques2D techniques2d;
 		Techniques3D techniques3d;
 		Meshes2D meshes2d;

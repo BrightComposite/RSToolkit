@@ -71,9 +71,19 @@ namespace Rapture
 			return std::abs(x);
 		}
 
+		static inline T sign(const T & x)
+		{
+			return x > 0.0f ? 1.0f : x < 0.0f ? -1.0f : 0.0f;
+		}
+
 		static inline T sqr(const T & x)
 		{
 			return x * x;
+		}
+
+		static inline T pow(const T & x, const T & pow)
+		{
+			return std::pow(x, pow);
 		}
 
 		static inline T sqrt(const T & x)
@@ -86,13 +96,9 @@ namespace Rapture
 			return 0.5f * (x + y);
 		}
 
-		static inline void clamp(T & x, const T & low, const T & high)
+		static inline const T & clamp(const T & x, const T & low, const T & high)
 		{
-			if(x < low)
-				x = low;
-			else
-			if(x > high)
-				x = high;
+			return x > high ? high : x < low ? low : x;
 		}
 
 		static inline T invert(const T & v)
@@ -114,9 +120,19 @@ namespace Rapture
 			return std::abs(x);
 		}
 
+		static inline T sign(const T & x)
+		{
+			return x > 0 ? 1 : x < 0 ? -1 : 0;
+		}
+
 		static inline T sqr(const T & x)
 		{
 			return x * x;
+		}
+
+		static inline T pow(const T & x, const T & pow)
+		{
+			return static_cast<T>(std::pow(x, pow));
 		}
 
 		static inline T sqrt(const T & x)
@@ -129,13 +145,9 @@ namespace Rapture
 			return (x + y) >> 1;
 		}
 
-		static inline void clamp(T & x, const T & low, const T & high)
+		static inline const T & clamp(const T & x, const T & low, const T & high)
 		{
-			if(x < low)
-				x = low;
-			else
-			if(x > high)
-				x = high;
+			return x > high ? high : x < low ? low : x;
 		}
 
 		static inline T invert(const T & v)
@@ -276,6 +288,12 @@ namespace Rapture
 
 	template<class T>
 	struct Math : MathConstants<T>, BasicMath<T>, Trigonometry<T> {};
+
+	template<class T>
+	inline T rad(const T & degrees)
+	{
+		return Math<T>::dtor(degrees);
+	}
 
 	using FloatMath = Math<float>;
 	using DoubleMath = Math<double>;

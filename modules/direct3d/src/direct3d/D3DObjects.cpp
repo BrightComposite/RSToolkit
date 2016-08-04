@@ -131,7 +131,7 @@ namespace Rapture
 		{
 			graphics->bind(vbuffer);
 			graphics->context->IASetPrimitiveTopology(topology);
-			graphics->context->Draw(vbuffer->verticesCount - verticesLocation, verticesLocation);
+			graphics->context->Draw(verticesCount, verticesLocation);
 		}
 
 		void D3DIndexedMesh::draw() const
@@ -139,7 +139,7 @@ namespace Rapture
 			graphics->bind(vbuffer);
 			graphics->bind(ibuffer);
 			graphics->context->IASetPrimitiveTopology(topology);
-			graphics->context->DrawIndexed(ibuffer->size - indicesLocation, indicesLocation, verticesLocation);
+			graphics->context->DrawIndexed(verticesCount, verticesLocation, 0);
 		}
 
 		D3DShader::D3DShader(D3DShaderProgram * program) : program(program) {}

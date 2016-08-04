@@ -83,6 +83,8 @@ namespace Rapture
 		}
 
 		api(ui) void setCursor(Cursor * cursor);
+		api(ui) void showCursor();
+		api(ui) void hideCursor();
 
 		api(ui) void enable();
 		api(ui) void disable();
@@ -110,6 +112,12 @@ namespace Rapture
 
 		api(ui) const IntPoint & cursorPos() const;
 		api(ui) void setCursorPos(const IntPoint & pt);
+
+		bool isCursorClipped()
+		{
+			return _clippedCursor;
+		}
+
 		api(ui) void clipCursor(const IntRect & region);
 		api(ui) void unclipCursor();
 
@@ -122,6 +130,7 @@ namespace Rapture
 		virtual api(ui) void read(Handle<MouseDownMessage> & msg);
 		virtual api(ui) void read(Handle<MouseUpdateMessage> & msg);
 		virtual api(ui) void read(Handle<MouseUpMessage> & msg);
+		virtual api(ui) void read(Handle<UIMoveMessage> & msg);
 		virtual api(ui) void read(Handle<UIResizeMessage> & msg);
 
 	protected:
@@ -135,7 +144,7 @@ namespace Rapture
 		void acquireCursorPos(IntPoint &) const;
 		void unpress(MouseButton buttons, int x, int y, int flags);
 
-		void updateClipRect();
+		void updateCursorClipRect();
 
 		HWND _handle;
 		int _width, _height;
@@ -155,8 +164,8 @@ namespace Rapture
 		Cursor * _cursor = nullptr;
 		IntPoint _cursorPos;
 
-		IntRect _clipRect;
-		bool _clipped = false;
+		IntRect _cursorClipRect;
+		bool _clippedCursor = false;
 
 		bool _fullscreen = false;
 		bool _closed = false;

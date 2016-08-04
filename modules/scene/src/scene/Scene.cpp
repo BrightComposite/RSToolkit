@@ -129,46 +129,6 @@ namespace Rapture
 		}
 	}
 
-	void Camera::setProjectionMode(ProjectionMode mode)
-	{
-		if(_projectionMode == mode)
-			return;
-
-		_projectionMode = mode;
-		updateProjection();
-	}
-
-	void Camera::updateProjection()
-	{
-		float aspect = _scene->viewport().ratio();
-		float z = 1.0f / _zoom;
-
-		switch(_projectionMode)
-		{
-			case ProjectionMode::Ortho:
-			{
-				_scene->graphics().updateUniform<Uniforms::Projection>(floatm::orthot(-1.0f / aspect, 1.0f / aspect, -1.0f, 1.0f, -z, z));
-				break;
-			}
-
-			case ProjectionMode::Perspective:
-			{
-				_scene->graphics().updateUniform<Uniforms::Projection>(floatm::perspectivet(_fov, aspect, 0.01f, 2 * z));
-				break;
-			}
-		}
-	}
-
-	void Camera::setZoom(float zoom)
-	{
-		_zoom = zoom;
-	}
-
-	void Camera::setFieldOfView(float fov)
-	{
-		_fov = fov;
-	}
-
 	void Scene::onWidgetResize(Handle<WidgetResizeMessage> & msg, Widget & w)
 	{
 		if(_camera)
@@ -209,8 +169,105 @@ namespace Rapture
 		}
 	}
 
+	void Camera::setProjectionMode(ProjectionMode mode)
+	{
+		if(_projectionMode == mode)
+			return;
+
+		_projectionMode = mode;
+		updateProjection();
+	}
+
+	void Camera::updateProjection()
+	{
+		float aspect = _scene->viewport().ratio();
+		float z = 1.0f / _zoom;
+
+		switch(_projectionMode)
+		{
+			case ProjectionMode::Ortho:
+			{
+				_scene->graphics().updateUniform<Uniforms::Projection>(floatm::orthot(-1.0f / aspect, 1.0f / aspect, -1.0f, 1.0f, -z, z));
+				break;
+			}
+
+			case ProjectionMode::Perspective:
+			{
+				_scene->graphics().updateUniform<Uniforms::Projection>(floatm::perspectivet(_fov, aspect, 0.01f, 2 * z));
+				break;
+			}
+		}
+	}
+
+	void Camera::setZoom(float zoom)
+	{
+		_zoom = zoom;
+	}
+
+	void Camera::setFieldOfView(float fov)
+	{
+		_fov = fov;
+	}
+
+	void Camera::setRotation(const floatq & rot)
+	{
+		_rot = rot;
+	}
+
+	void Camera::rotate(const floatq & rot)
+	{
+		_rot->rotateBy(rot);
+	}
+
+	void Camera::setPitch(float value)
+	{
+		_angles->x = fmath::clamp(value, -fmath::half_pi, fmath::half_pi);
+		_rot->fromEuler(_angles);
+	}
+
+	void Camera::setYaw(float value)
+	{
+		_angles->y = fmath::rmod(value);
+		_rot->fromEuler(_angles);
+	}
+
+	void Camera::setRoll(float value)
+	{
+		_angles->z = value;
+		_rot->fromEuler(_angles);
+	}
+
+	void Camera::setAngles(float pitch, float yaw, float roll)
+	{
+		_angles->x = fmath::clamp(pitch, -fmath::pi * 0.49f, fmath::pi * 0.49f);
+		_angles->y = fmath::rmod(yaw);
+		_angles->z = roll;
+
+		_rot = floatq(floatv::up, _angles->y) * floatq(floatv::right, _angles->x);
+	}
+
+	void Camera::addPitch(float value)
+	{
+		setPitch(_angles->x + value);
+	}
+
+	void Camera::addYaw(float value)
+	{
+		setYaw(_angles->y + value);
+	}
+
+	void Camera::addRoll(float value)
+	{
+		setRoll(_angles->z + value);
+	}
+
+	void Camera::addAngles(float pitch, float yaw, float roll)
+	{
+		setAngles(_angles->x + pitch, _angles->y + yaw, _angles->z + roll);
+	}
+
 	void Camera::update()
 	{
-		_scene->graphics().updateUniform<Uniforms::View>(floatm::lookTo(_pos, _rot->forward(), floatv::up).transpose());
+		_scene->graphics().updateUniform<Uniforms::View>(floatm::lookTo(_pos, _rot->forward(), _rot->up()).transpose());
 	}
 }

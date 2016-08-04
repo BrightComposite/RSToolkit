@@ -303,14 +303,14 @@ namespace Rapture
 			checkForErrors();
 			
 			glEnable(GL_DEPTH_TEST);
-			glDepthFunc(GL_LESS);
+			glDepthFunc(GL_LEQUAL);
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			//glEnable(GL_CULL_FACE);
+			glEnable(GL_CULL_FACE);
 			glEnable(GL_SCISSOR_TEST);
 			
-			//glCullFace(GL_BACK);
-			//glFrontFace(GL_CW);
+			glCullFace(GL_BACK);
+			glFrontFace(GL_CW);
 
 			glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 			glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
@@ -380,23 +380,33 @@ namespace Rapture
 		{
 			return Handle<GLVertexBuffer, GLGraphics>(this, layout, data);
 		}
-
-		Handle<IndexBuffer> GLGraphics::createIndexBuffer(const VertexIndices & indices)
+		/*
+		Handle<MeshBuffer> GLGraphics::createIndexBuffer(const VertexIndices & indices)
 		{
 			return Handle<GLIndexBuffer, GLGraphics>(this, indices);
 		}
-
-		Handle<Mesh> GLGraphics::createMesh(const Handle<VertexBuffer> & buffer, VertexTopology topology, uint verticesLocation)
+		*/
+		Handle<Mesh> GLGraphics::createMesh(ArrayList<MeshBuffer> && buffers, uint verticesCount, VertexTopology topology, uint verticesLocation)
 		{
-			return Handle<GLMesh>(this, buffer, topology, verticesLocation);
+			return Handle<GLMesh>(this, move(buffers), topology, verticesCount, verticesLocation);
 		}
 
-		Handle<IndexedMesh> GLGraphics::createMesh(const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology, uint verticesLocation, uint indicesLocation)
+		Handle<Mesh> GLGraphics::createMesh(ArrayList<MeshBuffer> && buffers, const VertexIndices & indices, uint verticesCount, VertexTopology topology, uint verticesLocation)
 		{
-			return Handle<GLIndexedMesh>(this, buffer, createIndexBuffer(indices), topology, verticesLocation, indicesLocation);
+			return Handle<GLIndexedMesh>(this, move(buffers), indices, topology, (uint)indices.size(), verticesLocation);
 		}
 
-		UniqueHandle<UniformAdapter> GLGraphics::createUniformAdapter(const char * name, ShaderType shader, int index, size_t size)
+		Handle<InstancedMesh> GLGraphics::createInstancedMesh(MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && buffers, uint verticesCount, VertexTopology topology, uint verticesLocation)
+		{
+			return Handle<GLInstancedMesh>(this, instanceLayout, move(buffers), topology, verticesCount, verticesLocation);
+		}
+
+		Handle<InstancedMesh> GLGraphics::createInstancedMesh(MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && buffers, const VertexIndices & indices, uint verticesCount, VertexTopology topology, uint verticesLocation)
+		{
+			return Handle<GLInstancedIndexedMesh>(this, instanceLayout, move(buffers), indices, topology, (uint)indices.size(), verticesLocation);
+		}
+
+		Handle<UniformAdapter> & GLGraphics::init(Handle<UniformAdapter> & adapter, const char * name, ShaderType shader, int index, size_t size)
 		{
 			_uniformBindings.emplace_back(name, index);
 
@@ -411,7 +421,8 @@ namespace Rapture
 
 			checkForErrors();
 
-			return UniqueHandle<GLUniformAdapter, GLGraphics>(this, shader, index, size);
+			adapter = Handle<GLUniformAdapter, GLGraphics>(this, shader, index, size);
+			return adapter;
 		}
 
 		Handle<Surface> GLGraphics::createSurface(UISpace * space)

@@ -54,6 +54,16 @@ namespace Rapture
 		Contents(A &&... args) :
 			Contents(contents_types<T>(), forward<A>(args)...) {}
 
+		void * pointer()
+		{
+			return reinterpret_cast<void *>(this);
+		}
+
+		const void * pointer() const
+		{
+			return reinterpret_cast<const void *>(this);
+		}
+
 		operator void * ()
 		{
 			return reinterpret_cast<void *>(this);

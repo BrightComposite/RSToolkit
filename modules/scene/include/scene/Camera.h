@@ -33,6 +33,34 @@ namespace Rapture
 			updateProjection();
 		}
 
+		virtual api(scene) void setRotation(const floatq & rot) override;
+		virtual api(scene) void rotate(const floatq & rot) override;
+
+		float pitch() const
+		{
+			return _angles->x;
+		}
+
+		float yaw() const
+		{
+			return _angles->y;
+		}
+
+		float roll() const
+		{
+			return _angles->z;
+		}
+
+		virtual api(scene) void setPitch(float value);
+		virtual api(scene) void setYaw(float value);
+		virtual api(scene) void setRoll(float value);
+		virtual api(scene) void setAngles(float pitch, float yaw, float roll);
+
+		virtual api(scene) void addPitch(float value);
+		virtual api(scene) void addYaw(float value);
+		virtual api(scene) void addRoll(float value);
+		virtual api(scene) void addAngles(float pitch, float yaw, float roll);
+
 		float zoom() const
 		{
 			return _zoom;
@@ -59,6 +87,7 @@ namespace Rapture
 	protected:
 		float _zoom = 0.01f;
 		float _fov = 90.0f;
+		fvec  _angles = {0.0f, 0.0f, 0.0f};
 		ProjectionMode _projectionMode = ProjectionMode::Ortho;
 	};
 }

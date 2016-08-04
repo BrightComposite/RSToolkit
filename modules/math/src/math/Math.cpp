@@ -88,21 +88,27 @@ namespace Rapture
 	template<> const FloatVector  Vector<float> ::negativeZ = { 0,  0, -1,  0 };
 	template<> const FloatVector  Vector<float> ::negativeW = { 0,  0,  0, -1 };
 
-	template<> const FloatVector  & Vector<float>::right     = positiveX;
+	template<> const FloatVector  & Vector<float>::right    = positiveX;
 	template<> const FloatVector  & Vector<float>::up       = positiveY;
 	template<> const FloatVector  & Vector<float>::forward  = positiveZ;
+
+	template<> const FloatVector  & Vector<float>::left     = negativeX;
+	template<> const FloatVector  & Vector<float>::down     = negativeY;
+	template<> const FloatVector  & Vector<float>::back     = negativeZ;
+
 	template<> const FloatVector  & Vector<float>::identity = positiveW;
 
-	template<> const FloatVector  Vector<float> ::zero	  = { 0,  0,  0,  0 };
-	template<> const FloatVector  Vector<float> ::one		  = { 1,  1,  1,  1 };
-	template<> const FloatVector  Vector<float> ::two		  = { 2,  2,  2,  2 };
-	template<> const FloatVector  Vector<float> ::oneXYZ	  = { 1,  1,  1,  0 };
-	template<> const FloatVector  Vector<float> ::twoXYZ	  = { 2,  2,  2,  0 };
+	template<> const FloatVector  Vector<float> ::zero		= { 0,  0,  0,  0 };
+	template<> const FloatVector  Vector<float> ::one		= { 1,  1,  1,  1 };
+	template<> const FloatVector  Vector<float> ::two		= { 2,  2,  2,  2 };
+	template<> const FloatVector  Vector<float> ::oneXYZ	= { 1,  1,  1,  0 };
+	template<> const FloatVector  Vector<float> ::twoXYZ	= { 2,  2,  2,  0 };
 	template<> const FloatVector  Vector<float> ::minusOne  = {-1, -1, -1, -1 };
 
-	template<> const FloatVector  Vector<float> ::half	  = {.5f,.5f,.5f,.5f};
+	template<> const FloatVector  Vector<float> ::half	    = {.5f,.5f,.5f,.5f};
 
 	template struct MathConstants<Vector<float>>;
+
 #ifdef USE_AVX
 
 	template struct Vector<double>;
@@ -118,19 +124,25 @@ namespace Rapture
 	template<> const DoubleVector Vector<double>::negativeZ = { 0,  0, -1,  0 };
 	template<> const DoubleVector Vector<double>::negativeW = { 0,  0,  0, -1 };
 
-	template<> const DoubleVector & Vector<double>::right    = positiveX;
+	template<> const DoubleVector & Vector<double>::right   = positiveX;
 	template<> const DoubleVector & Vector<double>::up      = positiveY;
 	template<> const DoubleVector & Vector<double>::forward = positiveZ;
+
+	template<> const DoubleVector & Vector<double>::left    = negativeX;
+	template<> const DoubleVector & Vector<double>::down    = negativeY;
+	template<> const DoubleVector & Vector<double>::back    = negativeZ;
+
+
 	template<> const DoubleVector & Vector<double>::identity= positiveW;
 
-	template<> const DoubleVector Vector<double>::zero	  = { 0,  0,  0,  0 };
-	template<> const DoubleVector Vector<double>::one		  = { 1,  1,  1,  1 };
-	template<> const DoubleVector Vector<double>::two		  = { 2,  2,  2,  2 };
-	template<> const DoubleVector Vector<double>::oneXYZ	  = { 1,  1,  1,  0 };
-	template<> const DoubleVector Vector<double>::twoXYZ	  = { 2,  2,  2,  0 };
+	template<> const DoubleVector Vector<double>::zero	    = { 0,  0,  0,  0 };
+	template<> const DoubleVector Vector<double>::one		= { 1,  1,  1,  1 };
+	template<> const DoubleVector Vector<double>::two		= { 2,  2,  2,  2 };
+	template<> const DoubleVector Vector<double>::oneXYZ	= { 1,  1,  1,  0 };
+	template<> const DoubleVector Vector<double>::twoXYZ	= { 2,  2,  2,  0 };
 	template<> const DoubleVector Vector<double>::minusOne  = {-1, -1, -1, -1 };
 
-	template<> const DoubleVector Vector<double>::half	  = {.5, .5, .5, .5 };
+	template<> const DoubleVector Vector<double>::half	    = {.5, .5, .5, .5 };
 
 	template struct MathConstants<Vector<double>>;
 

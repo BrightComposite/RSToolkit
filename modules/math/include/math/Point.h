@@ -74,29 +74,29 @@ namespace Rapture {
         template<typename U>
         void multiply(const Point<U> & pt)
         {
-            x *= static_cast<T>(pt.x);
-            y *= static_cast<T>(pt.y);
+            x = static_cast<T>(x * pt.x);
+            y = static_cast<T>(y * pt.y);
         }
 
 		template<typename U, useif<std::is_pod<U>::value>>
         void multiply(U value)
         {
-            x *= static_cast<T>(value);
-            y *= static_cast<T>(value);
+            x = static_cast<T>(x * value);
+            y = static_cast<T>(y * value);
         }
 
         template<typename U>
         void divide(const Point<U> & pt)
         {
-            x /= static_cast<T>(pt.x);
-            y /= static_cast<T>(pt.y);
+            x = static_cast<T>(x / pt.x);
+            y = static_cast<T>(y / pt.y);
         }
 
 		template<typename U, useif<std::is_pod<U>::value>>
         void divide(U value)
         {
-            x /= static_cast<T>(value);
-            y /= static_cast<T>(value);
+            x = static_cast<T>(x / value);
+            y = static_cast<T>(y / value);
         }
 
         void invert()

@@ -36,6 +36,7 @@ namespace Rapture
 	link_class(scene, OrientedObject, Class<WorldObject>);
 
 	using Position = fvec;
+	using Direction = fvec;
 	using Rotation = fquat;
 
 	class SceneObject : public Object
@@ -58,13 +59,20 @@ namespace Rapture
 			return floatv::identity;
 		}
 
-		virtual const floatq & rotation() const
+		virtual floatv direction() const
+		{
+			return floatv::forward;
+		}
+
+		virtual floatq rotation() const
 		{
 			return floatq::identity;
 		}
 
 		virtual void setPosition(const floatv & pos) {}
+		virtual void setDirection(const floatv & rot) {}
 		virtual void setRotation(const floatq & rot) {}
+
 		virtual void move(const floatv & offset) {}
 		virtual void rotate(const floatq & rot) {}
 
@@ -178,9 +186,19 @@ namespace Rapture
 
 		virtual ~OrientedObject() {}
 
-		virtual const floatq & rotation() const override
+		virtual floatv direction() const override
+		{
+			return _rot->forward();
+		}
+
+		virtual floatq rotation() const override
 		{
 			return _rot;
+		}
+
+		virtual void setDirection(const floatv & dir) override
+		{
+			setRotation({floatv::forward, dir});
 		}
 
 		virtual void setRotation(const floatq & rot) override
@@ -190,7 +208,7 @@ namespace Rapture
 
 		virtual void move(const floatv & offset) override
 		{
-			*_pos += _rot->applyTo(offset);
+			*_pos += offset.blend<1, 0, 1, 0>(_rot->applyTo(offset.mask<1, 0, 1, 0>()));
 		}
 
 		virtual void rotate(const floatq & rot) override
@@ -199,7 +217,7 @@ namespace Rapture
 		}
 
 	protected:
-		Rotation _rot;
+		Rotation _rot {};
 	};
 
 	class Scene : public Object, public Named, public Connector
@@ -273,7 +291,7 @@ namespace Rapture
 		array_list<Drawable *> _opaque;
 		array_list<Drawable *> _transparent;
 
-		milliseconds _tickLength = 1ms;
+		milliseconds _tickLength = 5ms;
 		time_marker _lastTick;
 		time_marker _firstTick;
 

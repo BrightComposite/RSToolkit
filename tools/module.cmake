@@ -17,12 +17,14 @@ else()
 endif()
 
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-	set(OUTPUT_ROOT ${RAPTURE_ROOT}/build-vs-${MODULE_ARCH} CACHE PATH "Output root")
+	set(OUTPUT_PATH_SUFFIX build-vs-${MODULE_ARCH} CACHE PATH "Output path suffix")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
-	set(OUTPUT_ROOT ${RAPTURE_ROOT}/build-cb CACHE PATH "Output root")
+	set(OUTPUT_PATH_SUFFIX build-cb CACHE PATH "Output path suffix")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
-	set(OUTPUT_ROOT ${RAPTURE_ROOT}/build-clang CACHE PATH "Output root")
+	set(OUTPUT_PATH_SUFFIX build-clang CACHE PATH "Output path suffix")
 endif()
+
+set(OUTPUT_ROOT ${RAPTURE_ROOT}/${OUTPUT_PATH_SUFFIX} CACHE PATH "Output root")
 
 set(MODULES_ROOT ${RAPTURE_ROOT}/modules CACHE PATH "Modules root")
 
@@ -269,15 +271,26 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 		set(DIR "${PATH}")
 		set(DOMAIN "${ARGV1}")
+		set(ROOT "${ARGV2}")
 
 		if(NOT "${DOMAIN}" STREQUAL "")
 			set(DIR "${DOMAIN}/${DIR}")
 		endif()
 
-		set(OUTPUT_DIR "${OUTPUT_ROOT}/${DIR}")
-		set(DIR "${RAPTURE_ROOT}/${DIR}")
+		if(NOT "${ROOT}" STREQUAL "")
+			if(NOT IS_ABSOLUTE "${ROOT}")
+				message(FATAL_ERROR "add_module: a third argument (module root) must be an absolute path or empty")
+			endif()
+
+			set(OUTPUT_DIR "${ROOT}/${OUTPUT_PATH_SUFFIX}/${DIR}")
+			set(DIR "${ROOT}/${DIR}")
+		else()
+			set(OUTPUT_DIR "${OUTPUT_ROOT}/${DIR}")
+			set(DIR "${RAPTURE_ROOT}/${DIR}")
+		endif()
 
 		message("${DIR}")
+		
 		if(NOT EXISTS "${DIR}/CMakeLists.txt")
 			file(MAKE_DIRECTORY ${DIR})
 
@@ -286,9 +299,6 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			if(NOT "${DOMAIN}" STREQUAL "")
 				set(TEMPLATE_FILE_DOMAIN ${RAPTURE_ROOT}/templates/module/${DOMAIN}/CMakeLists.txt)
 			endif()
-
-			message("${TEMPLATE_FILE}")
-			message("${TEMPLATE_FILE_DOMAIN}")
 
 			set(module_path ${PATH})
 			set(module_domain ${DOMAIN})

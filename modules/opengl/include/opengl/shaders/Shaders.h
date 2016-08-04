@@ -22,6 +22,8 @@
 #include <opengl/shaders/3d/multicolor/fs.shader.inc>
 #include <opengl/shaders/3d/texture/vs.shader.inc>
 #include <opengl/shaders/3d/texture/fs.shader.inc>
+#include <opengl/shaders/3d/instanced/cube/vs.shader.inc>
+#include <opengl/shaders/3d/instanced/cube/fs.shader.inc>
 
 //---------------------------------------------------------------------------
 
@@ -63,6 +65,7 @@
 	static const RFX_SHADER_CODE_UNIT shader_code_3d_color[]{{shader_code_3d_color_vs, RFX_VERTEX_SHADER}, {shader_code_3d_color_fs, RFX_FRAGMENT_SHADER}};
 	static const RFX_SHADER_CODE_UNIT shader_code_3d_multicolor[]{{shader_code_3d_multicolor_vs, RFX_VERTEX_SHADER}, {shader_code_3d_multicolor_fs, RFX_FRAGMENT_SHADER}};
 	static const RFX_SHADER_CODE_UNIT shader_code_3d_texture[]{{shader_code_3d_texture_vs, RFX_VERTEX_SHADER}, {shader_code_3d_texture_fs, RFX_FRAGMENT_SHADER}};
+	static const RFX_SHADER_CODE_UNIT shader_code_3d_instanced_cube[]{{shader_code_3d_instanced_cube_vs, RFX_VERTEX_SHADER}, {shader_code_3d_instanced_cube_fs, RFX_FRAGMENT_SHADER}};
 
 	static const RFX_SHADER_CODE_SET shaders[] {
 		{"2d/rect", shader_code_2d_rect_layout, shader_code_2d_rect},
@@ -75,7 +78,8 @@
 		{"3d/basic", shader_code_3d_basic_layout, shader_code_3d_basic},
 		{"3d/color", shader_code_3d_color_layout, shader_code_3d_color},
 		{"3d/multicolor", shader_code_3d_multicolor_layout, shader_code_3d_multicolor},
-		{"3d/texture", shader_code_3d_texture_layout, shader_code_3d_texture}
+		{"3d/texture", shader_code_3d_texture_layout, shader_code_3d_texture},
+		{"3d/instanced/cube", shader_code_3d_instanced_cube_layout, shader_code_3d_instanced_cube}
 	};
 
 //---------------------------------------------------------------------------

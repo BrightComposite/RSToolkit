@@ -19,34 +19,24 @@ namespace Rapture
 {
 	class Graphics3D;
 
+	class GraphicModelView
+	{
+	public:
+		GraphicModelView(const Handle<Mesh> & mesh, const Handle<FxTechnique> & technique) :
+			mesh(mesh), technique(technique) {}
+
+		Handle<Mesh> mesh;
+		Handle<FxTechnique> technique;
+	};
+
 	class GraphicModel : public Shared
 	{
 	public:
-		GraphicModel(Graphics3D * graphics, Handle<Mesh> mesh, Handle<FxTechnique> technique) :
-			graphics(graphics), mesh(mesh), technique(technique) {}
+		GraphicModel(Graphics3D * graphics, const Handle<Mesh> & mesh, const Handle<FxTechnique> & technique) :
+			graphics(graphics), view(mesh, technique) {}
 
-		const FloatTransform & getTransform() const
-		{
-			return transform;
-		}
-
-		void setTransform(const FloatTransform & t)
-		{
-			transform = t;
-		}
-
-		void setTransform(FloatTransform && t)
-		{
-			transform = forward<FloatTransform>(t);
-		}
-
-		virtual api(graphics) void draw(int pass = 0) const;
-
-	protected:
 		Graphics3D * graphics;
-		Handle<Mesh> mesh;
-		Handle<FxTechnique> technique;
-		FloatTransform transform;
+		GraphicModelView view;
 	};
 
 	class Figure3D : public Figure
@@ -56,10 +46,11 @@ namespace Rapture
 
 		virtual void draw() const override
 		{
-			model.draw();
+			view.technique->apply();
+			view.mesh->draw();
 		}
 
-		GraphicModel model;
+		GraphicModelView view;
 	};
 }
 

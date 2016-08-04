@@ -20,22 +20,48 @@
 namespace Rapture
 {
 	class Graphics3D;
+	class UniformAdapter;
+
+	struct UniformData : Shared
+	{
+		api(graphics) void apply() const;
+
+		uint buffer;
+		size_t offset;
+		data<void> data;
+		UniformAdapter * adapter;
+	};
 
 	class UniformAdapter : public Shared
 	{
 	public:
+		UniformAdapter(int index, uint size) : _index(index), _size(size) {}
+
+		template<class U, class ... A, useif<can_construct_contents<U, A...>::value>>
+		void update(A &&... args)
+		{
+			update(Contents<U>(forward<A>(args)...).pointer());
+		}
+
+		template<class U>
+		void update(const Contents<U> & contents)
+		{
+			update(contents.pointer());
+		}
+
 		virtual void update(const void * data) = 0;
+		virtual void append(UniformData & data) = 0;
+		virtual void bind(const UniformData & data) = 0;
+
+	protected:
+		int _index;
+		uint _size;
 	};
 
-	class Uniform : public Shared
+	struct Uniform
 	{
 		morph_base(Uniform);
 		deny_copy(Uniform);
-
-	protected:
-		Uniform(UniqueHandle<UniformAdapter> && adapter) : _adapter(forward<UniqueHandle<UniformAdapter>>(adapter)) {}
-
-		UniqueHandle<UniformAdapter> _adapter;
 	};
 
 	create_morph_pool(graphics, Uniform);
@@ -43,21 +69,20 @@ namespace Rapture
 	template<class T>
 	using is_uniform = is_base_of<Uniform, T>;
 
-	using UniformSet = Morpher<Uniform, Graphics3D>;
+	using UniformSet = UnorderedMap<int, UniformAdapter>;
 
 #define uniform_class(U, shader_index, shader_type, components)			\
 	namespace Uniforms													\
 	{																	\
-		class U;														\
+		struct U;														\
 	}																	\
 																		\
 	aligned_contents(Uniforms::U, alignas(16), components)				\
 																		\
 	namespace Uniforms													\
 	{																	\
-		class U : public Uniform										\
+		struct U : Uniform												\
 		{																\
-		public:															\
 			static const uint index = shader_index;						\
 			static const ShaderType shader = ShaderType::shader_type;	\
 																		\
@@ -65,26 +90,6 @@ namespace Rapture
 			{															\
 				return #U;												\
 			}															\
-																		\
-			template<class ... A, useif<								\
-				can_construct_contents<U, A...>::value					\
-				>														\
-			>															\
-			void set(A &&... args)										\
-			{															\
-				_adapter->update(Contents<U>(forward<A>(args)...));		\
-			}															\
-																		\
-			void set(const Contents<U> & contents)						\
-			{															\
-				_adapter->update(contents);								\
-			}															\
-																		\
-		protected:														\
-			friend_owned_handle(U, Graphics3D);							\
-																		\
-			U(UniqueHandle<UniformAdapter> && a) :						\
-				Uniform(forward<UniqueHandle<UniformAdapter>>(a)) {}	\
 		};																\
 	}																	\
 																		\

@@ -115,6 +115,7 @@ namespace Rapture
 		friend api(ui) LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 		bool _isShown = false;
+		bool _isActive = false;
 
 		DWORD _normalStyle;
 		LongRect _outerRegion;

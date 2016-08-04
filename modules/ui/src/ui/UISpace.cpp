@@ -178,6 +178,16 @@ namespace Rapture
 			_cursor->bind(this);
 	}
 
+	void UISpace::showCursor()
+	{
+		ShowCursor(true);
+	}
+
+	void UISpace::hideCursor()
+	{
+		ShowCursor(false);
+	}
+
 	void UISpace::enable()
 	{
 		if(_enabled)
@@ -282,18 +292,17 @@ namespace Rapture
 
 	void UISpace::clipCursor(const IntRect & region)
 	{
-		_clipRect = region;
-		updateClipRect();
-		_clipped = true;
+		_cursorClipRect = region;
+		updateCursorClipRect();
 	}
 
-	void UISpace::updateClipRect()
+	void UISpace::updateCursorClipRect()
 	{
-		RectAdapter a(_clipRect);
+		RectAdapter a(_cursorClipRect);
 
 		ClientToScreen(_handle, &a.leftTop());
 		ClientToScreen(_handle, &a.rightBottom());
-		ClipCursor(&a);
+		_clippedCursor = ClipCursor(&a) == TRUE;
 
 		acquireCursorPos(_cursorPos);
 	}
@@ -301,7 +310,7 @@ namespace Rapture
 	void UISpace::unclipCursor()
 	{
 		ClipCursor(nullptr);
-		_clipped = false;
+		_clippedCursor = false;
 	}
 
 	void UISpace::read(Handle<KeyDownMessage> & msg)
@@ -463,6 +472,14 @@ namespace Rapture
 			return;
 
 		send<MouseUpdateMessage>(*this, msg->x, msg->y);
+	}
+
+	void UISpace::read(Handle<UIMoveMessage> & msg)
+	{
+		if(_clippedCursor)
+			updateCursorClipRect();
+		else
+			acquireCursorPos(_cursorPos);
 	}
 
 	void UISpace::read(Handle<UIResizeMessage> & msg)

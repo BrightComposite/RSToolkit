@@ -51,9 +51,14 @@ namespace Rapture
 
 		Quaternion(T x, T y, T z, T w) : v {x, y, z, w} {}
 
-		Quaternion(T x, T y, T z)
+		Quaternion(T pitch, T yaw, T roll)
 		{
-			fromEuler({x, y, z});
+			fromEuler({pitch, yaw, roll});
+		}
+
+		Quaternion(const VectorType & from, const VectorType & to)
+		{
+			fromVectors(from, to);
 		}
 
 		Quaternion(const VectorType & v) : v {v} {}
@@ -66,7 +71,7 @@ namespace Rapture
 		}
 
 		Quaternion(const VectorType & axis, T angle) : Quaternion(VectorMath<T>::trigon(angle * 0.5f).template shuffle<0, 0, 0, 1>() * axis.template blend<0, 0, 0, 1>(VectorType::identity)) {}
-		//																											[ s  s  s  c ]						[ x  y  z  1 ]
+		//	[sx sy sz c]																							 [ s  s  s  c ]						 [ x  y  z  1 ]
 
 		Quaternion & operator = (const Quaternion & q)
 		{
@@ -147,12 +152,12 @@ namespace Rapture
 
 		Quaternion & invert()
 		{
-			return conjugate().downscale(norm());
+			return conjugate().downscale(magnitude());
 		}
 
 		Quaternion inverse() const
 		{
-			return conjugation().downscale(norm());
+			return conjugation().downscale(magnitude());
 		}
 
 		Quaternion & operator += (const Quaternion & q)
@@ -254,6 +259,19 @@ namespace Rapture
 			return Math<T>::sqrt(norm());
 		}
 
+		Quaternion & normalize() &
+		{
+			v /= VectorMath<T>::sqrt(v.sqr().fillsum());
+			return *this;
+		}
+
+		Quaternion && normalize() &&
+		{
+			v /= VectorMath<T>::sqrt(v.sqr().fillsum());
+			return forward<Quaternion>(*this);
+		}
+
+		// pitch (x), yaw (y), roll (z)
 		Quaternion & fromEuler(const VectorType & angles)
 		{
 			auto halfs = angles * VectorType::half;
@@ -261,12 +279,37 @@ namespace Rapture
 			VectorType sine, cosine;
 			VectorMath<T>::sincos(halfs, sine, cosine);
 
-			auto r = sine.template shuffle<0, 0, 0, 0>(cosine);
-			auto p = sine.template shuffle<1, 1, 1, 1>(cosine);
-			auto y = sine.template shuffle<2, 2, 2, 2>(cosine);
-
-			v = r.template shuffle<0, 2, 2, 2>() * p.template shuffle<2, 0, 2, 2>() * y.template shuffle<2, 2, 0, 2>() + r.template shuffle<2, 0, 0, 0>().template negate<0, 1, 0, 1>() * p.template shuffle<0, 2, 0, 0>() * y.template shuffle<0, 0, 2, 0>();
+			auto p = sine.template shuffle<0, 0, 0, 0>(cosine);
+			auto y = sine.template shuffle<1, 1, 1, 1>(cosine);
+			auto r = sine.template shuffle<2, 2, 2, 2>(cosine);
+			
+			v =
+				p.template shuffle<0, 2, 2, 2>() * y.template shuffle<2, 0, 2, 2>() * r.template shuffle<2, 2, 0, 2>() +
+				p.template shuffle<2, 0, 0, 0>().template negate<0, 1, 0, 1>() * y.template shuffle<0, 2, 0, 0>() * r.template shuffle<0, 0, 2, 0>();
+			
 			return *this;
+		}
+
+		// 'from' and 'to' are unit vectors
+		Quaternion & fromVectors(const VectorType & from, const VectorType & to)
+		{
+			auto d = from.dot(to);
+
+			if(d.x >= 1.0f) // 0 degrees, no rotation
+				return *this = identity;
+
+			if(d.x < (-1.0f + Math<T>::eps)) // 180 degrees, find any acceptable orthogonal vector to represent a rotation
+			{
+				auto axis = cross(VectorType::positiveX, from);
+
+				if(axis.magnitudeSq() < Math<T>::eps2)
+					 axis = cross(VectorType::positiveY, from);
+
+				return *this = {axis.normalize(), Math<T>::pi};
+			}
+
+			v = cross(from, to).blend<0, 0, 0, 1>(VectorType::one + d); // orthogonal vector [x y z] and rotation angle [w]
+			return normalize();
 		}
 
 		Matrix<T> toMatrix() const

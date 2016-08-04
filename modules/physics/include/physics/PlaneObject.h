@@ -21,9 +21,8 @@ namespace Rapture
 	{
 	public:
 		PlaneObject(Scene * scene, PhysicalWorld * world, float level) :
-			Physical
-			(
-				scene->append<OrientedObject>(fvec{0.0f, level, 0.0f}, fquat{floatv::right, fmath::half_pi}),
+			Physical(
+				Handle<OrientedObject>(scene, floatv{0.0f, level, 0.0f}, floatq{floatv::up, floatv::forward}),
 				world,
 				new btStaticPlaneShape({0, 1, 0}, 0)
 			)

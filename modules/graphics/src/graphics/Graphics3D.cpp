@@ -21,14 +21,14 @@ namespace Rapture
 		-1.0f,  1.0f,	0.0f, 0.0f,
 		 1.0f,  1.0f,	1.0f, 0.0f,
 		 1.0f, -1.0f,	1.0f, 1.0f,
-	    -1.0f,  1.0f,	0.0f, 0.0f,
+		-1.0f,  1.0f,	0.0f, 0.0f,
 		 1.0f, -1.0f,	1.0f, 1.0f,
 		-1.0f, -1.0f,	0.0f, 1.0f
 	});
 
 	const VertexData VertexData::linequad2d({
 		-1.0f,  1.0f,
-	 	 1.0f,  1.0f,
+		 1.0f,  1.0f,
 		 1.0f,  1.0f,
 		 1.0f, -1.0f,
 		 1.0f, -1.0f,
@@ -145,12 +145,14 @@ namespace Rapture
 		out << id;
 	}
 
-	void GraphicModel::draw(int pass) const
+	void UniformData::apply() const
 	{
-		graphics->updateUniform<Uniforms::Model>(getTransform().output());
+		adapter->bind(*this);
+	}
 
-		technique->apply(pass);
-		mesh->draw();
+	void MeshInstance::setData(void * data)
+	{
+		mesh->setData(index, data);
 	}
 
 	static Handle<Mesh> createMesh(Graphics3D * graphics, const FigureData & data)
@@ -175,10 +177,10 @@ namespace Rapture
 		points.push_back(p[0].x);
 		points.push_back(p[0].y);
 
-		return graphics->createMesh("p2", points);
+		return graphics->createMesh(graphics->getVertexLayout("p2"), points);
 	}
 
-	Figure3D::Figure3D(Graphics3D * graphics, const FigureData & data) : Figure(graphics, data), model(graphics, createMesh(graphics, data), graphics->techniques2d.figure) {}
+	Figure3D::Figure3D(Graphics3D * graphics, const FigureData & data) : Figure(graphics, data), view(createMesh(graphics, data), graphics->techniques2d.figure) {}
 
 	void Graphics3D::bind(const Handle<Texture> & texture, uint index)
 	{
@@ -327,37 +329,38 @@ namespace Rapture
 
 	void Graphics3D::initFacilities()
 	{
-		auto p2 = getVertexLayout("p2");
-		auto p2t = getVertexLayout("p2 t");
-		auto p3 = getVertexLayout("p3");
-		auto p3t = getVertexLayout("p3 t");
+		auto p2   = getVertexLayout("p2");
+		auto p2t  = getVertexLayout("p2 t");
+		auto p3   = getVertexLayout("p3");
+		auto p3t  = getVertexLayout("p3 t");
 		auto p3c4 = getVertexLayout("p3 c4");
 
-		meshes2d.quad = createMesh(p2, VertexData::quad2d);
-		meshes2d.texquad = createMesh(p2t, VertexData::texquad2d);
-		meshes2d.linequad = createMesh(p2, VertexData::linequad2d, VertexTopology::Lines);
+		meshes2d.quad      = createMesh(p2,   VertexData::quad2d);
+		meshes2d.texquad   = createMesh(p2t,  VertexData::texquad2d);
+		meshes2d.linequad  = createMesh(p2,   VertexData::linequad2d, VertexTopology::Lines);
+		meshes3d.quad      = createMesh(p3,   VertexData::quad3d);
+		meshes3d.texquad   = createMesh(p3t,  VertexData::texquad3d);
+		meshes3d.linequad  = createMesh(p2,   VertexData::linequad3d, VertexTopology::Lines);
+		meshes3d.texcube   = createMesh(p3t,  VertexData::texcube,    VertexIndices::cube);
+		meshes3d.colorcube = createMesh(p3c4, VertexData::colorcube,  VertexIndices::cube);
 
 		auto cubeVB = createVertexBuffer(p3, VertexData::cube);
 
-		meshes3d.quad = createMesh(p3, VertexData::quad3d);
-		meshes3d.texquad = createMesh(p3t, VertexData::texquad3d);
-		meshes3d.linequad = createMesh(p2, VertexData::linequad3d, VertexTopology::Lines);
-		meshes3d.cube = createMesh(cubeVB, VertexIndices::cube);
-		meshes3d.texcube = createMesh(p3t, VertexData::texcube, VertexIndices::cube);
-		meshes3d.colorcube = createMesh(p3c4, VertexData::colorcube, VertexIndices::cube);
-		meshes3d.linecube = createMesh(cubeVB, VertexIndices::linecube, VertexTopology::Lines);
+		meshes3d.cube      = createMesh(cubeVB, VertexIndices::cube);
+		meshes3d.linecube  = createMesh(cubeVB, VertexIndices::linecube, VertexTopology::Lines);
 
 		techniques2d.rectangle.init(getShaderProgram("2d/rect"));
-		techniques2d.ellipse.init(getShaderProgram("2d/ellipse"));
-		techniques2d.wired_rectangle.init(getShaderProgram("2d/wired/rect"));
-		techniques2d.wired_ellipse.init(getShaderProgram("2d/wired/ellipse"));
-		techniques2d.figure.init(getShaderProgram("2d/figure"));
-		techniques2d.image.init(getShaderProgram("2d/image"));
-		techniques2d.text.init(getShaderProgram("2d/text"));
+		techniques2d.ellipse  .init(getShaderProgram("2d/ellipse"));
+		techniques2d.figure   .init(getShaderProgram("2d/figure"));
+		techniques2d.image    .init(getShaderProgram("2d/image"));
+		techniques2d.text     .init(getShaderProgram("2d/text"));
 
-		techniques3d.color.init(getShaderProgram("3d/color"));
+		techniques2d.wired_rectangle.init(getShaderProgram("2d/wired/rect"));
+		techniques2d.wired_ellipse  .init(getShaderProgram("2d/wired/ellipse"));
+
+		techniques3d.color     .init(getShaderProgram("3d/color"));
 		techniques3d.multicolor.init(getShaderProgram("3d/multicolor"));
-		techniques3d.texture.init(getShaderProgram("3d/texture"));
+		techniques3d.texture   .init(getShaderProgram("3d/texture"));
 
 		updateUniform<Uniforms::Model>();
 		updateUniform<Uniforms::View>();
@@ -370,31 +373,6 @@ namespace Rapture
 
 	void Graphics3D::clearFacilities()
 	{
-		meshes2d.quad = nullptr;
-		meshes2d.texquad = nullptr;
-
-		meshes3d.quad = nullptr;
-		meshes3d.texquad = nullptr;
-		meshes3d.cube = nullptr;
-		meshes3d.texcube = nullptr;
-		meshes3d.colorcube = nullptr;
-
-		techniques2d.rectangle = nullptr;
-		techniques2d.ellipse = nullptr;
-		techniques2d.wired_rectangle = nullptr;
-		techniques2d.wired_ellipse = nullptr;
-		techniques2d.figure = nullptr;
-		techniques2d.image = nullptr;
-		techniques2d.text = nullptr;
-
-		techniques3d.color = nullptr;
-		techniques3d.multicolor = nullptr;
-		techniques3d.texture = nullptr;
-
-		_textures.clear();
-		_shaderPrograms.clear();
-		_uniforms.clear();
-		_vertexLayouts.clear();
 	}
 
 	void Graphics3D::updateBrushState()

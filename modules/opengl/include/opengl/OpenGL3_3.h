@@ -103,8 +103,12 @@ namespace Rapture
 			virtual api(opengl3_3) Handle<Surface> createSurface(UISpace * space) override;
 			virtual api(opengl3_3) Handle<Surface> createSurface(const IntSize & size, Handle<Image> & image) override;
 
-			virtual api(opengl3_3) Handle<Mesh> createMesh(const Handle<VertexBuffer> & buffer, VertexTopology topology, uint verticesLocation) override;
-			virtual api(opengl3_3) Handle<IndexedMesh> createMesh(const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology, uint verticesLocation, uint indicesLocation) override;
+			virtual api(opengl3_3) Handle<Mesh> createMesh(ArrayList<MeshBuffer> && buffers, uint verticesCount, VertexTopology topology, uint verticesLocation) override;
+			virtual api(opengl3_3) Handle<Mesh> createMesh(ArrayList<MeshBuffer> && buffers, const VertexIndices & indices, uint verticesCount, VertexTopology topology, uint verticesLocation) override;
+			virtual api(opengl3_3) Handle<InstancedMesh> createInstancedMesh(MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && buffers, uint verticesCount, VertexTopology topology, uint verticesLocation) override;
+			virtual api(opengl3_3) Handle<InstancedMesh> createInstancedMesh(MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && buffers, const VertexIndices & indices, uint verticesCount, VertexTopology topology, uint verticesLocation) override;
+
+			virtual api(opengl3_3) Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) override;
 
 			virtual Handle<GraphicsDebug> getDebug() const override
 			{
@@ -123,10 +127,8 @@ namespace Rapture
 			virtual api(opengl3_3) ~GLGraphics();
 
 			virtual api(opengl3_3) Handle<VertexLayout> createVertexLayout(const string & fingerprint) override;
-			virtual api(opengl3_3) Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) override;
-			virtual api(opengl3_3) Handle<IndexBuffer> createIndexBuffer(const VertexIndices & indices) override;
 
-			virtual api(opengl3_3) UniqueHandle<UniformAdapter> createUniformAdapter(const char * name, ShaderType shader, int index, size_t size) override;
+			virtual api(opengl3_3) Handle<UniformAdapter> & init(Handle<UniformAdapter> & adapter, const char * name, ShaderType shader, int index, size_t size) override;
 
 			virtual api(opengl3_3) void initFacilities() override;
 
@@ -182,8 +184,6 @@ namespace Rapture
 			GLGraphics * graphics;
 		};
 
-		// TODO: save current layout in Graphics and apply it with the glVertexAttribPointer and the glEnableVertexAttribArray functions
-
 		//---------------------------------------------------------------------------
 
 		class GLVertexBuffer : public VertexBuffer
@@ -201,26 +201,24 @@ namespace Rapture
 			uint handle;
 		};
 
-		class GLIndexBuffer : public IndexBuffer
+		class GLIndexBuffer : public MeshBuffer
 		{
 			friend_owned_handle(GLIndexBuffer, GLGraphics);
 
 		public:
+			api(opengl3_3) GLIndexBuffer(GLGraphics * graphics, const VertexIndices & indices);
 			virtual api(opengl3_3) ~GLIndexBuffer();
 
 			virtual api(opengl3_3) void apply() const override;
 
 		protected:
-			api(opengl3_3) GLIndexBuffer(GLGraphics * graphics, const VertexIndices & indices);
-
-			GLGraphics * graphics;
 			uint handle;
 		};
 
+		//---------------------------------------------------------------------------
+
 		class GLMeshTrait
 		{
-			friend class GLGraphics;
-
 		public:
 			api(opengl3_3) GLMeshTrait(GLGraphics * graphics, VertexTopology topology);
 			virtual api(opengl3_3) ~GLMeshTrait();
@@ -231,23 +229,71 @@ namespace Rapture
 			GLGraphics * graphics;
 		};
 
+		class GLIndexedMeshTrait : public GLMeshTrait
+		{
+		public:
+			api(opengl3_3) GLIndexedMeshTrait(GLGraphics * graphics, VertexTopology topology, const VertexIndices & indices);
+
+		protected:
+			Handle<GLIndexBuffer> ibuffer;
+		};
+
 		class GLMesh : public Mesh, public GLMeshTrait
 		{
 		public:
-			api(opengl3_3) GLMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vbuffer, VertexTopology topology, uint verticesLocation);
+			api(opengl3_3) GLMesh(GLGraphics * graphics, ArrayList<MeshBuffer> && buffers, VertexTopology topology, uint verticesCount, uint verticesLocation);
 
 			virtual api(opengl3_3) void draw() const;
 		};
 
-		class GLIndexedMesh : public IndexedMesh, public GLMeshTrait
+		class GLIndexedMesh : public Mesh, public GLIndexedMeshTrait
 		{
 		public:
-			api(opengl3_3) GLIndexedMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, VertexTopology topology, uint verticesLocation, uint indicesLocation);
+			api(opengl3_3) GLIndexedMesh(GLGraphics * graphics, ArrayList<MeshBuffer> && buffers, const VertexIndices & indices, VertexTopology topology, uint verticesCount, uint verticesLocation);
 
-			virtual api(opengl3_3) void draw() const override;
+			virtual api(opengl3_3) void draw() const;
+
+		protected:
+		};
+
+		class GLInstancedMeshBase : public InstancedMesh
+		{
+		public:
+			api(opengl3_3) GLInstancedMeshBase(MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && buffers, uint verticesCount, uint verticesLocation);
+
+			virtual api(opengl3_3) MeshInstance * createInstance() override;
+			virtual api(opengl3_3) void setData(uint index, void * data) override;
+
+		protected:
+		};
+
+		class GLInstancedMesh : public GLInstancedMeshBase, public GLMeshTrait
+		{
+		public:
+			api(opengl3_3) GLInstancedMesh(GLGraphics * graphics, MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && buffers, VertexTopology topology, uint verticesCount, uint verticesLocation);
+
+			virtual api(opengl3_3) void draw() const;
+
+		protected:
+		};
+
+		class GLInstancedIndexedMesh : public GLInstancedMeshBase, public GLIndexedMeshTrait
+		{
+		public:
+			api(opengl3_3) GLInstancedIndexedMesh(GLGraphics * graphics, MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && buffers, const VertexIndices & indices, VertexTopology topology, uint verticesCount, uint verticesLocation);
+	
+			virtual api(opengl3_3) void draw() const;
+
+		protected:
 		};
 
 		//---------------------------------------------------------------------------
+
+		struct GLUniformBuffer
+		{
+			owned_data<byte> data;
+			uint handle;
+		};
 
 		class GLUniformAdapter : public UniformAdapter
 		{
@@ -257,13 +303,15 @@ namespace Rapture
 			virtual api(opengl3_3) ~GLUniformAdapter();
 
 			virtual api(opengl3_3) void update(const void * data) override;
+			virtual api(opengl3_3) void append(UniformData & data) override;
+			virtual api(opengl3_3) void bind(const UniformData & data) override;
 
 		protected:
 			api(opengl3_3) GLUniformAdapter(GLGraphics * graphics, ShaderType shader, int index, uint size);
 
-			uint _buffer;
-			int _index;
-			uint _size;
+			uint _common;
+			size_t _offset;
+			array_list<GLUniformBuffer> _buffers;
 			GLGraphics * _graphics;
 		};
 

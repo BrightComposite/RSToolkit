@@ -16,6 +16,8 @@
 namespace Rapture
 {
 	class Graphics3D;
+	class Mesh;
+	class InstancedMesh;
 
 	class VertexData : public array_list<float>
 	{
@@ -50,45 +52,66 @@ namespace Rapture
 		LineStrip
 	};
 
-	class VertexBuffer : public Shared
+	class MeshBuffer : public Shared
+	{
+	public:
+		MeshBuffer() {}
+
+		virtual void apply() const = 0;
+	};
+
+	class VertexBuffer : public MeshBuffer
 	{
 	public:
 		VertexBuffer(VertexLayout * layout, const VertexData & vd) : layout(layout), verticesCount(static_cast<uint>(vd.size() / layout->units)) {}
-
-		virtual void apply() const = 0;
 
 		VertexLayout * layout;
 		uint verticesCount;
 	};
 
-	class IndexBuffer : public Shared
-	{
-	public:
-		IndexBuffer(const VertexIndices & indices) : size(static_cast<uint>(indices.size())) {}
-
-		virtual void apply() const = 0;
-
-		uint size;
-	};
-
 	class Mesh : public Shared
 	{
 	public:
-		Mesh(const Handle<VertexBuffer> & vbuffer, VertexTopology topology, uint verticesLocation = 0) : vbuffer(vbuffer), verticesLocation(verticesLocation) {}
+		Mesh(ArrayList<MeshBuffer> && buffers, uint verticesCount, uint verticesLocation) : buffers(move(buffers)), verticesLocation(verticesLocation), verticesCount(verticesCount) {}
 
 		virtual api(graphics) void draw() const = 0;
 
-		Handle<VertexBuffer> vbuffer;
+	protected:
+		ArrayList<MeshBuffer> buffers;
+		VertexLayout * layout = nullptr;
+
 		uint verticesLocation;
+		uint verticesCount;
 	};
 
-	class IndexedMesh : public Mesh
+	struct MeshInputLayout
+	{
+
+		size_t size;
+	};
+
+	class MeshInstance : public Shared
 	{
 	public:
-		IndexedMesh(const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, VertexTopology topology, uint verticesLocation = 0, uint indicesLocation = 0) : Mesh(vbuffer, topology, verticesLocation), ibuffer(ibuffer), indicesLocation(indicesLocation) {}
+		MeshInstance(InstancedMesh * mesh, uint index) : mesh(mesh), index(index) {}
 
-		Handle<IndexBuffer> ibuffer;
-		uint indicesLocation;
+		api(graphics) void setData(void * data);
+
+		InstancedMesh * mesh;
+		uint index;
+	};
+
+	class InstancedMesh : public Mesh
+	{
+	public:
+		InstancedMesh(MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && buffers, uint verticesCount, uint verticesLocation) : Mesh(move(buffers), verticesLocation, verticesCount), instanceLayout(instanceLayout) {}
+
+		virtual MeshInstance * createInstance() = 0;
+		virtual void setData(uint index, void * data) = 0;
+
+	protected:
+		MeshInputLayout * instanceLayout;
+		ArrayList<MeshInstance> instances;
 	};
 }
 

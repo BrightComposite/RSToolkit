@@ -117,6 +117,12 @@ namespace Rapture
 			h.state = nullptr;
 		}
 
+		~StateHolder()
+		{
+			if(state != nullptr)
+				state->set(old);
+		}
+
 		StateHolder & operator = (const StateHolder & h) = delete;
 
 		StateHolder & operator = (StateHolder && h)
@@ -138,12 +144,6 @@ namespace Rapture
 		{
 			state->set(forward<T>(newState));
 			return *this;
-		}
-
-		~StateHolder()
-		{
-			if(state != nullptr)
-				state->set(old);
 		}
 
 		State<T> * state;

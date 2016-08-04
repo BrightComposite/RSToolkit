@@ -45,12 +45,14 @@ cmake_minimum_required(VERSION 3.0)
 		
 	if("${ShaderType}" STREQUAL "vs")
 		file(READ ${Input} ShaderCode)
-		string(REGEX MATCH "!layout:[ a-z2-4]*" layout ${ShaderCode})
+		string(REGEX MATCH "!vertex:[ a-z2-4]*" layout ${ShaderCode})
 		
 		if(NOT "${layout}" STREQUAL "")
-			string(REGEX REPLACE "!layout:[ ]*" "" layout ${layout})
+			string(REGEX REPLACE "!vertex:[ ]*" "" layout ${layout})
 			string(REGEX REPLACE "\\s\\s+" " " layout ${layout})
 			set(CONTENTS "${CONTENTS}\n\nstatic constexpr char const * ${OutputVariable}_layout = \"${layout}\";\n")
+		else()
+			set(CONTENTS "${CONTENTS}\n\n#error \"Shader must declare vertex layout! Example: /* !vertex: p3 c4 */\"\n")
 		endif()
 	endif()
 	

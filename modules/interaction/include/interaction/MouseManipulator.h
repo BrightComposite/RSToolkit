@@ -19,15 +19,25 @@ namespace Rapture
 		api(interaction) MouseManipulator(Widget * w);
 		virtual ~MouseManipulator() {}
 
+		FloatPoint fetchData()
+		{
+			_wait = false;
+			return _delta;
+		}
+
 		api(interaction) void enable();
 		api(interaction) void disable();
 		virtual api(interaction) void toggle();
 
 	protected:
-		api(interaction) void onMouseMove(Handle<MouseMoveMessage> &, UISpace &);
+		api(interaction) void onMouseUpdate(Handle<MouseUpdateMessage> &, UISpace &);
 
-		bool _enabled;
+		bool _enabled = false;
+		bool _wait = false;
+
 		IntPoint _initial;
+		FloatPoint _delta = {};
+		IntPoint _old = {};
 	};
 
 	class MouseDragger : public MouseManipulator

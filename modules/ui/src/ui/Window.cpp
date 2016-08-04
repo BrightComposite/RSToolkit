@@ -70,6 +70,10 @@ namespace Rapture
 			case WM_CLOSE:
 			{
 				w._closed = true;
+
+				if(w._clippedCursor)
+					ClipCursor(nullptr);
+
 				DestroyWindow(hWnd);
 				break;
 			}
@@ -83,8 +87,20 @@ namespace Rapture
 
 			case WM_ACTIVATE:
 			{
+				w._isActive = LOWORD(wParam) != 0;
+
 				if(LOWORD(wParam) == 0 && !w._closed)
+				{
 					w.setFullscreen(false);
+					
+					if(w._clippedCursor)
+						ClipCursor(nullptr);
+				}
+				else
+				{
+					if(w._clippedCursor)
+						w.updateCursorClipRect();
+				}
 
 				break;
 			}
@@ -193,9 +209,13 @@ namespace Rapture
 
 			case WM_TIMER:
 			{
-				IntPoint pt;
-				w.acquireCursorPos(pt);
-				send<MouseUpdateMessage>(w, pt.x, pt.y);
+				if(w._isActive)
+				{
+					IntPoint pt;
+					w.acquireCursorPos(pt);
+					send<MouseUpdateMessage>(w, pt.x, pt.y);
+				}
+
 				break;
 			}
 
@@ -205,10 +225,14 @@ namespace Rapture
 					break;
 
 				WINDOWPOS & pos = *(WINDOWPOS *)lParam;
-				w._outerRegion.setPlacement(pos.x, pos.y, pos.cx, pos.cy);
 
 				RectAdapter a;
 				GetClientRect(w._handle, &a.rect);
+
+				if(pos.x != w._outerRegion.left || pos.y != w._outerRegion.top)
+					send<UIMoveMessage>(w, a.rect.left, a.rect.top);
+				
+				w._outerRegion.setPlacement(pos.x, pos.y, pos.cx, pos.cy);
 
 				WINDOWPLACEMENT wp {};
 				GetWindowPlacement(hWnd, &wp);

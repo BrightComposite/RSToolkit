@@ -86,6 +86,7 @@ namespace Rapture
 		ColorBase(const ColorBase & color) : data {color.data} {}
 		ColorBase(ColorBase && color) : data {move(color.data)} {}
 		ColorBase(const Vector<T> & vec) : data {vec.v} {}
+		ColorBase(const Vector<T> & vec, T alpha) : data {vec.x, vec.y, vec.z, alpha} {}
 		ColorBase(const array<T, 4> & data) : data {data} {}
 		ColorBase(array<T, 4> && data) : data {forward<array<T, 4>>(data)} {}
 		ColorBase(T r, T g, T b, T a) : r(r), g(g), b(b), a(a) {}
@@ -111,6 +112,7 @@ namespace Rapture
 		ColorBase(const ColorBase & color) : data {color.data} {}
 		ColorBase(ColorBase && color) : data {move(color.data)} {}
 		ColorBase(const Vector<T> & vec) : data {vec.v} {}
+		ColorBase(const Vector<T> & vec, T alpha) : data {vec.x, vec.y, vec.z, alpha} {}
 		ColorBase(const array<T, 4> & data) : data {data} {}
 		ColorBase(array<T, 4> && data) : data {forward<array<T, 4>>(data)} {}
 		ColorBase(T h, T s, T v, T a) : h(h), s(s), v(v), a(a) {}
@@ -149,6 +151,7 @@ namespace Rapture
 		GenericColor(const T(&color)[4]) : Base {color} {}
 		GenericColor(const T(&color)[3]) : Base {color[0], color[1], color[2], Traits::alpha()} {}
 		GenericColor(const Vector<T> & color) : Base {color} {}
+		GenericColor(const Vector<T> & color, T alpha) : Base {color, alpha} {}
 
 		template<ColorType d, ColorFormat f, useif<d != datatype || f != format>>
 		GenericColor(const GenericColor<d, f> & color)

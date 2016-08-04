@@ -13,7 +13,7 @@ namespace Rapture
 
 	void CustomLayer::draw(Widget * w)
 	{
-		drawer(w, w->region());
+		drawer(w, w->absRegion());
 	}
 
 	Widget::Widget(Widget * parent) : Widget(parent, *parent) {}

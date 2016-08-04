@@ -45,7 +45,7 @@ add_module(math tests)
 
 add_module(ui tests)
 
-add_module(independence projects)
-add_module(BasicGame projects)
+add_module(independence projects "E:/Programming/C++/RST")
+add_module(BasicGame projects "E:/Programming/C++/RST")
 
 #--------------------------------------------------------

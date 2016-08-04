@@ -273,6 +273,14 @@ namespace Rapture
 		(int, id)
 	);
 
+	// UI-space has changed its position
+	message_class
+	(
+		UIMoveMessage,
+		(int, x)
+		(int, y)
+	);
+
 	// UI-space has changed its size
 	message_class
 	(
@@ -309,8 +317,8 @@ namespace Rapture
 
 #define UIMessages																											\
 	KeyDownMessage, CharMessage, KeyUpMessage, MouseUpdateMessage,                                                          \
-	MouseDownMessage, MouseMoveMessage, MouseUpMessage,                                                                     \
-	HotkeyMessage, UIResizeMessage, UIFullscreenMessage, UIDestroyMessage                                                   \
+	MouseDownMessage, MouseMoveMessage, MouseUpMessage, HotkeyMessage,                                                      \
+	UIMoveMessage, UIResizeMessage, UIFullscreenMessage, UIDestroyMessage													\
 
 #define WindowMessages	                                                                                                    \
 	WindowCloseMessage

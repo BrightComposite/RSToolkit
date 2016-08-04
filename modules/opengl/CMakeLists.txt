@@ -60,7 +60,11 @@ module(SHARED)
 				multicolor/
 					vs.glsl fs.glsl ..
 				texture/
-					vs.glsl fs.glsl
+					vs.glsl fs.glsl ..
+				instanced/
+					cube/
+						vs.glsl fs.glsl ..
+				..
 		)
 
 		group(include Headers)

@@ -69,7 +69,7 @@ namespace Rapture
 			layout->apply();
 		}
 
-		GLIndexBuffer::GLIndexBuffer(GLGraphics * graphics, const VertexIndices & indices) : IndexBuffer(indices), graphics(graphics)
+		GLIndexBuffer::GLIndexBuffer(GLGraphics * graphics, const VertexIndices & indices)
 		{
 			glGenBuffers(1, &handle);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
@@ -116,24 +116,34 @@ namespace Rapture
 			glDeleteVertexArrays(1, &id);
 		}
 
-		GLMesh::GLMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vb, VertexTopology topology, uint verticesLocation) : Mesh(vb, topology, verticesLocation), GLMeshTrait(graphics, topology)
+		GLIndexedMeshTrait::GLIndexedMeshTrait(GLGraphics * graphics, VertexTopology topology, const VertexIndices & indices) : GLMeshTrait(graphics, topology), ibuffer(graphics, indices)
+		{
+		}
+
+		GLMesh::GLMesh(GLGraphics * graphics, ArrayList<MeshBuffer> && b, VertexTopology t, uint verticesCount, uint verticesLocation) : Mesh(move(b), verticesCount, verticesLocation), GLMeshTrait(graphics, t)
 		{
 			glBindVertexArray(id);
-			vbuffer->apply();
+
+			for(auto & buffer : buffers)
+				buffer->apply();
+
 			glBindVertexArray(0);
 		}
 
 		void GLMesh::draw() const
 		{
 			glBindVertexArray(id);
-			glDrawArrays(topology, verticesLocation, vbuffer->verticesCount - verticesLocation);
+			glDrawArrays(topology, verticesLocation, verticesCount);
 			glBindVertexArray(0);
 		}
 
-		GLIndexedMesh::GLIndexedMesh(GLGraphics * graphics, const Handle<VertexBuffer> & vb, const Handle<IndexBuffer> & ib, VertexTopology topology, uint verticesLocation, uint indicesLocation) : IndexedMesh(vb, ib, topology, verticesLocation, indicesLocation), GLMeshTrait(graphics, topology)
+		GLIndexedMesh::GLIndexedMesh(GLGraphics * graphics, ArrayList<MeshBuffer> && b, const VertexIndices & indices, VertexTopology t, uint verticesCount, uint verticesLocation) : Mesh(move(b), verticesCount, verticesLocation), GLIndexedMeshTrait(graphics, t, indices)
 		{
 			glBindVertexArray(id);
-			vbuffer->apply();
+
+			for(auto & buffer : buffers)
+				buffer->apply();
+
 			ibuffer->apply();
 			glBindVertexArray(0);
 		}
@@ -141,8 +151,58 @@ namespace Rapture
 		void GLIndexedMesh::draw() const
 		{
 			glBindVertexArray(id);
-			//glDrawArrays(topology, verticesLocation, vbuffer->verticesCount - verticesLocation);
-			glDrawElements(topology, ibuffer->size, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(indicesLocation));
+			glDrawElements(topology, verticesCount, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(verticesLocation));
+			glBindVertexArray(0);
+			graphics->checkForErrors();
+		}
+
+		GLInstancedMeshBase::GLInstancedMeshBase(MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && b, uint verticesCount, uint verticesLocation) : InstancedMesh(instanceLayout, move(b), verticesCount, verticesLocation)
+		{
+
+		}
+
+		MeshInstance * GLInstancedMeshBase::createInstance()
+		{
+			return nullptr;
+		}
+
+		void GLInstancedMeshBase::setData(uint index, void * data)
+		{
+
+		}
+
+		GLInstancedMesh::GLInstancedMesh(GLGraphics * graphics, MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && b, VertexTopology topology, uint verticesCount, uint verticesLocation) : GLInstancedMeshBase(instanceLayout, move(b), verticesCount, verticesLocation), GLMeshTrait(graphics, topology)
+		{
+			glBindVertexArray(id);
+
+			for(auto & buffer : buffers)
+				buffer->apply();
+
+			glBindVertexArray(0);
+		}
+
+		void GLInstancedMesh::draw() const
+		{
+			glBindVertexArray(id);
+			glDrawArrays(topology, verticesLocation, verticesCount);
+			glBindVertexArray(0);
+		}
+
+		GLInstancedIndexedMesh::GLInstancedIndexedMesh(GLGraphics * graphics, MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && b, const VertexIndices & indices, VertexTopology topology, uint verticesCount, uint verticesLocation) : GLInstancedMeshBase(instanceLayout, move(b), verticesCount, verticesLocation), GLIndexedMeshTrait(graphics, topology, indices)
+		{
+			glBindVertexArray(id);
+
+			for(auto & buffer : buffers)
+				buffer->apply();
+
+			ibuffer->apply();
+			glBindVertexArray(0);
+		}
+
+		void GLInstancedIndexedMesh::draw() const
+		{
+			glBindVertexArray(id);
+			glDrawElements(topology, verticesCount, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(verticesLocation));
 			glBindVertexArray(0);
 		}
 
@@ -393,7 +453,7 @@ namespace Rapture
 
 		GLImage::GLImage(GLGraphics * graphics, const ImageData & data) : Image(graphics, data), _graphics(graphics)
 		{
-			uint w  = umath::round2pow(_size.x);
+			uint w = umath::round2pow(_size.x);
 			uint h = umath::round2pow(_size.y);
 
 			_scale[0] = float(_size.x) / float(w);
@@ -408,12 +468,12 @@ namespace Rapture
 			{
 				case ImageFormat::grayscale:
 					internalformat = GL_R8;
-					format = GL_LUMINANCE;
+					format = GL_RED;
 					break;
 
 				case ImageFormat::grayscale_alpha:
 					internalformat = GL_RG8;
-					format = GL_LUMINANCE_ALPHA;
+					format = GL_RG;
 					break;
 
 				case ImageFormat::bgra:
@@ -437,6 +497,7 @@ namespace Rapture
 
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+			graphics->checkForErrors();
 
 			glTexImage2D(GL_TEXTURE_2D, 0, internalformat, w, h, 0, format, GL_UNSIGNED_BYTE, newData->ptr);
 			graphics->checkForErrors();
@@ -444,7 +505,7 @@ namespace Rapture
 
 		void GLImage::apply() const
 		{
-			glBindTexture(0, _id);
+			glBindTexture(GL_TEXTURE_2D, _id);
 			_graphics->checkForErrors();
 		}
 
@@ -454,28 +515,59 @@ namespace Rapture
 				throw Exception("Output image buffer should be not-null!");
 		}
 
-		GLUniformAdapter::GLUniformAdapter(GLGraphics * graphics, ShaderType shader, int index, size_t size) : _graphics(graphics), _index(index), _size(size)
+		GLUniformAdapter::GLUniformAdapter(GLGraphics * graphics, ShaderType shader, int index, size_t size) : UniformAdapter(index, size), _graphics(graphics), _offset(0)
 		{
-			glGenBuffers(1, &_buffer);
-			glBindBuffer(GL_UNIFORM_BUFFER, _buffer);
+			glGenBuffers(1, &_common);
+			glBindBuffer(GL_UNIFORM_BUFFER, _common);
 			glBufferData(GL_UNIFORM_BUFFER, _size, nullptr, GL_STATIC_DRAW);
 		}
 
 		GLUniformAdapter::~GLUniformAdapter()
 		{
-			glDeleteBuffers(1, &_buffer);
+			glDeleteBuffers(1, &_common);
+
+			for(auto & b : _buffers)
+				glDeleteBuffers(1, &b.handle);
 		}
 
 		void GLUniformAdapter::update(const void * data)
 		{
-			glBindBufferBase(GL_UNIFORM_BUFFER, _index, _buffer);
+			glBindBufferBase(GL_UNIFORM_BUFFER, _index, _common);
 			glBufferData(GL_UNIFORM_BUFFER, _size, data, GL_STATIC_DRAW);
-			/*void * ptr = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
+		}
 
-			assert(ptr);
+		void GLUniformAdapter::append(UniformData & data)
+		{
+			static const auto max_buffer_size = static_cast<uint>(glGetInteger(GL_MAX_UNIFORM_BLOCK_SIZE));
+			static const auto buffer_offset_alignment = static_cast<uint>(glGetInteger(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT));
 
-			memcpy(ptr, data, _size);
-			glUnmapBuffer(GL_UNIFORM_BUFFER);*/
+			if(_buffers.size() == 0 || _offset + _size > max_buffer_size)
+			{
+				_offset = 0;
+				_buffers.emplace_back();
+
+				auto & b = _buffers.back();
+				b.data.alloc(_size);
+
+				glGenBuffers(1, &b.handle);
+				glBindBuffer(GL_UNIFORM_BUFFER, b.handle);
+				glBufferData(GL_UNIFORM_BUFFER, _size, nullptr, GL_STATIC_DRAW);
+			}
+
+			auto & b = _buffers.back();
+
+			data.buffer  = _buffers.size() - 1;
+			data.offset  = _offset;
+			data.data    = {b.data.ptr + _offset, _size};
+			data.adapter = this;
+
+			_offset += _size + buffer_offset_alignment - 1;
+			_offset = _offset - (_offset % buffer_offset_alignment);
+		}
+
+		void GLUniformAdapter::bind(const UniformData & data)
+		{
+			glBindBufferRange(GL_UNIFORM_BUFFER, _index, _buffers[data.buffer].handle, data.offset, _size);
 		}
 	}
 }

@@ -444,7 +444,29 @@ namespace Rapture
 		return list;
 	}
 
-	StringList splitOnLines(const string & text, uint lineLength, bool separateWords)
+	WideStringList split(const wstring & text, const wchar_t * sep)
+	{
+		WideStringList list;
+
+		if(text.empty())
+			return list;
+
+		wchar_t * temp = Memory<wchar_t>::copy(text.c_str(), text.length() + 1);
+		wchar_t * next = nullptr;
+		wchar_t * token = wcstok_s(temp, sep, &next);
+
+		while(token != nullptr)
+		{
+			list.emplace_back(token, wcslen(token));
+			token = wcstok_s(nullptr, sep, &next);
+		}
+
+		Memory<wchar_t>::free(temp);
+
+		return list;
+	}
+
+	StringList lines(const string & text, uint lineLength, bool separateWords)
 	{
 		StringList list;
 
@@ -482,29 +504,7 @@ namespace Rapture
 		return list;
 	}
 
-	WideStringList split(const wstring & text, const wchar_t * sep)
-	{
-		WideStringList list;
-
-		if(text.empty())
-			return list;
-
-		wchar_t * temp = Memory<wchar_t>::copy(text.c_str(), text.length() + 1);
-		wchar_t * next = nullptr;
-		wchar_t * token = wcstok_s(temp, sep, &next);
-
-		while(token != nullptr)
-		{
-			list.emplace_back(token, wcslen(token));
-			token = wcstok_s(nullptr, sep, &next);
-		}
-
-		Memory<wchar_t>::free(temp);
-
-		return list;
-	}
-
-	WideStringList splitOnLines(const wstring & text, uint lineLength, bool separateWords)
+	WideStringList lines(const wstring & text, uint lineLength, bool separateWords)
 	{
 		WideStringList list;
 

@@ -47,24 +47,24 @@ namespace Rapture
 
 		struct Meshes2D
 		{
-			Handle<Mesh, Graphics3D> quad;
-			Handle<Mesh, Graphics3D> texquad;
-			Handle<Mesh, Graphics3D> linequad;
+			Handle<const Mesh, Graphics3D> quad;
+			Handle<const Mesh, Graphics3D> texquad;
+			Handle<const Mesh, Graphics3D> linequad;
 		};
 
 		struct Meshes3D
 		{
-			Handle<Mesh, Graphics3D> quad;
-			Handle<Mesh, Graphics3D> texquad;
-			Handle<Mesh, Graphics3D> linequad;
-			Handle<Mesh, Graphics3D> cube;
-			Handle<Mesh, Graphics3D> texcube;
-			Handle<Mesh, Graphics3D> colorcube;
-			Handle<Mesh, Graphics3D> linecube;
+			Handle<const Mesh, Graphics3D> quad;
+			Handle<const Mesh, Graphics3D> texquad;
+			Handle<const Mesh, Graphics3D> linequad;
+			Handle<const Mesh, Graphics3D> cube;
+			Handle<const Mesh, Graphics3D> texcube;
+			Handle<const Mesh, Graphics3D> colorcube;
+			Handle<const Mesh, Graphics3D> linecube;
 		};
 
 	public:
-		Graphics3D() { setclass(Graphics3D); }
+		api(graphics) Graphics3D();
 		virtual ~Graphics3D() {}
 
 		using Graphics::bind;
@@ -84,27 +84,31 @@ namespace Rapture
 		virtual api(graphics) void draw(const Symbol * symbol, int x, int y) override final;
 
 		api(graphics) VertexLayout * getVertexLayout(const string & fingerprint);
+		api(graphics) VertexElement * getVertexElement(const string & key);
+
+		api(graphics) void registerVertexElement(const string & key, const string & semantic, uint units);
+
 		api(graphics) const Handle<ShaderProgram> & getShaderProgram(const string & id);
 
 		virtual Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) = 0;
 		virtual Handle<Mesh> createMesh() = 0;
 
-		Handle<Mesh> createMesh(const Handle<VertexBuffer> & buffer, VertexTopology topology = VertexTopology::Triangles)
+		Handle<const Mesh> createMesh(const Handle<VertexBuffer> & buffer, VertexTopology topology = VertexTopology::Triangles)
 		{
 			return createMesh()->buffer(buffer)->topology(topology)->ready();
 		}
 
-		Handle<Mesh> createMesh(const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles)
+		Handle<const Mesh> createMesh(const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles)
 		{
 			return createMesh()->buffer(buffer)->indices(indices)->topology(topology)->ready();
 		}
 
-		Handle<Mesh> createMesh(VertexLayout * layout, const VertexData & data, VertexTopology topology)
+		Handle<const Mesh> createMesh(VertexLayout * layout, const VertexData & data, VertexTopology topology = VertexTopology::Triangles)
 		{
 			return createMesh(createVertexBuffer(layout, data), topology);
 		}
 
-		Handle<Mesh> createMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, VertexTopology topology)
+		Handle<const Mesh> createMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles)
 		{
 			return createMesh(createVertexBuffer(layout, data), indices, topology);
 		}
@@ -191,10 +195,8 @@ namespace Rapture
 		
 		api(graphics) void clearFacilities();
 
-		virtual Handle<VertexLayout> createVertexLayout(const string & fingerprint) = 0;
-		
 		virtual Handle<UniformAdapter> & init(Handle<UniformAdapter> & adapter, const char * name, ShaderType shader, int index, size_t size) = 0;
-
+		
 		template<class T>
 		UniformAdapter * uniformAdapter()
 		{
@@ -210,7 +212,8 @@ namespace Rapture
 
 		ArrayList<Texture> _textures;
 
-		UnorderedMap<string, VertexLayout> _vertexLayouts;
+		Map<string, VertexElement, Graphics3D> _vertexElements;
+		UnorderedMap<string, VertexLayout, Graphics3D> _vertexLayouts;
 		UnorderedMap<string, ShaderProgram> _shaderPrograms;
 	};
 }

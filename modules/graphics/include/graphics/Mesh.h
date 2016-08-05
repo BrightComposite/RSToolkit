@@ -68,15 +68,15 @@ namespace Rapture
 		uint verticesCount;
 	};
 
-	class MeshInstance : public Shared
+	struct MeshInstance : Shared
 	{
-	public:
-		MeshInstance(Mesh * mesh, uint index) : mesh(mesh), index(index) {}
+		template<class U>
+		void fill(const Contents<U> & contents)
+		{
+			Memory<void>::move(data.ptr, contents.pointer(), data.size);
+		}
 
-		virtual void setData(void * data) = 0;
-
-		Mesh * mesh;
-		uint index;
+		data<void> data;
 	};
 
 	enum class MeshState
@@ -88,56 +88,42 @@ namespace Rapture
 
 	adapt_enum_flags(MeshState);
 
-	class MIDElement : public Shared
-	{
-		friend class VertexLayout;
-
-	public:
-		string key;
-		uint id;
-		uint index;
-		uint units;
-
-	protected:
-		MIDElement(const string & key, uint id, uint index, uint units) : key(key), id(id), index(index), units(units) {}
-	};
-
-	class MIDLayout : public Shared
-	{
-	public:
-		api(graphics) MIDLayout(Graphics3D * graphics, const string & fingerprint);
-
-		virtual void apply() {}
-
-		string fingerprint;
-		array_list<MIDElement *> elements;
-		uint units;
-		uint stride;
-	};
-
 	class Mesh : public Shared
 	{
 	public:
+		virtual ~Mesh() {}
+
 		virtual Mesh * buffer(const Handle<VertexBuffer> & buffer) = 0;
-		virtual Mesh * indices(const VertexIndices & indices) = 0;
+		virtual Mesh * indices(const VertexIndices & indices, uint offset = 0) = 0;
 		virtual Mesh * topology(VertexTopology topology) = 0;
-		virtual Mesh * ready() = 0;
+		virtual Mesh * instanceLayout(VertexLayout * layout) = 0;
+
+		virtual const Mesh * ready() = 0;
+
+		virtual MeshInstance * instance() const = 0;
 
 		virtual void draw() const = 0;
 
-		virtual Mesh * apply(MIDLayout *) = 0;
-		virtual MeshInstance * instance() const = 0;
-
-		void setLocation(uint location)
+		uint offset() const
 		{
-			_verticesLocation = location;
+			return _verticesOffset;
+		}
+
+		Mesh * offset(uint offset)
+		{
+			_verticesOffset = offset;
+			return this;
+		}
+
+		uint verticesCount() const
+		{
+			return _verticesCount;
 		}
 
 	protected:
-		uint _verticesLocation = 0;
+		uint _verticesOffset = 0;
 		uint _verticesCount = 0;
 		uint _state = 0;
-		VertexLayout * _layout = nullptr;
 	};
 }
 

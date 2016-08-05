@@ -1,6 +1,7 @@
 ﻿//---------------------------------------------------------------------------
 
-#include <opengl/OpenGL3_3.h>
+#include <opengl/GLObjects.h>
+
 #include <iostream>
 
 //---------------------------------------------------------------------------
@@ -23,189 +24,6 @@ namespace Rapture
 {
 	namespace OpenGL
 	{
-		const char * const GLVertexLayout::attributes[] = {
-			"position",
-			"color",
-			"normal",
-			"texcoord"
-		};
-
-		GLVertexLayout::GLVertexLayout(GLGraphics * graphics, const string & fingerprint) : VertexLayout(fingerprint), graphics(graphics) {}
-
-		void GLVertexLayout::apply()
-		{
-			float * pointer = 0;
-
-			for(size_t i = 0; i < elements.size(); ++i)
-			{
-				auto units = elements[i]->units;
-				glEnableVertexAttribArray(i);
-				glVertexAttribPointer(i, units, GL_FLOAT, GL_FALSE, stride, pointer);
-				pointer += units;
-			}
-		}
-
-		void GLVertexLayout::accept(const ShaderCode * code) {}
-
-		GLVertexBuffer::GLVertexBuffer(GLGraphics * graphics, VertexLayout * layout, const VertexData & vd) : VertexBuffer(layout, vd)
-		{
-			if(vd.size() % layout->units != 0)
-				throw Exception("Size of vertex buffer doesn't matches its vertex input layout");
-
-			glGenBuffers(1, &handle);
-			glBindBuffer(GL_ARRAY_BUFFER, handle);
-			glBufferData(GL_ARRAY_BUFFER, vd.size() * sizeof(float), vd.data(), GL_STATIC_DRAW);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-		}
-
-		GLVertexBuffer::~GLVertexBuffer()
-		{
-			glDeleteBuffers(1, &handle);
-		}
-
-		void GLVertexBuffer::apply() const
-		{
-			glBindBuffer(GL_ARRAY_BUFFER, handle);
-			layout->apply();
-		}
-
-		GLIndexBuffer::GLIndexBuffer(GLGraphics * graphics, const VertexIndices & indices)
-		{
-			glGenBuffers(1, &handle);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint16_t), indices.data(), GL_STATIC_DRAW);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-		}
-
-		GLIndexBuffer::~GLIndexBuffer()
-		{
-			glDeleteBuffers(1, &handle);
-		}
-
-		void GLIndexBuffer::apply() const
-		{
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
-		}
-
-		GLMeshTrait::GLMeshTrait(GLGraphics * graphics, VertexTopology t) : graphics(graphics), id(0)
-		{
-			switch(t)
-			{
-				case VertexTopology::Triangles:
-					topology = GL_TRIANGLES;
-					break;
-
-				case VertexTopology::TriangleStrip:
-					topology = GL_TRIANGLE_STRIP;
-					break;
-
-				case VertexTopology::Lines:
-					topology = GL_LINES;
-					break;
-
-				case VertexTopology::LineStrip:
-					topology = GL_LINE_STRIP;
-					break;
-			}
-
-			glGenVertexArrays(1, &id);
-		}
-
-		GLMeshTrait::~GLMeshTrait()
-		{
-			glDeleteVertexArrays(1, &id);
-		}
-
-		GLIndexedMeshTrait::GLIndexedMeshTrait(GLGraphics * graphics, VertexTopology topology, const VertexIndices & indices) : GLMeshTrait(graphics, topology), ibuffer(graphics, indices)
-		{
-		}
-
-		GLMesh::GLMesh(GLGraphics * graphics, ArrayList<MeshBuffer> && b, VertexTopology t, uint verticesCount, uint verticesLocation) : Mesh(move(b), verticesCount, verticesLocation), GLMeshTrait(graphics, t)
-		{
-			glBindVertexArray(id);
-
-			for(auto & buffer : buffers)
-				buffer->apply();
-
-			glBindVertexArray(0);
-		}
-
-		void GLMesh::draw() const
-		{
-			glBindVertexArray(id);
-			glDrawArrays(topology, verticesLocation, verticesCount);
-			glBindVertexArray(0);
-		}
-
-		GLIndexedMesh::GLIndexedMesh(GLGraphics * graphics, ArrayList<MeshBuffer> && b, const VertexIndices & indices, VertexTopology t, uint verticesCount, uint verticesLocation) : Mesh(move(b), verticesCount, verticesLocation), GLIndexedMeshTrait(graphics, t, indices)
-		{
-			glBindVertexArray(id);
-
-			for(auto & buffer : buffers)
-				buffer->apply();
-
-			ibuffer->apply();
-			glBindVertexArray(0);
-		}
-
-		void GLIndexedMesh::draw() const
-		{
-			glBindVertexArray(id);
-			glDrawElements(topology, verticesCount, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(verticesLocation));
-			glBindVertexArray(0);
-			graphics->checkForErrors();
-		}
-
-		GLInstancedMeshBase::GLInstancedMeshBase(MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && b, uint verticesCount, uint verticesLocation) : InstancedMesh(instanceLayout, move(b), verticesCount, verticesLocation)
-		{
-
-		}
-
-		MeshInstance * GLInstancedMeshBase::createInstance()
-		{
-			return nullptr;
-		}
-
-		void GLInstancedMeshBase::setData(uint index, void * data)
-		{
-
-		}
-
-		GLInstancedMesh::GLInstancedMesh(GLGraphics * graphics, MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && b, VertexTopology topology, uint verticesCount, uint verticesLocation) : GLInstancedMeshBase(instanceLayout, move(b), verticesCount, verticesLocation), GLMeshTrait(graphics, topology)
-		{
-			glBindVertexArray(id);
-
-			for(auto & buffer : buffers)
-				buffer->apply();
-
-			glBindVertexArray(0);
-		}
-
-		void GLInstancedMesh::draw() const
-		{
-			glBindVertexArray(id);
-			glDrawArrays(topology, verticesLocation, verticesCount);
-			glBindVertexArray(0);
-		}
-
-		GLInstancedIndexedMesh::GLInstancedIndexedMesh(GLGraphics * graphics, MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && b, const VertexIndices & indices, VertexTopology topology, uint verticesCount, uint verticesLocation) : GLInstancedMeshBase(instanceLayout, move(b), verticesCount, verticesLocation), GLIndexedMeshTrait(graphics, topology, indices)
-		{
-			glBindVertexArray(id);
-
-			for(auto & buffer : buffers)
-				buffer->apply();
-
-			ibuffer->apply();
-			glBindVertexArray(0);
-		}
-
-		void GLInstancedIndexedMesh::draw() const
-		{
-			glBindVertexArray(id);
-			glDrawElements(topology, verticesCount, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(verticesLocation));
-			glBindVertexArray(0);
-		}
-
 		GLShaderProgram::GLShaderProgram(GLGraphics * graphics, const string & filename, VertexLayout * layout, ShaderCodeState state) : GLShaderProgram(graphics, layout)
 		{
 			if(id == 0)
@@ -230,22 +48,16 @@ namespace Rapture
 				glAttachShader(id, shader->id);
 			}
 
-			string attr;
+			uint k = 0;
 
 			for(size_t i = 0; i < layout->elements.size(); ++i)
 			{
 				auto & e = layout->elements[i];
-				attr = GLVertexLayout::attributes[e->type];
-
-				if(e->index > 0)
-					attr += (e->index + 1);
-
-				glBindAttribLocation(id, i, attr.c_str());
+				glBindAttribLocation(id, k, e->semantic);
+				k += (e->units - 1) / 4 + 1;
 			}
 
 			glLinkProgram(id);
-
-			auto loc = glGetAttribLocation(id, "position");
 
 			int status;
 			glGetProgramiv(id, GL_LINK_STATUS, &status);

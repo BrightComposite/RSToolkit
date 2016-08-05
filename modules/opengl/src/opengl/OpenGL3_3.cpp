@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 
 #include <opengl/OpenGL3_3.h>
+#include <opengl/GLObjects.h>
 
 #include <ui/UISpace.h>
 
@@ -301,14 +302,14 @@ namespace Rapture
 			wglDeleteContext(_tmpcontext);
 
 			checkForErrors();
-			
+
 			glEnable(GL_DEPTH_TEST);
 			glDepthFunc(GL_LEQUAL);
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glEnable(GL_CULL_FACE);
 			glEnable(GL_SCISSOR_TEST);
-			
+
 			glCullFace(GL_BACK);
 			glFrontFace(GL_CW);
 
@@ -347,14 +348,6 @@ namespace Rapture
 			}
 		}
 
-		void GLGraphics::bind(const GLMeshTrait * mesh)
-		{
-			if(_mesh != mesh)
-			{
-				_mesh = mesh;
-			}
-		}
-
 		void GLGraphics::printInfo() {}
 		void GLGraphics::printDebug() {}
 
@@ -371,39 +364,14 @@ namespace Rapture
 			return Handle<GLImage>(this, data);
 		}
 
-		Handle<VertexLayout> GLGraphics::createVertexLayout(const string & fingerprint)
-		{
-			return Handle<GLVertexLayout, GLGraphics>(this, fingerprint);
-		}
-
 		Handle<VertexBuffer> GLGraphics::createVertexBuffer(VertexLayout * layout, const VertexData & data)
 		{
 			return Handle<GLVertexBuffer, GLGraphics>(this, layout, data);
 		}
-		/*
-		Handle<MeshBuffer> GLGraphics::createIndexBuffer(const VertexIndices & indices)
-		{
-			return Handle<GLIndexBuffer, GLGraphics>(this, indices);
-		}
-		*/
-		Handle<Mesh> GLGraphics::createMesh(ArrayList<MeshBuffer> && buffers, uint verticesCount, VertexTopology topology, uint verticesLocation)
-		{
-			return Handle<GLMesh>(this, move(buffers), topology, verticesCount, verticesLocation);
-		}
 
-		Handle<Mesh> GLGraphics::createMesh(ArrayList<MeshBuffer> && buffers, const VertexIndices & indices, uint verticesCount, VertexTopology topology, uint verticesLocation)
+		Handle<Mesh> GLGraphics::createMesh()
 		{
-			return Handle<GLIndexedMesh>(this, move(buffers), indices, topology, (uint)indices.size(), verticesLocation);
-		}
-
-		Handle<InstancedMesh> GLGraphics::createInstancedMesh(MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && buffers, uint verticesCount, VertexTopology topology, uint verticesLocation)
-		{
-			return Handle<GLInstancedMesh>(this, instanceLayout, move(buffers), topology, verticesCount, verticesLocation);
-		}
-
-		Handle<InstancedMesh> GLGraphics::createInstancedMesh(MeshInputLayout * instanceLayout, ArrayList<MeshBuffer> && buffers, const VertexIndices & indices, uint verticesCount, VertexTopology topology, uint verticesLocation)
-		{
-			return Handle<GLInstancedIndexedMesh>(this, instanceLayout, move(buffers), indices, topology, (uint)indices.size(), verticesLocation);
+			return Handle<GLMesh>(this);
 		}
 
 		Handle<UniformAdapter> & GLGraphics::init(Handle<UniformAdapter> & adapter, const char * name, ShaderType shader, int index, size_t size)

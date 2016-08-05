@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------
 
-#include <opengl/OpenGL3_3.h>
+#include <opengl/GLObjects.h>
 #include <ui/UISpace.h>
 
 #include <iostream>

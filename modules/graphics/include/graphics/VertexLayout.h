@@ -18,82 +18,40 @@
 
 namespace Rapture
 {
-	class ShaderCode;
+	class Graphics3D;
 	class VertexElement;
 
-	api_class(graphics, Precached<string, VertexElement>);
-
-	class VertexElement : public Shared, public Precached<string, VertexElement>
+	class VertexElement : public Shared
 	{
-		friend class VertexLayout;
+		friend class Graphics3D;
 
 	public:
-		enum Type : int
-		{
-			Position = 0,
-			Color    = 1,
-			Normal   = 2,
-			Texcoord = 3,
-			Max
-		};
-
-		string id;
-		Type type;
-		uint index;
+		string key;
+		String semantic;
 		uint units;
 
-		static api(graphics) VertexElement pos2;
-		static api(graphics) VertexElement pos3;
-		static api(graphics) VertexElement color3;
-		static api(graphics) VertexElement color4;
-		static api(graphics) VertexElement secondaryColor3;
-		static api(graphics) VertexElement secondaryColor4;
-		static api(graphics) VertexElement tex;
-		static api(graphics) VertexElement normal;
-
-		static api(graphics) void writeKey(String & out, Type type, uint units);
-
 	protected:
-		VertexElement(const string & id, Type type, uint index, uint units) : Precached<string, VertexElement>(id),
-			id(id), type(type), index(index), units(units) {}
-	};
+		friend_owned_handle(VertexElement, Graphics3D);
 
-	inline void print(String & s, VertexElement::Type type)
-	{
-		switch(type)
-		{
-			case VertexElement::Position:
-				s << "p";
-				return;
-			case VertexElement::Color:
-				s << "c";
-				return;
-			case VertexElement::Normal:
-				s << "n";
-				return;
-			case VertexElement::Texcoord:
-				s << "t";
-				return;
-			default:
-				s << "?";
-				return;
-		}
-	}
+		VertexElement(const string & key, const string & semantic, uint units) : key(key), semantic(semantic), units(units) {}
+	};
 
 //---------------------------------------------------------------------------
 
 	class VertexLayout : public Shared
 	{
+		friend class Graphics3D;
+
 	public:
-		api(graphics) VertexLayout(const string & fingerprint);
-
-		virtual void apply() {}
-		virtual void accept(const ShaderCode *) {}
-
 		string fingerprint;
 		array_list<VertexElement *> elements;
 		uint units;
 		uint stride;
+
+	protected:
+		friend_owned_handle(VertexLayout, Graphics3D);
+
+		api(graphics) VertexLayout(Graphics3D * graphics, const string & fingerprint);
 	};
 }
 

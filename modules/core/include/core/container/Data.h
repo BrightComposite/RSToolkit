@@ -206,6 +206,14 @@ namespace Rapture
 			return this->ptr;
 		}
 
+		auto realloc(size_t size)
+		{
+			this->ptr = Memory<T>::reallocate(this->ptr, size);
+			this->size = size;
+
+			return this->ptr;
+		}
+
 		void set(const owned_data<T> & od)
 		{
 			Memory<void>::free(this->ptr);
@@ -372,6 +380,14 @@ namespace Rapture
 		{
 			Memory<void>::free(this->ptr);
 			this->ptr = Memory<void>::allocate(size);
+			this->size = size;
+
+			return this->ptr;
+		}
+
+		auto realloc(size_t size)
+		{
+			this->ptr = Memory<void>::reallocate(this->ptr, size);
 			this->size = size;
 
 			return this->ptr;

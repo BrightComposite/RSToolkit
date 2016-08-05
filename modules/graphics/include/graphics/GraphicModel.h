@@ -22,17 +22,17 @@ namespace Rapture
 	class GraphicModelView
 	{
 	public:
-		GraphicModelView(const Handle<Mesh> & mesh, const Handle<FxTechnique> & technique) :
+		GraphicModelView(const Handle<const Mesh> & mesh, const Handle<FxTechnique> & technique) :
 			mesh(mesh), technique(technique) {}
 
-		Handle<Mesh> mesh;
+		Handle<const Mesh> mesh;
 		Handle<FxTechnique> technique;
 	};
 
 	class GraphicModel : public Shared
 	{
 	public:
-		GraphicModel(Graphics3D * graphics, const Handle<Mesh> & mesh, const Handle<FxTechnique> & technique) :
+		GraphicModel(Graphics3D * graphics, const Handle<const Mesh> & mesh, const Handle<FxTechnique> & technique) :
 			graphics(graphics), view(mesh, technique) {}
 
 		Graphics3D * graphics;

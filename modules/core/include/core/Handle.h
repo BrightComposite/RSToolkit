@@ -28,12 +28,12 @@ namespace Rapture
 	template<class T>
 	struct PointerDeleter
 	{
-		static void free(T * ptr)
+		static void free(const T * ptr)
 		{
 			delete ptr;
 		}
 
-		void operator()(T * ptr)
+		void operator()(const T * ptr)
 		{
 			delete ptr;
 		}
@@ -705,6 +705,30 @@ namespace Rapture
 			return *this;
 		}
 
+		Handle & operator = (const Handle<const T> & h)
+		{
+			if(void_ptr(this) == void_ptr(&h))
+				return *this;
+
+			release();
+			_shared = h._shared;
+			keep();
+
+			return *this;
+		}
+
+		Handle & operator = (Handle<const T> && h)
+		{
+			if(void_ptr(this) == void_ptr(&h))
+				return *this;
+
+			release();
+			_shared = h._shared;
+			h._shared = nullptr;
+
+			return *this;
+		}
+
 		Handle & operator = (const T * shared)
 		{
 			release();
@@ -1020,10 +1044,7 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class U, useif<
-			based_on<U, T>::value, !is_const<U>::value
-			>
-		>
+		template<class U, useif<based_on<U, T>::value, !is_const<U>::value>>
 		UniqueHandle & operator = (UniqueHandle<U> && h)
 		{
 			if(void_ptr(this) == void_ptr(&h))
@@ -1032,7 +1053,7 @@ namespace Rapture
 			if(_inner)
 				delete _inner;
 
-			_inner = h._inner;
+			_inner = static_cast<T *>(h._inner);
 			h._inner = nullptr;
 
 			return *this;
@@ -1124,6 +1145,9 @@ namespace Rapture
 			return _inner;
 		}
 	};
+
+	template<class T, class ... A>
+	using Unique = UniqueHandle<T, A...>;
 
 	template<class T, class ... A, useif<can_construct<T, A...>::value>>
 	UniqueHandle<T> unique_handle(A &&... args)

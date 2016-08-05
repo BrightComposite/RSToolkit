@@ -19,10 +19,14 @@ module(SHARED)
 		domain(opengl)
 		
 		group(include Headers)
-		files(OpenGL3_3.h)
+		files(
+			GLObjects.h
+			OpenGL3_3.h
+		)
 
 		group(src Sources)
 		files(
+			GLMesh.cpp
 			GLObjects.cpp
 			GLSurfaces.cpp
 			OpenGL3_3.cpp

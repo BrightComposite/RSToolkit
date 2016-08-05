@@ -125,69 +125,24 @@ namespace Rapture
 
 #undef indices
 
-	VertexElement VertexElement::pos2("p2", VertexElement::Position, 0, 2);
-	VertexElement VertexElement::pos3("p3", VertexElement::Position, 0, 3);
-	VertexElement VertexElement::color3("c3", VertexElement::Color, 0, 3);
-	VertexElement VertexElement::color4("c4", VertexElement::Color, 0, 4);
-	VertexElement VertexElement::tex("t", VertexElement::Texcoord, 0, 2);
-	VertexElement VertexElement::normal("n", VertexElement::Normal, 0, 3);
-	VertexElement VertexElement::secondaryColor3("s3", VertexElement::Color, 1, 3);
-	VertexElement VertexElement::secondaryColor4("s4", VertexElement::Color, 1, 4);
-
 	void UniformData::apply() const
 	{
 		adapter->bind(*this);
 	}
 
-	VertexLayout::VertexLayout(const string & fingerprint) : fingerprint(fingerprint), units(0)
+	VertexLayout::VertexLayout(Graphics3D * graphics, const string & fingerprint) : fingerprint(fingerprint), units(0)
 	{
 		for(const auto & key : split(fingerprint))
 		{
-			auto & vie = VertexElement::get(key);
-			elements.push_back(vie);
-			units += vie->units;
-		}
-
-		stride = units * sizeof(float);
-	}
-
-	MIDLayout::MIDLayout(Graphics3D * graphics, const string & fingerprint) : fingerprint(fingerprint), units(0)
-	{
-		for(const auto & key : split(fingerprint))
-		{
-			auto & e = graphics->getMIDElement(key);
+			auto * e = graphics->getVertexElement(key);
 			elements.push_back(e);
 			units += e->units;
 		}
 
 		stride = units * sizeof(float);
 	}
-	/*
-	void MeshLayout::add(VertexLayout * l)
-	{
-		if(fingerprint.size() > 0)
-		{
-			layout = nullptr;
-			fingerprint += ' ' + l->fingerprint;
-			return;
-		}
-			
-		layout = l;
-		fingerprint = l->fingerprint;
-	}
 
-	void MeshLayout::update(Graphics3D * graphics)
-	{
-		if(layout == nullptr)
-			layout = graphics->getVertexLayout(fingerprint);
-	}
-	*/
-	void MeshInstance::setData(void * data)
-	{
-		mesh->setData(index, data);
-	}
-
-	static Handle<Mesh> createMesh(Graphics3D * graphics, const FigureData & data)
+	static Handle<const Mesh> createMesh(Graphics3D * graphics, const FigureData & data)
 	{
 		VertexData points;
 		auto & p = data.points;
@@ -213,6 +168,26 @@ namespace Rapture
 	}
 
 	Figure3D::Figure3D(Graphics3D * graphics, const FigureData & data) : Figure(graphics, data), view(createMesh(graphics, data), graphics->techniques2d.figure) {}
+
+	Graphics3D::Graphics3D()
+	{ 
+		setclass(Graphics3D); 
+
+		registerVertexElement("p2",   "position", 2);
+		registerVertexElement("p3",   "position", 3);
+		registerVertexElement("c3",   "color", 3);
+		registerVertexElement("c4",   "color", 4);
+		registerVertexElement("t",    "texcoord", 2);
+		registerVertexElement("n",    "normal", 3);
+		registerVertexElement("c3|0", "color0", 3);
+		registerVertexElement("c4|0", "color0", 4);
+		registerVertexElement("c3|1", "color1", 3);
+		registerVertexElement("c4|1", "color1", 4);
+		registerVertexElement("c3|2", "color2", 3);
+		registerVertexElement("c4|2", "color2", 4);
+		registerVertexElement("c3|3", "color3", 3);
+		registerVertexElement("c4|3", "color3", 4);
+	}
 
 	void Graphics3D::bind(const Handle<Texture> & texture, uint index)
 	{
@@ -344,9 +319,14 @@ namespace Rapture
 		auto & layout = _vertexLayouts[fingerprint];
 
 		if(layout == nullptr)
-			layout = createVertexLayout(fingerprint);
+			layout.init(this, fingerprint);
 
 		return layout;
+	}
+
+	VertexElement * Graphics3D::getVertexElement(const string & key)
+	{
+		return _vertexElements[key];
 	}
 
 	const Handle<ShaderProgram> & Graphics3D::getShaderProgram(const string & id)
@@ -357,6 +337,11 @@ namespace Rapture
 			throw Exception("Can't find program with id: ", id);
 
 		return program;
+	}
+
+	void Graphics3D::registerVertexElement(const string & key, const string & semantic, uint units)
+	{
+		_vertexElements[key].init(key, semantic, units);
 	}
 
 	void Graphics3D::initFacilities()
@@ -381,6 +366,8 @@ namespace Rapture
 		meshes3d.cube      = createMesh(cubeVB, VertexIndices::cube);
 		meshes3d.linecube  = createMesh(cubeVB, VertexIndices::linecube, VertexTopology::Lines);
 
+		checkForErrors();
+
 		techniques2d.rectangle.init(getShaderProgram("2d/rect"));
 		techniques2d.ellipse  .init(getShaderProgram("2d/ellipse"));
 		techniques2d.figure   .init(getShaderProgram("2d/figure"));
@@ -393,6 +380,8 @@ namespace Rapture
 		techniques3d.color     .init(getShaderProgram("3d/color"));
 		techniques3d.multicolor.init(getShaderProgram("3d/multicolor"));
 		techniques3d.texture   .init(getShaderProgram("3d/texture"));
+
+		checkForErrors();
 
 		updateUniform<Uniforms::Model>();
 		updateUniform<Uniforms::View>();

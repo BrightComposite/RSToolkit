@@ -1067,14 +1067,14 @@ namespace Rapture
 		return widen(print(object));
 	}
 
-	typedef list<string> StringList;
-	typedef list<wstring> WideStringList;
+	typedef array_list<string> StringList;
+	typedef array_list<wstring> WideStringList;
 
 	api(core) StringList split(const string & text, const char * sep = " \t");
-	api(core) StringList splitOnLines(const string & text, size_t lineLength, bool separateWords = true);
-
 	api(core) WideStringList split(const wstring & text, const wchar_t * sep = L" \t");
-	api(core) WideStringList splitOnLines(const wstring & text, size_t lineLength, bool separateWords = true);
+
+	api(core) StringList lines(const string & text, size_t lineLength, bool separateWords = true);
+	api(core) WideStringList lines(const wstring & text, size_t lineLength, bool separateWords = true);
 
 	inline String operator + (const char * s, const String & string)
 	{

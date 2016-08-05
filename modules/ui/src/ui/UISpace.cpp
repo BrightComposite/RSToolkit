@@ -281,6 +281,13 @@ namespace Rapture
 		SetCursorPos(a.x(), a.y());
 	}
 
+	void UISpace::mouseUpdate()
+	{
+		IntPoint pt;
+		acquireCursorPos(pt);
+		send<MouseUpdateMessage>(*this, pt.x, pt.y);
+	}
+
 	void UISpace::acquireCursorPos(IntPoint & pt) const
 	{
 		PointAdapter a;
@@ -377,25 +384,13 @@ namespace Rapture
 		}
 	}
 
-	void UISpace::read(Handle<MouseUpdateMessage> & msg)
+	void UISpace::read(Handle<MouseMoveMessage> & msg)
 	{
 		if(!_enabled)
 			return;
 
-		MouseButton buttons = MouseButton::None;
-
-		if(hi_bit_mask::state(GetKeyState(VK_LBUTTON)))
-			set_flag(MouseButton::Left, buttons);
-
-		if(hi_bit_mask::state(GetKeyState(VK_MBUTTON)))
-			set_flag(MouseButton::Middle, buttons);
-
-		if(hi_bit_mask::state(GetKeyState(VK_RBUTTON)))
-			set_flag(MouseButton::Right, buttons);
-
-		unpress(MouseButton(~buttons), msg->x, msg->y, 0);
-
-		Widget * w = _root->findAt({msg->x, msg->y});
+		_cursorPos = {msg->x, msg->y};
+		Widget * w = _root->findAt(_cursorPos);
 
 		if(w != _pointed)
 		{
@@ -406,7 +401,7 @@ namespace Rapture
 
 				if(_mouseState.isPressed())
 				{
-					buttons = MouseButton(_pointed->pressedButtons() & _mouseState.buttons());
+					MouseButton buttons = MouseButton(_pointed->pressedButtons() & _mouseState.buttons());
 
 					if(buttons != MouseButton::None)
 					{
@@ -441,11 +436,40 @@ namespace Rapture
 
 		_pointed = w;
 
-		IntPoint oldPos = _cursorPos;
-		_cursorPos = {msg->x, msg->y};
-		bool mouseMoved = (_cursorPos - oldPos) != IntPoint{0, 0};
+		if(_pointed != nullptr)
+		{
+			int x = msg->x;
+			int y = msg->y;
 
-		if(mouseMoved)
+			msg->x -= _pointed->absLeft();
+			msg->y -= _pointed->absTop();
+
+			resend(msg, *_pointed);
+
+			msg->x = x;
+			msg->y = y;
+		}
+	}
+
+	void UISpace::read(Handle<MouseUpdateMessage> & msg)
+	{
+		if(!_enabled)
+			return;
+
+		MouseButton buttons = MouseButton::None;
+
+		if(hi_bit_mask::state(GetKeyState(VK_LBUTTON)))
+			set_flag(MouseButton::Left, buttons);
+
+		if(hi_bit_mask::state(GetKeyState(VK_MBUTTON)))
+			set_flag(MouseButton::Middle, buttons);
+
+		if(hi_bit_mask::state(GetKeyState(VK_RBUTTON)))
+			set_flag(MouseButton::Right, buttons);
+
+		unpress(MouseButton(~buttons), msg->x, msg->y, 0);
+
+		if(_cursorPos != IntPoint{msg->x, msg->y})
 			send<MouseMoveMessage>(*this, msg->x, msg->y);
 
 		if(_pointed != nullptr)
@@ -457,9 +481,6 @@ namespace Rapture
 			msg->y -= _pointed->absTop();
 
 			resend(msg, *_pointed);
-
-			if(mouseMoved)
-				send<MouseMoveMessage>(*_pointed, msg->x, msg->y);
 
 			msg->x = x;
 			msg->y = y;

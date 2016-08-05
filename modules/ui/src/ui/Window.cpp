@@ -26,8 +26,6 @@ namespace Rapture
 		SetWindowLongPtrW(_handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 		ShowWindow(_handle, SW_HIDE);
 
-		_timer = SetTimer(_handle, 0, 25, nullptr);
-
 	#define HOTKEY_FULLSCREEN 0x20
 
 		registerHotkey(HOTKEY_FULLSCREEN, VK_RETURN, MOD_ALT);
@@ -80,7 +78,6 @@ namespace Rapture
 
 			case WM_DESTROY:
 			{
-				KillTimer(hWnd, w._timer);
 				send<WindowCloseMessage>(w);
 				break;
 			}
@@ -204,18 +201,6 @@ namespace Rapture
 			case WM_MOUSEWHEEL:
 			{
 				send<MouseWheelMessage>(root, GET_WHEEL_DELTA_WPARAM(wParam), (int)LOWORD(lParam), (int)HIWORD(lParam), (int)LOWORD(wParam));
-				break;
-			}
-
-			case WM_TIMER:
-			{
-				if(w._isActive)
-				{
-					IntPoint pt;
-					w.acquireCursorPos(pt);
-					send<MouseUpdateMessage>(w, pt.x, pt.y);
-				}
-
 				break;
 			}
 

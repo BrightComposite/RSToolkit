@@ -123,7 +123,6 @@ namespace Rapture
 		WINDOWPLACEMENT _fullscreenPlacement = {0};
 		WINDOWPLACEMENT _windowedPlacement = {0};
 
-		UINT_PTR _timer;
 		WindowState _state = WindowState::Hidden;
 		BorderStyle _borderStyle = BorderStyle::Normal;
 

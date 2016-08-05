@@ -112,6 +112,7 @@ namespace Rapture
 
 		api(ui) const IntPoint & cursorPos() const;
 		api(ui) void setCursorPos(const IntPoint & pt);
+		api(ui) void mouseUpdate();
 
 		bool isCursorClipped()
 		{
@@ -128,6 +129,7 @@ namespace Rapture
 		virtual api(ui) void read(Handle<CharMessage> & msg);
 		virtual api(ui) void read(Handle<KeyUpMessage> & msg);
 		virtual api(ui) void read(Handle<MouseDownMessage> & msg);
+		virtual api(ui) void read(Handle<MouseMoveMessage> & msg);
 		virtual api(ui) void read(Handle<MouseUpdateMessage> & msg);
 		virtual api(ui) void read(Handle<MouseUpMessage> & msg);
 		virtual api(ui) void read(Handle<UIMoveMessage> & msg);

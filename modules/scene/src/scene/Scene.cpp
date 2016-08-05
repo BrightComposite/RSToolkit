@@ -155,6 +155,8 @@ namespace Rapture
 	{
 		if(clock::now() - _lastTick > _tickLength)
 		{
+			space().mouseUpdate();
+
 			_lastTick = clock::now();
 			ticks_t ticks = (_lastTick - _firstTick) / _tickLength;
 

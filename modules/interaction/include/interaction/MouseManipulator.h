@@ -26,13 +26,13 @@ namespace Rapture
 		virtual api(interaction) void toggle();
 
 	protected:
-		api(interaction) void onMouseUpdate(Handle<MouseUpdateMessage> &, UISpace &);
+		api(interaction) void callback(Handle<MouseMoveMessage> &, UISpace &);
 
 		bool _enabled = false;
 		bool _wait = false;
 
 		IntPoint _initial;
-		FloatPoint _delta = {};
+		FloatPoint _current = {};
 		IntPoint _old = {};
 	};
 

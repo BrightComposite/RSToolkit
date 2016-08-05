@@ -11,7 +11,7 @@ namespace Rapture
 
 	MouseManipulator::MouseManipulator(Widget * w) : WidgetComponent(w)
 	{
-		connect(this, &MouseManipulator::onMouseUpdate, *w->space());
+		connect(this, &MouseManipulator::callback, *w->space());
 	}
 
 	MouseManipulator::~MouseManipulator()
@@ -21,40 +21,27 @@ namespace Rapture
 
 	FloatPoint MouseManipulator::fetchData()
 	{
-		_wait = false;
-		auto t = _delta;
-		_delta *= 0.8f;
-		return t;
+		if(!_enabled)
+			return {};
+
+		FloatPoint delta = _current - center;
+		// remove peaks
+		delta.x = fmath::clamp(delta.x, -center.x * 0.8f, center.x * 0.8f);
+		delta.y = fmath::clamp(delta.y, -center.y * 0.8f, center.y * 0.8f);
+
+		// increase smoothness
+		delta.x = fmath::pow(delta.x / center.x, 3) * center.x;
+		delta.y = fmath::pow(delta.y / center.y, 3) * center.y;
+		
+		_widget->space()->setCursorPos(center);
+		_current = center;
+
+		return delta;
 	}
 
-	void MouseManipulator::onMouseUpdate(Handle<MouseUpdateMessage> & msg, UISpace & space)
+	void MouseManipulator::callback(Handle<MouseMoveMessage> & msg, UISpace & space)
 	{
-		if(_wait || !_enabled)
-			return;
-
-		IntPoint current {msg->x, msg->y};
-		_delta = current - _old;
-
-		if(_delta != FloatPoint{})
-		{
-			//IntPoint s = sqr(current - center);
-
-			//if(s.x + s.y > sqr(center.x / 2))
-			//{
-				current = center;
-				_widget->space()->setCursorPos(center);
-			//}
-
-			_old = current;
-
-			// remove peaks
-			_delta.x = fmath::clamp(_delta.x, -center.x * 0.4f, center.x * 0.4f);
-			_delta.y = fmath::clamp(_delta.y, -center.y * 0.4f, center.y * 0.4f);
-			
-			// increase smoothness
-			_delta.x = fmath::pow(_delta.x / center.x, 3) * center.x;
-			_delta.y = fmath::pow(_delta.y / center.y, 3) * center.y;
-		}
+		_current.set(msg->x, msg->y);
 	}
 
 	void MouseManipulator::enable()
@@ -73,17 +60,14 @@ namespace Rapture
 	{
 		if(!_enabled)
 		{
-			_widget->space()->hideCursor();
 			_initial = _widget->space()->cursorPos();
-			_delta = {};
-			_wait = true;
-			_old = center;
+			_current = center;
+			_widget->space()->hideCursor();
 			_widget->space()->setCursorPos(center);
 			_widget->space()->clipCursor({IntPoint{0, 0}, center * 2 + IntPoint{1, 1}});
 		}
 		else
 		{
-			_delta = {};
 			_widget->space()->unclipCursor();
 			_widget->space()->setCursorPos(_initial);
 			_widget->space()->showCursor();

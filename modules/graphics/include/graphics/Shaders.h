@@ -9,6 +9,7 @@
 
 #include "Graphics.h"
 #include "VertexLayout.h"
+#include "ShaderCode.h"
 
 //---------------------------------------------------------------------------
 
@@ -63,6 +64,7 @@ namespace Rapture
 		friend_owned_handle(FxTechnique, Graphics3D);
 
 	public:
+		FxTechnique(const Handle<ShaderProgram> & program) : program(program) {}
 		virtual ~FxTechnique() {}
 
 		virtual void apply(uint pass = 0) const
@@ -71,8 +73,6 @@ namespace Rapture
 		}
 
 	protected:
-		FxTechnique(const Handle<ShaderProgram> & program) : program(program) {}
-
 		Handle<ShaderProgram> program;
 		uint passes = 0;
 	};

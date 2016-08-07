@@ -88,7 +88,16 @@ namespace Rapture
 
 		api(graphics) void registerVertexElement(const string & key, const string & semantic, uint units);
 
+		template<size_t N>
+		void addShaderPrograms(const RawShaderCode (&codeSets)[N])
+		{
+			addShaderPrograms(codeSets, N);
+		}
+
+		api(graphics) void addShaderPrograms(const RawShaderCode * codeSets, size_t count);
 		api(graphics) const Handle<ShaderProgram> & getShaderProgram(const string & id);
+
+		virtual void addShaderProgram(const string & id, VertexLayout * layout, ShaderCodeSet & codeSet) = 0;
 
 		virtual Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) = 0;
 		virtual Handle<Mesh> createMesh() = 0;

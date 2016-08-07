@@ -35,6 +35,7 @@ namespace Rapture
 
 		virtual api(scene) void setRotation(const floatq & rot) override;
 		virtual api(scene) void rotate(const floatq & rot) override;
+		virtual api(scene) void move(const floatv & offset) override;
 
 		float pitch() const
 		{
@@ -87,6 +88,9 @@ namespace Rapture
 	protected:
 		float _zoom = 0.01f;
 		float _fov = 90.0f;
+		fquat _pitch;
+		fquat _yaw;
+		fquat _roll;
 		fvec  _angles = {0.0f, 0.0f, 0.0f};
 		ProjectionMode _projectionMode = ProjectionMode::Ortho;
 	};

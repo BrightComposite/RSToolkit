@@ -45,7 +45,7 @@ cmake_minimum_required(VERSION 3.0)
 		
 	if("${ShaderType}" STREQUAL "vs")
 		file(READ ${Input} ShaderCode)
-		string(REGEX MATCH "!vertex:[ a-z2-4]*" layout ${ShaderCode})
+		string(REGEX MATCH "!vertex:[ a-z2-4-]*" layout ${ShaderCode})
 		
 		if(NOT "${layout}" STREQUAL "")
 			string(REGEX REPLACE "!vertex:[ ]*" "" layout ${layout})

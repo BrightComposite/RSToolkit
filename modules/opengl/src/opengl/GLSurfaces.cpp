@@ -93,13 +93,12 @@ namespace Rapture
 		
 		void UISurface::present() const
 		{
-			glFlush();
 			SwapBuffers(_deviceCtx);
 		}
 
 		void UISurface::requestData(ImageData * output) const
 		{
-			throw Exception("'requestData' method for OpenGL UISurface is not implemente yet!");
+			throw Exception("'requestData' method for OpenGL UISurface is not implemented yet!");
 
 			if(output == nullptr)
 				throw Exception("Output image buffer should be not-null!");

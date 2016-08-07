@@ -103,7 +103,9 @@ namespace Rapture
 
 			virtual api(opengl3_3) Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) override;
 			virtual api(opengl3_3) Handle<Mesh> createMesh() override;
-			
+
+			virtual api(opengl3_3) void addShaderProgram(const string & id, VertexLayout * layout, ShaderCodeSet & codeSet) override;
+
 			virtual Handle<GraphicsDebug> getDebug() const override
 			{
 				return nullptr;

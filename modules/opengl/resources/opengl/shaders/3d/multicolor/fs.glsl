@@ -3,7 +3,6 @@
  */
 #version 330 core
 
-
 in Vertex 
 {
 	vec4 color;

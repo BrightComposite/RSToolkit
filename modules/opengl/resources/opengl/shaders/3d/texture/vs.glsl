@@ -29,5 +29,5 @@ out Vertex
 void main(void)
 {
     output.texcoord = texcoord;
-	gl_Position = vec4(position, 1.0) * model * view * projection;
+    gl_Position = projection * view * model * vec4(position, 1.0);
 }

@@ -40,14 +40,16 @@ namespace Rapture
 
 			virtual void draw(const GLMesh * mesh) const
 			{
+				glBindBuffer(GL_ARRAY_BUFFER, buffer);
+				glBufferData(GL_ARRAY_BUFFER, data.size, data.ptr, GL_STATIC_DRAW);
 				glDrawArraysInstanced(mesh->topology(), mesh->offset(), mesh->verticesCount(), instances.size());
 			}
 
 			VertexLayout * layout = nullptr;
-			array_list<MeshInstance> instances;
+			ArrayList<MeshInstance> instances;
 			uint buffer;
 			uint offset;
-			owned_data<void> data;
+			owned_data<byte> data;
 		};
 
 		struct GLInstancedIndexedMeshImpl : GLIndexedMeshImpl, GLInstancedMeshImpl
@@ -70,6 +72,8 @@ namespace Rapture
 
 			virtual void draw(const GLMesh * mesh) const final
 			{
+				glBindBuffer(GL_ARRAY_BUFFER, buffer);
+				glBufferData(GL_ARRAY_BUFFER, data.size, data.ptr, GL_STATIC_DRAW);
 				glDrawElementsInstanced(mesh->topology(), indicesCount, GL_UNSIGNED_SHORT, indicesOffset, instances.size());
 			}
 		};
@@ -115,7 +119,7 @@ namespace Rapture
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
 		}
 
-		GLMesh::GLMesh(GLGraphics * graphics) : _graphics(graphics)
+		GLMesh::GLMesh(GLGraphics * graphics) : _graphics(graphics), _topology(GL_TRIANGLES)
 		{
 			glGenVertexArrays(1, &_id);
 		}
@@ -189,13 +193,13 @@ namespace Rapture
 		{
 			glBindVertexArray(_id);
 
-			float * pointer = 0;
 			uint k = 0;
 
 			for(auto & b : _buffers)
 			{
 				auto * layout = b->layout;
 				b->apply();
+				float * pointer = 0;
 
 				for(size_t i = 0; i < layout->elements.size(); ++i)
 				{
@@ -216,6 +220,7 @@ namespace Rapture
 			{
 				auto * impl = _impl->upcast<GLInstancedMeshImpl>();
 				auto * layout = impl->layout;
+				float * pointer = 0;
 				glBindBuffer(GL_ARRAY_BUFFER, impl->buffer);
 
 				for(size_t i = 0; i < layout->elements.size(); ++i)
@@ -225,7 +230,7 @@ namespace Rapture
 
 					for(uint j = 0; j < count; ++j, ++k)
 					{
-						auto u = (j == count - 1) ? units % 4 : 4;
+						auto u = (j == count - 1) ? ((units - 1) % 4) + 1 : 4;
 						glEnableVertexAttribArray(k);
 						glVertexAttribPointer(k, u, GL_FLOAT, GL_FALSE, layout->stride, pointer);
 						glVertexAttribDivisor(k, 1);
@@ -262,6 +267,7 @@ namespace Rapture
 			auto impl = _impl->upcast<GLInstancedMeshImpl>();
 			impl->layout = layout;
 			impl->data.alloc(layout->stride * 16);
+			impl->offset = 0;
 
 			glGenBuffers(1, &impl->buffer);
 			glBindBuffer(GL_ARRAY_BUFFER, impl->buffer);
@@ -276,9 +282,19 @@ namespace Rapture
 				throw Exception("Can't create instance of a mesh without an instance data layout!");
 
 			auto impl = _impl->upcast<GLInstancedMeshImpl>();
-			auto & b = *impl->instances.emplace(impl->instances.end());
+			auto & b = impl->instances.emplace(impl->instances.end())->init();
 
-			return &b;
+			if(impl->offset + impl->layout->stride > impl->data.size)
+			{
+				impl->data.realloc(impl->data.size * 2);
+				glBindBuffer(GL_ARRAY_BUFFER, impl->buffer);
+				glBufferData(GL_ARRAY_BUFFER, impl->data.size, impl->data.ptr, GL_STATIC_DRAW);
+			}
+
+			b->data.set(impl->data.ptr + impl->offset, impl->layout->stride);
+			impl->offset += impl->layout->stride;
+			
+			return b;
 		}
 
 		void GLMesh::draw() const

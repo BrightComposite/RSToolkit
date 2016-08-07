@@ -102,8 +102,8 @@ if(WIN32)
 			endforeach()
 			
 			set(${ShaderGroup}_types CACHE INTERNAL "" FORCE)
-			set(ShaderCodeUnits "\tstatic const RFX_SHADER_CODE_UNIT shader_code_${ShaderGroup}[]{${ShaderCodeUnits}};\n")
-				
+			set(ShaderCodeUnits "\tstatic const RawShaderCodeUnit shader_code_${ShaderGroup}[]{${ShaderCodeUnits}};\n")
+			
 			if("${CONTENTS}" STREQUAL "")
 				set(CONTENTS "${ShaderCodeUnits}")
 			else()
@@ -120,7 +120,7 @@ if(WIN32)
 		endforeach()
 		
 		file(READ ${HEADER_FILE} HEADER)
-		set(CONTENTS "${HEADER}\n${CONTENTS}\n\tstatic const RFX_SHADER_CODE_SET shaders[] {\n${ShaderSetArray}\n\t};")
+		set(CONTENTS "${HEADER}\n${CONTENTS}\n\tstatic const RawShaderCode shaders[] {\n${ShaderSetArray}\n\t};")
 		set(HEADER)
 		
 		collect_files(outfile ${out})

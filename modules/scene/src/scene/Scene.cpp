@@ -218,22 +218,33 @@ namespace Rapture
 		_rot->rotateBy(rot);
 	}
 
+	void Camera::move(const floatv & offset)
+	{
+		*_pos += _yaw->applyTo(offset);
+	}
+
 	void Camera::setPitch(float value)
 	{
 		_angles->x = fmath::clamp(value, -fmath::half_pi, fmath::half_pi);
-		_rot->fromEuler(_angles);
+		_pitch = fquat(floatv::right, _angles->x);
+
+		_rot = *_roll * *_yaw * *_pitch;
 	}
 
 	void Camera::setYaw(float value)
 	{
 		_angles->y = fmath::rmod(value);
-		_rot->fromEuler(_angles);
+		_yaw = fquat(floatv::up, _angles->y);
+
+		_rot = *_roll * *_yaw * *_pitch;
 	}
 
 	void Camera::setRoll(float value)
 	{
 		_angles->z = value;
-		_rot->fromEuler(_angles);
+		_roll = fquat(floatv::forward, _angles->z);
+
+		_rot = *_roll * *_yaw * *_pitch;
 	}
 
 	void Camera::setAngles(float pitch, float yaw, float roll)
@@ -242,7 +253,11 @@ namespace Rapture
 		_angles->y = fmath::rmod(yaw);
 		_angles->z = roll;
 
-		_rot = floatq(floatv::up, _angles->y) * floatq(floatv::right, _angles->x);
+		_pitch = fquat(floatv::right, _angles->x);
+		_yaw   = fquat(floatv::up, _angles->y);
+		_roll  = fquat(floatv::forward, _angles->z);
+
+		_rot = *_roll * *_yaw * *_pitch;
 	}
 
 	void Camera::addPitch(float value)

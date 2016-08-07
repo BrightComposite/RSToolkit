@@ -27,6 +27,7 @@ module(SHARED)
 			Graphics3D.h
 			Mesh.h
 			ScreenCoord.h
+			ShaderCode.h
 			Shaders.h
 			Surface.h
 			Uniform.h

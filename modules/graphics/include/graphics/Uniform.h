@@ -105,8 +105,14 @@ namespace Rapture
 
 	uniform_class
 	(
+		Color, 0, Pixel,
+		(colorf, color)
+	);
+
+	uniform_class
+	(
 		BrushOptions, 0, Pixel,
-		(Color, color)
+		(colorf, color)
 		(float, lineWidth)
 	);
 

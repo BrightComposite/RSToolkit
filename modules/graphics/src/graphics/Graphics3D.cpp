@@ -179,14 +179,14 @@ namespace Rapture
 		registerVertexElement("c4",   "color", 4);
 		registerVertexElement("t",    "texcoord", 2);
 		registerVertexElement("n",    "normal", 3);
-		registerVertexElement("c3|0", "color0", 3);
-		registerVertexElement("c4|0", "color0", 4);
-		registerVertexElement("c3|1", "color1", 3);
-		registerVertexElement("c4|1", "color1", 4);
-		registerVertexElement("c3|2", "color2", 3);
-		registerVertexElement("c4|2", "color2", 4);
-		registerVertexElement("c3|3", "color3", 3);
-		registerVertexElement("c4|3", "color3", 4);
+		registerVertexElement("c3-0", "color0", 3);
+		registerVertexElement("c4-0", "color0", 4);
+		registerVertexElement("c3-1", "color1", 3);
+		registerVertexElement("c4-1", "color1", 4);
+		registerVertexElement("c3-2", "color2", 3);
+		registerVertexElement("c4-2", "color2", 4);
+		registerVertexElement("c3-3", "color3", 3);
+		registerVertexElement("c4-3", "color3", 4);
 	}
 
 	void Graphics3D::bind(const Handle<Texture> & texture, uint index)
@@ -327,6 +327,23 @@ namespace Rapture
 	VertexElement * Graphics3D::getVertexElement(const string & key)
 	{
 		return _vertexElements[key];
+	}
+
+	void Graphics3D::addShaderPrograms(const RawShaderCode * codeSets, size_t count)
+	{
+		for(size_t i = 0; i < count; ++i)
+		{
+			auto & shader = codeSets[i];
+			ShaderCodeSet codeSet;
+
+			for(int j = 0; j < shader.count; ++j)
+			{
+				auto & unit = shader.units[j];
+				codeSet.insert({ShaderType(unit.type), handle<ShaderCode>(unit.data, unit.size)});
+			}
+
+			addShaderProgram(shader.id, getVertexLayout(shader.layout), codeSet);
+		}
 	}
 
 	const Handle<ShaderProgram> & Graphics3D::getShaderProgram(const string & id)

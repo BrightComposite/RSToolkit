@@ -136,27 +136,24 @@ namespace Rapture
 			if(dc == nullptr)
 				throw Exception("Can't set pixel format, device context is null!");
 
-			PIXELFORMATDESCRIPTOR pfd;
-			memset(&pfd, 0, sizeof(pfd));
+			PIXELFORMATDESCRIPTOR pfd; 
+			
+			const int attribs[] = 
+			{ 
+				WGL_DRAW_TO_WINDOW_ARB, GL_TRUE, 
+				WGL_SUPPORT_OPENGL_ARB, GL_TRUE, 
+				WGL_DOUBLE_BUFFER_ARB, GL_TRUE, 
+				WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB, 
+				WGL_COLOR_BITS_ARB, 32, 
+				WGL_DEPTH_BITS_ARB, 24, 
+				WGL_STENCIL_BITS_ARB, 8, 
+				0
+			}; 
 
-			pfd.nSize = sizeof(pfd);
-			pfd.nVersion = 1;
-			pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-			pfd.iPixelType = PFD_TYPE_RGBA;
-			pfd.cColorBits = 32;
-			pfd.cDepthBits = 24;
+			int pixelFormat, numFormats; 
+			wglChoosePixelFormatARB(dc, attribs, NULL, 1, &pixelFormat, (UINT*)&numFormats); 
 
-			int format = ::ChoosePixelFormat(dc, &pfd);
-
-			if(format == 0)
-			{
-				format = 1;
-
-				if(::DescribePixelFormat(dc, format, sizeof(pfd), &pfd) == FALSE)
-					throw Exception("Can't describe pixel format!");
-			}
-
-			if(::SetPixelFormat(dc, format, &pfd) != TRUE)
+			if(SetPixelFormat(dc, pixelFormat, &pfd) == FALSE)
 				throw Exception("Can't set pixel format! Call to SetPixelFormat failed");
 		}
 
@@ -267,7 +264,25 @@ namespace Rapture
 		{
 			_wnd = createEmptyWindowHandle();
 			_device = ::GetDC(_wnd);
-			setPixelFormat(_device);
+
+			PIXELFORMATDESCRIPTOR pfd; 
+			memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR)); 
+
+			pfd.nSize      = sizeof(PIXELFORMATDESCRIPTOR); 
+			pfd.nVersion   = 1; 
+			pfd.dwFlags    = PFD_DOUBLEBUFFER | PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW; 
+			pfd.iPixelType = PFD_TYPE_RGBA; 
+			pfd.cColorBits = 32; 
+			pfd.cDepthBits = 32; 
+			pfd.iLayerType = PFD_MAIN_PLANE; 
+
+			int pixelFormat = ChoosePixelFormat(_device, &pfd);
+
+			if(pixelFormat == 0)
+				throw Exception("Can't choose pixel format!");
+
+			if(SetPixelFormat(_device, pixelFormat, &pfd) == FALSE)
+				throw Exception("Can't set pixel format! Call to SetPixelFormat failed");
 
 			auto _tmpcontext = wglCreateContext(_device);
 
@@ -279,6 +294,18 @@ namespace Rapture
 
 			if(error > 0)
 				throw Exception("Can't initialize GLEW! ", (const char *)glewGetErrorString(error));
+			
+			int major = glGetInteger(GL_MAJOR_VERSION);
+			int minor = glGetInteger(GL_MINOR_VERSION);
+
+			wglMakeCurrent(nullptr, nullptr);
+			wglDeleteContext(_tmpcontext);
+			DestroyWindow(_wnd);
+
+			_wnd = createEmptyWindowHandle();
+			_device = ::GetDC(_wnd);
+
+			setPixelFormat(_device);
 
 			int flags = 0;
 
@@ -287,8 +314,8 @@ namespace Rapture
 		#endif
 
 			int attribs[] = {
-				WGL_CONTEXT_MAJOR_VERSION_ARB, glGetInteger(GL_MAJOR_VERSION),
-				WGL_CONTEXT_MINOR_VERSION_ARB, glGetInteger(GL_MINOR_VERSION),
+				WGL_CONTEXT_MAJOR_VERSION_ARB, major,
+				WGL_CONTEXT_MINOR_VERSION_ARB, minor,
 				WGL_CONTEXT_FLAGS_ARB,         flags,
 				WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 				0
@@ -299,8 +326,6 @@ namespace Rapture
 			if(_context == nullptr || wglMakeCurrent(_device, _context) == GL_FALSE)
 				throw Exception("Can't create OpenGL render context!");
 
-			wglDeleteContext(_tmpcontext);
-
 			checkForErrors();
 
 			glEnable(GL_DEPTH_TEST);
@@ -310,7 +335,6 @@ namespace Rapture
 			glEnable(GL_CULL_FACE);
 			glEnable(GL_SCISSOR_TEST);
 
-			glCullFace(GL_BACK);
 			glFrontFace(GL_CW);
 
 			glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
@@ -401,6 +425,11 @@ namespace Rapture
 		Handle<Surface> GLGraphics::createSurface(const IntSize & size, Handle<Image> & image)
 		{
 			return Handle<TextureSurface>(this, size, image);
+		}
+
+		void GLGraphics::addShaderProgram(const string & id, VertexLayout * layout, ShaderCodeSet & codeSet)
+		{
+			_shaderPrograms[id] = handle<GLShaderProgram>(this, id, layout, codeSet);
 		}
 
 		void GLGraphics::present() const

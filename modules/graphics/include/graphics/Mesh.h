@@ -76,6 +76,28 @@ namespace Rapture
 			Memory<void>::move(data.ptr, contents.pointer(), data.size);
 		}
 
+		template<class U>
+		void fill(size_t offset, const Contents<U> & contents)
+		{
+			Memory<void>::move(reinterpret_cast<byte *>(data.ptr) + offset, contents.pointer(), data.size);
+		}
+
+		template<class H, class ... T, useif<sizeof...(T) != 0>>
+		void fill(const Contents<H> & contents, const Contents<T> &... other)
+		{
+			fill(contents);
+			fill(data.size, other...);
+		}
+
+		template<class H, class ... T, useif<sizeof...(T) != 0>>
+		void fill(size_t offset, const Contents<H> & contents, const Contents<T> &... other)
+		{
+			fill(offset, contents);
+			fill(offset + data.size, other...);
+		}
+
+		void fill(size_t offset) {}
+
 		data<void> data;
 	};
 

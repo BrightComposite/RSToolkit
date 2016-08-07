@@ -210,7 +210,7 @@ namespace Rapture
 
 		virtual void move(const floatv & offset) override
 		{
-			*_pos += offset.blend<1, 0, 1, 0>(_rot->applyTo(offset.mask<1, 0, 1, 0>()));
+			*_pos += _rot->applyTo(offset);
 		}
 
 		virtual void rotate(const floatq & rot) override

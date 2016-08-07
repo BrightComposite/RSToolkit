@@ -22,5 +22,5 @@ in vec3 position;
 
 void main(void)
 {
-    gl_Position = vec4(position, 1.0) * model * view * projection;
+    gl_Position = projection * view * model * vec4(position, 1.0);
 }

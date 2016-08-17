@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------
 
 #include <graphics/image/ImageData.h>
-#include <core/container/Map.h>
+#include <container/Map.h>
 #include <core/addition/Singleton.h>
 #include <core/String.h>
 #include <core/Exception.h>
@@ -139,8 +139,8 @@ namespace Rapture
 		}
 
 	protected:
-		map<string, ImageDecoder *> decoders;
-		map<string, ImageEncoder *> encoders;
+		dictionary<string, ImageDecoder *> decoders;
+		dictionary<string, ImageEncoder *> encoders;
 	};
 }
 

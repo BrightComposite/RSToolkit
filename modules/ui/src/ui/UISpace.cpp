@@ -128,7 +128,7 @@ namespace Rapture
 		{
 			auto & r = *i;
 
-			if(rect.isIntersecting(r))
+			if(rect.intersects(r))
 			{
 				r.include(rect);
 				return;
@@ -276,6 +276,10 @@ namespace Rapture
 	void UISpace::setCursorPos(const IntPoint & pt)
 	{
 		_cursorPos = pt;
+
+		if(!_active)
+			return;
+
 		PointAdapter a(_cursorPos);
 		ClientToScreen(_handle, &a);
 		SetCursorPos(a.x(), a.y());
@@ -283,6 +287,9 @@ namespace Rapture
 
 	void UISpace::mouseUpdate()
 	{
+		if(!_active)
+			return;
+
 		IntPoint pt;
 		acquireCursorPos(pt);
 		send<MouseUpdateMessage>(*this, pt.x, pt.y);
@@ -305,12 +312,15 @@ namespace Rapture
 
 	void UISpace::updateCursorClipRect()
 	{
+		if(!_active)
+			return;
+
 		RectAdapter a(_cursorClipRect);
 
 		ClientToScreen(_handle, &a.leftTop());
 		ClientToScreen(_handle, &a.rightBottom());
-		_clippedCursor = ClipCursor(&a) == TRUE;
 
+		_clippedCursor = ClipCursor(&a) == TRUE;
 		acquireCursorPos(_cursorPos);
 	}
 

@@ -27,8 +27,6 @@ namespace Rapture
 	template <> const int64	 IntrinNofrac<int64>	::value = 0;
 	template <> const float  IntrinNofrac<float>	::value = 8388608.0f; // float(0x80'0000)
 
-	//const Intrinsic<byte, 4>  ::inner Intrinsic<byte, 4>  ::maximum  = IntrinsicMask<byte,   IntrinMax,      mk_mask4(1, 1, 1, 1)>::get();
-	//const Intrinsic<byte, 4>  ::inner Intrinsic<byte, 4>  ::signmask = IntrinsicMask<byte,   IntrinSignmask, mk_mask4(1, 1, 1, 1)>::get();
 	const Intrinsic<int, 4>   ::inner Intrinsic<int, 4>   ::maximum  = IntrinsicMask<int,    IntrinMax,      mk_mask4(1, 1, 1, 1)>::get();
 	const Intrinsic<int, 4>   ::inner Intrinsic<int, 4>   ::signmask = IntrinsicMask<int,    IntrinSignmask, mk_mask4(1, 1, 1, 1)>::get();
 	const Intrinsic<float, 4> ::inner Intrinsic<float, 4> ::signmask = IntrinsicMask<float,  IntrinSignmask, mk_mask4(1, 1, 1, 1)>::get();

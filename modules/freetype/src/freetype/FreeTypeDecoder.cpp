@@ -97,7 +97,7 @@ namespace Rapture
 
 		Handle<ByteData> data;
 		FT_Face face;
-		mutable map<const Graphics *, map<int, UnorderedMap<wchar_t, Symbol>>> _cache;
+		mutable dictionary<const Graphics *, dictionary<int, Map<wchar_t, Symbol>>> _cache;
 	};
 
 	FreeTypeDecoder::FreeTypeDecoder()

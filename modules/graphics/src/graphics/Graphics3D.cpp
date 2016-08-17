@@ -99,6 +99,39 @@ namespace Rapture
 		/*  Left  */ -1.0f, -1.0f, -1.0f,   0.0f,  1.0f,  1.0f,  1.0f, /**/ -1.0f, -1.0f,  1.0f,   0.0f,  1.0f,  1.0f,  1.0f, /**/ -1.0f,  1.0f,  1.0f,   0.0f,  1.0f,  1.0f,  1.0f, /**/ -1.0f,  1.0f, -1.0f,   0.0f,  1.0f,  1.0f,  1.0f
 	});
 
+	const VertexData VertexData::normalcube({
+		/* Front  */ -1.0f, -1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	/**/  1.0f, -1.0f,  1.0f, 	0.0f,  0.0f,  1.0f,	/**/  1.0f,  1.0f,  1.0f, 	0.0f,  0.0f,  1.0f,	/**/ -1.0f,  1.0f,  1.0f,	0.0f,  0.0f,  1.0f, 
+		/*  Back  */ -1.0f, -1.0f, -1.0f,	0.0f,  0.0f, -1.0f,	/**/ -1.0f,  1.0f, -1.0f,	0.0f,  0.0f, -1.0f,	/**/  1.0f,  1.0f, -1.0f,	0.0f,  0.0f, -1.0f,	/**/  1.0f, -1.0f, -1.0f,	0.0f,  0.0f, -1.0f,	
+
+		/*  Top   */ -1.0f,  1.0f, -1.0f,	0.0f,  1.0f,  0.0f,	/**/ -1.0f,  1.0f,  1.0f,	0.0f,  1.0f,  0.0f,	/**/  1.0f,  1.0f,  1.0f,	0.0f,  1.0f,  0.0f,	/**/  1.0f,  1.0f, -1.0f,	0.0f,  1.0f,  0.0f,	
+		/* Bottom */ -1.0f, -1.0f, -1.0f,	0.0f, -1.0f,  0.0f,	/**/  1.0f, -1.0f, -1.0f,	0.0f, -1.0f,  0.0f,	/**/  1.0f, -1.0f,  1.0f,	0.0f, -1.0f,  0.0f,	/**/ -1.0f, -1.0f,  1.0f,	0.0f, -1.0f,  0.0f,	
+
+		/* Right  */  1.0f, -1.0f, -1.0f,	1.0f,  0.0f,  0.0f,	/**/  1.0f,  1.0f, -1.0f, 	1.0f,  0.0f,  0.0f,	/**/  1.0f,  1.0f,  1.0f, 	1.0f,  0.0f,  0.0f,	/**/  1.0f, -1.0f,  1.0f,	1.0f,  0.0f,  0.0f,	
+		/*  Left  */ -1.0f, -1.0f, -1.0f,  -1.0f,  0.0f,  0.0f,	/**/ -1.0f, -1.0f,  1.0f,  -1.0f,  0.0f,  0.0f,	/**/ -1.0f,  1.0f,  1.0f,  -1.0f,  0.0f,  0.0f,	/**/ -1.0f,  1.0f, -1.0f,  -1.0f,  0.0f,  0.0f
+	});
+
+	const VertexData VertexData::normaltexcube({
+		/* Front  */ -1.0f, -1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	   1.0f,  1.0f, /**/  1.0f, -1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	   0.0f,  1.0f, /**/  1.0f,  1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	   0.0f,  0.0f, /**/ -1.0f,  1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	   1.0f,  0.0f,
+		/*  Back  */ -1.0f, -1.0f, -1.0f,	0.0f,  0.0f, -1.0f,    0.0f,  1.0f, /**/ -1.0f,  1.0f, -1.0f,	0.0f,  0.0f, -1.0f,    0.0f,  0.0f, /**/  1.0f,  1.0f, -1.0f,	0.0f,  0.0f, -1.0f,    1.0f,  0.0f, /**/  1.0f, -1.0f, -1.0f,	0.0f,  0.0f, -1.0f,    1.0f,  1.0f,
+
+		/*  Top   */ -1.0f,  1.0f, -1.0f,	0.0f,  1.0f,  0.0f,	   0.0f,  1.0f, /**/ -1.0f,  1.0f,  1.0f,	0.0f,  1.0f,  0.0f,	   0.0f,  0.0f, /**/  1.0f,  1.0f,  1.0f,	0.0f,  1.0f,  0.0f,	   1.0f,  1.0f, /**/  1.0f,  1.0f, -1.0f,	0.0f,  1.0f,  0.0f,	   1.0f,  0.0f,
+		/* Bottom */ -1.0f, -1.0f, -1.0f,	0.0f, -1.0f,  0.0f,	   0.0f,  0.0f, /**/  1.0f, -1.0f, -1.0f,	0.0f, -1.0f,  0.0f,	   1.0f,  0.0f, /**/  1.0f, -1.0f,  1.0f,	0.0f, -1.0f,  0.0f,	   1.0f,  1.0f, /**/ -1.0f, -1.0f,  1.0f,	0.0f, -1.0f,  0.0f,	   0.0f,  1.0f,
+
+		/* Right  */  1.0f, -1.0f, -1.0f,	1.0f,  0.0f,  0.0f,	   0.0f,  1.0f, /**/  1.0f,  1.0f, -1.0f,	1.0f,  0.0f,  0.0f,	   0.0f,  0.0f, /**/  1.0f,  1.0f,  1.0f,	1.0f,  0.0f,  0.0f,	   1.0f,  0.0f, /**/  1.0f, -1.0f,  1.0f,	1.0f,  0.0f,  0.0f,	   1.0f,  1.0f,
+		/*  Left  */ -1.0f, -1.0f, -1.0f,  -1.0f,  0.0f,  0.0f,	   1.0f,  1.0f, /**/ -1.0f, -1.0f,  1.0f,  -1.0f,  0.0f,  0.0f,	   0.0f,  1.0f, /**/ -1.0f,  1.0f,  1.0f,  -1.0f,  0.0f,  0.0f,	   0.0f,  0.0f, /**/ -1.0f,  1.0f, -1.0f,  -1.0f,  0.0f,  0.0f,	   1.0f,  0.0f
+	});
+
+	const VertexData VertexData::normalcolorcube({
+		/* Front  */ -1.0f, -1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	   0.0f,  0.0f,  1.0f,  1.0f,	/**/  1.0f, -1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	   0.0f,  0.0f,  1.0f,  1.0f,	/**/  1.0f,  1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	   0.0f,  0.0f,  1.0f,  1.0f,	/**/ -1.0f,  1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	   0.0f,  0.0f,  1.0f,  1.0f,
+		/*  Back  */ -1.0f, -1.0f, -1.0f,	0.0f,  0.0f, -1.0f,    1.0f,  1.0f,  0.0f,  1.0f,	/**/ -1.0f,  1.0f, -1.0f,	0.0f,  0.0f, -1.0f,    1.0f,  1.0f,  0.0f,  1.0f,	/**/  1.0f,  1.0f, -1.0f,	0.0f,  0.0f, -1.0f,    1.0f,  1.0f,  0.0f,  1.0f,	/**/  1.0f, -1.0f, -1.0f,	0.0f,  0.0f, -1.0f,    1.0f,  1.0f,  0.0f,  1.0f,
+
+		/*  Top   */ -1.0f,  1.0f, -1.0f,	0.0f,  1.0f,  0.0f,	   0.0f,  1.0f,  0.0f,  1.0f,	/**/ -1.0f,  1.0f,  1.0f,	0.0f,  1.0f,  0.0f,	   0.0f,  1.0f,  0.0f,  1.0f,	/**/  1.0f,  1.0f,  1.0f,	0.0f,  1.0f,  0.0f,	   0.0f,  1.0f,  0.0f,  1.0f,	/**/  1.0f,  1.0f, -1.0f,	0.0f,  1.0f,  0.0f,	   0.0f,  1.0f,  0.0f,  1.0f,
+		/* Bottom */ -1.0f, -1.0f, -1.0f,	0.0f, -1.0f,  0.0f,	   1.0f,  0.0f,  1.0f,  1.0f,	/**/  1.0f, -1.0f, -1.0f,	0.0f, -1.0f,  0.0f,	   1.0f,  0.0f,  1.0f,  1.0f,	/**/  1.0f, -1.0f,  1.0f,	0.0f, -1.0f,  0.0f,	   1.0f,  0.0f,  1.0f,  1.0f,	/**/ -1.0f, -1.0f,  1.0f,	0.0f, -1.0f,  0.0f,	   1.0f,  0.0f,  1.0f,  1.0f,
+
+		/* Right  */  1.0f, -1.0f, -1.0f,	1.0f,  0.0f,  0.0f,	   1.0f,  0.0f,  0.0f,  1.0f,	/**/  1.0f,  1.0f, -1.0f,	1.0f,  0.0f,  0.0f,	   1.0f,  0.0f,  0.0f,  1.0f,	/**/  1.0f,  1.0f,  1.0f,	1.0f,  0.0f,  0.0f,	   1.0f,  0.0f,  0.0f,  1.0f,	/**/  1.0f, -1.0f,  1.0f,	1.0f,  0.0f,  0.0f,	   1.0f,  0.0f,  0.0f,  1.0f,
+		/*  Left  */ -1.0f, -1.0f, -1.0f,  -1.0f,  0.0f,  0.0f,	   0.0f,  1.0f,  1.0f,  1.0f,	/**/ -1.0f, -1.0f,  1.0f,  -1.0f,  0.0f,  0.0f,	   0.0f,  1.0f,  1.0f,  1.0f,	/**/ -1.0f,  1.0f,  1.0f,  -1.0f,  0.0f,  0.0f,	   0.0f,  1.0f,  1.0f,  1.0f,	/**/ -1.0f,  1.0f, -1.0f,  -1.0f,  0.0f,  0.0f,	   0.0f,  1.0f,  1.0f,  1.0f
+	});
+
 #define indices(o, x0, x1, x2, x3, x4, x5) x0 + o, x1 + o, x2 + o, x3 + o, x4 + o, x5 + o
 
 	VertexIndices VertexIndices::cube = {
@@ -175,18 +208,18 @@ namespace Rapture
 
 		registerVertexElement("p2",   "position", 2);
 		registerVertexElement("p3",   "position", 3);
-		registerVertexElement("c3",   "color", 3);
-		registerVertexElement("c4",   "color", 4);
+		registerVertexElement("c3",   "color",	  3);
+		registerVertexElement("c4",   "color",    4);
 		registerVertexElement("t",    "texcoord", 2);
-		registerVertexElement("n",    "normal", 3);
-		registerVertexElement("c3-0", "color0", 3);
-		registerVertexElement("c4-0", "color0", 4);
-		registerVertexElement("c3-1", "color1", 3);
-		registerVertexElement("c4-1", "color1", 4);
-		registerVertexElement("c3-2", "color2", 3);
-		registerVertexElement("c4-2", "color2", 4);
-		registerVertexElement("c3-3", "color3", 3);
-		registerVertexElement("c4-3", "color3", 4);
+		registerVertexElement("n",    "normal",   3);
+		registerVertexElement("c3-0", "color0",   3);
+		registerVertexElement("c4-0", "color0",   4);
+		registerVertexElement("c3-1", "color1",   3);
+		registerVertexElement("c4-1", "color1",   4);
+		registerVertexElement("c3-2", "color2",   3);
+		registerVertexElement("c4-2", "color2",   4);
+		registerVertexElement("c3-3", "color3",   3);
+		registerVertexElement("c4-3", "color3",   4);
 	}
 
 	void Graphics3D::bind(const Handle<Texture> & texture, uint index)
@@ -202,7 +235,7 @@ namespace Rapture
 	{
 		auto fm = hold(_fillMode, FillMode::Solid);
 
-		updateAreaUniform(rect);
+		setArea(rect);
 
 		if(fm.old == FillMode::Solid)
 			techniques2d.rectangle->apply();
@@ -216,7 +249,7 @@ namespace Rapture
 	{
 		auto fm = hold(_fillMode, FillMode::Solid);
 
-		updateAreaUniform(rect);
+		setArea(rect);
 
 		if(fm.old == FillMode::Solid)
 			techniques2d.ellipse->apply();
@@ -230,7 +263,7 @@ namespace Rapture
 	{
 		auto fm = hold(_fillMode, FillMode::Solid);
 
-		updateAreaUniform(rect);
+		setArea(rect);
 
 		if(fm.old == FillMode::Solid)
 			techniques2d.rectangle->apply();
@@ -282,7 +315,7 @@ namespace Rapture
 			return;
 
 		image->apply();
-		updateAreaUniform(rect);
+		setArea(rect);
 
 		techniques2d.image->apply();
 		meshes2d.texquad->draw();
@@ -294,7 +327,7 @@ namespace Rapture
 			return;
 
 		image->apply();
-		updateAreaUniform(rect);
+		setArea(rect);
 
 		techniques2d.image->apply();
 		meshes2d.texquad->draw();
@@ -308,7 +341,7 @@ namespace Rapture
 			return;
 
 		image->apply();
-		updateAreaUniform(IntRect({x + symbol->left(), y + symbol->top()}, {image->width(), image->height()}));
+		setArea(IntRect({x + symbol->left(), y + symbol->top()}, {image->width(), image->height()}));
 
 		techniques2d.text->apply();
 		meshes2d.texquad->draw();
@@ -368,6 +401,9 @@ namespace Rapture
 		auto p3   = getVertexLayout("p3");
 		auto p3t  = getVertexLayout("p3 t");
 		auto p3c4 = getVertexLayout("p3 c4");
+		auto p3n   = getVertexLayout("p3 n");
+		auto p3nt  = getVertexLayout("p3 n t");
+		auto p3nc4 = getVertexLayout("p3 n c4");
 
 		meshes2d.quad      = createMesh(p2,   VertexData::quad2d);
 		meshes2d.texquad   = createMesh(p2t,  VertexData::texquad2d);
@@ -375,13 +411,16 @@ namespace Rapture
 		meshes3d.quad      = createMesh(p3,   VertexData::quad3d);
 		meshes3d.texquad   = createMesh(p3t,  VertexData::texquad3d);
 		meshes3d.linequad  = createMesh(p2,   VertexData::linequad3d, VertexTopology::Lines);
-		meshes3d.texcube   = createMesh(p3t,  VertexData::texcube,    VertexIndices::cube);
-		meshes3d.colorcube = createMesh(p3c4, VertexData::colorcube,  VertexIndices::cube);
 
-		auto cubeVB = createVertexBuffer(p3, VertexData::cube);
+		meshes3d.cube			 = createMesh(p3,    VertexData::cube,             VertexIndices::cube);
+		meshes3d.texcube		 = createMesh(p3t,   VertexData::texcube,          VertexIndices::cube);
+		meshes3d.colorcube		 = createMesh(p3c4,  VertexData::colorcube,        VertexIndices::cube);
+		meshes3d.normalcube      = createMesh(p3n,   VertexData::normalcube,       VertexIndices::cube);
+		meshes3d.normaltexcube   = createMesh(p3nt,  VertexData::normaltexcube,    VertexIndices::cube);
+		meshes3d.normalcolorcube = createMesh(p3nc4, VertexData::normalcolorcube,  VertexIndices::cube);
 
-		meshes3d.cube      = createMesh(cubeVB, VertexIndices::cube);
-		meshes3d.linecube  = createMesh(cubeVB, VertexIndices::linecube, VertexTopology::Lines);
+		meshes3d.linecube = createMesh(p3, VertexData::cube, VertexIndices::linecube, VertexTopology::Lines);
+
 
 		checkForErrors();
 
@@ -424,7 +463,7 @@ namespace Rapture
 		updateUniform<Uniforms::Viewport>(FloatSize {_surface->size()});
 	}
 
-	void Graphics3D::updateAreaUniform(const IntRect & rect)
+	void Graphics3D::setArea(const IntRect & rect)
 	{
 		FloatPoint t;
 		FloatSize s;
@@ -433,7 +472,7 @@ namespace Rapture
 		updateUniform<Uniforms::Area>(move(t), move(s), _depth);
 	}
 
-	void Graphics3D::updateAreaUniform(const SqRect & rect)
+	void Graphics3D::setArea(const SqRect & rect)
 	{
 		FloatPoint t;
 		FloatSize s;

@@ -84,7 +84,7 @@ namespace Rapture
 
 			case WM_ACTIVATE:
 			{
-				w._isActive = LOWORD(wParam) != 0;
+				w._active = LOWORD(wParam) != 0;
 
 				if(LOWORD(wParam) == 0 && !w._closed)
 				{
@@ -206,7 +206,7 @@ namespace Rapture
 
 			case WM_WINDOWPOSCHANGED:
 			{
-				if(!w._isShown)
+				if(!w._shown)
 					break;
 
 				WINDOWPOS & pos = *(WINDOWPOS *)lParam;
@@ -331,7 +331,7 @@ namespace Rapture
 
 	void Window::centralize()
 	{
-		if(_isShown && (_state != WindowState::Normal || _fullscreen))
+		if(_shown && (_state != WindowState::Normal || _fullscreen))
 			return;
 
 		long w = _outerRegion.width();
@@ -382,7 +382,7 @@ namespace Rapture
 
 		SetWindowLongW(_handle, GWL_STYLE, _normalStyle);
 
-		if(_isShown)
+		if(_shown)
 			ShowWindow(_handle, SW_SHOW);
 	}
 
@@ -428,17 +428,17 @@ namespace Rapture
 
 	void Window::show()
 	{
-		if(_isShown && _state != WindowState::Hidden)
+		if(_shown && _state != WindowState::Hidden)
 			return;
 
-		_isShown = true;
+		_shown = true;
 		SetWindowPos(_handle, nullptr, _outerRegion.left, _outerRegion.top, _outerRegion.width(), _outerRegion.height(), SWP_SHOWWINDOW);
 		SetForegroundWindow(_handle);
 	}
 
 	void Window::minimize()
 	{
-		if(!_isShown || _state == WindowState::Minimized)
+		if(!_shown || _state == WindowState::Minimized)
 			return;
 
 		ShowWindow(_handle, SW_MINIMIZE);
@@ -446,7 +446,7 @@ namespace Rapture
 
 	void Window::maximize()
 	{
-		if(!_isShown || _state == WindowState::Maximized)
+		if(!_shown || _state == WindowState::Maximized)
 			return;
 
 		ShowWindow(_handle, SW_SHOWMAXIMIZED);
@@ -454,7 +454,7 @@ namespace Rapture
 
 	void Window::restore()
 	{
-		if(!_isShown || _state == WindowState::Normal)
+		if(!_shown || _state == WindowState::Normal)
 			return;
 
 		ShowWindow(_handle, SW_RESTORE);
@@ -462,7 +462,7 @@ namespace Rapture
 
 	void Window::hide()
 	{
-		if(!_isShown || _state == WindowState::Hidden)
+		if(!_shown || _state == WindowState::Hidden)
 			return;
 
 		ShowWindow(_handle, SW_HIDE);

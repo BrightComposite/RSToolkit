@@ -20,11 +20,14 @@ namespace Rapture {
         Point()                     : x(static_cast<T>(0)),		y(static_cast<T>(0))     {}
 		Point(const Point & pt)		: x(pt.x),					y(pt.y)					 {}
 
+		template<typename U, useif<std::is_pod<U>::value>>
+		Point(U val)				: x(static_cast<T>(val)),	y(static_cast<T>(val))   {}
+
 		template<typename Tx, typename Ty, useif<std::is_pod<Tx>::value, std::is_pod<Ty>::value>>
         Point(Tx x, Ty y)           : x(static_cast<T>(x)),		y(static_cast<T>(y))     {}
 
 		template<typename U, useif<std::is_convertible<U, T>::value>>
-		Point(const U (&pt)[2])	: x(static_cast<T>(pt[0])),	y(static_cast<T>(pt[1]))	 {}
+		Point(const U (&pt)[2])	    : x(static_cast<T>(pt[0])),	y(static_cast<T>(pt[1]))	 {}
 
 		template<typename U, useif<not_same_type<T, U>::value, std::is_convertible<U, T>::value>>
         explicit Point(const Point<U> & pt) : x(static_cast<T>(pt.x)),	y(static_cast<T>(pt.y))  {}

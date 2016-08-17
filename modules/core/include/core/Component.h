@@ -9,7 +9,7 @@
 
 #include <core/Morpher.h>
 #include <core/Exception.h>
-#include <core/container/ArrayList.h>
+#include <container/ArrayList.h>
 
 //---------------------------------------------------------------------------
 
@@ -58,7 +58,7 @@ namespace Rapture
 			_links.erase(MorphType<C>::id());
 		}
 
-		map<int, Component *> _links;
+		dictionary<int, Component *> _links;
 	};
 
 	class LinkedComponentException : public Exception
@@ -190,7 +190,7 @@ namespace Rapture
 		}
 
 	protected:
-		UnorderedMap<int, Base, Owner...> map;
+		Map<int, Base, Owner...> map;
 	};
 }
 

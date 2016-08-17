@@ -170,6 +170,7 @@ namespace Rapture
 		bool _clippedCursor = false;
 
 		bool _fullscreen = false;
+		bool _active = false;
 		bool _closed = false;
 		bool _enabled = true;
 	};

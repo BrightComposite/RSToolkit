@@ -2,13 +2,12 @@
 
 #pragma once
 
-#ifndef MATRIX4x4_H
-#define MATRIX4x4_H
+#ifndef MATRIX_H
+#define MATRIX_H
 
 //---------------------------------------------------------------------------
 
 #include "Vector.h"
-#include "Matrix2x2.h"
 
 //---------------------------------------------------------------------------
 
@@ -63,7 +62,6 @@ namespace Rapture
 		Matrix(const Matrix & matrix) : x {matrix.x}, y {matrix.y}, z {matrix.z}, w {matrix.w} {}
 		Matrix(Matrix && matrix) : m {move(matrix.m)} {}
 
-		Matrix(const Matrix2x2<T> & m) : x {m.xx, m.xy, 0, 0}, y {m.yx, m.yy, 0, 0}, z {Vector<T>::positiveZ}, w {Vector<T>::positiveW} {}
 		Matrix(const Row (& v)[4]) : x {v[0]}, y {v[1]}, z {v[2]}, w {v[3]} {}
 		Matrix(const Row & x, const Row & y, const Row & z, const Row & w) : x {x}, y {y}, z {z}, w {w} {}
 		Matrix(const Row & x, const Row & y, const Row & z) : x {x}, y {y}, z {z}, w {Vector<T>::positiveW} {}
@@ -296,9 +294,10 @@ namespace Rapture
 	using doublem = DoubleMatrix;
 
 	template<class T>
-	using smat = Storage<Matrix<T>>;
-	using fmat = Storage<FloatMatrix>;
-	using dmat = Storage<DoubleMatrix>;
+	using AlignedMatrix = Aligned<Matrix<T>>;
+
+	using fmat = AlignedMatrix<float>;
+	using dmat = AlignedMatrix<double>;
 
 	template<class T>
 	inline Matrix<T> operator + (const Matrix<T> & m1, const Matrix<T> & m2)

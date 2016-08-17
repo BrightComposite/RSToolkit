@@ -37,9 +37,9 @@ namespace Rapture
 
 			using namespace std;
 
-		#ifdef GL_DEBUG
+		//#ifdef GL_DEBUG
 			cout << "Compile shader program \"" << key << "\"" << endl;
-		#endif
+		//#endif
 
 			for(auto & c : codeSet)
 			{
@@ -58,7 +58,6 @@ namespace Rapture
 			}
 
 			glLinkProgram(id);
-
 			int status;
 			glGetProgramiv(id, GL_LINK_STATUS, &status);
 
@@ -87,6 +86,20 @@ namespace Rapture
 				if(block != GL_INVALID_INDEX)
 					glUniformBlockBinding(id, block, b.index);
 			}
+
+			glUseProgram(id);
+
+			String uniform = "texture";
+
+			for(uint i = 0; i < 16; ++i)
+			{
+				auto loc = glGetUniformLocation(id, uniform + i);
+
+				if(loc >= 0)
+					glUniform1i(loc, i);
+			}
+
+			glUseProgram(0);
 
 			graphics->checkForErrors();
 		}
@@ -259,65 +272,156 @@ namespace Rapture
 		{
 		}
 
-		GLImage::GLImage(GLGraphics * graphics, uint width, uint height) : Image(graphics, width, height, ImageFormat::bgra), _graphics(graphics)
+		void glImageFormat(ImageFormat f, GLint * internalformat, GLenum * format, GLenum * type)
 		{
+			switch(f)
+			{
+				case ImageFormat::grayscale:
+					*internalformat = GL_R8;
+					*format = GL_RED;
+					*type = GL_UNSIGNED_BYTE;
+					break;
+
+				case ImageFormat::grayscale_alpha:
+					*internalformat = GL_RG8;
+					*format = GL_RG;
+					*type = GL_UNSIGNED_BYTE;
+					break;
+
+				case ImageFormat::rgb:
+					*internalformat = GL_RGB8;
+					*format = GL_RGB;
+					*type = GL_UNSIGNED_BYTE;
+					break;
+
+				case ImageFormat::bgr:
+					*internalformat = GL_RGB8;
+					*format = GL_BGR;
+					*type = GL_UNSIGNED_BYTE;
+					break;
+
+				case ImageFormat::rgba:
+					*internalformat = GL_RGBA8;
+					*format = GL_RGBA;
+					*type = GL_UNSIGNED_BYTE;
+					break;
+
+				case ImageFormat::bgra:
+					*internalformat = GL_RGBA8;
+					*format = GL_BGRA;
+					*type = GL_UNSIGNED_BYTE;
+					break;
+
+				case ImageFormat::rgb16f:
+					*internalformat = GL_RGB16F;
+					*format = GL_RGBA;
+					*type = GL_FLOAT;
+					break;
+
+				case ImageFormat::bgr16f:
+					*internalformat = GL_RGB16F;
+					*format = GL_BGR;
+					*type = GL_FLOAT;
+					break;
+
+				case ImageFormat::rgba16f:
+					*internalformat = GL_RGBA16F;
+					*format = GL_RGBA;
+					*type = GL_FLOAT;
+					break;
+
+				case ImageFormat::bgra16f:
+					*internalformat = GL_RGBA16F;
+					*format = GL_BGRA;
+					*type = GL_FLOAT;
+					break;
+
+				case ImageFormat::rgb32f:
+					*internalformat = GL_RGB32F;
+					*format = GL_RGBA;
+					*type = GL_FLOAT;
+					break;
+
+				case ImageFormat::bgr32f:
+					*internalformat = GL_RGB32F;
+					*format = GL_BGR;
+					*type = GL_FLOAT;
+					break;
+
+				case ImageFormat::rgba32f:
+					*internalformat = GL_RGBA32F;
+					*format = GL_RGBA;
+					*type = GL_FLOAT;
+					break;
+
+				case ImageFormat::bgra32f:
+					*internalformat = GL_RGBA32F;
+					*format = GL_BGRA;
+					*type = GL_FLOAT;
+					break;
+
+				default:
+					throw Exception("Format ", f, " is unacceptable for OpenGL!");
+			}
+		}
+
+		GLImage::GLImage(GLGraphics * graphics, uint width, uint height, ImageFormat f) : Image(graphics, width, height, f), _graphics(graphics)
+		{
+			_target = GL_TEXTURE_RECTANGLE;
+
+			glGenTextures(1, &_id);
+			glBindTexture(_target, _id);
+
+			GLint internalformat;
+			GLenum format;
+			GLenum type;
+
+			glImageFormat(_format, &internalformat, &format, &type);
+
+			glTexParameteri(_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+			glTexImage2D(_target, 0, internalformat, width, height, 0, format, type, nullptr);
 		}
 
 		GLImage::GLImage(GLGraphics * graphics, const ImageData & data) : Image(graphics, data), _graphics(graphics)
 		{
+			_target = GL_TEXTURE_2D;
+
 			uint w = umath::round2pow(_size.x);
 			uint h = umath::round2pow(_size.y);
 
 			_scale[0] = float(_size.x) / float(w);
 			_scale[1] = float(_size.y) / float(h);
 
-			int internalformat;
-			int format;
+			GLint internalformat;
+			GLenum format;
+			GLenum type;
 
-			auto newData = handle<ImageData>();
+			glImageFormat(_format, &internalformat, &format, &type);
 
-			switch(_format)
-			{
-				case ImageFormat::grayscale:
-					internalformat = GL_R8;
-					format = GL_RED;
-					break;
-
-				case ImageFormat::grayscale_alpha:
-					internalformat = GL_RG8;
-					format = GL_RG;
-					break;
-
-				case ImageFormat::bgra:
-					internalformat = GL_RGBA8;
-					format = GL_BGRA;
-					break;
-
-				default:
-					internalformat = GL_RGBA8;
-					format = GL_RGBA;
-					_format = ImageFormat::rgba;
-					data.convert(newData, _format);
-			}
-
-			glActiveTexture(GL_TEXTURE0);
 			glGenTextures(1, &_id);
-			glBindTexture(GL_TEXTURE_2D, _id);
+			glBindTexture(_target, _id);
 
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+			glTexParameteri(_target, GL_TEXTURE_WRAP_S, GL_CLAMP);
+			glTexParameteri(_target, GL_TEXTURE_WRAP_T, GL_CLAMP);
 			graphics->checkForErrors();
 
-			glTexImage2D(GL_TEXTURE_2D, 0, internalformat, w, h, 0, format, GL_UNSIGNED_BYTE, newData->ptr);
+			glTexImage2D(_target, 0, internalformat, w, h, 0, format, type, data.ptr);
 			graphics->checkForErrors();
+		}
+
+		GLImage::~GLImage()
+		{
+			glDeleteTextures(1, &_id);
 		}
 
 		void GLImage::apply() const
 		{
-			glBindTexture(GL_TEXTURE_2D, _id);
+			glBindTexture(_target, _id);
 			_graphics->checkForErrors();
 		}
 
@@ -382,8 +486,7 @@ namespace Rapture
 			data.data    = {b.data.ptr + _offset, _size};
 			data.adapter = this;
 
-			_offset += _size + buffer_offset_alignment - 1;
-			_offset -= _offset % buffer_offset_alignment;
+			_offset = aligned_add(_offset, _size, buffer_offset_alignment);
 		}
 
 		void GLUniformAdapter::bind(const UniformData & data)

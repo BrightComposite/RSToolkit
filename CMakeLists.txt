@@ -4,48 +4,14 @@
 
 project(RaptureStateToolkit CXX)
 
-#--------------------------------------------------------
-
 cmake_minimum_required(VERSION 3.0)
 
 #--------------------------------------------------------
 
-set(GUARD_BLOCKS CACHE INTERNAL "Guard blocks" FORCE)
-set(MESSAGES_INDENTATION "" CACHE STRING "Messages indentation" FORCE)
-
-get_filename_component(RAPTURE_ROOT ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
-set(RAPTURE_ROOT ${RAPTURE_ROOT} CACHE PATH "Rapture state engine root directory")
-set(RAPTURE_TOOLS ${RAPTURE_ROOT}/tools CACHE PATH "Rapture tools directory")
-
-include(${RAPTURE_TOOLS}/module.cmake)
-
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "")
-
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-    #add_compile_options(/arch:AVX2)
-	add_definitions(-D_UNICODE -DUNICODE -DNOMINMAX)
-elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
-    add_compile_options(-std=c++14 -pthread -fabi-version=10)
-elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
-    set(CMAKE_CXX_FLAGS -Wall -std=c++14)
-endif()
-
-#add_definitions(-DUSE_AVX)
+include(tools/workspace.cmake)
 
 add_module(core tests)
 add_module(math tests)
-
-#if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-	#set(USE_DIRECT3D 1 CACHE INTERNAL "Use direct3d flag")
-    #add_module(d3d tests)
-#else()
-	set(USE_DIRECT3D 0 CACHE INTERNAL "Use direct3d flag")
-#endif()
-
-add_module(ui tests)
-
-add_module(independence projects "E:/Programming/C++/RST")
-add_module(BasicGame projects "E:/Programming/C++/RST")
+add_module(ui   tests)
 
 #--------------------------------------------------------

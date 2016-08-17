@@ -62,9 +62,9 @@ namespace Rapture
 		virtual api(scene) void addRoll(float value);
 		virtual api(scene) void addAngles(float pitch, float yaw, float roll);
 
-		float zoom() const
+		float viewRange() const
 		{
-			return _zoom;
+			return _range;
 		}
 
 		float fieldOfView() const
@@ -79,14 +79,14 @@ namespace Rapture
 
 		api(scene) void setProjectionMode(ProjectionMode mode);
 
-		api(scene) void setZoom(float zoom);
+		api(scene) void setViewRange(float range);
 		api(scene) void setFieldOfView(float fov);
 		api(scene) void updateProjection();
 
 		api(scene) void update();
 
 	protected:
-		float _zoom = 0.01f;
+		float _range = 0.01f;
 		float _fov = 90.0f;
 		fquat _pitch;
 		fquat _yaw;

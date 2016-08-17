@@ -15,7 +15,7 @@ module(SHARED)
 		# RaptureCore "core"
 	)
 
-	sources("@module_domain@")
+	sources(@module_domain@)
 		group(include Headers)
 		files(
 			# headers

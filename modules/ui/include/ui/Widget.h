@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/container/ArrayList.h>
+#include <container/ArrayList.h>
 #include <core/Component.h>
 
 #include <message/Subject.h>

@@ -24,14 +24,21 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
 	set(OUTPUT_PATH_SUFFIX build-clang CACHE PATH "Output path suffix")
 endif()
 
-set(OUTPUT_ROOT ${RAPTURE_ROOT}/${OUTPUT_PATH_SUFFIX} CACHE PATH "Output root")
+set(OUTPUT_ROOT ${WORKSPACE_ROOT}/${OUTPUT_PATH_SUFFIX} CACHE PATH "Output root")
+
+set(BINARY_OUTPUT ${WORKSPACE_ROOT}/bin/${MODULE_ARCH} CACHE PATH "Binary output")
+set(LIBRARY_OUTPUT ${WORKSPACE_ROOT}/lib/${MODULE_ARCH} CACHE PATH "Library output")
 
 set(MODULES_ROOT ${RAPTURE_ROOT}/modules CACHE PATH "Modules root")
-
-set(BINARY_OUTPUT ${RAPTURE_ROOT}/bin/${MODULE_ARCH} CACHE PATH "Binary output")
-set(LIBRARY_OUTPUT ${RAPTURE_ROOT}/bin/${MODULE_ARCH} CACHE PATH "Library output")
+set(WORKSPACE_MODULES_ROOT ${WORKSPACE_ROOT}/modules CACHE PATH "Workspace modules root")
 
 set(THIRD_PARTY ${RAPTURE_ROOT}/third-party CACHE PATH "Third-party directory")
+set(WORKSPACE_THIRD_PARTY ${WORKSPACE_ROOT}/third-party CACHE PATH "Workspace third-party directory")
+
+if(NOT "${ALTERNATIVE_ROOT}" STREQUAL "")
+	set(${PROJECT_NAME}_ROOT "${ALTERNATIVE_ROOT}" CACHE PATH "")
+	unset(ALTERNATIVE_ROOT)
+endif()
 
 #--------------------------------------------------------
 
@@ -47,13 +54,13 @@ function(set_output_dir DIR TYPE)
 	set(${OUTPUT_DIR}_RELWITHDEBINFO ${${OUTPUT_DIR}}/withdebinfo CACHE PATH "Cmake ${TYPE} relwithdebinfo output")
 endfunction()
 
-set_output_dir(${RAPTURE_ROOT}/lib ARCHIVE)
-set_output_dir(${RAPTURE_ROOT}/lib LIBRARY)
-set_output_dir(${RAPTURE_ROOT}/bin RUNTIME)
+set_output_dir(${WORKSPACE_ROOT}/lib ARCHIVE)
+set_output_dir(${WORKSPACE_ROOT}/lib LIBRARY)
+set_output_dir(${WORKSPACE_ROOT}/bin RUNTIME)
 
-link_directories(${RAPTURE_ROOT}/lib/${MODULE_ARCH})
-link_directories(${RAPTURE_ROOT}/lib/${MODULE_ARCH}/release)
-link_directories(${RAPTURE_ROOT}/lib/${MODULE_ARCH}/debug)
+link_directories(${WORKSPACE_ROOT}/lib/${MODULE_ARCH})
+link_directories(${WORKSPACE_ROOT}/lib/${MODULE_ARCH}/release)
+link_directories(${WORKSPACE_ROOT}/lib/${MODULE_ARCH}/debug)
 
 #--------------------------------------------------------
 
@@ -286,7 +293,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			set(DIR "${ROOT}/${DIR}")
 		else()
 			set(OUTPUT_DIR "${OUTPUT_ROOT}/${DIR}")
-			set(DIR "${RAPTURE_ROOT}/${DIR}")
+			set(DIR "${WORKSPACE_ROOT}/${DIR}")
 		endif()
 
 		message("${DIR}")
@@ -312,6 +319,10 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			endif()
 		endif()
 
+		if(NOT "${ROOT}" STREQUAL "")
+			set(ALTERNATIVE_ROOT "${ROOT}" CACHE PATH "")
+		endif()
+
 		add_subdirectory("${DIR}" "${OUTPUT_DIR}")
 	endfunction()
 
@@ -325,7 +336,15 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		set(${PROJECT_NAME}_MODULE_DEPENDENCIES ${${PROJECT_NAME}_MODULE_DEPENDENCIES};${name} CACHE INTERNAL "${PROJECT_NAME} module dependencies" FORCE)
 
 		if(NOT ";${GUARD_BLOCKS};" MATCHES ";${name}_GUARD;")
-			add_subdirectory("${MODULES_ROOT}/${path}" "${OUTPUT_ROOT}/${path}")
+			if(NOT "${${PROJECT_NAME}_ROOT}" STREQUAL "" AND EXISTS "${${PROJECT_NAME}_ROOT}/modules/${path}")
+				add_subdirectory("${${PROJECT_NAME}_ROOT}/modules/${path}" "${${PROJECT_NAME}_ROOT}/${OUTPUT_PATH_SUFFIX}/ ${path}")
+			elseif(EXISTS "${WORKSPACE_MODULES_ROOT}/${path}")
+				add_subdirectory("${WORKSPACE_MODULES_ROOT}/${path}" "${OUTPUT_ROOT}/${path}")
+			elseif(EXISTS "${MODULES_ROOT}/${path}")
+				add_subdirectory("${MODULES_ROOT}/${path}" "${OUTPUT_ROOT}/${path}")
+			else()
+				message(FATAL_ERROR "Can't find dependency ${name}! Path ${path} doesn't exist!")
+			endif()
 		endif()
 
 		set(MESSAGES_INDENTATION ${MESSAGES_INDENTATION_TEMP} CACHE STRING "Messages indentation" FORCE)
@@ -495,13 +514,21 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 #	setup_third_party function
 
 	function(setup_third_party LIBRARY_PATH)
-		set(THIRD_PARTY_DIR ${THIRD_PARTY}/${LIBRARY_PATH})
+		    if(EXISTS ${WORKSPACE_THIRD_PARTY}/${LIBRARY_PATH})
+			set(THIRD_PARTY_DIR ${WORKSPACE_THIRD_PARTY}/${LIBRARY_PATH})
+		elseif(EXISTS ${THIRD_PARTY}/${LIBRARY_PATH})
+			set(THIRD_PARTY_DIR ${THIRD_PARTY}/${LIBRARY_PATH})
+		elseif(EXISTS "${WORKSPACE_THIRD_PARTY}/${LIBRARY_PATH}.tar.gz")
+			set(THIRD_PARTY_DIR ${WORKSPACE_THIRD_PARTY}/${LIBRARY_PATH})
+			set(THIRD_PARTY_ARCHIVE 1)
+		elseif(EXISTS "${THIRD_PARTY}/${LIBRARY_PATH}.tar.gz")
+			set(THIRD_PARTY_DIR ${THIRD_PARTY}/${LIBRARY_PATH})
+			set(THIRD_PARTY_ARCHIVE 1)
+		else()
+			message(FATAL_ERROR "Can't find third-party library '${LIBRARY_PATH}'!")
+		endif()
 
-		if(NOT EXISTS ${THIRD_PARTY_DIR})
-			if(NOT EXISTS "${THIRD_PARTY_DIR}.tar.gz")
-				message(FATAL_ERROR "Can't find the archive with third-party library '${LIBRARY_PATH}'!")
-			endif()
-
+		if(NOT "${THIRD_PARTY_ARCHIVE}" STREQUAL "")
 			message(STATUS "Extract third-party library '${LIBRARY_PATH}' from ${THIRD_PARTY_DIR}.tar.gz")
 			execute_process(COMMAND ${CMAKE_COMMAND} -E tar xfz "${LIBRARY_PATH}.tar.gz" WORKING_DIRECTORY "${THIRD_PARTY}")
 
@@ -521,9 +548,6 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		set(BINARY_SOURCE ${THIRD_PARTY_DIR}/bin/${PATH_SUFFIX})
 		set(LIBRARY_SOURCE ${THIRD_PARTY_DIR}/lib/${PATH_SUFFIX})
 
-		set(BINARY_DEST ${RAPTURE_ROOT}/bin/${MODULE_ARCH})
-		set(LIBRARY_DEST ${RAPTURE_ROOT}/lib/${MODULE_ARCH})
-
 		if(EXISTS ${BINARY_SOURCE})
 			file(GLOB_RECURSE SHARED_LIBS RELATIVE ${BINARY_SOURCE}
 				${BINARY_SOURCE}/*${CMAKE_SHARED_LIBRARY_SUFFIX}
@@ -533,10 +557,10 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 				get_filename_component(SHARED_LIB_NAME ${SHARED_LIB} NAME)
 				get_filename_component(SHARED_LIB_DIR ${SHARED_LIB} DIRECTORY)
 
-				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_DEST}/${SHARED_LIB_DIR}/release)
-				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_DEST}/${SHARED_LIB_DIR}/minsize)
-				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_DEST}/${SHARED_LIB_DIR}/withdebinfo)
-				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_DEST}/${SHARED_LIB_DIR}/debug)
+				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_OUTPUT}/${SHARED_LIB_DIR}/release)
+				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_OUTPUT}/${SHARED_LIB_DIR}/minsize)
+				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_OUTPUT}/${SHARED_LIB_DIR}/withdebinfo)
+				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_OUTPUT}/${SHARED_LIB_DIR}/debug)
 			endforeach()
 		endif()
 
@@ -547,7 +571,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 			foreach(STATIC_LIB ${STATIC_LIBS})
 				message("${MESSAGES_INDENTATION}    Found ${STATIC_LIB}")
-				setup_file(${STATIC_LIB} ${LIBRARY_SOURCE} ${LIBRARY_DEST})
+				setup_file(${STATIC_LIB} ${LIBRARY_SOURCE} ${LIBRARY_OUTPUT})
 			endforeach()
 		endif()
 
@@ -560,13 +584,21 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 #	load_third_party function
 
 	function(load_third_party LIBRARY_PATH)
-		set(THIRD_PARTY_DIR ${THIRD_PARTY}/${LIBRARY_PATH})
+		    if(EXISTS ${WORKSPACE_THIRD_PARTY}/${LIBRARY_PATH})
+			set(THIRD_PARTY_DIR ${WORKSPACE_THIRD_PARTY}/${LIBRARY_PATH})
+		elseif(EXISTS ${THIRD_PARTY}/${LIBRARY_PATH})
+			set(THIRD_PARTY_DIR ${THIRD_PARTY}/${LIBRARY_PATH})
+		elseif(EXISTS "${WORKSPACE_THIRD_PARTY}/${LIBRARY_PATH}.tar.gz")
+			set(THIRD_PARTY_DIR ${WORKSPACE_THIRD_PARTY}/${LIBRARY_PATH})
+			set(THIRD_PARTY_ARCHIVE 1)
+		elseif(EXISTS "${THIRD_PARTY}/${LIBRARY_PATH}.tar.gz")
+			set(THIRD_PARTY_DIR ${THIRD_PARTY}/${LIBRARY_PATH})
+			set(THIRD_PARTY_ARCHIVE 1)
+		else()
+			message(FATAL_ERROR "Can't find third-party library '${LIBRARY_PATH}'!")
+		endif()
 
-		if(NOT EXISTS ${THIRD_PARTY_DIR})
-			if(NOT EXISTS "${THIRD_PARTY_DIR}.tar.gz")
-				message(FATAL_ERROR "Can't find the archive with third-party library '${LIBRARY_PATH}'!")
-			endif()
-
+		if(NOT "${THIRD_PARTY_ARCHIVE}" STREQUAL "")
 			message(STATUS "Extract third-party library '${LIBRARY_PATH}' from ${THIRD_PARTY_DIR}.tar.gz")
 			execute_process(COMMAND ${CMAKE_COMMAND} -E tar xfz "${LIBRARY_PATH}.tar.gz" WORKING_DIRECTORY "${THIRD_PARTY}")
 
@@ -587,9 +619,6 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		set(BINARY_SOURCE ${THIRD_PARTY_DIR}/bin/${PATH_SUFFIX})
 		set(LIBRARY_SOURCE ${THIRD_PARTY_DIR}/lib/${PATH_SUFFIX})
 
-		set(BINARY_DEST ${RAPTURE_ROOT}/bin/${MODULE_ARCH})
-		set(LIBRARY_DEST ${RAPTURE_ROOT}/lib/${MODULE_ARCH})
-
 		if(EXISTS ${BINARY_SOURCE})
 			file(GLOB_RECURSE SHARED_LIBS RELATIVE ${BINARY_SOURCE}
 				${BINARY_SOURCE}/*${CMAKE_SHARED_LIBRARY_SUFFIX}
@@ -601,10 +630,10 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 				get_filename_component(SHARED_LIB_NAME ${SHARED_LIB} NAME)
 				get_filename_component(SHARED_LIB_DIR ${SHARED_LIB} DIRECTORY)
 
-				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_DEST}/${SHARED_LIB_DIR}/release)
-				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_DEST}/${SHARED_LIB_DIR}/minsize)
-				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_DEST}/${SHARED_LIB_DIR}/withdebinfo)
-				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_DEST}/${SHARED_LIB_DIR}/debug)
+				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_OUTPUT}/${SHARED_LIB_DIR}/release)
+				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_OUTPUT}/${SHARED_LIB_DIR}/minsize)
+				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_OUTPUT}/${SHARED_LIB_DIR}/withdebinfo)
+				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_OUTPUT}/${SHARED_LIB_DIR}/debug)
 			endforeach()
 		endif()
 
@@ -615,12 +644,12 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 			foreach(STATIC_LIB ${STATIC_LIBS})
 				message("${MESSAGES_INDENTATION}    Found ${STATIC_LIB}")
-				setup_file(${STATIC_LIB} ${LIBRARY_SOURCE} ${LIBRARY_DEST})
+				setup_file(${STATIC_LIB} ${LIBRARY_SOURCE} ${LIBRARY_OUTPUT})
 
 				string(REGEX REPLACE "[^a-zA-Z0-9_-]" _ LIBRARY_NAME ${STATIC_LIB})
 
 				add_library(${LIBRARY_NAME} STATIC IMPORTED)
-				set_target_properties(${LIBRARY_NAME} PROPERTIES IMPORTED_LOCATION ${LIBRARY_DEST}/${STATIC_LIB})
+				set_target_properties(${LIBRARY_NAME} PROPERTIES IMPORTED_LOCATION ${LIBRARY_OUTPUT}/${STATIC_LIB})
 
 				if("${STATIC_LIB}" MATCHES "debug/")
 					target_link_libraries(${PROJECT_NAME} PUBLIC debug ${LIBRARY_NAME})
@@ -636,7 +665,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			)
 
 			foreach(DEBUG_DB ${STATIC_DEBUG_DATABASES})
-				setup_file(${DEBUG_DB} ${LIBRARY_SOURCE} ${BINARY_DEST})
+				setup_file(${DEBUG_DB} ${LIBRARY_SOURCE} ${BINARY_OUTPUT})
 			endforeach()
 		endif()
 

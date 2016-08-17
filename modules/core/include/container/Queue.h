@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------
 
 #include <core/Handle.h>
-#include <core/container/Container.h>
+#include <container/Container.h>
 
 #include <queue>
 

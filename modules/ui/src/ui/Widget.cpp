@@ -454,7 +454,7 @@ namespace Rapture
 			auto & ch = *i;
 			auto p = pt - ch->_relPos;
 
-			if(ch->localRegion().includes(p))
+			if(ch->localRegion().contains(p))
 				return ch->findAt(p);
 		}
 

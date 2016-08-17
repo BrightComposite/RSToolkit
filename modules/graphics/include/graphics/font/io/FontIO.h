@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------
 
 #include <core/Exception.h>
-#include <core/container/Map.h>
+#include <container/Map.h>
 
 #include <graphics/font/Font.h>
 
@@ -68,7 +68,7 @@ namespace Rapture
 		}
 
 	protected:
-		map<string, FontDecoder *> decoders;
+		dictionary<string, FontDecoder *> decoders;
 	};
 }
 

@@ -11,15 +11,99 @@
 
 //---------------------------------------------------------------------------
 
-#undef min
-#undef max
-
 namespace Rapture
 {
+	template<typename T>
+	class Range;
+
+	template<typename T>
+	class range_iterator
+	{
+		static_assert(std::is_integral<T>::value, "Can iterate only integral range!");
+
+	public:
+		using iterator_category = std::random_access_iterator_tag;
+
+		range_iterator(T val) : val(val) {}
+
+		bool operator == (const range_iterator & it) const
+		{
+			return val == it.val;
+		}
+
+		bool operator != (const range_iterator & it) const
+		{
+			return val != it.val;
+		}
+
+		T operator * () const
+		{
+			return val;
+		}
+
+		range_iterator & operator ++ ()
+		{
+			++val;
+			return *this;
+		}
+
+		range_iterator & operator -- ()
+		{
+			--val;
+			return *this;
+		}
+
+		range_iterator operator ++ (int)
+		{
+			return {val++};
+		}
+
+		range_iterator operator -- (int)
+		{
+			return {val--};
+		}
+
+		range_iterator & operator += (T diff)
+		{
+			val += diff;
+			return *this;
+		}
+
+		range_iterator & operator -= (T diff)
+		{
+			val -= diff;
+			return *this;
+		}
+
+		range_iterator operator + (T diff)
+		{
+			return {val + diff};
+		}
+
+		range_iterator operator - (T diff)
+		{
+			return {val - diff};
+		}
+
+		T operator [] (T diff) const
+		{
+			return val + diff;
+		}
+
+	protected:
+		T val;
+	};
+
     template<typename T>
     class Range
     {
     public:
+		using iterator = range_iterator<T>;
+		using const_iterator = range_iterator<T>;
+
+		using reverse_iterator = std::reverse_iterator<iterator>;
+		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
         T min, max;
 
 		Range() : min(0), max(0) {}
@@ -95,18 +179,18 @@ namespace Rapture
         }
 
         template<typename U>
-        bool includes(const Range<U> & range) const
+        bool contains(const Range<U> & range) const
         {
             return (compare(range.min) & compare(range.max)) == 0;
         }
 
-        bool includes(T value) const
+        bool contains(T value) const
         {
             return between(value, min, max);
         }
 
         template<typename U>
-        bool isIntersecting(const Range<U> & range) const
+        bool intersects(const Range<U> & range) const
         {
 			return range.max >= min && range.min <= max;
         }
@@ -179,9 +263,71 @@ namespace Rapture
 		{
 			return Range(*this) |= range;
 		}
+
+		iterator begin()
+		{
+			return {min};
+		}
+
+		const_iterator begin() const
+		{
+			return {min};
+		}
+
+		iterator end()
+		{
+			return {max};
+		}
+
+		const_iterator end() const
+		{
+			return {max};
+		}
+
+		reverse_iterator rbegin()
+		{
+			return end();
+		}
+
+		const_reverse_iterator rbegin() const
+		{
+			return end();
+		}
+
+		reverse_iterator rend()
+		{
+			return begin();
+		}
+
+		const_reverse_iterator rend() const
+		{
+			return begin();
+		}
+
+		const_iterator cbegin() const
+		{
+			return begin();
+		}
+
+		const_iterator cend() const
+		{
+			return end();
+		}
+
+		const_reverse_iterator crbegin() const
+		{
+			return rbegin();
+		}
+
+		const_reverse_iterator crend() const
+		{
+			return rend();
+		}
     };
 
-    typedef Range<long> LRange, LongRange;
+	using IntRange = Range<int>;
+    using LongRange = Range<long>;
+	using FloatRange = Range<float>;
 }
 
 //---------------------------------------------------------------------------

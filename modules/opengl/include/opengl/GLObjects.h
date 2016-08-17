@@ -17,11 +17,13 @@ namespace Rapture
 	{
 		class GLImage : public Image
 		{
-			friend class TextureSurface;
+			friend class GLTextureSurface;
 
 		public:
-			api(opengl3_3) GLImage(GLGraphics * graphics, uint width, uint height);
+			api(opengl3_3) GLImage(GLGraphics * graphics, uint width, uint height, ImageFormat format);
 			api(opengl3_3) GLImage(GLGraphics * ctx, const ImageData & data);
+
+			virtual api(opengl3_3) ~GLImage();
 
 			virtual api(opengl3_3) void apply() const override;
 			virtual api(opengl3_3) void requestData(ImageData * output) const override;
@@ -29,6 +31,7 @@ namespace Rapture
 		protected:
 			float _scale[2];
 			uint  _id;
+			GLenum _target;
 			GLGraphics * _graphics;
 		};
 
@@ -65,73 +68,44 @@ namespace Rapture
 
 		//---------------------------------------------------------------------------
 
-		class GLMeshTrait
+		enum class GLMeshType
 		{
-		public:
-			api(opengl3_3) GLMeshTrait(GLGraphics * graphics, VertexTopology topology);
-			virtual api(opengl3_3) ~GLMeshTrait();
-
-		protected:
-			uint id;
-			uint topology;
-			GLGraphics * graphics;
+			Plain,
+			Indexed,
+			Instanced,
+			InstancedIndexed
 		};
 
-		class GLIndexedMeshTrait : public GLMeshTrait
+		template<GLMeshType type>
+		class GLMesh {};
+
+		class GLMeshBuilder : public MeshBuilder
 		{
+			template<GLMeshType type>
+			friend class GLMesh;
+
 		public:
-			api(opengl3_3) GLIndexedMeshTrait(GLGraphics * graphics, VertexTopology topology, const VertexIndices & indices);
+			api(opengl3_3) GLMeshBuilder(GLGraphics * graphics);
+			virtual api(opengl3_3) ~GLMeshBuilder();
 
-		protected:
-			Handle<GLIndexBuffer> ibuffer;
-		};
+			virtual api(opengl3_3) MeshBuilder * buffer(const Handle<VertexBuffer> & buffer) override final;
+			virtual api(opengl3_3) MeshBuilder * indices(const VertexIndices & indices) override final;
+			virtual api(opengl3_3) MeshBuilder * offset(uint offset) override final;
+			virtual api(opengl3_3) MeshBuilder * topology(VertexTopology t) override final;
+			virtual api(opengl3_3) MeshBuilder * makeInstanced(VertexLayout *) override final;
 
-		struct GLMeshImpl
-		{
-			virtual ~GLMeshImpl() {}
-			virtual void draw(const GLMesh * mesh) const = 0;
-
-			template<class T>
-			T * upcast()
-			{
-				return dynamic_cast<T *>(this);
-			}
-
-			template<class T>
-			const T * upcast() const
-			{
-				return dynamic_cast<const T *>(this);
-			}
-		};
-
-		class GLMesh : public Mesh
-		{
-		public:
-			api(opengl3_3) GLMesh(GLGraphics * graphics);
-			virtual api(opengl3_3) ~GLMesh();
-
-			virtual api(opengl3_3) Mesh * buffer(const Handle<VertexBuffer> & buffer) final;
-			virtual api(opengl3_3) Mesh * indices(const VertexIndices & indices, uint offset) final;
-			virtual api(opengl3_3) Mesh * topology(VertexTopology t) final;
-			virtual api(opengl3_3) Mesh * instanceLayout(VertexLayout *) final;
-
-			virtual api(opengl3_3) const Mesh * ready() final;
-
-			virtual api(opengl3_3) MeshInstance * instance() const final;
-
-			virtual api(opengl3_3) void draw() const final;
-
-			uint topology() const
-			{
-				return _topology;
-			}
+			virtual api(opengl3_3) Handle<Mesh> ready() override final;
 
 		protected:
 			GLGraphics * _graphics;
-			uint _id;
-			uint _topology;
-			Unique<GLMeshImpl> _impl;
+			uint _topology = 0;
+			uint _offset = 0;
+			uint _verticesCount = 0;
+			uint _indicesCount = 0;
 			ArrayList<VertexBuffer> _buffers;
+			Handle<GLIndexBuffer> _ibuffer = nullptr;
+			VertexLayout * _instancedLayout = nullptr;
+			Unique<InstancedMeshData> _instancedData = nullptr;
 		};
 
 		//---------------------------------------------------------------------------
@@ -195,7 +169,7 @@ namespace Rapture
 		protected:
 			api(opengl3_3) GLShaderProgram(GLGraphics * graphics, VertexLayout * layout);
 
-			Map<ShaderType, GLShader> _shaders;
+			Dictionary<ShaderType, GLShader> _shaders;
 		};
 
 		class GLShader : public Shader
@@ -235,20 +209,6 @@ namespace Rapture
 
 			GLGraphics * _graphics;
 			HDC _deviceCtx = nullptr;
-			Context _renderCtx = nullptr;
-		};
-
-		class RenderTargetSurface : public GLSurface
-		{
-			deny_copy(RenderTargetSurface);
-
-		public:
-			api(opengl3_3) RenderTargetSurface(GLGraphics * graphics, const IntSize & size);
-			virtual api(opengl3_3) ~RenderTargetSurface();
-
-			virtual api(opengl3_3) void apply() const override;
-
-		protected:
 		};
 
 		class DepthSurface : public GLSurface
@@ -263,13 +223,15 @@ namespace Rapture
 			virtual api(opengl3_3) void clear() const override;
 		};
 
-		class UISurface : public RenderTargetSurface, public Connector
+		class UISurface : public GLSurface, public Connector
 		{
 			deny_copy(UISurface);
 
 		public:
 			api(opengl3_3) UISurface(GLGraphics * graphics, UISpace * space);
 			virtual ~UISurface() {}
+
+			virtual api(opengl3_3) void apply() const override;
 
 			virtual api(opengl3_3) void present() const override;
 			virtual api(opengl3_3) void requestData(ImageData * data) const override;
@@ -287,19 +249,29 @@ namespace Rapture
 			UISpace * _space;
 		};
 
-		class TextureSurface : public RenderTargetSurface
+		class GLTextureSurface : public TextureSurface
 		{
 			friend class GLGraphics;
 
 		public:
-			api(opengl3_3) TextureSurface(GLGraphics * graphics, const IntSize & size, Handle<Image> & image);
-			virtual ~TextureSurface() {}
+			api(opengl3_3) GLTextureSurface(GLGraphics * graphics, const IntSize & size);
+			virtual api(opengl3_3) ~GLTextureSurface();
 
+			virtual api(opengl3_3) void apply() const override;
 			virtual api(opengl3_3) void clear() const override;
+
+			virtual api(opengl3_3) void present() const override;
+
 			virtual api(opengl3_3) void requestData(ImageData * data) const override;
 
+			virtual api(opengl3_3) void addBuffer(Handle<Texture> & texture, ImageFormat format = ImageFormat::rgb) override;
+
 		protected:
-			Handle<GLImage> _texture;
+			GLGraphics * _graphics;
+			ArrayList<GLImage> _textures;
+			GLuint id;
+			GLuint depthBuffer;
+			array_list<GLenum> buffers;
 		};
 	}
 }

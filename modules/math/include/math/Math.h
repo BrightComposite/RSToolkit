@@ -63,8 +63,18 @@ namespace Rapture
 	using FloatCfs = Cfs<float>;
 	using DoubleCfs = Cfs<double>;
 
-	template<class T, bool integral = std::is_integral<T>::value>
-	struct BasicMath
+	enum class MathType
+	{
+		Integral,
+		Floating,
+		Other
+	};
+
+	template<class T, MathType type = std::is_integral<T>::value ? MathType::Integral : std::is_floating_point<T>::value ? MathType::Floating : MathType::Other>
+	struct BasicMath {};
+
+	template<class T>
+	struct BasicMath<T, MathType::Floating>
 	{
 		static inline T abs(const T & x)
 		{
@@ -91,6 +101,11 @@ namespace Rapture
 			return std::sqrt(x);
 		}
 
+		static inline T mod(const T & x, const T & y)
+		{
+			return std::fmod(x, y);
+		}
+
 		static inline T avg(const T & x, const T & y)
 		{
 			return 0.5f * (x + y);
@@ -106,14 +121,114 @@ namespace Rapture
 			return 1 / v;
 		}
 
+		static inline T floor(const T & v)
+		{
+			return std::floor(v);
+		}
+
+		static inline T ceil(const T & v)
+		{
+			return std::ceil(v);
+		}
+
 		static inline T round(const T & v)
 		{
 			return std::round(v);
 		}
+
+		static inline T lerp(T a, T b, T t)
+		{
+			return a + (b - a) * t;
+		}
 	};
 
 	template<class T>
-	struct BasicMath<T, true>
+	struct BasicMath<T, MathType::Integral>
+	{
+		static inline T abs(const T & x)
+		{
+			return std::abs(x);
+		}
+
+		static inline T sign(const T & x)
+		{
+			return x > 0 ? 1 : x < 0 ? -1 : 0;
+		}
+
+		static inline T sqr(const T & x)
+		{
+			return x * x;
+		}
+
+		static inline T pow(const T & x, const T & pow)
+		{
+			return static_cast<T>(std::pow(x, pow));
+		}
+
+		static inline T sqrt(const T & x)
+		{
+			return static_cast<T>(std::sqrt(x));
+		}
+
+		static inline T mod(const T & x, const T & y)
+		{
+			return x % y;
+		}
+
+		static inline T avg(const T & x, const T & y)
+		{
+			return (x + y) >> 1;
+		}
+
+		static inline const T & clamp(const T & x, const T & low, const T & high)
+		{
+			return x > high ? high : x < low ? low : x;
+		}
+
+		static inline T invert(const T & v)
+		{
+			return 1 / v;
+		}
+
+		static inline T floor(const T & v)
+		{
+			return v;
+		}
+
+		static inline T ceil(const T & v)
+		{
+			return v;
+		}
+
+		static inline T round(const T & v)
+		{
+			return v;
+		}
+
+		template<class U, useif<not_same_type<U, double>::value>>
+		static inline T lerp(T a, T b, U t)
+		{
+			return a + (b - a) * static_cast<float>(t);
+		}
+
+		static inline T lerp(T a, T b, double t)
+		{
+			return a + (b - a) * t;
+		}
+
+		static inline T round2pow(const T & v)
+		{
+			T i = 1;
+
+			while(i < v)
+				i <<= 1;
+
+			return i;
+		}
+	};
+
+	template<class T>
+	struct BasicMath<T, MathType::Other>
 	{
 		static inline T abs(const T & x)
 		{
@@ -155,38 +270,67 @@ namespace Rapture
 			return 1 / v;
 		}
 
+		static inline T floor(const T & v)
+		{
+			return v;
+		}
+
+		static inline T ceil(const T & v)
+		{
+			return v;
+		}
+
 		static inline T round(const T & v)
 		{
 			return v;
 		}
 
-		static inline T round2pow(const T & v)
+		template<class U, useif<not_same_type<U, double>::value>>
+		static inline T lerp(T a, T b, U t)
 		{
-			T i = 1;
+			return a + (b - a) * static_cast<float>(t);
+		}
 
-			while(i < v)
-				i <<= 1;
-
-			return i;
+		static inline T lerp(T a, T b, double t)
+		{
+			return a + (b - a) * t;
 		}
 	};
 
 	template<class T>
-	inline T avg(const T & x, const T & y)
+	inline auto avg(const T & x, const T & y) -> decltype(BasicMath<T>::avg(x, y))
 	{
 		return BasicMath<T>::avg(x, y);
 	}
 
 	template<class T>
-	inline T round(const T & x)
+	inline auto floor(const T & x) -> decltype(BasicMath<T>::floor(x))
+	{
+		return BasicMath<T>::floor(x);
+	}
+
+	template<class T>
+	inline auto ceil(const T & x) -> decltype(BasicMath<T>::ceil(x))
+	{
+		return BasicMath<T>::ceil(x);
+	}
+
+	template<class T>
+	inline auto round(const T & x) -> decltype(BasicMath<T>::round(x))
 	{
 		return BasicMath<T>::round(x);
 	}
 
 	template<class T>
-	inline T sqr(const T & x)
+	inline auto sqr(const T & x) -> decltype(BasicMath<T>::sqr(x))
 	{
 		return BasicMath<T>::sqr(x);
+	}
+
+	template<class T, class U>
+	inline auto lerp(const T & a, const T & b, U t) -> decltype(BasicMath<T>::lerp(a, b, t))
+	{
+		return BasicMath<T>::lerp(a, b, t);
 	}
 
 	template<int I>

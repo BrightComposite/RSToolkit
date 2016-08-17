@@ -266,23 +266,23 @@ namespace Rapture
         template<typename U>
         int compare(const Point<U> & pt) const
         {
-            return includes(pt) ? 0 : icomp(center(), pt);
+            return contains(pt) ? 0 : icomp(center(), pt);
         }
 
         template<typename U>
-        bool includes(const Rect<U> & r) const
+        bool contains(const Rect<U> & r) const
         {
-            return includes(r.minPos()) && includes(r.maxPos());
+            return contains(r.minPos()) && contains(r.maxPos());
         }
 
         template<typename U>
-        bool includes(const Point<U> & pt) const
+        bool contains(const Point<U> & pt) const
         {
             return between(pt.x, left, right) && between(pt.y, top, bottom);
         }
 
         template<typename U>
-        bool isIntersecting(const Rect<U> & r) const
+        bool intersects(const Rect<U> & r) const
         {
             return (r.right >= left && r.left <= right) && (r.bottom >= top && r.top <= bottom);
         }

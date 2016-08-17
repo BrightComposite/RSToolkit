@@ -10,7 +10,7 @@
 #include <windows.h>
 
 #include <core/addition/Singleton.h>
-#include <core/container/ArrayList.h>
+#include <container/ArrayList.h>
 #include <core/function/Function.h>
 #include <core/String.h>
 

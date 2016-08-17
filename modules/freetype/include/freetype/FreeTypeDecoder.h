@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------
 
 #include <graphics/font/io/FontIO.h>
-#include <core/container/Map.h>
+#include <container/Map.h>
 #include <core/String.h>
 
 //---------------------------------------------------------------------------

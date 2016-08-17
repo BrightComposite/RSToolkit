@@ -42,7 +42,7 @@ namespace Rapture
 		member_cast(q, array<T, 4>);
 		member_cast(data, Data);
 
-		Quaternion() : v(VectorType::identity) {}
+		Quaternion() : v(VectorType::positiveW) {}
 
 		Quaternion(const Quaternion & q) : v(q.v) {}
 
@@ -70,7 +70,7 @@ namespace Rapture
 			Cast<U, Quaternion>::cast(*this, v);
 		}
 
-		Quaternion(const VectorType & axis, T angle) : Quaternion(VectorMath<T>::trigon(angle * 0.5f).template shuffle<0, 0, 0, 1>() * axis.template blend<0, 0, 0, 1>(VectorType::identity)) {}
+		Quaternion(const VectorType & axis, T angle) : Quaternion(VectorMath<T>::trigon(angle * 0.5f).template shuffle<0, 0, 0, 1>() * axis.template blend<0, 0, 0, 1>(VectorType::positiveW)) {}
 		//	[sx sy sz c]																							 [ s  s  s  c ]						 [ x  y  z  1 ]
 
 		Quaternion & operator = (const Quaternion & q)
@@ -345,13 +345,14 @@ namespace Rapture
 
 	using FloatQuaternion = Quaternion<float>;
 	using DoubleQuaternion = Quaternion<double>;
-	using floatq = Quaternion<float>;
-	using doubleq = Quaternion<double>;
+	using floatq = FloatQuaternion;
+	using doubleq = DoubleQuaternion;
 
 	template<class T>
-	using squat = Storage<Quaternion<T>>;
-	using fquat = Storage<Quaternion<float>>;
-	using dquat = Storage<Quaternion<double>>;
+	using AlignedQuaternion = Aligned<Quaternion<T>>;
+
+	using fquat = AlignedQuaternion<float>;
+	using dquat = AlignedQuaternion<double>;
 
 	template<class T>
 	Quaternion<T> operator + (const Quaternion<T> & q1, const Quaternion<T> & q2)

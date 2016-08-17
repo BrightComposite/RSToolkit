@@ -7,7 +7,7 @@
 
 #include <core/addition/Cached.h>
 #include <core/addition/Singleton.h>
-#include <core/container/ArrayList.h>
+#include <container/ArrayList.h>
 
 #include <message/Subject.h>
 
@@ -43,7 +43,6 @@ namespace Rapture
 		class GLImage;
 		class GLShader;
 		class GLShaderProgram;
-		class GLMesh;
 	}
 
 	link_class(opengl3_3, OpenGL3_3::GLGraphics, Class<Graphics3D>);
@@ -90,6 +89,8 @@ namespace Rapture
 
 			api(opengl3_3) void bind(const GLShaderProgram * program);
 
+			virtual api(opengl3_3) void bind(const Handle<Texture> & texture, uint index) override;
+
 			virtual api(opengl3_3) void clip(const IntRect & rect) override;
 			virtual api(opengl3_3) void present() const override;
 
@@ -99,10 +100,10 @@ namespace Rapture
 
 			virtual api(opengl3_3) Handle<Image> createImage(const ImageData & data) override;
 			virtual api(opengl3_3) Handle<Surface> createSurface(UISpace * space) override;
-			virtual api(opengl3_3) Handle<Surface> createSurface(const IntSize & size, Handle<Image> & image) override;
+			virtual api(opengl3_3) Handle<TextureSurface> createSurface(const IntSize & size) override;
 
 			virtual api(opengl3_3) Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) override;
-			virtual api(opengl3_3) Handle<Mesh> createMesh() override;
+			virtual api(opengl3_3) Handle<MeshBuilder> createMesh() override;
 
 			virtual api(opengl3_3) void addShaderProgram(const string & id, VertexLayout * layout, ShaderCodeSet & codeSet) override;
 
@@ -136,7 +137,6 @@ namespace Rapture
 
 			array_list<GLUniformBinding> _uniformBindings;
 			const GLShaderProgram * _shaderProgram = nullptr;
-			const GLMesh * _mesh = nullptr;
 		};
 	}
 

@@ -11,7 +11,7 @@
 #include <core/addition/Wrapper.h>
 #include <core/memory/allocator/DefaultAllocator.h>
 #include <core/Hash.h>
-#include <core/container/Container.h>
+#include <container/Container.h>
 
 //---------------------------------------------------------------------------
 
@@ -556,15 +556,17 @@ namespace Rapture
 			return *this;
 		}
 
-		Handle & operator = (const Handle<T> & h)
+		template<class U, class ... A, useif<based_on<U, T>::value>>
+		Handle & operator = (const Handle<U, A...> & h)
 		{
 			Base::operator = (h);
 			return *this;
 		}
 
-		Handle & operator = (Handle<T> && h)
+		template<class U, class ... A, useif<based_on<U, T>::value>>
+		Handle & operator = (Handle<U, A...> && h)
 		{
-			Base::operator = (forward<Handle<T>>(h));
+			Base::operator = (forward<Handle<U, A...>>(h));
 			return *this;
 		}
 
@@ -657,73 +659,27 @@ namespace Rapture
 			}
 		}
 
-		Handle & operator = (const Handle & h)
+		template<class U, class ... O, useif<based_on<U, T>::value>, skipif<same_types<Owner, Types<O...>>::value>>
+		Handle & operator = (const Handle<U, O...> & h)
 		{
-			if(this == &h)
+			if(void_ptr(this) == void_ptr(&h))
 				return *this;
 
 			release();
-			_shared = h._shared;
+			_shared = static_cast<const T *>(h._shared);
 			keep();
 
 			return *this;
 		}
 
-		Handle & operator = (Handle && h)
-		{
-			if(this == &h)
-				return *this;
-
-			release();
-			_shared = h._shared;
-			h._shared = nullptr;
-
-			return *this;
-		}
-
-		Handle & operator = (const Handle<T> & h)
+		template<class U, class ... O, useif<based_on<U, T>::value>, skipif<same_types<Owner, Types<O...>>::value>>
+		Handle & operator = (Handle<U, O...> && h)
 		{
 			if(void_ptr(this) == void_ptr(&h))
 				return *this;
 
 			release();
-			_shared = h._shared;
-			keep();
-
-			return *this;
-		}
-
-		Handle & operator = (Handle<T> && h)
-		{
-			if(void_ptr(this) == void_ptr(&h))
-				return *this;
-
-			release();
-			_shared = h._shared;
-			h._shared = nullptr;
-
-			return *this;
-		}
-
-		Handle & operator = (const Handle<const T> & h)
-		{
-			if(void_ptr(this) == void_ptr(&h))
-				return *this;
-
-			release();
-			_shared = h._shared;
-			keep();
-
-			return *this;
-		}
-
-		Handle & operator = (Handle<const T> && h)
-		{
-			if(void_ptr(this) == void_ptr(&h))
-				return *this;
-
-			release();
-			_shared = h._shared;
+			_shared = static_cast<const T *>(h._shared);
 			h._shared = nullptr;
 
 			return *this;
@@ -780,6 +736,56 @@ namespace Rapture
 		bool isNull() const
 		{
 			return _shared == nullptr;
+		}
+
+		Handle & operator = (const Handle & h)
+		{
+			if(this == &h)
+				return *this;
+
+			release();
+			_shared = h._shared;
+			keep();
+
+			return *this;
+		}
+
+		Handle & operator = (Handle && h)
+		{
+			if(this == &h)
+				return *this;
+
+			release();
+			_shared = h._shared;
+			h._shared = nullptr;
+
+			return *this;
+		}
+
+		template<class U, useif<based_on<U, T>::value, not_same_type<U, T>::value>>
+		Handle & operator = (const Handle<U, Owner> & h)
+		{
+			if(void_ptr(this) == void_ptr(&h))
+				return *this;
+
+			release();
+			_shared = static_cast<const T *>(h._shared);
+			keep();
+
+			return *this;
+		}
+
+		template<class U, useif<based_on<U, T>::value, not_same_type<U, T>::value>>
+		Handle & operator = (Handle<U, Owner> && h)
+		{
+			if(void_ptr(this) == void_ptr(&h))
+				return *this;
+
+			release();
+			_shared = static_cast<const T *>(h._shared);
+			h._shared = nullptr;
+
+			return *this;
 		}
 
 		template<class U>
@@ -1099,7 +1105,7 @@ namespace Rapture
 		UniqueHandle() : _inner(nullptr) {}
 		UniqueHandle(nullptr_t) : _inner(nullptr) {}
 
-		~UniqueHandle() { delete _inner; }
+		~UniqueHandle() { if(_inner != nullptr) delete _inner; }
 
 		bool isNull() const
 		{
@@ -1244,16 +1250,16 @@ namespace Rapture
 		struct is_handle0<Handle<A...>> : true_type {};
 
 		template<class T, class U>
-		struct is_same_handle1 : false_type {};
-
-		template<class T, class ... A>
-		struct is_same_handle1<Handle<T, A...>, T> : true_type {};
-
-		template<class T, class U>
-		struct is_same_handle0 : false_type {};
+		struct is_handle_of1 : false_type {};
 
 		template<class T, class U, class ... A>
-		struct is_same_handle0<Handle<U, A...>, T> : is_same_handle1<Handle<decay_t<U>, A...>, T> {};
+		struct is_handle_of1<Handle<U, A...>, T> : based_on<U, T> {};
+
+		template<class T, class U>
+		struct is_handle_of0 : false_type {};
+
+		template<class T, class U, class ... A>
+		struct is_handle_of0<Handle<U, A...>, T> : is_handle_of1<Handle<decay_t<U>, A...>, T> {};
 
 		template<class T>
 		struct is_uhandle0 : false_type {};
@@ -1262,29 +1268,29 @@ namespace Rapture
 		struct is_uhandle0<Handle<A...>> : true_type {};
 
 		template<class T, class U>
-		struct is_same_uhandle1 : false_type {};
-
-		template<class T, class ... A>
-		struct is_same_uhandle1<Handle<T, A...>, T> : true_type {};
-
-		template<class T, class U>
-		struct is_same_uhandle0 : false_type {};
+		struct is_uhandle_of1 : false_type {};
 
 		template<class T, class U, class ... A>
-		struct is_same_uhandle0<Handle<U, A...>, T> : is_same_uhandle1<Handle<decay_t<U>, A...>, T> {};
+		struct is_uhandle_of1<Handle<U, A...>, T> : based_on<U, T> {};
+
+		template<class T, class U>
+		struct is_uhandle_of0 : false_type {};
+
+		template<class T, class U, class ... A>
+		struct is_uhandle_of0<Handle<U, A...>, T> : is_uhandle_of1<Handle<decay_t<U>, A...>, T> {};
 	}
 
 	template<class T>
 	struct is_handle : Internals::is_handle0<decay_t<T>> {};
 
 	template<class H, class T>
-	struct is_handle_of : Internals::is_same_handle0<decay_t<H>, T> {};
+	struct is_handle_of : Internals::is_handle_of0<decay_t<H>, T> {};
 
 	template<class T>
 	struct is_uhandle : Internals::is_uhandle0<decay_t<T>> {};
 
 	template<class H, class T>
-	struct is_uhandle_of : Internals::is_same_uhandle0<decay_t<H>, T> {};
+	struct is_uhandle_of : Internals::is_uhandle_of0<decay_t<H>, T> {};
 
 	template<class T, class ... A>
 	struct is_handle_init

@@ -14,8 +14,8 @@
 #include <core/Handle.h>
 #include <core/Exception.h>
 #include <core/addition/State.h>
-#include <core/container/Data.h>
-#include <core/container/Stack.h>
+#include <container/Data.h>
+#include <container/Stack.h>
 
 #include <math/Rect.h>
 #include <math/Transform.h>
@@ -137,7 +137,7 @@ namespace Rapture
 
 		virtual Handle<Image> createImage(const ImageData & data) = 0;
 		virtual Handle<Surface> createSurface(UISpace * space) = 0;
-		virtual Handle<Surface> createSurface(const IntSize & size, Handle<Image> & image) = 0;
+		virtual Handle<ImageSurface> createSurface(const IntSize & size) = 0;
 
 		virtual void clip(const IntRect & rect) = 0;
 		virtual void rectangle(const IntRect & rect) = 0;

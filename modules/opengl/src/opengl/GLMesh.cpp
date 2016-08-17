@@ -2,81 +2,211 @@
 
 #include <opengl/GLObjects.h>
 
+#include <iostream>
+
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
 	namespace OpenGL
 	{
-		struct GLPlainMeshImpl : GLMeshImpl
+		using std::cout;
+		using std::endl;
+		
+		template<>
+		class GLMesh<GLMeshType::Plain> : public Mesh
 		{
-			virtual ~GLPlainMeshImpl() {}
+			deny_copy(GLMesh);
 
-			virtual void draw(const GLMesh * mesh) const
+		public:
+			GLMesh(GLMeshBuilder * builder) : topology(builder->_topology), buffers(move(builder->_buffers)), offset(builder->_offset), verticesCount(builder->_verticesCount - builder->_offset)
 			{
-				glDrawArrays(mesh->topology(), mesh->offset(), mesh->verticesCount());
+				glGenVertexArrays(1, &id);
+				glBindVertexArray(id);
+
+				for(auto & b : buffers)
+				{
+					auto * layout = b->layout;
+					b->apply();
+					float * pointer = 0;
+
+					for(size_t i = 0; i < layout->elements.size(); ++i)
+					{
+						auto units = layout->elements[i]->units;
+						auto count = (units - 1) / 4 + 1;
+
+						for(uint j = 0; j < count; ++j, ++attrCount)
+						{
+							auto u = (j == count - 1) ? ((units - 1) % 4) + 1 : 4;
+							glEnableVertexAttribArray(attrCount);
+							glVertexAttribPointer(attrCount, u, GL_FLOAT, GL_FALSE, layout->stride, pointer);
+							pointer += u;
+						}
+					}
+				}
+
+				glBindVertexArray(0);
 			}
+
+			virtual ~GLMesh()
+			{
+				glDeleteVertexArrays(1, &id);
+			}
+
+			virtual void draw() const override
+			{
+				glBindVertexArray(id);
+				glDrawArrays(topology, offset, verticesCount);
+				glBindVertexArray(0);
+			}
+
+			uint id = 0;
+			uint attrCount = 0;
+			uint topology;
+			ArrayList<VertexBuffer> buffers;
+			uint offset;
+			uint verticesCount;
 		};
 
-		struct GLIndexedMeshImpl : virtual GLPlainMeshImpl
-		{
-			GLIndexedMeshImpl() {}
-			virtual ~GLIndexedMeshImpl() {}
+		using GLPlainMesh = GLMesh<GLMeshType::Plain>;
 
-			virtual void draw(const GLMesh * mesh) const
+		template<>
+		class GLMesh<GLMeshType::Indexed> : public virtual GLPlainMesh
+		{
+			deny_copy(GLMesh);
+
+		public:
+			GLMesh(GLMeshBuilder * builder) : GLPlainMesh(builder), ibuffer(move(builder->_ibuffer)), indicesCount(builder->_indicesCount - builder->_offset)
 			{
-				glDrawElements(mesh->topology(), indicesCount, GL_UNSIGNED_SHORT, indicesOffset);
+				glBindVertexArray(id);
+				ibuffer->apply();
+				glBindVertexArray(0);
 			}
 
-			void * indicesOffset;
-			uint indicesCount;
+			virtual ~GLMesh() {}
+
+			virtual void draw() const override
+			{
+				glBindVertexArray(id);
+				glDrawElements(topology, indicesCount, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(offset));
+				glBindVertexArray(0);
+			}
+
+			uint indicesCount = 0;
 			Handle<GLIndexBuffer> ibuffer;
 		};
 
-		struct GLInstancedMeshImpl : virtual GLPlainMeshImpl
-		{
-			GLInstancedMeshImpl() {}
-			virtual ~GLInstancedMeshImpl() {}
+		using GLIndexedMesh = GLMesh<GLMeshType::Indexed>;
 
-			virtual void draw(const GLMesh * mesh) const
+		template<>
+		class GLMesh<GLMeshType::Instanced> : public virtual GLPlainMesh
+		{
+			deny_copy(GLMesh);
+
+		public:
+			GLMesh(GLMeshBuilder * builder) : GLPlainMesh(builder), data(move(builder->_instancedData))
 			{
+				glBindVertexArray(id);
+				glGenBuffers(1, &buffer);
 				glBindBuffer(GL_ARRAY_BUFFER, buffer);
-				glBufferData(GL_ARRAY_BUFFER, data.size, data.ptr, GL_STATIC_DRAW);
-				glDrawArraysInstanced(mesh->topology(), mesh->offset(), mesh->verticesCount(), instances.size());
+				glBufferData(GL_ARRAY_BUFFER, data->contents.size, data->contents.ptr, GL_STATIC_DRAW);
+
+				auto * layout = builder->_instancedLayout;
+				float * pointer = 0;
+
+				for(size_t i = 0; i < layout->elements.size(); ++i)
+				{
+					auto units = layout->elements[i]->units;
+					auto count = (units - 1) / 4 + 1;
+
+					for(uint j = 0; j < count; ++j, ++attrCount)
+					{
+						auto u = (j == count - 1) ? ((units - 1) % 4) + 1 : 4;
+						glEnableVertexAttribArray(attrCount);
+						glVertexAttribPointer(attrCount, u, GL_FLOAT, GL_FALSE, layout->stride, pointer);
+						glVertexAttribDivisor(attrCount, 1);
+						pointer += u;
+					}
+				}
+
+				glBindVertexArray(0);
 			}
 
-			VertexLayout * layout = nullptr;
-			ArrayList<MeshInstance> instances;
+			virtual ~GLMesh() {}
+
+			virtual void draw() const override
+			{
+				glBindVertexArray(id);
+				glDrawArraysInstanced(topology, offset, verticesCount, data->instances.count());
+				glBindVertexArray(0);
+			}
+
+			virtual void updateInstanceData() const override
+			{
+				glBindBuffer(GL_ARRAY_BUFFER, buffer);
+				glBufferData(GL_ARRAY_BUFFER, data->contents.size, data->contents.ptr, GL_STATIC_DRAW);
+			}
+
+			virtual InstancedMeshDataChunk * instance() override
+			{
+				return data->makeInstance();
+			}
+
+			virtual void remove(InstancedMeshDataChunk * chunk) override
+			{
+				data->releaseInstance(chunk);
+			}
+
+			virtual void removeInstances() override
+			{
+				data->clear();
+			}
+
+			Unique<InstancedMeshData> data = nullptr;
 			uint buffer;
-			uint offset;
-			owned_data<byte> data;
 		};
 
-		struct GLInstancedIndexedMeshImpl : GLIndexedMeshImpl, GLInstancedMeshImpl
+		using GLInstancedMesh = GLMesh<GLMeshType::Instanced>;
+
+		template<>
+		class GLMesh<GLMeshType::InstancedIndexed> : public GLIndexedMesh, public GLInstancedMesh
 		{
-			GLInstancedIndexedMeshImpl(GLIndexedMeshImpl * impl)
+			deny_copy(GLMesh);
+
+		public:
+			GLMesh(GLMeshBuilder * builder) : GLPlainMesh(builder), GLInstancedMesh(builder), GLIndexedMesh(builder) {}
+			virtual ~GLMesh() {}
+
+			virtual void draw() const override final
 			{
-				indicesOffset = impl->indicesOffset;
-				indicesCount = impl->indicesCount;
-				ibuffer = move(impl->ibuffer);
+				glBindVertexArray(id);
+				glDrawElementsInstanced(GLInstancedMesh::topology, indicesCount, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(GLInstancedMesh::offset), data->instances.count());
+				glBindVertexArray(0);
 			}
 
-			GLInstancedIndexedMeshImpl(GLInstancedMeshImpl * impl)
-			{
-				layout = impl->layout;
-				instances = move(impl->instances);
-				data = move(impl->data);
-			}
-
-			virtual ~GLInstancedIndexedMeshImpl() {}
-
-			virtual void draw(const GLMesh * mesh) const final
+			virtual void updateInstanceData() const override final
 			{
 				glBindBuffer(GL_ARRAY_BUFFER, buffer);
-				glBufferData(GL_ARRAY_BUFFER, data.size, data.ptr, GL_STATIC_DRAW);
-				glDrawElementsInstanced(mesh->topology(), indicesCount, GL_UNSIGNED_SHORT, indicesOffset, instances.size());
+				glBufferData(GL_ARRAY_BUFFER, data->contents.size, data->contents.ptr, GL_STATIC_DRAW);
+			}
+
+			virtual InstancedMeshDataChunk * instance() override final
+			{
+				return data->makeInstance();
+			}
+
+			virtual void remove(InstancedMeshDataChunk * chunk) override final
+			{
+				data->releaseInstance(chunk);
+			}
+
+			virtual void removeInstances() override final
+			{
+				data->clear();
 			}
 		};
+
+		using GLInstancedIndexedMesh = GLMesh<GLMeshType::InstancedIndexed>;
 
 //---------------------------------------------------------------------------
 
@@ -119,17 +249,10 @@ namespace Rapture
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
 		}
 
-		GLMesh::GLMesh(GLGraphics * graphics) : _graphics(graphics), _topology(GL_TRIANGLES)
-		{
-			glGenVertexArrays(1, &_id);
-		}
+		GLMeshBuilder::GLMeshBuilder(GLGraphics * graphics) : _graphics(graphics) {}
+		GLMeshBuilder::~GLMeshBuilder() {}
 
-		GLMesh::~GLMesh()
-		{
-			glDeleteVertexArrays(1, &_id);
-		}
-
-		Mesh * GLMesh::buffer(const Handle<VertexBuffer> & buffer)
+		MeshBuilder * GLMeshBuilder::buffer(const Handle<VertexBuffer> & buffer)
 		{
 			if(_verticesCount == 0)
 				_verticesCount = buffer->verticesCount;
@@ -140,29 +263,23 @@ namespace Rapture
 			return this;
 		}
 
-		Mesh * GLMesh::indices(const VertexIndices & indices, uint offset)
+		MeshBuilder * GLMeshBuilder::indices(const VertexIndices & indices)
 		{
-			if(!check_flag(MeshState::Indexed, _state))
-			{
-				if(check_flag(MeshState::Instanced, _state))
-					_impl = unique_handle<GLInstancedIndexedMeshImpl>(_impl->upcast<GLInstancedMeshImpl>());
-				else
-					_impl = unique_handle<GLIndexedMeshImpl>();
-			}
-
 			set_flag(MeshState::Indexed, _state);
 
-			auto impl = _impl->upcast<GLIndexedMeshImpl>();
-			impl->ibuffer.init(_graphics, indices);
-			impl->indicesOffset = reinterpret_cast<void *>(offset);
-			impl->indicesCount = static_cast<uint>(indices.size() - offset);
-
-			_graphics->checkForErrors();
+			_ibuffer.init(_graphics, indices);
+			_indicesCount = static_cast<uint>(indices.size());
 
 			return this;
 		}
 
-		Mesh * GLMesh::topology(VertexTopology topology)
+		MeshBuilder * GLMeshBuilder::offset(uint offset)
+		{
+			_offset = offset;
+			return this;
+		}
+
+		MeshBuilder * GLMeshBuilder::topology(VertexTopology topology)
 		{
 			switch(topology)
 			{
@@ -189,119 +306,29 @@ namespace Rapture
 			return this;
 		}
 
-		const Mesh * GLMesh::ready()
+		Handle<Mesh> GLMeshBuilder::ready()
 		{
-			glBindVertexArray(_id);
-
-			uint k = 0;
-
-			for(auto & b : _buffers)
-			{
-				auto * layout = b->layout;
-				b->apply();
-				float * pointer = 0;
-
-				for(size_t i = 0; i < layout->elements.size(); ++i)
-				{
-					auto units = layout->elements[i]->units;
-					auto count = (units - 1) / 4 + 1;
-
-					for(uint j = 0; j < count; ++j, ++k)
-					{
-						auto u = (j == count - 1) ? ((units - 1) % 4) + 1 : 4;
-						glEnableVertexAttribArray(k);
-						glVertexAttribPointer(k, u, GL_FLOAT, GL_FALSE, layout->stride, pointer);
-						pointer += u;
-					}
-				}
-			}
-
-			if(check_flag(MeshState::Instanced, _state))
-			{
-				auto * impl = _impl->upcast<GLInstancedMeshImpl>();
-				auto * layout = impl->layout;
-				float * pointer = 0;
-				glBindBuffer(GL_ARRAY_BUFFER, impl->buffer);
-
-				for(size_t i = 0; i < layout->elements.size(); ++i)
-				{
-					auto units = layout->elements[i]->units;
-					auto count = (units - 1) / 4 + 1;
-
-					for(uint j = 0; j < count; ++j, ++k)
-					{
-						auto u = (j == count - 1) ? ((units - 1) % 4) + 1 : 4;
-						glEnableVertexAttribArray(k);
-						glVertexAttribPointer(k, u, GL_FLOAT, GL_FALSE, layout->stride, pointer);
-						glVertexAttribDivisor(k, 1);
-						pointer += u;
-					}
-				}
-			}
-
-			if(check_flag(MeshState::Indexed, _state))
-				_impl->upcast<GLIndexedMeshImpl>()->ibuffer->apply();
-
-			if(_state == 0)
-				_impl = unique_handle<GLPlainMeshImpl>();
-
-			glBindVertexArray(0);
-
-			_graphics->checkForErrors();
-
 			set_flag(MeshState::Ready, _state);
-			return this;
+
+			switch(_state)
+			{
+				case 1: return handle<GLPlainMesh>(this);
+				case 3: return handle<GLIndexedMesh>(this);
+				case 5: return handle<GLInstancedMesh>(this);
+				case 7: return handle<GLInstancedIndexedMesh>(this);
+
+				default: return nullptr;
+			}
 		}
 
-		Mesh * GLMesh::instanceLayout(VertexLayout * layout)
+		MeshBuilder * GLMeshBuilder::makeInstanced(VertexLayout * layout)
 		{
-			if(!check_flag(MeshState::Instanced, _state))
-			{
-				if(check_flag(MeshState::Indexed, _state))
-					_impl = unique_handle<GLInstancedIndexedMeshImpl>(_impl->upcast<GLIndexedMeshImpl>());
-				else
-					_impl = unique_handle<GLInstancedMeshImpl>();
-			}
-			
 			set_flag(MeshState::Instanced, _state);
-			auto impl = _impl->upcast<GLInstancedMeshImpl>();
-			impl->layout = layout;
-			impl->data.alloc(layout->stride * 16);
-			impl->offset = 0;
 
-			glGenBuffers(1, &impl->buffer);
-			glBindBuffer(GL_ARRAY_BUFFER, impl->buffer);
-			glBufferData(GL_ARRAY_BUFFER, impl->data.size, impl->data.ptr, GL_STATIC_DRAW);
+			_instancedLayout = layout;
+			_instancedData.init(layout->stride);
 
 			return this;
-		}
-
-		MeshInstance * GLMesh::instance() const
-		{
-			if(!check_flag(MeshState::Instanced, _state))
-				throw Exception("Can't create instance of a mesh without an instance data layout!");
-
-			auto impl = _impl->upcast<GLInstancedMeshImpl>();
-			auto & b = impl->instances.emplace(impl->instances.end())->init();
-
-			if(impl->offset + impl->layout->stride > impl->data.size)
-			{
-				impl->data.realloc(impl->data.size * 2);
-				glBindBuffer(GL_ARRAY_BUFFER, impl->buffer);
-				glBufferData(GL_ARRAY_BUFFER, impl->data.size, impl->data.ptr, GL_STATIC_DRAW);
-			}
-
-			b->data.set(impl->data.ptr + impl->offset, impl->layout->stride);
-			impl->offset += impl->layout->stride;
-			
-			return b;
-		}
-
-		void GLMesh::draw() const
-		{
-			glBindVertexArray(_id);
-			_impl->draw(this);
-			glBindVertexArray(0);
 		}
 	}
 }

@@ -20,7 +20,7 @@ namespace Rapture
 			return ImageFormatConverter<ImageFormat::format, to>::convert;
 /*	op	*/
 
-			enum_image_formats(op)
+			enum_image_convertable_formats(op)
 #undef op
 
 		default:
@@ -37,7 +37,7 @@ namespace Rapture
 			return getConverter0<ImageFormat::format>(from);
 /*	op	*/
 
-			enum_image_formats(op)
+			enum_image_convertable_formats(op)
 #undef op
 
 		default:

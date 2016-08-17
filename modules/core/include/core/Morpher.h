@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/container/Map.h>
+#include <container/Map.h>
 #include <core/Object.h>
 #include <atomic>
 
@@ -155,7 +155,7 @@ namespace Rapture
 			return map[morphid(T)];
 		}
 
-		UnorderedMap<int, Base, Owner...> map;
+		Map<int, Base, Owner...> map;
 	};
 };
 

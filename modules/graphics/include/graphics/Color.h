@@ -325,11 +325,14 @@ namespace Rapture
 	template<>
 	struct ColorFormatCast<ColorFormat::hsv, ColorFormat::rgb>
 	{
-		static inline void cast(GenericColor<ColorType::Byte, ColorFormat::rgb> & out,const GenericColor<ColorType::Byte, ColorFormat::hsv> & color)
+		static inline void cast(GenericColor<ColorType::Byte, ColorFormat::rgb> & out, const GenericColor<ColorType::Byte, ColorFormat::hsv> & color)
 		{
-			static const int cc[] = {0, 1, 1, 2, 2, 0};
-			static const int xx[] = {1, 0, 2, 1, 0, 2};
-			static const int zz[] = {2, 2, 0, 0, 1, 1};
+			// 0 - red, 1 - green, 2 - blue
+			static constexpr int map[3][6] = {
+				{0, 1, 1, 2, 2, 0}, // primary
+				{1, 0, 2, 1, 0, 2}, // secondary
+				{2, 2, 0, 0, 1, 1}	// recessive
+			};
 
 			static const byte third = 85;
 			static const float sixx = 6.0f / 255.0f;
@@ -340,18 +343,21 @@ namespace Rapture
 
 			int i = std::min(static_cast<int>(sector), 5);
 
-			out[cc[i]] = color.v;
-			out[zz[i]] = color.v - chroma;
-			out[xx[i]] = std::min<byte>(x + out[zz[i]], 255);
+			out[map[0][i]] = color.v;
+			out[map[1][i]] = color.v - chroma;
+			out[map[2][i]] = std::min<byte>(x + out[map[1][i]], 255);
 
 			out.a = color.a;
 		}
 
 		static inline void cast(GenericColor<ColorType::Float, ColorFormat::rgb> & out, const GenericColor<ColorType::Float, ColorFormat::hsv> & color)
 		{
-			static const int cc[] = {0, 1, 1, 2, 2, 0};
-			static const int xx[] = {1, 0, 2, 1, 0, 2};
-			static const int zz[] = {2, 2, 0, 0, 1, 1};
+			// 0 - red, 1 - green, 2 - blue
+			static constexpr int map[3][6] = {
+				{0, 1, 1, 2, 2, 0}, // primary
+				{1, 0, 2, 1, 0, 2}, // secondary
+				{2, 2, 0, 0, 1, 1}	// recessive
+			};
 
 			float sector = color.h * 6.0f;
 			float chroma = color.v * color.s;
@@ -359,9 +365,9 @@ namespace Rapture
 
 			int i = std::min(static_cast<int>(sector), 5);
 
-			out[cc[i]] = color.v;
-			out[zz[i]] = color.v - chroma;
-			out[xx[i]] = std::min(x + out[zz[i]], 1.0f);
+			out[map[0][i]] = color.v;
+			out[map[1][i]] = color.v - chroma;
+			out[map[2][i]] = std::min(x + out[map[1][i]], 1.0f);
 
 			out.a = color.a;
 		}

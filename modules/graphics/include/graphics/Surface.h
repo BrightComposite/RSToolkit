@@ -88,6 +88,13 @@ namespace Rapture
 		Viewport _viewport;
 	};
 
+	class ImageSurface : public Surface
+	{
+	public:
+		using Surface::Surface;
+
+		virtual void addBuffer(Handle<Image> & texture, ImageFormat format = ImageFormat::rgb) = 0;
+	};
 }
 
 //---------------------------------------------------------------------------

@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------
 
 #include <core/Object.h>
-#include <core/container/ArrayList.h>
+#include <container/ArrayList.h>
 
 #include <math/Vector.h>
 

@@ -18,9 +18,11 @@ module(SHARED)
 		
 		group(include Headers)
 		files(
+			Box.h
+			Frustum.h
 			Math.h
-			Matrix2x2.h
 			Matrix.h
+			Plane.h
 			Point.h
 			Quaternion.h
 			Range.h

@@ -142,7 +142,7 @@ namespace Rapture
 		virtual api(ui) void update() override;
 
 		Handle<Image> _image = nullptr;
-		Handle<Surface> _surface = nullptr;
+		Handle<ImageSurface> _surface = nullptr;
 	};
 
 	class SmartTextLayer : public StaticTextLayer

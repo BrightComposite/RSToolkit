@@ -17,10 +17,18 @@ module(SHARED)
 		domain(scene)
 		
 		group(include Headers)
-		files(Camera.h Scene.h)
+		files(
+			Camera.h
+			DeferredShadingScene.h
+			Scene.h
+		)
 
 		group(src Sources)
-		files(Scene.cpp)
+		files(
+			Camera.cpp
+			DeferredShadingScene.cpp
+			Scene.cpp
+			)
 	endsources()
 endmodule()
 

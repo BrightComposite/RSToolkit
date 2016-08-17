@@ -22,11 +22,39 @@ namespace Rapture
 #define mk_shuffle_2(a, b) (((b) << 1) | (a))
 #define mk_shuffle_4(a, b, c, d) (((d) << 6) | ((c) << 4) | ((b) << 2) | (a))
 #define mk_mask4(a, b, c, d) (((d) << 3) | ((c) << 2) | ((b) << 1) | (a))
+#define mk_mask8(a, b, c, d) (((d) << 7) | ((d) << 6) | ((c) << 5) | ((c) << 4) | ((b) << 3) | ((b) << 2) | ((a) << 1) | (a))
 #define reverse_shuffle_2 mk_shuffle_2(1, 0)
 #define reverse_shuffle_4 mk_shuffle_4(3, 2, 1, 0)
 
 	template<typename From, typename To>
 	struct IntrinsicCvt {};
+
+	template<>
+	struct IntrinsicCvt<__m128i, __m128i>
+	{
+		static inline void perform(const __m128i & in, __m128i & out)
+		{
+			out = in;
+		}
+	};
+
+	template<>
+	struct IntrinsicCvt<__m128i, __m128>
+	{
+		static inline void perform(const __m128i & in, __m128 & out)
+		{
+			out = _mm_cvtepi32_ps(in);
+		}
+	};
+
+	template<>
+	struct IntrinsicCvt<__m128, __m128i>
+	{
+		static inline void perform(const __m128 & in, __m128i & out)
+		{
+			out = _mm_cvtps_epi32(in);
+		}
+	};
 
 	template<>
 	struct IntrinsicCvt<__m128, __m128>

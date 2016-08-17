@@ -10,7 +10,7 @@
 #include <math/Math.h>
 #include <core/intrinsic/Intrinsic.h>
 #include <core/String.h>
-#include <core/memory/Storage.h>
+#include <core/memory/Aligned.h>
 #include <core/memory/allocator/AlignedAllocator.h>
 
 //---------------------------------------------------------------------------
@@ -35,11 +35,79 @@ namespace Rapture
 	template<class T>
 	using VectorConstants = MathConstants<Vector<T>>;
 
+	template<int ... Sequence>
+	struct SwizzleSequence	{};
+
+	template<typename T, class S, bool Assignable = S::assignable>
+	struct SwizzleVector {};
+
+	template<int X, int Y>
+	struct SwizzleSequence<X, Y>
+	{
+		static constexpr bool assignable = (X != Y);
+
+		template<int Component>
+		using get_component = std::integral_constant<int, (X == Component) ? 0 : (Y == Component) ? 1 : -1>;
+
+		enum : int
+		{
+			HX = get_component<0>::value, HY = get_component<1>::value, HZ = get_component<2>::value, HW = get_component<3>::value,
+
+			MX = X >= 0 ? 1 : 0, MY = Y >= 0 ? 1 : 0, MZ = 0, MW = 0,
+			SX = X >= 0 ? X : 0, SY = Y >= 0 ? Y : 0, SZ = 0, SW = 0,
+
+			BX = HX >= 0 ?  1 : 0, BY = HY >= 0 ?  1 : 0, BZ = HZ >= 0 ?  1 : 0, BW = HW >= 0 ?  1 : 0,
+			AX = HX >= 0 ? HX : 0, AY = HY >= 0 ? HY : 0, AZ = HZ >= 0 ? HZ : 0, AW = HW >= 0 ? HW : 0
+		};
+	};
+
+	template<int X, int Y, int Z>
+	struct SwizzleSequence<X, Y, Z>
+	{
+		static constexpr bool assignable = ((X != Y) && (X != Z) && (Y != Z));
+
+		template<int Component>
+		using get_component = std::integral_constant<int, (X == Component) ? 0 : (Y == Component) ? 1 : (Z == Component) ? 2 : -1>;
+
+		enum : int
+		{
+			HX = get_component<0>::value, HY = get_component<1>::value, HZ = get_component<2>::value, HW = get_component<3>::value,
+
+			MX = X >= 0 ? 1 : 0, MY = Y >= 0 ? 1 : 0, MZ = Z >= 0 ? 1 : 0, MW = 0,
+			SX = X >= 0 ? X : 0, SY = Y >= 0 ? Y : 0, SZ = Z >= 0 ? Z : 0, SW = 0,
+
+			BX = HX >= 0 ?  1 : 0, BY = HY >= 0 ?  1 : 0, BZ = HZ >= 0 ?  1 : 0, BW = HW >= 0 ?  1 : 0,
+			AX = HX >= 0 ? HX : 0, AY = HY >= 0 ? HY : 0, AZ = HZ >= 0 ? HZ : 0, AW = HW >= 0 ? HW : 0
+		};
+	};
+
+	template<int X, int Y, int Z, int W>
+	struct SwizzleSequence<X, Y, Z, W>
+	{
+		static constexpr bool assignable = ((X != Y) && (X != Z) && (X != W) && (Y != Z) && (Y != W) && (Z != W));
+
+		template<int Component>
+		using get_component = std::integral_constant<int, (X == Component) ? 0 : (Y == Component) ? 1 : (Z == Component) ? 2 : (W == Component) ? 3 : -1>;
+
+		enum : int
+		{
+			HX = get_component<0>::value, HY = get_component<1>::value, HZ = get_component<2>::value, HW = get_component<3>::value,
+
+			MX = X >= 0 ? 1 : 0, MY = Y >= 0 ? 1 : 0, MZ = Z >= 0 ? 1 : 0, MW = W >= 0 ? 1 : 0,
+			SX = X >= 0 ? X : 0, SY = Y >= 0 ? Y : 0, SZ = Z >= 0 ? Z : 0, SW = W >= 0 ? W : 0,
+
+			BX = HX >= 0 ?  1 : 0, BY = HY >= 0 ?  1 : 0, BZ = HZ >= 0 ?  1 : 0, BW = HW >= 0 ?  1 : 0,
+			AX = HX >= 0 ? HX : 0, AY = HY >= 0 ? HY : 0, AZ = HZ >= 0 ? HZ : 0, AW = HW >= 0 ? HW : 0
+		};
+	};
+
+	template<typename T, int ... Mask>
+	using Swizzle = SwizzleVector<T, SwizzleSequence<Mask...>>;
+
 	template<typename T>
 	struct alignas(sizeof(T) * 4) Vector : AlignedAllocator
 	{
-		using Data = intrin_data<T, 4>;
-		using IntrinType = typename Data::type;
+		using IntrinType = intrin_t<T, 4>;
 		using Intrin = Intrinsic<T, 4>;
 
 		union
@@ -53,18 +121,43 @@ namespace Rapture
 
 			array<T, 4> v;
 			T elements[4];
+
+			Swizzle<T, 0, 1, 2> xyz;
+			Swizzle<T, 0, 2, 1> xzy;
+			Swizzle<T, 1, 2, 0> yzx;
+			Swizzle<T, 1, 0, 2> yxz;
+			Swizzle<T, 2, 0, 1> zxy;
+			Swizzle<T, 2, 1, 0> zyx;
 		};
 
 		member_cast(v, array<T, 4>);
 		member_cast(intrinsic, IntrinType);
 
 		Vector() : intrinsic(identity) {}
-		Vector(const Vector & v) : intrinsic(v) {}
 		Vector(const IntrinType & v) : intrinsic(v) {}
 
-		template<class U, useif<!is_same<T, U>::value>>
-		Vector(const Vector<U> & v) : intrinsic(intrin_cvt<IntrinType>(v)) {}
+		Vector(const Vector & v) : intrinsic(v) {}
 
+		Vector(const Vector & v, T a)      : intrinsic(v) { w = a; }
+		Vector(const Vector & v, T a, T b) : intrinsic(v) { z = a; w = b; }
+		Vector(T a, const Vector & v)      : intrinsic(Intrin::template shuffle<3, 0, 1, 2>(v)) { x = a; }
+		Vector(T a, T b, const Vector & v) : intrinsic(Intrin::template shuffle<2, 3, 0, 1>(v)) { x = a; y = b; }
+		Vector(T a, const Vector & v, T b) : intrinsic(Intrin::template shuffle<3, 0, 1, 2>(v)) { x = a; w = b; }
+
+		template<class U, useif<!is_same<T, U>::value>>
+		Vector(const Vector<U> & v) : intrinsic(intrin_cvt<IntrinType>(v.intrinsic)) {}
+
+		template<class U, useif<!is_same<T, U>::value>>
+		Vector(const Vector<U> & v, T a)      : intrinsic(intrin_cvt<IntrinType>(v.intrinsic)) { w = a; }
+		template<class U, useif<!is_same<T, U>::value>>
+		Vector(const Vector<U> & v, T a, T b) : intrinsic(intrin_cvt<IntrinType>(v.intrinsic)) { z = a; w = b; }
+		template<class U, useif<!is_same<T, U>::value>>
+		Vector(T a, const Vector<U> & v)      : intrinsic(intrin_cvt<IntrinType>(Intrin::template shuffle<3, 0, 1, 2>(v))) { x = a; }
+		template<class U, useif<!is_same<T, U>::value>>
+		Vector(T a, T b, const Vector<U> & v) : intrinsic(intrin_cvt<IntrinType>(Intrin::template shuffle<2, 3, 0, 1>(v))) { x = a; y = b; }
+		template<class U, useif<!is_same<T, U>::value>>
+		Vector(T a, const Vector<U> & v, T b) : intrinsic(intrin_cvt<IntrinType>(Intrin::template shuffle<3, 0, 1, 2>(v))) { x = a; w = b; }
+		
 		template<class U, useif<can_cast<U, Vector>::value>>
 		Vector(const U & v)
 		{
@@ -77,7 +170,7 @@ namespace Rapture
 		}
 
 		Vector(T value) : intrinsic(Intrin::fill(value)) {}
-		Vector(T x, T y, T z, T w = 0) : intrinsic(Intrin::load(x, y, z, w)) {}
+		Vector(T x, T y, T z = 0, T w = 0) : intrinsic(Intrin::load(x, y, z, w)) {}
 
 		Vector & operator = (const Vector & v)
 		{
@@ -138,15 +231,16 @@ namespace Rapture
 			return *this;
 		}
 
+		Vector & floor()
+		{
+			intrinsic = Intrin::floor(intrinsic);
+			return *this;
+		}
+
 		Vector & invert()
 		{
 			intrinsic = Intrin::invert(intrinsic);
 			return *this;
-		}
-
-		Vector rounded() const
-		{
-			return Intrin::round(intrinsic);
 		}
 
 		Vector inverse() const
@@ -539,34 +633,36 @@ namespace Rapture
 		}
 
 		template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
-		inline Vector shuffle() const
+		Vector shuffle() const
 		{
 			return Intrin::template shuffle<A, B, C, D>(intrinsic);
 		}
 
 		template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
-		inline Vector shuffle(const Vector & v) const
+		Vector shuffle(const Vector & v) const
 		{
 			return Intrin::template shuffle2<A, B, C, D>(intrinsic, v);
 		}
 
 		template<byte A, byte B, byte C, byte D, useif<(A < 2 && B < 2 && C < 2 && D < 2)>>
-		inline Vector blend(const Vector & v) const
+		Vector blend(const Vector & v) const
 		{
 			return Intrin::template blend<A, B, C, D>(intrinsic, v);
 		}
 
-		static inline Vector minimum(const Vector & v1, const Vector & v2)
+		//---------------------------------------------------------------------------
+
+		static Vector minimum(const Vector & v1, const Vector & v2)
 		{
 			return Intrin::min(v1, v2);
 		}
 
-		static inline Vector maximum(const Vector & v1, const Vector & v2)
+		static Vector maximum(const Vector & v1, const Vector & v2)
 		{
 			return Intrin::max(v1, v2);
 		}
 
-		static inline int compare(const Vector & v1, const Vector & v2)
+		static int compare(const Vector & v1, const Vector & v2)
 		{
 			return static_cast<int>(Intrin::sum(Intrin::sub(v1, v2)));
 		}
@@ -599,6 +695,56 @@ namespace Rapture
 		static api(math) const Vector & identity;
 	};
 
+	template<typename T, int ... Mask>
+	struct SwizzleVector<T, SwizzleSequence<Mask...>, true>
+	{
+		using IntrinType = intrin_t<T, 4>;
+		using Intrin = Intrinsic<T, 4>;
+		using S = SwizzleSequence<Mask...>;
+
+		SwizzleVector & operator = (const Vector<T> & v)
+		{
+			intrinsic = Intrin::template blend<S::BX, S::BY, S::BZ, S::BW>(intrinsic, v.template shuffle<S::AX, S::AY, S::AZ, S::AW>());
+			return *this;
+		}
+
+		operator Vector<T> () const
+		{
+			return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(intrinsic));
+		}
+
+		operator IntrinType () const
+		{
+			return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(intrinsic));
+		}
+
+	protected:
+		IntrinType intrinsic;
+	};
+
+	template<typename T, int ... Mask>
+	struct SwizzleVector<T, SwizzleSequence<Mask...>, false>
+	{
+		using IntrinType = intrin_t<T, 4>;
+		using Intrin = Intrinsic<T, 4>;
+		using S = SwizzleSequence<Mask...>;
+
+		operator Vector<T> () const
+		{
+			return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(intrinsic));
+		}
+
+		operator IntrinType () const
+		{
+			return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(intrinsic));
+		}
+
+	protected:
+		IntrinType intrinsic;
+	};
+
+//---------------------------------------------------------------------------
+
 	using ByteVector = Vector<byte>;
 	using IntVector = Vector<int>;
 	using FloatVector = Vector<float>;
@@ -608,18 +754,22 @@ namespace Rapture
 	using floatv = FloatVector;
 
 	template<class T>
-	using svec = Storage<Vector<T>>;
-	using bvec = Storage<ByteVector>;
-	using ivec = Storage<IntVector>;
-	using fvec = Storage<FloatVector>;
+	using AlignedVector = Aligned<Vector<T>>;
+
+	using bvec = AlignedVector<byte>;
+	using ivec = AlignedVector<int>;
+	using fvec = AlignedVector<float>;
 
 #ifdef USE_AVX
 	using DoubleVector = Vector<double>;
-	using dvec = DoubleVector;
+	using doublev = DoubleVector;
+	using dvec = AlignedVector<double>;
 #endif
 
+//---------------------------------------------------------------------------
+
 	template<class T>
-	struct BasicMath<Vector<T>, false>
+	struct BasicMath<Vector<T>, MathType::Other>
 	{
 		typedef Intrinsic<T, 4> Intrin;
 
@@ -638,6 +788,11 @@ namespace Rapture
 			return Intrin::sqrt(x);
 		}
 
+		static inline Vector<T> mod(const Vector<T> & x, const Vector<T> & y)
+		{
+			return Intrin::mod(x, y);
+		}
+
 		static inline Vector<T> avg(const Vector<T> & x, const Vector<T> & y)
 		{
 			return Vector<T>::half * (x + y);
@@ -650,12 +805,33 @@ namespace Rapture
 
 		static inline Vector<T> invert(const Vector<T> & v)
 		{
-			return v.inverse();
+			return Intrin::invert(v.intrinsic);
+		}
+
+		static inline Vector<T> trunc(const Vector<T> & v)
+		{
+			return Intrin::trunc(v.intrinsic);
+		}
+
+		static inline Vector<T> floor(const Vector<T> & v)
+		{
+			return Intrin::floor(v.intrinsic);
+		}
+
+		static inline Vector<T> ceil(const Vector<T> & v)
+		{
+			return Intrin::ceil(v.intrinsic);
 		}
 
 		static inline Vector<T> round(const Vector<T> & v)
 		{
-			return v.rounded();
+			return Intrin::round(v.intrinsic);
+		}
+
+		template<class U>
+		static inline Vector<T> lerp(const Vector<T> & a, const Vector<T> & b, U t)
+		{
+			return a + (b - a) * static_cast<T>(t);
 		}
 	};
 
@@ -756,6 +932,8 @@ namespace Rapture
 	using DoubleVectorConstants = VectorConstants<double>;
 #endif
 
+//---------------------------------------------------------------------------
+
 	inline Vector<float> vec()
 	{
 		return Vector<float>::zero;
@@ -837,30 +1015,6 @@ namespace Rapture
 	}
 
 	template<typename T>
-	inline Vector<T> operator + (const Vector<T> & v1, const IntrinData<T, 4> & v2)
-	{
-		return Intrinsic<T, 4>::add(v1, v2);
-	}
-
-	template<typename T>
-	inline Vector<T> operator - (const Vector<T> & v1, const IntrinData<T, 4> & v2)
-	{
-		return Intrinsic<T, 4>::sub(v1, v2);
-	}
-
-	template<typename T>
-	inline Vector<T> operator * (const Vector<T> & v1, const IntrinData<T, 4> & v2)
-	{
-		return Intrinsic<T, 4>::mul(v1, v2);
-	}
-
-	template<typename T>
-	inline Vector<T> operator / (const Vector<T> & v1, const IntrinData<T, 4> & v2)
-	{
-		return Intrinsic<T, 4>::div(v1, v2);
-	}
-
-	template<typename T>
 	inline Vector<T> operator + (const intrin_t<T, 4> & v1, const Vector<T> & v2)
 	{
 		return Intrinsic<T, 4>::add(v1, v2);
@@ -884,76 +1038,52 @@ namespace Rapture
 		return Intrinsic<T, 4>::div(v1, v2);
 	}
 
-	template<typename T>
-	inline Vector<T> operator + (const IntrinData<T, 4> & v1, const Vector<T> & v2)
-	{
-		return Intrinsic<T, 4>::add(v1, v2);
-	}
-
-	template<typename T>
-	inline Vector<T> operator - (const IntrinData<T, 4> & v1, const Vector<T> & v2)
-	{
-		return Intrinsic<T, 4>::sub(v1, v2);
-	}
-
-	template<typename T>
-	inline Vector<T> operator * (const IntrinData<T, 4> & v1, const Vector<T> & v2)
-	{
-		return Intrinsic<T, 4>::mul(v1, v2);
-	}
-
-	template<typename T>
-	inline Vector<T> operator / (const IntrinData<T, 4> & v1, const Vector<T> & v2)
-	{
-		return Intrinsic<T, 4>::div(v1, v2);
-	}
-
-	template<typename T, typename U, useif<std::is_pod<U>::value>>
+	template<typename T, typename U, useif<std::is_arithmetic<U>::value>>
 	inline Vector<T> operator + (const Vector<T> & vec, U a)
 	{
 		return Intrinsic<T, 4>::add(vec, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 	}
 
-	template<typename T, typename U, useif<std::is_pod<U>::value>>
+	template<typename T, typename U, useif<std::is_arithmetic<U>::value>>
 	inline Vector<T> operator - (const Vector<T> & vec, U a)
 	{
 		return Intrinsic<T, 4>::sub(vec, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 	}
 
-	template<typename T, typename U, useif<std::is_pod<U>::value>>
+	template<typename T, typename U, useif<std::is_arithmetic<U>::value>>
 	inline Vector<T> operator * (const Vector<T> & vec, U a)
 	{
 		return Intrinsic<T, 4>::mul(vec, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 	}
 
-	template<typename T, typename U, useif<std::is_pod<U>::value>>
+	template<typename T, typename U, useif<std::is_arithmetic<U>::value>>
 	inline Vector<T> operator / (const Vector<T> & vec, U a)
 	{
 		return Intrinsic<T, 4>::div(vec, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 	}
 
-	template<typename T, typename U, useif<std::is_pod<U>::value>>
+	template<typename T, typename U, useif<std::is_arithmetic<U>::value>>
 	inline Vector<T> operator * (U a, const Vector<T> & vec)
 	{
 		return Intrinsic<T, 4>::mul(Intrinsic<T, 4>::fill(static_cast<T>(a)), vec.intrinsic);
 	}
 
-	template<typename T, typename U, useif<std::is_pod<U>::value>>
+	template<typename T, typename U, useif<std::is_arithmetic<U>::value>>
 	inline Vector<T> operator / (U a, const Vector<T> & vec)
 	{
 		return Intrinsic<T, 4>::div(Intrinsic<T, 4>::fill(static_cast<T>(a)), vec.intrinsic);
 	}
 
-	template<typename T, typename U>
-    inline auto lerp(const Vector<T> & a, const Vector<T> & b, U t)
-    {
-        return a + static_cast<T>(t) * (b - a);
-    }
-
 	template<typename T>
 	inline T sum(const Vector<T> & v)
 	{
 		return v.sum();
+	}
+
+	template<typename T>
+	inline T magnitude(const Vector<T> & v)
+	{
+		return v.magnitude();
 	}
 
 	template<typename T>
@@ -1005,7 +1135,7 @@ namespace Rapture
 	}
 
 	template<class T>
-	inline void print(String & s, const Storage<Vector<T>> & v)
+	inline void print(String & s, const AlignedVector<T> & v)
 	{
 		s << String::assemble("(", v->x, ", ", v->y, ", ", v->z, ", ", v->w, ")");
 	}

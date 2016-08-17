@@ -7,8 +7,8 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/container/Stack.h>
-#include <core/container/ArrayList.h>
+#include <container/Stack.h>
+#include <container/ArrayList.h>
 
 //---------------------------------------------------------------------------
 

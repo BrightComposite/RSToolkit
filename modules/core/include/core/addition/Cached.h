@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/container/Map.h>
+#include <container/Map.h>
 #include <core/Exception.h>
 
 //---------------------------------------------------------------------------
@@ -24,7 +24,7 @@ namespace Rapture
 		template<class ... A>
 		static auto & get(const K & key)
 		{
-			static UnorderedMap<K, T, Cached> _cache;
+			static Map<K, T, Cached> _cache;
 			auto & h = _cache[key];
 
 			if(h == nullptr)
@@ -85,7 +85,7 @@ namespace Rapture
 
 		static auto & cache()
 		{
-			static UnorderedMap<K, T, Precached> _cache;
+			static Map<K, T, Precached> _cache;
 			return _cache;
 		}
 	};

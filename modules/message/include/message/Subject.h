@@ -11,7 +11,7 @@
 #include <core/Hash.h>
 
 #include <core/addition/Named.h>
-#include <core/container/Set.h>
+#include <container/Set.h>
 #include "Connect.h"
 
 //---------------------------------------------------------------------------

@@ -139,9 +139,9 @@ namespace Rapture
 			return _transparent;
 		}
 
-	protected:
 		virtual void draw(Graphics3D & graphics, const IntRect & viewport, float zoom) const = 0;
 
+	protected:
 		bool _transparent = false;
 	};
 
@@ -280,7 +280,7 @@ namespace Rapture
 	protected:
 		Scene(const string & name) : Named(name) { setclass(Scene); }
 
-		api(scene) void draw(Graphics3D & graphics, const IntRect & viewport) const;
+		virtual api(scene) void draw(Graphics3D & graphics, const IntRect & viewport) const;
 		api(scene) void onWidgetResize(Handle<WidgetResizeMessage> & msg, Widget & w);
 
 		Camera * _camera = nullptr;
@@ -300,7 +300,7 @@ namespace Rapture
 
 	class SceneProvider
 	{
-		Map<string, Scene> _scenes;
+		Dictionary<string, Scene> _scenes;
 	};
 }
 

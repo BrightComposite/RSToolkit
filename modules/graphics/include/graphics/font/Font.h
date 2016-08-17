@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------
 
 #include <core/addition/Named.h>
-#include <core/container/Map.h>
+#include <container/Map.h>
 
 #include <io/FileSystem.h>
 
@@ -130,7 +130,7 @@ namespace Rapture
 		FontFamily() {}
 		FontFamily(const initializer_list<pair<FontStyle, Handle<Font>>> & list) : styles(list.begin(), list.end()) {}
 
-		Map<FontStyle, Font> styles;
+		Dictionary<FontStyle, Font> styles;
 	};
 
 	class FontCache : public Singleton<FontCache>
@@ -172,7 +172,7 @@ namespace Rapture
 		}
 
 	protected:
-		Map<string, FontFamily> _cache;
+		Dictionary<string, FontFamily> _cache;
 	};
 }
 

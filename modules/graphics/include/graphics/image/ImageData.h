@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/container/Data.h>
+#include <container/Data.h>
 #include <core/String.h>
 
 #include <math/Rect.h>
@@ -19,11 +19,28 @@
 namespace Rapture
 {
 #define enum_image_formats(op)	\
-	op(rgb,  3)					\
-	op(rgba, 4)					\
-	op(bgr,  3)					\
-	op(bgra, 4)					\
-	op(argb, 4)					\
+	op(rgb,     3)				\
+	op(rgba,    4)				\
+	op(bgr,     3)				\
+	op(bgra,    4)				\
+	op(rgb16f,  6)				\
+	op(rgba16f, 8)				\
+	op(bgr16f,  6)				\
+	op(bgra16f, 8)				\
+	op(rgb32f,  12)				\
+	op(rgba32f, 16)				\
+	op(bgr32f,  12)				\
+	op(bgra32f, 16)				\
+	op(argb,    4)				\
+	op(grayscale, 1)			\
+	op(grayscale_alpha, 2)		\
+
+#define enum_image_convertable_formats(op)	\
+	op(rgb,     3)				\
+	op(rgba,    4)				\
+	op(bgr,     3)				\
+	op(bgra,    4)				\
+	op(argb,    4)				\
 	op(grayscale, 1)			\
 	op(grayscale_alpha, 2)		\
 
@@ -32,12 +49,20 @@ namespace Rapture
 	op(grayscale_alpha, 2)		\
 	op(rgb,  3)					\
 	op(rgba, 4)					\
+	op(rgb16f, 6)				\
+	op(rgba16f, 8)				\
+	op(rgb32f,  12)				\
+	op(rgba32f, 16)				\
 
 #define enum_alt_image_bpps(op)	\
 	op(grayscale, 1)			\
 	op(grayscale_alpha, 2)		\
 	op(bgr,  3)					\
 	op(bgra, 4)					\
+	op(bgr16f, 6)				\
+	op(bgra16f, 8)				\
+	op(bgr32f,  12)				\
+	op(bgra32f, 16)				\
 
 #define op(format, _) format,
 

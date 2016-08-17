@@ -24,8 +24,8 @@ namespace Rapture
 		Transform() {}
 		Transform(const Transform & t) : _matrix(t._matrix) {}
 		Transform(Transform && t) : _matrix(move(t._matrix)) {}
-		Transform(const smat<T> & m) : _matrix(m) {}
-		Transform(smat<T> && m) : _matrix(forward<smat<T>>(m)) {}
+		Transform(const AlignedMatrix<T> & m) : _matrix(m) {}
+		Transform(AlignedMatrix<T> && m) : _matrix(forward<AlignedMatrix<T>>(m)) {}
 
 		Transform(const Vector<T> & p) : _matrix(Matrix<T>::translation(p)) {}
 		Transform(const Quaternion<T> & r) { r.toMatrix(_matrix); }
@@ -88,15 +88,15 @@ namespace Rapture
 			return *this;
 		}
 
-		Transform & operator = (const smat<T> & m)
+		Transform & operator = (const AlignedMatrix<T> & m)
 		{
 			_matrix = m;
 			return *this;
 		}
 
-		Transform & operator = (smat<T> && m)
+		Transform & operator = (AlignedMatrix<T> && m)
 		{
-			_matrix = forward<smat<T>>(m);
+			_matrix = forward<AlignedMatrix<T>>(m);
 			return *this;
 		}
 
@@ -164,7 +164,7 @@ namespace Rapture
 		}
 
 	protected:
-		smat<T> _matrix;
+		AlignedMatrix<T> _matrix;
 	};
 
 	template<class T>

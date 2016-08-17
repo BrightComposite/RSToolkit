@@ -108,7 +108,8 @@ namespace Rapture
 	void StaticTextLayer::update()
 	{
 		auto old = _graphics->surface();
-		_surface = _graphics->createSurface(_text->size(), _image);
+		_surface = _graphics->createSurface(_text->size());
+		_surface->addBuffer(_image);
 		_graphics->bind(_surface);
 		auto cc = hold(_graphics->clearColorState(), {0.0f, 0.0f, 0.0f, 0.0f});
 		_surface->clear();

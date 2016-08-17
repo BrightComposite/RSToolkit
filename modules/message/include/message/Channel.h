@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------
 
 #include <core/Morpher.h>
-#include <core/container/ArrayList.h>
+#include <container/ArrayList.h>
 #include "Message.h"
 
 //---------------------------------------------------------------------------

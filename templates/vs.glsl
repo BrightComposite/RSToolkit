@@ -1,5 +1,5 @@
 /**
- *	!layout: p3
+ *	!vertex: p3
  */
 #version 330 core
 

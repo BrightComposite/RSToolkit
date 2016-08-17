@@ -29,15 +29,6 @@ namespace Rapture
 			
 		}
 
-		RenderTargetSurface::RenderTargetSurface(GLGraphics * graphics, const IntSize & size) : GLSurface(graphics, size) {}
-		RenderTargetSurface::~RenderTargetSurface() {}
-
-		void RenderTargetSurface::apply() const
-		{
-			wglMakeCurrent(_deviceCtx, _graphics->context());
-			glViewport(0, 0, width(), height());
-		}
-
 		DepthSurface::DepthSurface(GLGraphics * graphics, const IntSize & size) : GLSurface(graphics, size)
 		{
 			createDepthStencil();
@@ -54,7 +45,7 @@ namespace Rapture
 			glClear(GL_DEPTH_BUFFER_BIT);
 		}
 
-		UISurface::UISurface(GLGraphics * graphics, UISpace * space) : RenderTargetSurface(graphics, space->size()), _space(space)
+		UISurface::UISurface(GLGraphics * graphics, UISpace * space) : GLSurface(graphics, space->size()), _space(space)
 		{
 			connect(this, &UISurface::onUIResize, *_space);
 			connect(this, &UISurface::onUIFullscreen, *_space);
@@ -90,7 +81,14 @@ namespace Rapture
 			::DeleteDC(_deviceCtx);
 			_deviceCtx = nullptr;
 		}
-		
+
+		void UISurface::apply() const
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			wglMakeCurrent(_deviceCtx, _graphics->context());
+			glViewport(0, 0, width(), height());
+		}
+
 		void UISurface::present() const
 		{
 			SwapBuffers(_deviceCtx);
@@ -151,20 +149,72 @@ namespace Rapture
 				_graphics->bind(null<Surface>());
 		}
 
-		TextureSurface::TextureSurface(GLGraphics * graphics, const IntSize & size, Handle<Image> & image) : RenderTargetSurface(graphics, size), _texture(graphics, size.x, size.y)
+		GLTextureSurface::GLTextureSurface(GLGraphics * graphics, const IntSize & size) : TextureSurface(size), _graphics(graphics)
 		{
-			// TODO create texture render context
-			image = _texture;
+			glGenFramebuffers(1, &id);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, id);
+
+			glGenRenderbuffers(1, &depthBuffer);
+			glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width(), height());
+
+			glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);
+
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		}
 
-		void TextureSurface::clear() const
+		GLTextureSurface::~GLTextureSurface()
+		{
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glBindRenderbuffer(GL_RENDERBUFFER, 0);
+			glDeleteRenderbuffers(1, &depthBuffer);
+			glDeleteFramebuffers(1, &id);
+		}
+
+		void GLTextureSurface::addBuffer(Handle<Texture> & texture, ImageFormat format)
+		{
+			if(_textures.size() == 16)
+				throw Exception("Number of buffers shouldn't be > 16");
+
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, id);
+
+			auto & t = *_textures.emplace(_textures.end(), _graphics, width(), height(), format);
+
+			GLenum attachment = GL_COLOR_ATTACHMENT0 + _textures.size() - 1;
+			glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, attachment, t->_target, t->_id, 0);
+			buffers.push_back(attachment);
+
+			if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+				throw Exception("Can't update framebuffer!");
+
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+			texture = t;
+
+			_graphics->checkForErrors();
+		}
+
+		void GLTextureSurface::apply() const
+		{
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, id);
+			glViewport(0, 0, width(), height());
+
+			glDrawBuffers(buffers.size(), buffers.data());
+		}
+
+		void GLTextureSurface::clear() const
 		{
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		}
 
-		void TextureSurface::requestData(ImageData * data) const
+		void GLTextureSurface::present() const
 		{
-			_texture->requestData(data);
+
+		}
+
+		void GLTextureSurface::requestData(ImageData * data) const
+		{
+			_textures[0]->requestData(data);
 		}
 	}
 }

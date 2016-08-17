@@ -39,17 +39,6 @@ module(SHARED)
 				crc32.h
 				lookup3.h
 				..
-			container/
-				ArrayList.h
-				Container.h
-				Data.h
-				List.h
-				Map.h
-				Queue.h
-				Set.h
-				Stack.h
-				StaticMap.h
-				..
 			function/
 				Function.h
 				Thread.h
@@ -60,18 +49,16 @@ module(SHARED)
 				IntrinsicData.h
 				..
 			memory/
-				BlockPool.h
 				Memory.h
-				PagePool.h
-				Storage.h
-				UnsafeBlockPool.h
+				Pool.h
+				Aligned.h
 
 				allocator/
 					AlignedAllocator.h
 					DefaultAllocator.h
 					PoolAllocator.h
 			)
-
+		
 		group(src Sources)
 		files(
 			Core.cpp
@@ -83,6 +70,21 @@ module(SHARED)
 				..
 			intrinsic/
 				Intrinsic.cpp
+			)
+		
+		domain(container)
+		
+		group(include Headers)
+		files(
+			ArrayList.h
+			Container.h
+			Data.h
+			List.h
+			Map.h
+			Queue.h
+			Set.h
+			Stack.h
+			StaticMap.h
 			)
 	endsources()
 endmodule()

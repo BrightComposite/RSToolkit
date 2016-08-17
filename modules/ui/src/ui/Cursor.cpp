@@ -9,9 +9,9 @@ namespace Rapture
 {
 	CursorPool::CursorPool()
 	{
-		map["default"].init(LoadCursor(NULL, IDC_ARROW));
-		map["wait"].init(LoadCursor(NULL, IDC_WAIT));
-		map["hand"].init(LoadCursor(NULL, IDC_HAND));
+		cursors["default"].init(LoadCursor(NULL, IDC_ARROW));
+		cursors["wait"].init(LoadCursor(NULL, IDC_WAIT));
+		cursors["hand"].init(LoadCursor(NULL, IDC_HAND));
 	}
 
 	Cursor::Cursor(HCURSOR handle) : _handle(handle) {}
@@ -66,12 +66,12 @@ namespace Rapture
 
 	void Cursor::add(const string & name, const Handle<Cursor> & cursor)
 	{
-		CursorPool::instance().map[name] = cursor;
+		CursorPool::instance().cursors[name] = cursor;
 	}
 
 	Cursor * Cursor::find(const string & name)
 	{
-		return CursorPool::instance().map[name];
+		return CursorPool::instance().cursors[name];
 	}
 
 	Cursor * Cursor::default()

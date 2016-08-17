@@ -3,10 +3,9 @@
  */
 #version 330 core
 
-layout(std140) uniform BrushOptions
+layout(std140) uniform Color
 {
 	vec4 color;
-	float lineWidth;
 };
 
 out vec4 fscolor;

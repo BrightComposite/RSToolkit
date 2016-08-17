@@ -2,8 +2,8 @@
 
 #pragma once
 
-#ifndef STORAGE_H
-#define STORAGE_H
+#ifndef ALIGNED_H
+#define ALIGNED_H
 
 //---------------------------------------------------------------------------
 
@@ -15,9 +15,9 @@
 namespace Rapture
 {
 	template<class T>
-	class Storage
+	class Aligned
 	{
-		using Base = Wrapper<T, Storage<T>>;
+		using Base = Wrapper<T, Aligned<T>>;
 
 		T * _ptr;
 
@@ -37,27 +37,27 @@ namespace Rapture
 		member_cast(*_ptr, T);
 
 		template<class U = T, useif<can_construct<U>::value>>
-		Storage() : _ptr(create()) {}
+		Aligned() : _ptr(create()) {}
 
-		Storage(const Storage & s) : _ptr(create(s)) {}
-		Storage(Storage && s) : _ptr(create(forward<Storage>(s))) {}
+		Aligned(const Aligned & s) : _ptr(create(s)) {}
+		Aligned(Aligned && s) : _ptr(create(forward<Aligned>(s))) {}
 
-		template<class ... A, useif<(sizeof...(A) > 0), not_same_types<Storage, Types<A...>>::value, can_construct<T, A...>::value>>
-		Storage(A &&... args) : _ptr(create(forward<A>(args)...)) {}
+		template<class ... A, useif<(sizeof...(A) > 0), not_same_types<Aligned, Types<A...>>::value, can_construct<T, A...>::value>>
+		Aligned(A &&... args) : _ptr(create(forward<A>(args)...)) {}
 
-		~Storage()
+		~Aligned()
 		{
 			if(_ptr)
 				destroy(_ptr);
 		}
 
-		Storage & operator = (const Storage & s)
+		Aligned & operator = (const Aligned & s)
 		{
 			*_ptr = s;
 			return *this;
 		}
 
-		Storage & operator = (Storage && s)
+		Aligned & operator = (Aligned && s)
 		{
 			destroy(_ptr);
 			_ptr = s._ptr;
@@ -66,7 +66,7 @@ namespace Rapture
 			return *this;
 		}
 
-		Storage & operator = (const T & value)
+		Aligned & operator = (const T & value)
 		{
 			*_ptr = value;
 			return *this;
@@ -104,6 +104,9 @@ namespace Rapture
 			return *_ptr;
 		}
 	};
+
+	template<class T, size_t N>
+	using AlignedArray = Aligned<array<T, N>>;
 }
 
 //---------------------------------------------------------------------------

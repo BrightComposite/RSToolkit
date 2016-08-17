@@ -69,13 +69,22 @@ namespace Rapture
 	template<class T>
 	constexpr bool between(T value, T min, T max)
 	{
-		return value >= min && value <= max;
+		return value >= min && value < max;
 	}
 
 	template<class T, class Y>
 	constexpr auto align(T x, Y a)
 	{
 		return ((x - 1) | (a - 1)) + 1;
+	}
+
+	template<class T, class Y>
+	constexpr auto aligned_add(T x, T y, Y a)
+	{
+		x = x + y + a - 1;
+		x = x - x % a;
+
+		return x;
 	}
 
 	template<class T>
@@ -97,22 +106,22 @@ namespace Rapture
 		return {minmax.first - list.begin(), minmax.second - list.begin()};
 	}
 
-	template<class T, class F>
-	auto acquire(const T & object, F functor) -> decltype(functor(object))
+	template<class T, class F, class ... A>
+	auto acquire(const T & object, F functor, A &&... args) -> decltype(functor(object, forward<A>(args)...))
 	{
-		return object != nullptr ? functor(object) : 0;
+		return object != nullptr ? functor(object, forward<A>(args)...) : 0;
 	}
 
-	template<class T, class F>
-	auto acquire(T && object, F functor) -> decltype(functor(forward<T>(object)))
+	template<class T, class F, class ... A>
+	auto acquire(T && object, F functor, A &&... args) -> decltype(functor(forward<T>(object), forward<A>(args)...))
 	{
-		return object != nullptr ? functor(forward<T>(object)) : 0;
+		return object != nullptr ? functor(forward<T>(object), forward<A>(args)...) : 0;
 	}
 
-	template<class T, class F>
-	auto acquire(T * object, F functor) -> decltype(functor(object))
+	template<class T, class F, class ... A>
+	auto acquire(T * object, F functor, A &&... args) -> decltype(functor(object, forward<A>(args)...))
 	{
-		return object != nullptr ? functor(object) : 0;
+		return object != nullptr ? functor(object, forward<A>(args)...) : 0;
 	}
 
 	template<class T>

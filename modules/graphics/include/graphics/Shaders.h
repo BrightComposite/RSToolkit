@@ -43,7 +43,7 @@ namespace Rapture
 {
 	subclass(ShaderCode, owned_data<void>);
 
-	using ShaderCodeSet = Map<ShaderType, ShaderCode>;
+	using ShaderCodeSet = Dictionary<ShaderType, ShaderCode>;
 
 //---------------------------------------------------------------------------
 

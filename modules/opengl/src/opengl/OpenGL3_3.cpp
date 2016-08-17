@@ -86,6 +86,27 @@ namespace Rapture
 			}
 		};
 
+		class AccumulationState : public State<bool>
+		{
+		public:
+			AccumulationState(GLGraphics * graphics) : State<bool>(false) {}
+
+		protected:
+			virtual void change() override
+			{
+				if(_state)
+				{
+					glBlendEquation(GL_FUNC_ADD);
+					glBlendFunc(GL_ONE, GL_ONE);
+				}
+				else
+				{
+					glBlendEquation(GL_FUNC_ADD);
+					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				}
+			}
+		};
+
 		class ClearColorState : public State<Color>
 		{
 		public:
@@ -104,11 +125,12 @@ namespace Rapture
 
 			initDevice();
 
-			_fillMode = handle<FillModeState>(this);
-			_lineWidth = handle<LineWidthState>(this);
-			_depthTestMode = handle<DepthTestState>(this);
-			_blendMode = handle<BlendState>(this);
-			_clearColor = handle<ClearColorState>(this);
+			_fillMode = Handle<FillModeState>(this);
+			_lineWidth = Handle<LineWidthState>(this);
+			_depthTestMode = Handle<DepthTestState>(this);
+			_blendMode = Handle<BlendState>(this);
+			_clearColor = Handle<ClearColorState>(this);
+			_accumulationMode = Handle<AccumulationState>(this);
 		}
 
 		GLGraphics::~GLGraphics()
@@ -258,6 +280,9 @@ namespace Rapture
 			cout << "OpenGL debug:" << endl;
 			cout << "\tgroup: " << t << ", severity: " << sev << ", id: " << hex << showbase << id << dec << ", source: " << src << endl;
 			cout << message << endl << endl;
+
+			if(severity == GL_DEBUG_SEVERITY_HIGH)
+				throw Exception("GL error!");
 		}
 
 		void GLGraphics::initDevice()
@@ -372,6 +397,12 @@ namespace Rapture
 			}
 		}
 
+		void GLGraphics::bind(const Handle<Texture> & texture, uint index)
+		{
+			glActiveTexture(GL_TEXTURE0 + index);
+			texture->apply();
+		}
+
 		void GLGraphics::printInfo() {}
 		void GLGraphics::printDebug() {}
 
@@ -393,9 +424,9 @@ namespace Rapture
 			return Handle<GLVertexBuffer, GLGraphics>(this, layout, data);
 		}
 
-		Handle<Mesh> GLGraphics::createMesh()
+		Handle<MeshBuilder> GLGraphics::createMesh()
 		{
-			return Handle<GLMesh>(this);
+			return Handle<GLMeshBuilder>(this);
 		}
 
 		Handle<UniformAdapter> & GLGraphics::init(Handle<UniformAdapter> & adapter, const char * name, ShaderType shader, int index, size_t size)
@@ -422,9 +453,9 @@ namespace Rapture
 			return Handle<UISurface>(this, space);
 		}
 
-		Handle<Surface> GLGraphics::createSurface(const IntSize & size, Handle<Image> & image)
+		Handle<TextureSurface> GLGraphics::createSurface(const IntSize & size)
 		{
-			return Handle<TextureSurface>(this, size, image);
+			return Handle<GLTextureSurface>(this, size);
 		}
 
 		void GLGraphics::addShaderProgram(const string & id, VertexLayout * layout, ShaderCodeSet & codeSet)

@@ -34,7 +34,7 @@ namespace Rapture
 
 	FREE_IMAGE_FORMAT getFIFFormat(const string & type)
 	{
-		static map<string, FREE_IMAGE_FORMAT> formats = {
+		static dictionary<string, FREE_IMAGE_FORMAT> formats = {
 			{"bmp",  FIF_BMP},
 			{"ico",  FIF_ICO},
 			{"jpe",  FIF_JPEG},

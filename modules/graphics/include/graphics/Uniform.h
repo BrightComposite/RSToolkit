@@ -22,20 +22,41 @@ namespace Rapture
 	class Graphics3D;
 	class UniformAdapter;
 
+	struct Uniform
+	{
+		morph_base(Uniform);
+		deny_copy(Uniform);
+	};
+
+	create_morph_pool(graphics, Uniform);
+
+	template<class T>
+	using is_uniform = is_base_of<Uniform, T>;
+
 	struct UniformData : Shared
 	{
-		template<class U>
-		void fill(const Contents<U> & contents)
-		{
-			Memory<void>::move(data.ptr, contents.pointer(), data.size);
-		}
-
 		api(graphics) void apply() const;
 
 		uint buffer;
 		size_t offset;
 		data<void> data;
 		UniformAdapter * adapter;
+	};
+
+	template<class U>
+	struct UniformChunk : UniformData
+	{
+		static_assert(is_uniform<U>::value, "U must be an uniform");
+
+		UniformChunk(Graphics3D * graphics)
+		{
+			graphics->uniformChunk(*this);
+		}
+
+		void fill(const Contents<U> & contents)
+		{
+			Memory<void>::move(data.ptr, contents.pointer(), data.size);
+		}
 	};
 
 	class UniformAdapter : public Shared
@@ -66,18 +87,7 @@ namespace Rapture
 		uint _size;
 	};
 
-	struct Uniform
-	{
-		morph_base(Uniform);
-		deny_copy(Uniform);
-	};
-
-	create_morph_pool(graphics, Uniform);
-
-	template<class T>
-	using is_uniform = is_base_of<Uniform, T>;
-
-	using UniformSet = UnorderedMap<int, UniformAdapter>;
+	using UniformSet = Map<int, UniformAdapter>;
 
 #define uniform_class(U, shader_index, shader_type, components)			\
 	namespace Uniforms													\
@@ -146,6 +156,14 @@ namespace Rapture
 	(
 		Viewport, 5, Vertex,
 		(float2, size)
+	);
+
+	uniform_class
+	(
+		PointLight, 6, Pixel,
+		(float4, position)
+		(colorf, color)
+		(float4, lightparams) // attenuations (const, linear, exponential), ambient ratio
 	);
 }
 

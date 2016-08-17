@@ -101,7 +101,7 @@ namespace Rapture
 
 		Handle<CursorComponent> _cursorComponent;
 		MouseButton _button = MouseButton::Left;
-		map<MouseButton, Cursor *> _cursors;
+		dictionary<MouseButton, Cursor *> _cursors;
 		bool _bound = false;
 	};
 
@@ -113,7 +113,7 @@ namespace Rapture
 		friend struct Singleton<CursorPool>;
 
 	public:
-		Map<string, Cursor> map;
+		Dictionary<string, Cursor> cursors;
 
 	protected:
 		CursorPool();

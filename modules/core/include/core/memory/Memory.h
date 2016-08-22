@@ -14,6 +14,9 @@
 #include <memory>
 #include <malloc.h>
 
+#include <boost/align/aligned_alloc.hpp>
+#include <boost/align/aligned_allocator.hpp>
+
 #undef min
 #undef max
 
@@ -31,9 +34,9 @@
 #define _free(ptr) ::free(ptr)
 #define _realloc(type, ptr, size) reinterpret_cast<type *>(::realloc(ptr, size * sizeof(type)))
 
-#define _malloc_aligned(type, size, alignment) reinterpret_cast<type *>(::_aligned_malloc(size * sizeof(type), alignment))
-#define _free_aligned(ptr) ::_aligned_free(ptr)
-#define _realloc_aligned(type, ptr, size, alignment) reinterpret_cast<type *>(::_aligned_realloc(ptr, size * sizeof(type), alignment))
+#define _malloc_aligned(type, size, alignment) reinterpret_cast<type *>(aligned_alloc(alignment, size * sizeof(type)))
+#define _free_aligned(ptr) aligned_free(ptr)
+#define _realloc_aligned(type, ptr, size, alignment) reinterpret_cast<type *>(aligned_realloc(ptr, alignment, size * sizeof(type)))
 
 #define _memmove(type, to, from, size) ::memmove(to, from, size * sizeof(type));
 #define _memcopy(type, to, from, size) ::memcpy(to, from, size * sizeof(type));
@@ -55,6 +58,16 @@
 
 namespace Rapture
 {
+	using boost::alignment::aligned_alloc;
+	using boost::alignment::aligned_free;
+
+#ifdef WIN32
+	inline void * aligned_realloc(void * ptr, size_t alignment, size_t size)
+	{
+		::_aligned_realloc(ptr, size, alignment);
+	}
+#endif
+
 	using std::nothrow_t;
 	using std::unique_ptr;
 
@@ -206,17 +219,17 @@ namespace Rapture
 	public:
 		static inline void * allocate(size_t size)
 		{
-			return ::_aligned_malloc(size, alignment);
+			return aligned_alloc(alignment, size);
 		}
 
 		static inline void free(const void * ptr)
 		{
-			::_aligned_free(const_cast<void *>(ptr));
+			aligned_free(const_cast<void *>(ptr));
 		}
 
 		static inline void * reallocate(void * ptr, size_t size)
 		{
-			return ::_aligned_realloc(ptr, size, alignment);
+			return aligned_realloc(ptr, size, alignment);
 		}
 
 		static inline void move(void * to, const void * from, size_t size)

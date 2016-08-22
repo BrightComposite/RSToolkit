@@ -16,11 +16,9 @@
 
 namespace Rapture
 {
-	class Scene;
 	class SceneObject;
 	class Drawable;
-	class WorldObject;
-	class OrientedObject;
+	class Scene;
 
 	class Camera;
 
@@ -31,15 +29,9 @@ namespace Rapture
 	typedef std::chrono::high_resolution_clock clock;
 	typedef time_point<clock> time_marker;
 
-	link_class(scene, Scene, Class<Object>);
 	link_class(scene, SceneObject, Class<Object>);
 	link_class(scene, Drawable, Class<>);
-	link_class(scene, WorldObject, Class<SceneObject>);
-	link_class(scene, OrientedObject, Class<WorldObject>);
-
-	using Position = fvec;
-	using Direction = fvec;
-	using Rotation = fquat;
+	link_class(scene, Scene, Class<Object>);
 
 	class SceneObject : public Object
 	{
@@ -56,73 +48,36 @@ namespace Rapture
 			return _scene;
 		}
 
-		virtual const floatv & position() const
-		{
-			return floatv::identity;
-		}
-
-		virtual floatv direction() const
-		{
-			return floatv::forward;
-		}
-
-		virtual floatq rotation() const
-		{
-			return floatq::identity;
-		}
-
-		virtual void setPosition(const floatv & pos) {}
-		virtual void setDirection(const floatv & rot) {}
-		virtual void setRotation(const floatq & rot) {}
-
-		virtual void move(const floatv & offset) {}
-		virtual void rotate(const floatq & rot) {}
-
-		void move(float x, float y, float z)
-		{
-			move({x, y, z});
-		}
-
-		void moveX(float x)
-		{
-			move({x, 0, 0});
-		}
-
-		void moveY(float y)
-		{
-			move({0, y, 0});
-		}
-
-		void moveZ(float z)
-		{
-			move({0, 0, z});
-		}
-
-		void rotate(const Position & axis, float angle)
-		{
-			rotate({axis, angle});
-		}
-
-		void rotateX(float angle)
-		{
-			rotate(floatv::positiveX, angle);
-		}
-
-		void rotateY(float angle)
-		{
-			rotate(floatv::positiveY, angle);
-		}
-
-		void rotateZ(float angle)
-		{
-			rotate(floatv::positiveZ, angle);
-		}
-
 	protected:
 		virtual void update(ticks_t ticks) {}
 
 		Scene * _scene;
 	};
+
+	class SceneObjectComponent : public Shared
+	{
+		component_base(SceneObjectComponent);
+
+	public:
+		SceneObjectComponent(SceneObject * object) : _object(object) {}
+
+		SceneObject * object()
+		{
+			return _object;
+		}
+
+		const SceneObject * object() const
+		{
+			return _object;
+		}
+
+	protected:
+		SceneObject * _object;
+	};
+
+	create_component_pool(scene, SceneObjectComponent);
+
+	using SceneObjectComponents = ComponentSet<SceneObjectComponent>;
 
 	class Drawable
 	{
@@ -143,83 +98,6 @@ namespace Rapture
 
 	protected:
 		bool _transparent = false;
-	};
-
-	class WorldObject : public SceneObject
-	{
-		deny_copy(WorldObject);
-
-	public:
-		WorldObject(Scene * scene, const Position & pos = floatv::identity) : SceneObject(scene), _pos(pos)
-		{
-			setclass(WorldObject);
-		}
-
-		virtual ~WorldObject() {}
-
-		virtual const floatv & position() const override
-		{
-			return _pos;
-		}
-
-		virtual void setPosition(const floatv & pos) override
-		{
-			_pos = pos;
-		}
-
-		virtual void move(const floatv & offset) override
-		{
-			*_pos += offset;
-		}
-
-	protected:
-		Position _pos;
-	};
-
-	class OrientedObject : public WorldObject
-	{
-		deny_copy(OrientedObject);
-
-	public:
-		OrientedObject(Scene * scene, const Position & pos = floatv::identity, const Rotation & rot = floatq::identity) : WorldObject(scene, pos), _rot(rot)
-		{
-			setclass(OrientedObject);
-		}
-
-		virtual ~OrientedObject() {}
-
-		virtual floatv direction() const override
-		{
-			return _rot->forward();
-		}
-
-		virtual floatq rotation() const override
-		{
-			return _rot;
-		}
-
-		virtual void setDirection(const floatv & dir) override
-		{
-			setRotation({floatv::forward, dir});
-		}
-
-		virtual void setRotation(const floatq & rot) override
-		{
-			_rot = rot;
-		}
-
-		virtual void move(const floatv & offset) override
-		{
-			*_pos += _rot->applyTo(offset);
-		}
-
-		virtual void rotate(const floatq & rot) override
-		{
-			_rot->rotateBy(rot);
-		}
-
-	protected:
-		Rotation _rot {};
 	};
 
 	class Scene : public Object, public Named, public Connector

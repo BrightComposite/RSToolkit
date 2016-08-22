@@ -1,52 +1,49 @@
 //---------------------------------------------------------------------------
 
 #include <physics/PlaneObject.h>
-#include <physics/PhysicalWorld.h>
+#include <physics/PhysicalLayer.h>
 #include <physics/Physics.h>
 
 //---------------------------------------------------------------------------
 
 namespace Rapture
 {
-	implement_link(Physical);
-	implement_link(PlaneObject);
-
 	void MotionState::getWorldTransform(btTransform & trans) const
 	{
-		trans.setRotation(physical->_object->rotation().intrinsic);
-		trans.setOrigin(physical->_object->position().intrinsic);
+		trans.setRotation(object->rotation().intrinsic);
+		trans.setOrigin(object->position().intrinsic);
 	}
 
 	void MotionState::setWorldTransform(const btTransform & trans)
 	{
-		physical->_object->setRotation(trans.getRotation());
-		physical->_object->setPosition(trans.getOrigin());
+		object->setRotation(trans.getRotation());
+		object->setPosition(trans.getOrigin());
 	}
 
 	void Physical::setMass(float mass)
 	{
 		btVector3 inertia;
-		_shape->calculateLocalInertia(mass, inertia);
+		_rigidBody->getCollisionShape()->calculateLocalInertia(mass, inertia);
 		_rigidBody->setMassProps(mass, inertia);
 	}
 
-	void Physical::setLinearVelocity(const fvec & v)
+	void Physical::setLinearVelocity(const Velocity & v)
 	{
 		_rigidBody->setLinearVelocity(v->intrinsic);
 		_rigidBody->activate();
 	}
 
-	fvec Physical::getLinearVelocity()
+	Velocity Physical::getLinearVelocity()
 	{
 		return _rigidBody->getLinearVelocity();
 	}
 	
-	void PhysicalWorld::update(btDynamicsWorld * world, btScalar timeStep)
+	void PhysicalLayer::update(btDynamicsWorld * world, btScalar timeStep)
 	{
-		auto * w = static_cast<PhysicalWorld *>(world->getWorldUserInfo());
+		auto * w = static_cast<PhysicalLayer *>(world->getWorldUserInfo());
 
 		int num = world->getDispatcher()->getNumManifolds();
-		ContactInfo contactInfo;
+		ContactInfo info;
 
 		for(int i = 0; i < num; i++)
 		{
@@ -55,8 +52,8 @@ namespace Rapture
 			if(manifold->getNumContacts() == 0)
 				continue;
 
-			auto * obj0 = static_cast<Physical *>(manifold->getBody0() ? manifold->getBody0()->getUserPointer() : nullptr);
-			auto * obj1 = static_cast<Physical *>(manifold->getBody1() ? manifold->getBody1()->getUserPointer() : nullptr);
+			auto * a = static_cast<Physical *>(manifold->getBody0() != nullptr ? manifold->getBody0()->getUserPointer() : nullptr);
+			auto * b = static_cast<Physical *>(manifold->getBody1() != nullptr ? manifold->getBody1()->getUserPointer() : nullptr);
 
 			for(int j = 0; j < manifold->getNumContacts(); j++)
 			{
@@ -64,19 +61,19 @@ namespace Rapture
 
 				if(pt.getDistance() < 0.0)
 				{
-					contactInfo.force = pt.m_appliedImpulse / timeStep;
-					contactInfo.normal = pt.m_normalWorldOnB;
+					info.force = pt.m_appliedImpulse / timeStep;
+					info.normal = pt.m_normalWorldOnB;
 
-					if(obj0)
+					if(a != nullptr)
 					{
-						contactInfo.pos = pt.getPositionWorldOnA();
-						obj0->contactWith(obj1, contactInfo);
+						info.pos = pt.getPositionWorldOnA();
+						a->contactWith(b, info);
 					}
 
-					if(obj1)
+					if(b != nullptr)
 					{
-						contactInfo.pos = pt.getPositionWorldOnB();
-						obj1->contactWith(obj0, contactInfo);
+						info.pos = pt.getPositionWorldOnB();
+						b->contactWith(a, info);
 					}
 				}
 			}

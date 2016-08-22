@@ -14,6 +14,8 @@
 
 namespace Rapture
 {
+	using boost::alignment::aligned_allocator;
+
 	template<class T>
 	class Aligned
 	{
@@ -24,13 +26,13 @@ namespace Rapture
 		template<class ... A>
 		static T * create(A &&... args)
 		{
-			return new (_aligned_malloc(sizeof(T), alignof(T))) T(forward<A>(args)...);
+			return new (aligned_alloc(alignof(T), sizeof(T))) T(forward<A>(args)...);
 		}
 
 		static void destroy(T * ptr)
 		{
 			ptr->~T();
-			_aligned_free(ptr);
+			aligned_free(ptr);
 		}
 
 	public:
@@ -103,10 +105,138 @@ namespace Rapture
 		{
 			return *_ptr;
 		}
+
+		template<class U, class = decltype(declval<T &>() += declval<U>())>
+		Aligned & operator += (const Aligned<U> & x)
+		{
+			*_ptr += *x;
+			return *this;
+		}
+
+		template<class U, class = decltype(declval<T &>() += declval<U>())>
+		Aligned & operator += (const U & x)
+		{
+			*_ptr += x;
+			return *this;
+		}
+
+		template<class U, class = decltype(declval<T &>() -= declval<U>())>
+		Aligned & operator -= (const Aligned<U> & x)
+		{
+			*_ptr -= *x;
+			return *this;
+		}
+
+		template<class U, class = decltype(declval<T &>() -= declval<U>())>
+		Aligned & operator -= (const U & x)
+		{
+			*_ptr -= x;
+			return *this;
+		}
+
+		template<class U, class = decltype(declval<T &>() *= declval<U>())>
+		Aligned & operator *= (const Aligned<U> & x)
+		{
+			*_ptr *= *x;
+			return *this;
+		}
+
+		template<class U, class = decltype(declval<T &>() *= declval<U>())>
+		Aligned & operator *= (const U & x)
+		{
+			*_ptr *= x;
+			return *this;
+		}
+
+		template<class U, class = decltype(declval<T &>() /= declval<U>())>
+		Aligned & operator /= (const Aligned<U> & x)
+		{
+			*_ptr /= *x;
+			return *this;
+		}
+
+		template<class U, class = decltype(declval<T &>() /= declval<U>())>
+		Aligned & operator /= (const U & x)
+		{
+			*_ptr /= x;
+			return *this;
+		}
 	};
 
 	template<class T, size_t N>
 	using AlignedArray = Aligned<array<T, N>>;
+
+	template<class A, class B>
+	auto operator + (const Aligned<A> & a, const Aligned<B> & b) -> decltype(declval<A>() + declval<B>())
+	{
+		return *a + *b;
+	}
+
+	template<class A, class B>
+	auto operator + (const Aligned<A> & a, const B & b) -> decltype(declval<A>() +declval<B>())
+	{
+		return *a + b;
+	}
+
+	template<class A, class B>
+	auto operator + (const A & a, const Aligned<B> & b) -> decltype(declval<A>() + declval<B>())
+	{
+		return a + *b;
+	}
+
+	template<class A, class B>
+	auto operator - (const Aligned<A> & a, const Aligned<B> & b) -> decltype(declval<A>() - declval<B>())
+	{
+		return *a - *b;
+	}
+
+	template<class A, class B>
+	auto operator - (const Aligned<A> & a, const B & b) -> decltype(declval<A>() -declval<B>())
+	{
+		return *a - b;
+	}
+
+	template<class A, class B>
+	auto operator - (const A & a, const Aligned<B> & b) -> decltype(declval<A>() - declval<B>())
+	{
+		return a - *b;
+	}
+
+	template<class A, class B>
+	auto operator * (const Aligned<A> & a, const Aligned<B> & b) -> decltype(declval<A>() * declval<B>())
+	{
+		return *a * *b;
+	}
+
+	template<class A, class B>
+	auto operator * (const Aligned<A> & a, const B & b) -> decltype(declval<A>() * declval<B>())
+	{
+		return *a * b;
+	}
+
+	template<class A, class B>
+	auto operator * (const A & a, const Aligned<B> & b) -> decltype(declval<A>() * declval<B>())
+	{
+		return a * *b;
+	}
+
+	template<class A, class B>
+	auto operator / (const Aligned<A> & a, const Aligned<B> & b) -> decltype(declval<A>() / declval<B>())
+	{
+		return *a / *b;
+	}
+
+	template<class A, class B>
+	auto operator / (const Aligned<A> & a, const B & b) -> decltype(declval<A>() /declval<B>())
+	{
+		return *a / b;
+	}
+
+	template<class A, class B>
+	auto operator / (const A & a, const Aligned<B> & b) -> decltype(declval<A>() / declval<B>())
+	{
+		return a / *b;
+	}
 }
 
 //---------------------------------------------------------------------------

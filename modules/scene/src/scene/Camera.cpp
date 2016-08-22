@@ -23,103 +23,103 @@ namespace Rapture
 		{
 			case ProjectionMode::Ortho:
 			{
-				_scene->graphics().updateUniform<Uniforms::Projection>(floatm::orthot(-1.0f / aspect, 1.0f / aspect, -1.0f, 1.0f, -_range, _range));
+				_scene->graphics().updateUniform<Uniforms::Projection>(matrix::orthot(-1.0x / aspect, 1.0x / aspect, -1.0x, 1.0x, -_range, _range));
 				break;
 			}
 
 			case ProjectionMode::Perspective:
 			{
-				_scene->graphics().updateUniform<Uniforms::Projection>(floatm::perspectivet(_fov, aspect, 0.01f, 2 * _range));
+				_scene->graphics().updateUniform<Uniforms::Projection>(matrix::perspectivet(_fov, aspect, 0.01x, 2 * _range));
 				break;
 			}
 		}
 	}
 
-	void Camera::setViewRange(float range)
+	void Camera::setViewRange(scalar range)
 	{
 		_range = range;
 	}
 
-	void Camera::setFieldOfView(float fov)
+	void Camera::setFieldOfView(scalar fov)
 	{
 		_fov = fov;
 	}
 
-	void Camera::setRotation(const floatq & rot)
+	void Camera::setRotation(const quaternion & rot)
 	{
 		_rot = rot;
 	}
 
-	void Camera::rotate(const floatq & rot)
+	void Camera::rotate(const quaternion & rot)
 	{
 		_rot->rotateBy(rot);
 	}
 
-	void Camera::move(const floatv & offset)
+	void Camera::move(const vector & offset)
 	{
-		*_pos += _yaw->applyTo(offset);
+		_pos += _yaw->applyTo(offset);
 	}
 
-	void Camera::setPitch(float value)
+	void Camera::setPitch(scalar value)
 	{
-		_angles->x = fmath::clamp(value, -fmath::half_pi, fmath::half_pi);
-		_pitch = fquat(floatv::right, _angles->x);
+		_angles[0] = math::clamp(value, -math::half_pi, math::half_pi);
+		_pitch = Rotation(vector::right, _angles[0]);
 
-		_rot = *_roll * *_yaw * *_pitch;
+		_rot = _roll * _yaw * _pitch;
 	}
 
-	void Camera::setYaw(float value)
+	void Camera::setYaw(scalar value)
 	{
-		_angles->y = fmath::rmod(value);
-		_yaw = fquat(floatv::up, _angles->y);
+		_angles[1] = math::rmod(value);
+		_yaw = Rotation(vector::up, _angles[1]);
 
-		_rot = *_roll * *_yaw * *_pitch;
+		_rot = _roll * _yaw * _pitch;
 	}
 
-	void Camera::setRoll(float value)
+	void Camera::setRoll(scalar value)
 	{
-		_angles->z = value;
-		_roll = fquat(floatv::forward, _angles->z);
+		_angles[2] = value;
+		_roll = Rotation(vector::forward, _angles[2]);
 
-		_rot = *_roll * *_yaw * *_pitch;
+		_rot = _roll * _yaw * _pitch;
 	}
 
-	void Camera::setAngles(float pitch, float yaw, float roll)
+	void Camera::setAngles(scalar pitch, scalar yaw, scalar roll)
 	{
-		_angles->x = fmath::clamp(pitch, -fmath::pi * 0.49f, fmath::pi * 0.49f);
-		_angles->y = fmath::rmod(yaw);
-		_angles->z = roll;
+		_angles[0] = math::clamp(pitch, -math::pi * 0.49x, math::pi * 0.49x);
+		_angles[1] = math::rmod(yaw);
+		_angles[2] = roll;
 
-		_pitch = fquat(floatv::right, _angles->x);
-		_yaw   = fquat(floatv::up, _angles->y);
-		_roll  = fquat(floatv::forward, _angles->z);
+		_pitch = Rotation(vector::right, _angles[0]);
+		_yaw   = Rotation(vector::up, _angles[1]);
+		_roll  = Rotation(vector::forward, _angles[2]);
 
-		_rot = *_roll * *_yaw * *_pitch;
+		_rot = _roll * _yaw * _pitch;
 	}
 
-	void Camera::addPitch(float value)
+	void Camera::addPitch(scalar value)
 	{
-		setPitch(_angles->x + value);
+		setPitch(_angles[0] + value);
 	}
 
-	void Camera::addYaw(float value)
+	void Camera::addYaw(scalar value)
 	{
-		setYaw(_angles->y + value);
+		setYaw(_angles[1] + value);
 	}
 
-	void Camera::addRoll(float value)
+	void Camera::addRoll(scalar value)
 	{
-		setRoll(_angles->z + value);
+		setRoll(_angles[2] + value);
 	}
 
-	void Camera::addAngles(float pitch, float yaw, float roll)
+	void Camera::addAngles(scalar pitch, scalar yaw, scalar roll)
 	{
-		setAngles(_angles->x + pitch, _angles->y + yaw, _angles->z + roll);
+		setAngles(_angles[0] + pitch, _angles[1] + yaw, _angles[2] + roll);
 	}
 
 	void Camera::update()
 	{
-		_scene->graphics().updateUniform<Uniforms::View>(floatm::lookTo(_pos, _rot->forward(), _rot->up()).transpose());
+		_scene->graphics().updateUniform<Uniforms::View>(matrix::lookTo(_pos, _rot->forward(), _rot->up()).transpose());
 	}
 }
 

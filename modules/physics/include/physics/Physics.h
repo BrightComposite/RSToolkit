@@ -7,8 +7,9 @@
 
 //---------------------------------------------------------------------------
 
-#include <scene/Scene.h>
-#include <physics/PhysicalWorld.h>
+#include <physics/PhysicalLayer.h>
+
+#include <core/Exception.h>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
@@ -18,9 +19,9 @@
 namespace Rapture
 {
 	template<>
-	struct Cast<btVector3, floatv>
+	struct Cast<btVector3, vector>
 	{
-		static inline void cast(floatv & out, const btVector3 & in)
+		static inline void cast(vector & out, const btVector3 & in)
 		{
 			out.set(in);
 			out[3] = 1.0;
@@ -28,9 +29,9 @@ namespace Rapture
 	};
 
 	template<>
-	struct Cast<btQuaternion, floatq>
+	struct Cast<btQuaternion, quaternion>
 	{
-		static inline void cast(floatq & out, const btQuaternion & in)
+		static inline void cast(quaternion & out, const btQuaternion & in)
 		{
 			out.set(in);
 		}
@@ -54,20 +55,17 @@ namespace Rapture
 			return body->checkCollideWithOverride(static_cast<btCollisionObject *>(proxy->m_clientObject));
 		}
 
-		virtual btScalar addSingleResult
-		(
-			btManifoldPoint & cp,
-			const btCollisionObjectWrapper * colObj0, int partId0, int index0,
-			const btCollisionObjectWrapper * colObj1, int partId1, int index1
-		)
+		// WHO THE HELL HAS MADE SUCH SIGNATURE?!!
+		virtual btScalar addSingleResult(
+			btManifoldPoint & cp, const btCollisionObjectWrapper * objA, int partA, int indexA, const btCollisionObjectWrapper * objB, int partB, int indexB
+		) override
 		{
-			if(colObj0->m_collisionObject == body)
+			if(body == objA->m_collisionObject)
 				points.push_back(cp.m_localPointA);
+			else if(body == objB->m_collisionObject)
+				points.push_back(cp.m_localPointB);
 			else
-				if(colObj1->m_collisionObject == body)
-					points.push_back(cp.m_localPointB);
-			else
-				throw Exception("body does not match either collision object");
+				throw Exception("Body does not match either collision object");
 
 			return 0;
 		}
@@ -80,29 +78,46 @@ namespace Rapture
 	class MotionState : public btMotionState
 	{
 	public:
-		MotionState(Physical * physical) : physical(physical) {}
+		MotionState(Spatial * object) : object(object) {}
 		virtual ~MotionState() {}
 
 		virtual api(physics) void getWorldTransform(btTransform & trans) const override;
 		virtual api(physics) void setWorldTransform(const btTransform & trans) override;
 
-		Physical * physical;
+		Spatial * object;
 	};
 
-	class Physical : public Object
-	{
-		friend class MotionState;
+	using Velocity = AlignedVector<scalar>;
 
+	class Physical
+	{
 	public:
-		Physical(SceneObject * object, PhysicalWorld * world, btCollisionShape * shape, float mass = 0.0) : _object(object), _shape(shape), _world(world)
+		Physical(Spatial * object)
 		{
-			setclass(Physical);
-			_motionState = new MotionState(this);
+			_motionState = new MotionState(object);
+		}
+
+		Physical(Spatial * object, PhysicalLayer * world, btCollisionShape * shape, float mass = 0.0f) : Physical(object)
+		{
+			spawn(world, shape, mass);
+		}
+
+		virtual ~Physical()
+		{
+			_world->removeRigidBody(_rigidBody);
+		}
+
+		void spawn(PhysicalLayer * world, btCollisionShape * shape, float mass = 0.0)
+		{
+			if(_world != nullptr && _rigidBody != nullptr)
+				_world->removeRigidBody(_rigidBody);
+
+			_world = world;
 
 			btVector3 inertia;
-			_shape->calculateLocalInertia(mass, inertia);
+			shape->calculateLocalInertia(mass, inertia);
 
-			btRigidBody::btRigidBodyConstructionInfo info(mass, _motionState, _shape, inertia);
+			btRigidBody::btRigidBodyConstructionInfo info(mass, _motionState, shape, inertia);
 			info.m_restitution = 0.66f;
 			info.m_friction = 0.8f;
 
@@ -111,23 +126,17 @@ namespace Rapture
 			_world->addRigidBody(_rigidBody);
 		}
 
-		virtual ~Physical()
-		{
-			_world->removeRigidBody(_rigidBody);
-		}
-
 		virtual api(physics) void setMass(float mass);
-		virtual api(physics) void setLinearVelocity(const fvec & v);
-		api(physics) fvec getLinearVelocity();
+		virtual api(physics) void setLinearVelocity(const Velocity & v);
+		api(physics) Velocity getLinearVelocity();
 
 		virtual void contactWith(Physical * physical, const ContactInfo & info) {}
 
 	protected:
-		SceneObject * _object;
-		PhysicalWorld * _world;
-		UniqueHandle<btCollisionShape> _shape;
-		UniqueHandle<btRigidBody> _rigidBody;
-		UniqueHandle<btMotionState> _motionState;
+		PhysicalLayer * _world;
+
+		Unique<btRigidBody>		 _rigidBody;
+		Unique<btMotionState>	 _motionState;
 	};
 }
 

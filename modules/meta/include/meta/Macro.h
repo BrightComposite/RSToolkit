@@ -124,6 +124,12 @@ namespace Rapture
 		return object != nullptr ? functor(object, forward<A>(args)...) : 0;
 	}
 
+	template<class T, class U, class = enable_if_t<is_convertible<U &&, T>::value>>
+	void fast_cast(T & target, U && source)
+	{
+		target = static_cast<T>(forward<U>(source));
+	}
+
 	template<class T>
 	void * void_ptr(T * ptr)
 	{

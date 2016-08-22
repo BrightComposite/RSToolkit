@@ -1,8 +1,8 @@
 #--------------------------------------------------------
-#	Rapture Scene
+#	Rapture Space
 #--------------------------------------------------------
 
-project(RaptureScene CXX)
+project(RaptureSpace CXX)
 
 #--------------------------------------------------------
 
@@ -10,26 +10,18 @@ include(${RAPTURE_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-module(SHARED)
-	dependencies(RaptureUI "ui")
-	dependencies(RaptureSpace "space")
+module(INLINE)
+	dependencies(
+		RaptureMath "math"
+	)
 
 	sources(modules)
-		domain(scene)
-		
+		domain(space)
+	
 		group(include Headers)
 		files(
-			Camera.h
-			DeferredShadingScene.h
-			Scene.h
+			Spatial.h
 		)
-
-		group(src Sources)
-		files(
-			Camera.cpp
-			DeferredShadingScene.cpp
-			Scene.cpp
-			)
 	endsources()
 endmodule()
 

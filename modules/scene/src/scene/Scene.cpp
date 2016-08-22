@@ -7,11 +7,9 @@
 
 namespace Rapture
 {
-	implement_link(Scene);
-	implement_link(SceneObject);
 	implement_link(Drawable);
-	implement_link(WorldObject);
-	implement_link(OrientedObject);
+	implement_link(SceneObject);
+	implement_link(Scene);
 
 	SceneObject::SceneObject(Scene * scene) : _scene(scene)
 	{

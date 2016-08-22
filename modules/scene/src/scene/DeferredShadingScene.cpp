@@ -24,7 +24,7 @@ namespace Rapture
 
 	Handle<Light> DeferredShadingScene::addLight()
 	{
-		return *_lights.emplace(_lights.end(), nothing);
+		return *_lights.emplace(_lights.end(), default_init);
 	}
 
 	void DeferredShadingScene::draw(Graphics3D & g, const IntRect & viewport) const

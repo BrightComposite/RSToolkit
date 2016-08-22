@@ -107,7 +107,7 @@ namespace Rapture
 	 */
 	class Empty {};
 
-	static Empty nothing;
+	static Empty default_init;
 
 //---------------------------------------------------------------------------
 

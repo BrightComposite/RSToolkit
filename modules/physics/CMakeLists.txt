@@ -11,7 +11,7 @@ include(${RAPTURE_TOOLS}/module.cmake)
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(RaptureScene "scene")
+	dependencies(RaptureSpace "space")
 
 	sources(modules)
 		domain(physics)
@@ -19,7 +19,7 @@ module(SHARED)
 		group(include Headers)
 		files(
 			Physics.h
-			PhysicalWorld.h
+			PhysicalLayer.h
 			PlaneObject.h
 		)
 

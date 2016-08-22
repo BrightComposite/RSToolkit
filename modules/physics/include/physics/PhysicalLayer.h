@@ -2,15 +2,15 @@
 
 #pragma once
 
-#ifndef PHYSICAL_WORLD_H
-#define PHYSICAL_WORLD_H
+#ifndef PHYSICAL_LAYER_H
+#define PHYSICAL_LAYER_H
 
 //---------------------------------------------------------------------------
 
 #include <core/Object.h>
 #include <container/ArrayList.h>
 
-#include <math/Vector.h>
+#include <space/Spatial.h>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
@@ -21,21 +21,21 @@ namespace Rapture
 {
 	class Physical;
 
-	struct ContactInfo
+	struct alignas(alignof(vector)) ContactInfo
 	{
-		fvec normal;
-		fvec pos;
-		float force;
+		vector normal;
+		vector pos;
+		scalar force;
 	};
 
-	class PhysicalWorld : public Object, public btDiscreteDynamicsWorld
+	class PhysicalLayer : public Object, public btDiscreteDynamicsWorld
 	{
-		deny_copy(PhysicalWorld);
+		deny_copy(PhysicalLayer);
 
 	public:
-		PhysicalWorld(btDispatcher * dispatcher, btBroadphaseInterface * broadphase, btConstraintSolver * solver, btCollisionConfiguration * config) : btDiscreteDynamicsWorld(dispatcher, broadphase, solver, config)
+		PhysicalLayer(Unique<btDispatcher> && dispatcher, Unique<btBroadphaseInterface> && broadphase, Unique<btConstraintSolver> && solver, Unique<btCollisionConfiguration> && config) : btDiscreteDynamicsWorld(dispatcher, broadphase, solver, config), dispatcher(move(dispatcher)), broadphase(move(broadphase)), solver(move(solver)), config(move(config))
 		{
-			setInternalTickCallback(PhysicalWorld::update, this);
+			setInternalTickCallback(PhysicalLayer::update, this);
 			setGravity({0.0f, -10.0f, 0.0f});
 		}
 
@@ -47,6 +47,11 @@ namespace Rapture
 		using btDiscreteDynamicsWorld::operator delete[];
 
 		static api(physics) void update(btDynamicsWorld * world, btScalar timeStep);
+
+		Unique<btDispatcher> dispatcher;
+		Unique<btBroadphaseInterface> broadphase;
+		Unique<btConstraintSolver> solver;
+		Unique<btCollisionConfiguration> config;
 	};
 }
 

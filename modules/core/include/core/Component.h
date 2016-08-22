@@ -77,7 +77,7 @@ namespace Rapture
 		template<class T, class Context>
 		using is_context = is_same<decltype(declval<Context>().init(declval<Handle<T, Owner...> &>())), Handle<T, Owner...> &>;
 
-		template<class T, class ... A, useif<based_on<T, Base>::value, can_construct<T, A...>::value>>
+		template<class T, class InitType = T, class ... A, useif<based_on<T, Base>::value, based_on<InitType, T>::value, can_construct<InitType, A...>::value>>
 		Handle<T, Owner...> construct(A && ... args)
 		{
 			auto & p = map[MorphType<T>::id()];
@@ -85,12 +85,12 @@ namespace Rapture
 			if(p != nullptr && p->hasLinks())
 				throw LinkedComponentException(p);
 
-			Handle<T, Owner...> c;
+			Handle<InitType, Owner...> c;
 			p = c.init(forward<A>(args)...);
 			return c;
 		}
 
-		template<class T, class Context, useif<based_on<T, Base>::value, is_context<T, Context>::value>>
+		template<class T, class InitType = T, class Context, useif<based_on<T, Base>::value, based_on<InitType, T>::value, is_context<InitType, Context>::value>>
 		Handle<T, Owner...> construct(Context * ctx)
 		{
 			auto & p = map[MorphType<T>::id()];
@@ -98,12 +98,12 @@ namespace Rapture
 			if(p != nullptr && p->hasLinks())
 				throw LinkedComponentException(p);
 
-			Handle<T, Owner...> c;
+			Handle<InitType, Owner...> c;
 			p = ctx->init(c);
 			return c;
 		}
 
-		template<class T, useif<based_on<T, Base>::value, can_construct<T>::value>>
+		template<class T, class InitType = T, useif<based_on<T, Base>::value, based_on<InitType, T>::value, can_construct<InitType>::value>>
 		Handle<T, Owner...> require()
 		{
 			auto & p = map[MorphType<T>::id()];
@@ -111,12 +111,12 @@ namespace Rapture
 			if(p != nullptr)
 				return handle_cast<T>(p);
 
-			Handle<T, Owner...> c;
+			Handle<InitType, Owner...> c;
 			p = c.init();
 			return c;
 		}
 
-		template<class T, class Context, useif<based_on<T, Base>::value, is_context<T, Context>::value>>
+		template<class T, class InitType = T, class Context, useif<based_on<T, Base>::value, based_on<InitType, T>::value, is_context<InitType, Context>::value>>
 		Handle<T, Owner...> require(Context * ctx)
 		{
 			auto & p = map[MorphType<T>::id()];
@@ -124,9 +124,15 @@ namespace Rapture
 			if(p != nullptr)
 				return handle_cast<T>(p);
 
-			Handle<T, Owner...> c;
+			Handle<InitType, Owner...> c;
 			p = ctx->init(c);
 			return c;
+		}
+
+		template<class T, useif<based_on<T, Base>::value>>
+		void set(const Handle<T> & component)
+		{
+			map[MorphType<T>::id()] = component;
 		}
 
 		template<class T, class C, useif<based_on<T, Base>::value, can_construct<T>::value>>

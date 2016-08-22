@@ -64,7 +64,7 @@ link_directories(${WORKSPACE_ROOT}/lib/${MODULE_ARCH}/debug)
 
 #--------------------------------------------------------
 
-set(MODULE_TYPES APPLICATION;SHARED;LIBRARY;INLINE CACHE INTERNAL "Module types" FORCE)
+set(MODULE_TYPES APPLICATION;SHARED;LIBRARY;STATIC;INLINE CACHE INTERNAL "Module types" FORCE)
 
 #--------------------------------------------------------
 
@@ -250,7 +250,11 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 #	add_module_include_dirs function.
 
 	function(add_module_include_dirs)
-		target_include_directories(${PROJECT_NAME} PUBLIC ${ARGN})
+		if("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "INLINE")
+			target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${ARGN})
+		else()
+			target_include_directories(${PROJECT_NAME} PRIVATE ${ARGN})
+		endif()
 
 		set(DIRS ${${PROJECT_NAME}_INCLUDE_DIRS};${ARGN})
 		list(REMOVE_DUPLICATES DIRS)
@@ -260,13 +264,15 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 #	add_module_libraries function.
 
 	function(add_module_libraries)
-		foreach(LIB ${ARGN})
-			if(NOT "${${LIB}_MODULE_TYPE}" STREQUAL "INLINE")
+		if("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "INLINE")
+			foreach(LIB ${ARGN})
+				target_link_libraries(${PROJECT_NAME} INTERFACE ${LIB})
+			endforeach()
+		else()
+			foreach(LIB ${ARGN})
 				target_link_libraries(${PROJECT_NAME} PUBLIC ${LIB})
-			else()
-				add_module_include_dirs(${${LIB}_INCLUDE_DIRS})
-			endif()
-		endforeach()
+			endforeach()
+		endif()
 	endfunction()
 
 #	add_module function.
@@ -280,9 +286,11 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		set(DOMAIN "${ARGV1}")
 		set(ROOT "${ARGV2}")
 
-		if(NOT "${DOMAIN}" STREQUAL "")
-			set(DIR "${DOMAIN}/${DIR}")
+		if("${DOMAIN}" STREQUAL "")
+			set(DOMAIN modules)
 		endif()
+
+		set(DIR "${DOMAIN}/${DIR}")
 
 		if(NOT "${ROOT}" STREQUAL "")
 			if(NOT IS_ABSOLUTE "${ROOT}")
@@ -292,7 +300,12 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			set(OUTPUT_DIR "${ROOT}/${OUTPUT_PATH_SUFFIX}/${DIR}")
 			set(DIR "${ROOT}/${DIR}")
 		else()
-			set(OUTPUT_DIR "${OUTPUT_ROOT}/${DIR}")
+			if("${DOMAIN}" STREQUAL "modules")
+				set(OUTPUT_DIR "${OUTPUT_ROOT}/${PATH}")
+			else()
+				set(OUTPUT_DIR "${OUTPUT_ROOT}/${DIR}")
+			endif()
+
 			set(DIR "${WORKSPACE_ROOT}/${DIR}")
 		endif()
 
@@ -302,11 +315,8 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			file(MAKE_DIRECTORY ${DIR})
 
 			set(TEMPLATE_FILE ${RAPTURE_ROOT}/templates/module/CMakeLists.txt)
-
-			if(NOT "${DOMAIN}" STREQUAL "")
-				set(TEMPLATE_FILE_DOMAIN ${RAPTURE_ROOT}/templates/module/${DOMAIN}/CMakeLists.txt)
-			endif()
-
+			set(TEMPLATE_FILE_DOMAIN ${RAPTURE_ROOT}/templates/module/${DOMAIN}/CMakeLists.txt)
+			
 			set(module_path ${PATH})
 			set(module_domain ${DOMAIN})
 
@@ -342,6 +352,10 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 				add_subdirectory("${WORKSPACE_MODULES_ROOT}/${path}" "${OUTPUT_ROOT}/${path}")
 			elseif(EXISTS "${MODULES_ROOT}/${path}")
 				add_subdirectory("${MODULES_ROOT}/${path}" "${OUTPUT_ROOT}/${path}")
+			elseif(EXISTS "${WORKSPACE_THIRD_PARTY}/${path}")
+				add_subdirectory("${WORKSPACE_THIRD_PARTY}/${path}" "${OUTPUT_ROOT}/${path}")
+			elseif(EXISTS "${THIRD_PARTY}/${path}")
+				add_subdirectory("${THIRD_PARTY}/${path}" "${OUTPUT_ROOT}/${path}")
 			else()
 				message(FATAL_ERROR "Can't find dependency ${name}! Path ${path} doesn't exist!")
 			endif()
@@ -375,7 +389,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		message("${MESSAGES_INDENTATION}+ Add module \"${PROJECT_NAME}\"")
 
 		set(${PROJECT_NAME}_SOURCES CACHE INTERNAL "${PROJECT_NAME} sources" FORCE)
-		set(${PROJECT_NAME}_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include CACHE INTERNAL "${PROJECT_NAME} include directories" FORCE)
+		set(${PROJECT_NAME}_INCLUDE_DIRS CACHE INTERNAL "${PROJECT_NAME} include directories" FORCE)
 		set(${PROJECT_NAME}_MODULE_DEPENDENCIES CACHE INTERNAL "${PROJECT_NAME} module dependencies" FORCE)
 
 		if("${type}" STREQUAL "")
@@ -470,7 +484,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
 		elseif("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "SHARED")
 			add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES})
-		elseif("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "LIBRARY")
+		elseif("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "LIBRARY" OR "${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "STATIC")
 			add_library(${PROJECT_NAME} STATIC ${${PROJECT_NAME}_SOURCES})
 		elseif("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "INLINE")
 			add_library(${PROJECT_NAME} STATIC ${${PROJECT_NAME}_SOURCES})
@@ -489,15 +503,31 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 		target_compile_options(${PROJECT_NAME} PRIVATE ${COMPILE_OPTIONS})
 
-		add_module_include_dirs(${${PROJECT_NAME}_SOURCE_GROUPS})
-		add_module_libraries(${${PROJECT_NAME}_MODULE_DEPENDENCIES})
+		foreach(GROUP ${${PROJECT_NAME}_SOURCE_GROUPS})
+			add_module_include_dirs(${PROJECT_SOURCE_DIR}/${GROUP})
+		endforeach()
+
 		api_export(${PROJECT_NAME})
 
 		collect_dependencies(DEPENDENCIES ${PROJECT_NAME})
 
-		foreach(DEPENDENCY_NAME ${DEPENDENCIES})
-			if("${${DEPENDENCY_NAME}_MODULE_TYPE}" STREQUAL "SHARED")
-				api_import(${DEPENDENCY_NAME})
+		if("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "INLINE")
+			foreach(DEPENDENCY ${DEPENDENCIES})
+				target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${${DEPENDENCY}_INCLUDE_DIRS})
+			endforeach()
+		else()
+			foreach(DEPENDENCY ${DEPENDENCIES})
+				target_include_directories(${PROJECT_NAME} PRIVATE ${${DEPENDENCY}_INCLUDE_DIRS})
+				
+				if(NOT "${${DEPENDENCY}_MODULE_TYPE}" STREQUAL "INLINE")
+					target_link_libraries(${PROJECT_NAME} PRIVATE ${DEPENDENCY})
+				endif()
+			endforeach()
+		endif()
+
+		foreach(DEPENDENCY ${DEPENDENCIES})
+			if("${${DEPENDENCY}_MODULE_TYPE}" STREQUAL "SHARED")
+				api_import(${DEPENDENCY})
 			endif()
 		endforeach()
 	endfunction()

@@ -7,10 +7,8 @@
 
 //---------------------------------------------------------------------------
 
-#include <math/Vector.h>
-#include <math/Quaternion.h>
-
 #include "Scene.h"
+#include <space/Spatial.h>
 
 //---------------------------------------------------------------------------
 
@@ -22,10 +20,10 @@ namespace Rapture
 		Perspective
 	};
 
-	class Camera : public OrientedObject
+	class Camera : public Oriented, public SceneObject
 	{
 	public:
-		Camera(Scene * scene) : OrientedObject(scene)
+		Camera(Scene * scene) : SceneObject(scene)
 		{
 			if(scene->camera() == nullptr)
 				scene->setCamera(this);
@@ -33,41 +31,41 @@ namespace Rapture
 			updateProjection();
 		}
 
-		virtual api(scene) void setRotation(const floatq & rot) override;
-		virtual api(scene) void rotate(const floatq & rot) override;
-		virtual api(scene) void move(const floatv & offset) override;
+		virtual api(scene) void setRotation(const quaternion & rot) override;
+		virtual api(scene) void rotate(const quaternion & rot) override;
+		virtual api(scene) void move(const vector & offset) override;
 
-		float pitch() const
+		scalar pitch() const
 		{
-			return _angles->x;
+			return _angles[0];
 		}
 
-		float yaw() const
+		scalar yaw() const
 		{
-			return _angles->y;
+			return _angles[1];
 		}
 
-		float roll() const
+		scalar roll() const
 		{
-			return _angles->z;
+			return _angles[2];
 		}
 
-		virtual api(scene) void setPitch(float value);
-		virtual api(scene) void setYaw(float value);
-		virtual api(scene) void setRoll(float value);
-		virtual api(scene) void setAngles(float pitch, float yaw, float roll);
+		virtual api(scene) void setPitch(scalar value);
+		virtual api(scene) void setYaw(scalar value);
+		virtual api(scene) void setRoll(scalar value);
+		virtual api(scene) void setAngles(scalar pitch, scalar yaw, scalar roll);
 
-		virtual api(scene) void addPitch(float value);
-		virtual api(scene) void addYaw(float value);
-		virtual api(scene) void addRoll(float value);
-		virtual api(scene) void addAngles(float pitch, float yaw, float roll);
+		virtual api(scene) void addPitch(scalar value);
+		virtual api(scene) void addYaw(scalar value);
+		virtual api(scene) void addRoll(scalar value);
+		virtual api(scene) void addAngles(scalar pitch, scalar yaw, scalar roll);
 
-		float viewRange() const
+		scalar viewRange() const
 		{
 			return _range;
 		}
 
-		float fieldOfView() const
+		scalar fieldOfView() const
 		{
 			return _fov;
 		}
@@ -79,19 +77,19 @@ namespace Rapture
 
 		api(scene) void setProjectionMode(ProjectionMode mode);
 
-		api(scene) void setViewRange(float range);
-		api(scene) void setFieldOfView(float fov);
+		api(scene) void setViewRange(scalar range);
+		api(scene) void setFieldOfView(scalar fov);
 		api(scene) void updateProjection();
 
 		api(scene) void update();
 
 	protected:
-		float _range = 0.01f;
-		float _fov = 90.0f;
-		fquat _pitch;
-		fquat _yaw;
-		fquat _roll;
-		fvec  _angles = {0.0f, 0.0f, 0.0f};
+		scalar _range = 0.01f;
+		scalar _fov = 90.0f;
+		Rotation _pitch;
+		Rotation _yaw;
+		Rotation _roll;
+		scalar3  _angles = {0.0f, 0.0f, 0.0f};
 		ProjectionMode _projectionMode = ProjectionMode::Ortho;
 	};
 }

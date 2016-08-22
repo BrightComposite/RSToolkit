@@ -2,8 +2,8 @@
 
 #pragma once
 
-#ifndef GROUND_OBJECT_H
-#define GROUND_OBJECT_H
+#ifndef PLANE_OBJECT_H
+#define PLANE_OBJECT_H
 
 //---------------------------------------------------------------------------
 
@@ -13,24 +13,21 @@
 
 namespace Rapture
 {
-	class PlaneObject; 
-
-	link_class(physics, PlaneObject, Class<Physical>);
-
-	class PlaneObject : public Physical
+	class PlaneObject : public Oriented
 	{
 	public:
-		PlaneObject(Scene * scene, PhysicalWorld * world, float level) :
-			Physical(
-				Handle<OrientedObject>(scene, floatv{0.0f, level, 0.0f}, floatq{floatv::up, floatv::forward}),
-				world,
-				new btStaticPlaneShape({0, 1, 0}, 0)
-			)
+		PlaneObject(PhysicalLayer * world, scalar level) :
+			Oriented(vector{0.0x, level, 0.0x}, quaternion{vector::up, vector::forward}),
+			_shape(btVector3{0.0x, 1.0x, 0.0x}, 0.0x)
 		{
-			setclass(PlaneObject);
+			_physical.init(this, world, _shape);
 		}
 
 		virtual ~PlaneObject() {}
+
+	protected:
+		Unique<btStaticPlaneShape> _shape;
+		Unique<Physical> _physical;
 	};
 }
 

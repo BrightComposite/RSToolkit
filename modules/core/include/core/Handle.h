@@ -189,7 +189,7 @@ namespace Rapture
 		Handle(Handle<U, A...> && h) : Base(forward<Handle<U, A...>>(h)) {}
 
 		template<class U = T, useif<can_construct<U>::value>>
-		Handle(Empty) : Base(nothing) {}
+		Handle(Empty) : Base(default_init) {}
 
 		template<class ... A, selectif(0)<can_construct<T, A...>::value, (sizeof...(A) > 0)>>
 		explicit Handle(A &&... args) : Base(forward<A>(args)...) {}
@@ -537,7 +537,7 @@ namespace Rapture
 		Handle(Handle<U, A...> && h) : Base(forward<Handle<U, A...>>(h)) {}
 
 		template<class U = T, useif<can_construct<U>::value>>
-		Handle(Empty) : Base(nothing) {}
+		Handle(Empty) : Base(default_init) {}
 
 		template<class ... A, selectif(0)<can_construct<T, A...>::value && (sizeof...(A) > 0)>>
 		explicit Handle(A &&... args) : Base(forward<A>(args)...) {}
@@ -897,7 +897,7 @@ namespace Rapture
 	class SharedIdentifier : public EmptyHandle
 	{
 	public:
-		SharedIdentifier() : EmptyHandle(nothing) {}
+		SharedIdentifier() : EmptyHandle(default_init) {}
 	};
 }
 
@@ -943,7 +943,7 @@ namespace Rapture
 		UniqueHandle(UniqueHandle<U, A...> && h) : Base(forward<UniqueHandle<U, A...>>(h)) {}
 
 		template<class U = T, useif<can_construct<U>::value>>
-		UniqueHandle(Empty) : Base(nothing) {}
+		UniqueHandle(Empty) : Base(default_init) {}
 
 		template<class ... A, selectif(0)<can_construct<T, A...>::value && (sizeof...(A) > 0)>>
 		explicit UniqueHandle(A && ... args) : Base(forward<A>(args)...) {}
@@ -1008,9 +1008,6 @@ namespace Rapture
 		template<class...>
 		friend class UniqueHandle;
 		friend Owner;
-
-		// Check that T has been already determined
-		static_assert(is_determined_class<T>::value, "Class T hasn't been determined yet");
 
 	protected:
 		typedef Wrapper<T *, UniqueHandle<T, Owner>> Base;
@@ -1227,12 +1224,26 @@ namespace Rapture
 
 //---------------------------------------------------------------------------
 
+	template<class T, class U, useif<is_convertible<U &&, T *>::value>>
+	void fast_cast(Handle<T> & target, U && source)
+	{
+		target = static_cast<T *>(forward<U>(source));
+	}
+
+	template<class T, class U, useif<is_convertible<U &&, T *>::value>>
+	void fast_cast(Unique<T> & target, U && source)
+	{
+		target = static_cast<T *>(forward<U>(source));
+	}
+
+	//---------------------------------------------------------------------------
+
 	template<class T, class Owner>
 	struct VariableInitializer<Handle<T, Owner>>
 	{
 		static Handle<T, Owner> initialize()
 		{
-			return {nothing};
+			return {default_init};
 		}
 	};
 

@@ -431,7 +431,7 @@ namespace Rapture
 				throw Exception("Output image buffer should be not-null!");
 		}
 
-		GLUniformAdapter::GLUniformAdapter(GLGraphics * graphics, ShaderType shader, int index, size_t size) : UniformAdapter(index, size), _graphics(graphics), _offset(0)
+		GLUniformAdapter::GLUniformAdapter(GLGraphics * graphics, ShaderType shader, int index, uint size) : UniformAdapter(index, size), _graphics(graphics), _offset(0)
 		{
 			glGenBuffers(1, &_common);
 			glBindBufferBase(GL_UNIFORM_BUFFER, _index, _common);
@@ -481,7 +481,7 @@ namespace Rapture
 
 			auto & b = _buffers.back();
 
-			data.buffer  = _buffers.size() - 1;
+			data.buffer  = static_cast<uint>(_buffers.size() - 1);
 			data.offset  = _offset;
 			data.data    = {b.data.ptr + _offset, _size};
 			data.adapter = this;

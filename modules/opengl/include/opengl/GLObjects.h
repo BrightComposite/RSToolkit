@@ -259,6 +259,7 @@ namespace Rapture
 
 			virtual api(opengl3_3) void apply() const override;
 			virtual api(opengl3_3) void clear() const override;
+			virtual api(opengl3_3) void clear(uint bitmask) const override;
 
 			virtual api(opengl3_3) void present() const override;
 

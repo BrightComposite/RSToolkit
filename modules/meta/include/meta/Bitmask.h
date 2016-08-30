@@ -52,6 +52,12 @@ namespace Rapture
 		}
 
 		template<typename I>
+		static constexpr void selectState(int offset, I & s, bool state)
+		{
+			select_flag(I(1 << offset), s, state);
+		}
+
+		template<typename I>
 		static constexpr void clearState(int offset, I & s)
 		{
 			clear_flag(I(1 << offset), s);

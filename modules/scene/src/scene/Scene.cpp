@@ -149,6 +149,11 @@ namespace Rapture
 		_firstTick = _lastTick - (_tickLength * _ticks);
 	}
 
+	matrix Scene::normalMatrix(const matrix & model) const
+	{
+		return /*_camera != nullptr ? _camera->normalMatrix(model) : */model.inverse();
+	}
+
 	void Scene::update()
 	{
 		if(clock::now() - _lastTick > _tickLength)

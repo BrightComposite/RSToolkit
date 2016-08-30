@@ -14,8 +14,6 @@
 
 namespace Rapture
 {
-	using boost::alignment::aligned_allocator;
-
 	template<class T>
 	class Aligned
 	{

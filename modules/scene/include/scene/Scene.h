@@ -9,6 +9,7 @@
 
 #include <ui/UISpace.h>
 #include <graphics/Graphics3D.h>
+#include <space/Spatial.h>
 
 #include <chrono>
 
@@ -154,6 +155,8 @@ namespace Rapture
 
 		api(scene) void setTickLength(milliseconds length);
 		api(scene) void update();
+
+		api(scene) matrix normalMatrix(const matrix & model) const;
 
 	protected:
 		Scene(const string & name) : Named(name) { setclass(Scene); }

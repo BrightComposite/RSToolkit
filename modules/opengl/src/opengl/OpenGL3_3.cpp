@@ -354,7 +354,7 @@ namespace Rapture
 			checkForErrors();
 
 			glEnable(GL_DEPTH_TEST);
-			glDepthFunc(GL_LEQUAL);
+			glDepthFunc(GL_LESS);
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glEnable(GL_CULL_FACE);
@@ -363,7 +363,7 @@ namespace Rapture
 			glFrontFace(GL_CW);
 
 			glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-			glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+			//glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
 
 		#ifdef GL_DEBUG
 			glEnable(GL_DEBUG_OUTPUT);
@@ -444,7 +444,7 @@ namespace Rapture
 
 			checkForErrors();
 
-			adapter = Handle<GLUniformAdapter, GLGraphics>(this, shader, index, size);
+			adapter = Handle<GLUniformAdapter, GLGraphics>(this, shader, index, static_cast<uint>(size));
 			return adapter;
 		}
 

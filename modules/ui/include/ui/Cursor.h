@@ -16,6 +16,7 @@ namespace Rapture
 {
 	class UISpace;
 	class CursorPool;
+	apistruct(ui) Singleton<CursorPool>;
 
 	class Cursor : public Shared
 	{
@@ -118,8 +119,6 @@ namespace Rapture
 	protected:
 		CursorPool();
 	};
-
-	api_struct(ui, Singleton<CursorPool>);
 }
 
 //---------------------------------------------------------------------------

@@ -294,10 +294,10 @@ namespace Rapture
 		template<class U, class ... O, useif<based_on<U, T>::value, !is_const<U>::value>, skipif<same_types<Owner, Types<O...>>::value>>
 		Handle(Handle<U, O...> && h) : _shared(static_cast<T *>(h._shared)) { h._shared = nullptr; }
 
-		template<class ... A, selectif(0)<can_construct<T, A...>::value, (sizeof...(A) > 0)>>
+		template<class ... A, selectif(0) <can_construct<T, A...>::value, (sizeof...(A) > 0)>>
 		explicit Handle(A &&... args) : _shared(new T(forward<A>(args)...)) {}
 
-		template<class ... A, selectif(1)<is_abstract<T>::value, !is_handle_init<T, A...>::value>>
+		template<class ... A, selectif(1) <is_abstract<T>::value, !is_handle_init<T, A...>::value>>
 		explicit Handle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
 
 		void keep()

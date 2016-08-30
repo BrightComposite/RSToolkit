@@ -58,6 +58,8 @@
 
 namespace Rapture
 {
+	using boost::alignment::aligned_allocator;
+
 	using boost::alignment::aligned_alloc;
 	using boost::alignment::aligned_free;
 

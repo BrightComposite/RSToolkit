@@ -480,6 +480,9 @@ namespace Rapture
 		AxisMaskYZ   = AxisMaskY | AxisMaskZ,
 		AxisMaskXYZ  = AxisMaskX | AxisMaskY | AxisMaskZ,
 	};
+
+	template<typename T>
+	using limits = std::numeric_limits<T>;
 }
 
 //---------------------------------------------------------------------------

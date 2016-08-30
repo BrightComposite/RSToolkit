@@ -44,8 +44,8 @@
 #define rapture_export_api
 #endif
 
-#define api_struct(module, ...) template struct api(module) __VA_ARGS__
-#define api_class(module, ...)  template class  api(module) __VA_ARGS__
+#define apistruct(module) template struct api(module)
+#define apiclass(module)  template class  api(module)
 
 namespace Rapture
 {
@@ -72,14 +72,14 @@ namespace Rapture
 		return value >= min && value < max;
 	}
 
-	template<class T, class Y>
-	constexpr auto align(T x, Y a)
+	template<class X, class A>
+	constexpr auto align(X x, A a)
 	{
 		return ((x - 1) | (a - 1)) + 1;
 	}
 
-	template<class T, class Y>
-	constexpr auto aligned_add(T x, T y, Y a)
+	template<class X, class Y, class A>
+	constexpr auto aligned_add(X x, Y y, A a)
 	{
 		x = x + y + a - 1;
 		x = x - x % a;
@@ -90,29 +90,29 @@ namespace Rapture
 	template<class T>
 	size_t max_index(initializer_list<T> list)
 	{
-		return std::max_element(list.begin(), list.end()) - list.begin();
+		return std::distance(list.begin(), std::max_element(list.begin(), list.end()));
 	}
 
 	template<class T>
 	size_t min_index(initializer_list<T> list)
 	{
-		return std::min_element(list.begin(), list.end()) - list.begin();
+		return std::distance(list.begin(), std::min_element(list.begin(), list.end()));
 	}
 
 	template<class T>
 	pair<size_t, size_t> minmax_index(initializer_list<T> list)
 	{
 		auto minmax = std::minmax_element(list.begin(), list.end());
-		return {minmax.first - list.begin(), minmax.second - list.begin()};
+		return {std::distance(list.begin(), minmax.first), std::distance(list.begin(), minmax.second)};
 	}
 
-	template<class T, class F, class ... A>
+	template<class T, class F, class ... A, class = decltype(declval<const T>() != nullptr)>
 	auto acquire(const T & object, F functor, A &&... args) -> decltype(functor(object, forward<A>(args)...))
 	{
 		return object != nullptr ? functor(object, forward<A>(args)...) : 0;
 	}
 
-	template<class T, class F, class ... A>
+	template<class T, class F, class ... A, class = decltype(declval<T>() != nullptr)>
 	auto acquire(T && object, F functor, A &&... args) -> decltype(functor(forward<T>(object), forward<A>(args)...))
 	{
 		return object != nullptr ? functor(forward<T>(object), forward<A>(args)...) : 0;
@@ -206,7 +206,7 @@ namespace Rapture
  */
 #define repeat(var, times) for(int var = 0; var < times; ++var)
 
-#define inscope() //if(true)
+#define inscope()
 
 #define deny_copy(... /* Class */) \
 	__VA_ARGS__(const __VA_ARGS__ &) = delete; \

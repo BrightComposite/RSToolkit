@@ -97,7 +97,7 @@ namespace Rapture
 			_motionState = new MotionState(object);
 		}
 
-		Physical(Spatial * object, PhysicalLayer * world, btCollisionShape * shape, float mass = 0.0f) : Physical(object)
+		Physical(Spatial * object, PhysicalLayer * world, btCollisionShape * shape, scalar mass = 0.0f) : Physical(object)
 		{
 			spawn(world, shape, mass);
 		}
@@ -107,7 +107,12 @@ namespace Rapture
 			_world->removeRigidBody(_rigidBody);
 		}
 
-		void spawn(PhysicalLayer * world, btCollisionShape * shape, float mass = 0.0)
+		btRigidBody * body() const
+		{
+			return _rigidBody;
+		}
+
+		void spawn(PhysicalLayer * world, btCollisionShape * shape, scalar mass = 0.0)
 		{
 			if(_world != nullptr && _rigidBody != nullptr)
 				_world->removeRigidBody(_rigidBody);
@@ -126,11 +131,14 @@ namespace Rapture
 			_world->addRigidBody(_rigidBody);
 		}
 
-		virtual api(physics) void setMass(float mass);
+		virtual api(physics) void setMass(scalar mass);
 		virtual api(physics) void setLinearVelocity(const Velocity & v);
 		api(physics) Velocity getLinearVelocity();
 
-		virtual void contactWith(Physical * physical, const ContactInfo & info) {}
+		virtual void contactWith(Physical * physical, const ContactInfo & info)
+		{
+		
+		}
 
 	protected:
 		PhysicalLayer * _world;

@@ -88,7 +88,7 @@ namespace Rapture
 			virtual void draw() const override
 			{
 				glBindVertexArray(id);
-				glDrawElements(topology, indicesCount, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(offset));
+				glDrawElements(topology, indicesCount, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(static_cast<size_t>(offset)));
 				glBindVertexArray(0);
 			}
 
@@ -137,7 +137,7 @@ namespace Rapture
 			virtual void draw() const override
 			{
 				glBindVertexArray(id);
-				glDrawArraysInstanced(topology, offset, verticesCount, data->instances.count());
+				glDrawArraysInstanced(topology, offset, verticesCount, static_cast<GLsizei>(data->instances.count()));
 				glBindVertexArray(0);
 			}
 
@@ -180,7 +180,7 @@ namespace Rapture
 			virtual void draw() const override final
 			{
 				glBindVertexArray(id);
-				glDrawElementsInstanced(GLInstancedMesh::topology, indicesCount, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(GLInstancedMesh::offset), data->instances.count());
+				glDrawElementsInstanced(GLInstancedMesh::topology, indicesCount, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(static_cast<size_t>(GLInstancedMesh::offset)), static_cast<GLsizei>(data->instances.count()));
 				glBindVertexArray(0);
 			}
 

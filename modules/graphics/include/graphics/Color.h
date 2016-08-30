@@ -175,6 +175,11 @@ namespace Rapture
 			return this->data != color.data;
 		}
 
+		AlignedVector<T> vector() const
+		{
+			return {m};
+		}
+
 		T & operator [] (int index)
 		{
 			return this->data[index];

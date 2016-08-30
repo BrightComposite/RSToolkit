@@ -45,20 +45,20 @@ namespace Rapture
 	template<class, typename>					                                                                            \
 	friend struct Rapture::DestGetter;			                                                                            \
 												                                                                            \
-	pp_seq_foreach(op_bind_message, Dst, pp_tuple_to_seq((__VA_ARGS__)))										                                                                            \
+	pp_seq_foreach(op_bind_message, Dst, pp_tuple_to_seq((__VA_ARGS__)))										            \
 //----- bind_messages
 
 #define op_channel_api(s, data, Msg)			                                                                            \
-	api_struct(pp_tuple_extract(0, data), MessageConnector<pp_tuple_extract(1, data), Msg>);                                \
+	apistruct(pp_tuple_extract(0, data)) MessageConnector<pp_tuple_extract(1, data), Msg>;                                  \
 	create_morph_type(pp_tuple_extract(0, data), macrowrap(Receivers<pp_tuple_extract(1, data), Msg>));						\
 //----- op_channel_api
 
 #define channels_api(module, Dst, ... /* Messages */)	                                                                    \
-	pp_seq_foreach(op_channel_api, (module, Dst), pp_tuple_to_seq((__VA_ARGS__)))												                                                                    \
+	pp_seq_foreach(op_channel_api, (module, Dst), pp_tuple_to_seq((__VA_ARGS__)))											\
 //----- channels_api
 
 #define subscribe_on(Dst, Msg, ... /*Real dst*/)																			\
-	Channel<Dst, Msg>::receivers(__VA_ARGS__) += (msg_callback<Dst, Msg>)[](Handle<Msg> & msg, Dst & dest)                                                                    \
+	Channel<Dst, Msg>::receivers(__VA_ARGS__) += (msg_callback<Dst, Msg>)[](Handle<Msg> & msg, Dst & dest)                  \
 //----- subscribe_on
 
 //---------------------------------------------------------------------------

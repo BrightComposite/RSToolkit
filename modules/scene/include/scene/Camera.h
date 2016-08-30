@@ -8,7 +8,6 @@
 //---------------------------------------------------------------------------
 
 #include "Scene.h"
-#include <space/Spatial.h>
 
 //---------------------------------------------------------------------------
 
@@ -70,6 +69,21 @@ namespace Rapture
 			return _fov;
 		}
 
+		const matrix & projectionMatrix() const
+		{
+			return _projectionMatrix;
+		}
+
+		const matrix & viewMatrix() const
+		{
+			return _viewMatrix;
+		}
+
+		matrix normalMatrix(const matrix & model) const
+		{
+			return (_viewMatrix * model).invert();
+		}
+
 		ProjectionMode projectionMode() const
 		{
 			return _projectionMode;
@@ -79,11 +93,13 @@ namespace Rapture
 
 		api(scene) void setViewRange(scalar range);
 		api(scene) void setFieldOfView(scalar fov);
-		api(scene) void updateProjection();
 
-		api(scene) void update();
+		api(scene) void updateProjection();
+		api(scene) void updateView();
 
 	protected:
+		api(scene) void updateNormalMatrix();
+
 		scalar _range = 0.01f;
 		scalar _fov = 90.0f;
 		Rotation _pitch;
@@ -91,6 +107,8 @@ namespace Rapture
 		Rotation _roll;
 		scalar3  _angles = {0.0f, 0.0f, 0.0f};
 		ProjectionMode _projectionMode = ProjectionMode::Ortho;
+		AlignedMatrix<scalar> _projectionMatrix;
+		AlignedMatrix<scalar> _viewMatrix;
 	};
 }
 

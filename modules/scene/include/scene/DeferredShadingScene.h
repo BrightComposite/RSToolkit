@@ -37,6 +37,7 @@ namespace Rapture
 		virtual ~DeferredShadingScene() {}
 
 		api(scene) Handle<Light> addLight();
+		api(scene) void setGlobalLightColor(const colorf & color);
 
 	protected:
 		virtual api(scene) void draw(Graphics3D & graphics, const IntRect & viewport) const override;
@@ -45,9 +46,15 @@ namespace Rapture
 		Handle<Texture> _positions = nullptr;
 		Handle<Texture> _normals = nullptr;
 		Handle<Texture> _colors = nullptr;
-		Handle<FxTechnique> _lighttech = nullptr;
 
 		ArrayList<Light> _lights;
+		colorf _globalLightColor = {0.0f, 0.0f, 0.0f};
+
+		struct
+		{
+			Handle<FxTechnique> global = nullptr;
+			Handle<FxTechnique> point = nullptr;
+		} _lightTech;
 	};
 }
 

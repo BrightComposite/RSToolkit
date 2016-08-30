@@ -89,7 +89,7 @@ namespace Rapture
 
 	using UniformSet = Map<int, UniformAdapter>;
 
-#define uniform_class(U, shader_index, shader_type, components)			\
+#define uniform_class(module, U, shader_index, shader_type, components)	\
 	namespace Uniforms													\
 	{																	\
 		struct U;														\
@@ -111,16 +111,18 @@ namespace Rapture
 		};																\
 	}																	\
 																		\
-	create_morph_type(graphics, Uniforms::U)
+	create_morph_type(module, Uniforms::U)
 
 	uniform_class
 	(
+		graphics,
 		Color, 0, Pixel,
 		(colorf, color)
 	);
 
 	uniform_class
 	(
+		graphics,
 		BrushOptions, 0, Pixel,
 		(colorf, color)
 		(float, lineWidth)
@@ -128,24 +130,28 @@ namespace Rapture
 
 	uniform_class
 	(
+		graphics,
 		Model, 1, Vertex,
 		(floatm, transform)
 	);
 
 	uniform_class
 	(
+		graphics,
 		View, 2, Vertex,
 		(floatm, transform)
 	);
 
 	uniform_class
 	(
+		graphics,
 		Projection, 3, Vertex,
 		(floatm, transform)
 	);
 
 	uniform_class
 	(
+		graphics,
 		Area, 4, Vertex,
 		(float2, pos)
 		(float2, size)
@@ -154,16 +160,40 @@ namespace Rapture
 
 	uniform_class
 	(
+		graphics,
+		Normal, 4, Vertex,
+		(floatm, transform)
+	);
+
+	uniform_class
+	(
+		graphics,
 		Viewport, 5, Vertex,
 		(float2, size)
 	);
 
 	uniform_class
 	(
-		PointLight, 6, Pixel,
+		graphics,
+		Fog, 6, Pixel,
+		(float4, fogPos)
+		(colorf, fogColor)
+	);
+
+	uniform_class
+	(
+		graphics,
+		PointLight, 7, Pixel,
 		(float4, position)
 		(colorf, color)
 		(float4, lightparams) // attenuations (const, linear, exponential), ambient ratio
+	);
+
+	uniform_class
+	(
+		graphics,
+		GlobalLight, 7, Pixel,
+		(colorf, color)
 	);
 }
 

@@ -147,7 +147,7 @@ namespace Rapture
 		if(!isDisplayable() || visible == isVisible())
 			return;
 
-		change_flag(WidgetFlag::Visible, _flags, visible);
+		select_flag(WidgetFlag::Visible, _flags, visible);
 
 		if(_parent == nullptr)
 			return;
@@ -168,7 +168,7 @@ namespace Rapture
 		if(focusable == isFocusable())
 			return;
 		
-		change_flag(WidgetFlag::Focusable, _flags, focusable);
+		select_flag(WidgetFlag::Focusable, _flags, focusable);
 		auto & fl = _space->_focusList;
 
 		if(focusable)

@@ -18,7 +18,7 @@
 namespace Rapture
 {
 	class ImageIO;
-	api_struct(graphics, Singleton<ImageIO>);
+	apistruct(graphics) Singleton<ImageIO>;
 
 	class ImageDecoder
 	{

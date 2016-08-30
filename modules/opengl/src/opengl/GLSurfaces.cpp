@@ -180,7 +180,7 @@ namespace Rapture
 
 			auto & t = *_textures.emplace(_textures.end(), _graphics, width(), height(), format);
 
-			GLenum attachment = GL_COLOR_ATTACHMENT0 + _textures.size() - 1;
+			GLenum attachment = static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + _textures.size() - 1);
 			glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, attachment, t->_target, t->_id, 0);
 			buffers.push_back(attachment);
 
@@ -199,12 +199,27 @@ namespace Rapture
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, id);
 			glViewport(0, 0, width(), height());
 
-			glDrawBuffers(buffers.size(), buffers.data());
+			glDrawBuffers(static_cast<GLsizei>(buffers.size()), buffers.data());
 		}
 
 		void GLTextureSurface::clear() const
 		{
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		}
+
+		void GLTextureSurface::clear(uint bitmask) const
+		{
+			array_list<GLenum> b;
+
+			for(int i = 0; i < buffers.size(); ++i)
+				if(check_flag((1 << i), bitmask))
+				{
+					b.push_back(GL_COLOR_ATTACHMENT0 + i);
+				}
+
+			glDrawBuffers(static_cast<GLsizei>(b.size()), b.data());
+			glClear(GL_COLOR_BUFFER_BIT);
+			glDrawBuffers(static_cast<GLsizei>(buffers.size()), buffers.data());
 		}
 
 		void GLTextureSurface::present() const

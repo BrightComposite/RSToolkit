@@ -92,8 +92,10 @@ namespace Rapture
 	{
 	public:
 		using Surface::Surface;
+		using Surface::clear;
 
 		virtual void addBuffer(Handle<Image> & texture, ImageFormat format = ImageFormat::rgb) = 0;
+		virtual void clear(uint bitmask) const = 0; // buffer mask
 	};
 }
 

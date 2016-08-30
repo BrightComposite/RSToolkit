@@ -17,7 +17,7 @@
 namespace Rapture
 {
 	class FontIO;
-	api_struct(graphics, Singleton<FontIO>);
+	apistruct(graphics) Singleton<FontIO>;
 
 	class FontDecoder
 	{

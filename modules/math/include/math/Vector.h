@@ -708,6 +708,12 @@ namespace Rapture
 			return *this;
 		}
 
+		template<class U, useif<not_same_type<U, T>::value>>
+		operator Vector<U> () const
+		{
+			return Vector<T>(Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(intrinsic)));
+		}
+
 		operator Vector<T> () const
 		{
 			return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(intrinsic));
@@ -728,6 +734,12 @@ namespace Rapture
 		using IntrinType = intrin_t<T, 4>;
 		using Intrin = Intrinsic<T, 4>;
 		using S = SwizzleSequence<Mask...>;
+
+		template<class U, useif<not_same_type<U, T>::value>>
+		operator Vector<U> () const
+		{
+			return Vector<T>(Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(intrinsic)));
+		}
 
 		operator Vector<T> () const
 		{

@@ -20,7 +20,7 @@ namespace Rapture
 		object->setPosition(trans.getOrigin());
 	}
 
-	void Physical::setMass(float mass)
+	void Physical::setMass(scalar mass)
 	{
 		btVector3 inertia;
 		_rigidBody->getCollisionShape()->calculateLocalInertia(mass, inertia);
@@ -59,7 +59,7 @@ namespace Rapture
 			{
 				auto & pt = manifold->getContactPoint(j);
 
-				if(pt.getDistance() < 0.0)
+				if(pt.getDistance() <= 0.0)
 				{
 					info.force = pt.m_appliedImpulse / timeStep;
 					info.normal = pt.m_normalWorldOnB;

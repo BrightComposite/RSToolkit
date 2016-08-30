@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <math/Quaternion.h>
+#include <math/Transform.h>
 
 //---------------------------------------------------------------------------
 
@@ -31,6 +31,7 @@ namespace Rapture
 	using vector = Vector<scalar>;
 	using quaternion = Quaternion<scalar>;
 	using matrix = Matrix<scalar>;
+	using transform = Transform<scalar>;
 
 	//---------------------------------------------------------------------------
 
@@ -145,7 +146,7 @@ namespace Rapture
 		deny_copy(Oriented);
 
 	public:
-		Oriented(const Position & pos = vector::identity, const Rotation & rot = vector::identity) : Positioned(pos), _rot(rot) {}
+		Oriented(const Position & pos = vector::identity, const Rotation & rot = quaternion::identity) : Positioned(pos), _rot(rot) {}
 		virtual ~Oriented() {}
 
 		virtual vector direction() const override

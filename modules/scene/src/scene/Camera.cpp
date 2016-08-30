@@ -23,16 +23,18 @@ namespace Rapture
 		{
 			case ProjectionMode::Ortho:
 			{
-				_scene->graphics().updateUniform<Uniforms::Projection>(matrix::orthot(-1.0x / aspect, 1.0x / aspect, -1.0x, 1.0x, -_range, _range));
+				_projectionMatrix = matrix::orthot(-1.0x / aspect, 1.0x / aspect, -1.0x, 1.0x, -_range, _range);
 				break;
 			}
 
 			case ProjectionMode::Perspective:
 			{
-				_scene->graphics().updateUniform<Uniforms::Projection>(matrix::perspectivet(_fov, aspect, 0.01x, 2 * _range));
+				_projectionMatrix = matrix::perspectivet(_fov, aspect, 0.01x, 2 * _range);
 				break;
 			}
 		}
+
+		_scene->graphics().updateUniform<Uniforms::Projection>(*_projectionMatrix);
 	}
 
 	void Camera::setViewRange(scalar range)
@@ -117,9 +119,10 @@ namespace Rapture
 		setAngles(_angles[0] + pitch, _angles[1] + yaw, _angles[2] + roll);
 	}
 
-	void Camera::update()
+	void Camera::updateView()
 	{
-		_scene->graphics().updateUniform<Uniforms::View>(matrix::lookTo(_pos, _rot->forward(), _rot->up()).transpose());
+		_viewMatrix = matrix::lookTo(_pos, _rot->forward(), _rot->up()).transpose();
+		_scene->graphics().updateUniform<Uniforms::View>(*_viewMatrix);
 	}
 }
 

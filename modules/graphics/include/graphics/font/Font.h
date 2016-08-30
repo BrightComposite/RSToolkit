@@ -23,8 +23,7 @@ namespace Rapture
 	class Font;
 	class FontCache;
 	class Graphics;
-
-	api_struct(graphics, Singleton<FontCache>);
+	apistruct(graphics) Singleton<FontCache>;
 
 	using Rapture::Font; // specially for Windows Font
 

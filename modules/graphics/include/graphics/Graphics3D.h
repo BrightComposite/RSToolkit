@@ -115,14 +115,14 @@ namespace Rapture
 			return *_accumulationMode;
 		}
 
-		void setAlphaTestMode(bool mode)
-		{
-			*_blendMode = mode;
-		}
-
 		void setDepthTestMode(bool mode)
 		{
 			*_depthTestMode = mode;
+		}
+
+		void setBlendMode(bool mode)
+		{
+			*_blendMode = mode;
 		}
 
 		void setAccumulationMode(bool mode)

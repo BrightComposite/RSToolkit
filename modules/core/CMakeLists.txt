@@ -19,11 +19,9 @@ module(SHARED)
 		group(include Headers)
 		files(
 			Class.h
-			Component.h
 			Exception.h
 			Handle.h
 			Hash.h
-			Morpher.h
 			Object.h
 			String.h
 					
@@ -85,6 +83,16 @@ module(SHARED)
 			Set.h
 			Stack.h
 			StaticMap.h
+			)
+		
+		domain(component)
+		
+		group(include Headers)
+		files(
+			Component.h
+			Component.hpp
+			Morpher.h
+			Morpher.hpp
 			)
 	endsources()
 endmodule()

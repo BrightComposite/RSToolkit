@@ -45,7 +45,7 @@ namespace Rapture
 			auto & decoder = instance().decoders[type];
 
 			if(decoder == nullptr)
-				throw FontDecodingException("Can't read font of type ", type);
+				throw FontDecodingException("Can't read a font of the type ", type, "! Please, provide a decoder for this type.");
 
 			decoder->decode(output, type, raw);
 		}

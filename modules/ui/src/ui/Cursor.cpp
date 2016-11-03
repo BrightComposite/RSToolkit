@@ -26,13 +26,13 @@ namespace Rapture
 
 	Cursor * Cursor::get(Widget * w)
 	{
-		auto c = w->seek<CursorComponent>();
+		auto c = w->components->seek<CursorComponent>();
 		return c != nullptr ? c->_cursor : nullptr;
 	}
 
 	Cursor * Cursor::getPressed(Widget * w, MouseButton button)
 	{
-		auto c = w->seek<PressedCursorComponent>();
+		auto c = w->components->seek<PressedCursorComponent>();
 		return c != nullptr ? c->_cursors[button] : nullptr;
 	}
 
@@ -51,17 +51,17 @@ namespace Rapture
 
 	void Cursor::attach(Widget * w)
 	{
-		w->require<CursorComponent>()->setCursor(this);
+		w->components->require<CursorComponent>()->setCursor(this);
 	}
 
 	void Cursor::attachPressed(Widget * w, MouseButton button)
 	{
-		w->require<PressedCursorComponent>()->setCursor(this, button);
+		w->components->require<PressedCursorComponent>()->setCursor(this, button);
 	}
 
 	void Cursor::clear(Widget * w)
 	{
-		w->detach<CursorComponent>();
+		w->components->remove<CursorComponent>();
 	}
 
 	void Cursor::add(const string & name, const Handle<Cursor> & cursor)

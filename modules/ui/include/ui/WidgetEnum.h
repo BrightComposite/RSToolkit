@@ -67,20 +67,22 @@ namespace Rapture
 
 	enum class WidgetFlag
 	{
-		Visible = 1 << 0,
+		Visible   = 1 << 0,
 		Focusable = 1 << 1
 	};
 
 	enum class WidgetState
 	{
-		Pointed = 0,
-		Pressed = 1,
-		Focused = 2
+		Normal  = 0,
+		Pointed = 1,
+		Pressed = 2,
+		Focused = 4
 	};
 
 	adapt_enum_flags(MouseButton);
 	adapt_enum_flags(ModelMask);
 	adapt_enum_flags(WidgetFlag);
+	adapt_enum_flags(WidgetState);
 }
 
 //---------------------------------------------------------------------------

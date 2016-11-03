@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
 #include <ui/Text.h>
-#include <graphics/Graphics3D.h>
+#include <graphics/Graphics.h>
 
 //---------------------------------------------------------------------------
 
@@ -21,27 +21,32 @@ namespace Rapture
 
 	void Text::setDynamic(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color, int fontSize)
 	{
-		w->require<TextComponent>()->setLayer(Handle<TextLayer>(w, Handle<Text>(w->graphics(), s, font, color, fontSize)));
+		w->components->require<TextComponent>()->set(Unique<TextLayer>(w, s, font, color, fontSize));
 	}
 
 	void Text::setSmart(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color, int fontSize)
 	{
-		w->require<TextComponent>()->setLayer(Handle<SmartTextLayer>(w, Handle<Text>(w->graphics(), s, font, color, fontSize)));
+		w->components->require<TextComponent>()->set(Unique<SmartTextLayer>(w, s, font, color, fontSize));
 	}
 
 	void Text::setContents(Widget * w, const WideString & s)
 	{
-		auto c = w->seek<TextComponent>();
+		auto c = w->components->seek<TextComponent>();
 
 		if(c == nullptr)
 			return;
 
-		c->layer()->setContents(s);
+		auto l = c->layer();
+
+		if(l == nullptr)
+			return;
+
+		l->setContents(s);
 	}
 
 	TextLayer * Text::get(Widget * w)
 	{
-		auto c = w->seek<TextComponent>();
+		auto c = w->components->seek<TextComponent>();
 
 		if(c == nullptr)
 			return nullptr;
@@ -51,65 +56,40 @@ namespace Rapture
 
 	void Text::clear(Widget * w)
 	{
-		w->detach<TextComponent>();
+		w->components->remove<TextComponent>();
 	}
 
-	TextLayer::TextLayer(Widget * w, const Handle<Text> & text) : _graphics(w->graphics()), _text(text) {}
+	TextLayer::TextLayer(Widget * w, Unique<Text> && text) : WidgetLayer(2), _graphics(w->graphics()), _text(move(text)) {}
 
 	void TextLayer::draw(Widget * w)
 	{
 		_text->draw(w->absPos());
 	}
 
-	TextComponent::TextComponent(Widget * widget) : WidgetComponent(widget), _layer(nullptr) {}
-
-	TextComponent::~TextComponent()
-	{
-		if(_layer != nullptr)
-			_widget->detach(_layer);
-	}
-
-	void TextComponent::setContents(const WideString & text)
-	{
-		if(_layer == nullptr)
-			return;
-
-		_layer->setContents(text);
-	}
-
-	void TextComponent::setText(const Handle<Text> & text)
-	{
-		if(_layer == nullptr)
-			return;
-
-		_layer->setText(text);
-	}
-
-	void TextComponent::setLayer(const Handle<TextLayer> & layer)
-	{
-		if(_layer != nullptr)
-			_widget->detach(_layer);
-
-		_layer = layer;
-		_widget->attach(_layer);
-	}
-
-	StaticTextLayer::StaticTextLayer(Widget * w, const Handle<Text> & text) : 
-		TextLayer(w, text)
+	StaticTextLayer::StaticTextLayer(Widget * w, Unique<Text> && text) : TextLayer(w, move(text))
 	{
 		update();
 	}
 
 	void StaticTextLayer::draw(Widget * w)
 	{
-		_graphics->draw(_image, w->absPos());
+		if(_image != nullptr)
+			_graphics->draw(_image, w->absPos());
 	}
 
 	void StaticTextLayer::update()
 	{
+		auto & size = _text->size();
+
+		if(size.x * size.y == 0)
+		{
+			_image = nullptr;
+			return;
+		}
+
 		auto old = _graphics->surface();
-		_surface = _graphics->createSurface(_text->size());
-		_surface->addBuffer(_image);
+		_surface = _graphics->createSurface(size);
+		_surface->addBuffer(_image, ImageFormat::rgba32f);
 		_graphics->bind(_surface);
 		auto cc = hold(_graphics->clearColorState(), {0.0f, 0.0f, 0.0f, 0.0f});
 		_surface->clear();

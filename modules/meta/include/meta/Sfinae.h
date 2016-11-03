@@ -116,6 +116,9 @@ namespace Rapture
 		static constexpr bool value = decltype(_<T>(0))::value;
 	};
 
+	template<class R, class F, class ... A>
+	using can_transform_to = is_convertible<decltype(declval<F>()(declval<A>()...)), R>;
+
 //---------------------------------------------------------------------------
 
 #define type_getter(name, T, tgt, def)					                                                                    \

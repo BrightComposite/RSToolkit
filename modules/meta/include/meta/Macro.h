@@ -204,7 +204,7 @@ namespace Rapture
 /**
  *	Short for-loop
  */
-#define repeat(var, times) for(int var = 0; var < times; ++var)
+#define repeat(var, times) for(remove_cv_t<decltype(times)> var = 0; var < times; ++var)
 
 #define inscope()
 

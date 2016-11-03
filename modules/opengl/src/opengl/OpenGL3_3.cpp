@@ -55,7 +55,7 @@ namespace Rapture
 		class DepthTestState : public State<bool>
 		{
 		public:
-			DepthTestState(GLGraphics * graphics) : State<bool>(true), graphics(graphics) {}
+			DepthTestState(GLGraphics * graphics) : State<bool>(false), graphics(graphics) {}
 
 		protected:
 			virtual void change() override
@@ -353,7 +353,7 @@ namespace Rapture
 
 			checkForErrors();
 
-			glEnable(GL_DEPTH_TEST);
+			glDisable(GL_DEPTH_TEST);
 			glDepthFunc(GL_LESS);
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

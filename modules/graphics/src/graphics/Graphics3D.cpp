@@ -238,11 +238,15 @@ namespace Rapture
 		setArea(rect);
 
 		if(fm.old == FillMode::Solid)
+		{
 			techniques2d.rectangle->apply();
+			meshes2d.quad->draw();
+		}
 		else
+		{
 			techniques2d.wired_rectangle->apply();
-
-		meshes2d.quad->draw();
+			meshes2d.texquad->draw();
+		}
 	}
 
 	void Graphics3D::ellipse(const IntRect & rect)

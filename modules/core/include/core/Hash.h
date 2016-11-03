@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <meta/Meta.h>
+#include <meta/Types.h>
 #include <cstddef>
 #include <string>
 
@@ -15,25 +15,34 @@
 
 namespace Rapture
 {
-	template<class, bool>
-	class Hashed;
-}
+	template<class T>
+	struct hash : std::hash<T> {};
 
-namespace std
-{
-	template<class T, bool isPod>
-	struct hash<Rapture::Hashed<T, isPod>>;
-}
+	template<class T>
+	struct less : std::less<T> {};
 
-namespace Rapture
-{
-	template<class T, useif<is_callable<std::hash<T>, const T &>::value>>
-	size_t hash(const T & value);
+	template<class T>
+	struct equal_to : std::equal_to<T> {};
 
-	template<class T, useif<is_callable<std::hash<T>, const T &>::value>>
+	template<class T>
+	struct no_hash
+	{
+		size_t operator()(const T &) const
+		{
+			static_assert(false, "There is no hash function provided for this type!");
+		}
+	};
+
+	template<class T>
+	using has_hash = is_callable<hash<T>, const T &>;
+
+	template<class T, useif<has_hash<T>::value>>
+	size_t gethash(const T & value);
+
+	template<class T, useif<has_hash<T>::value>>
 	size_t ptr_hash(const T * value);
 
-	template<class T, skipif<is_callable<std::hash<T>, const T &>::value>>
+	template<class T, skipif<has_hash<T>::value>>
 	size_t ptr_hash(const T * value);
 
 	template<class T, bool isPod = std::is_pod<T>::value>
@@ -146,6 +155,9 @@ namespace Rapture
 		}
 	};
 
+	template<class T, bool isPod>
+	struct hash<Hashed<T, isPod>>;
+
 	typedef Hashed<void *> PointerId;
 
 	template<class X, class Y>
@@ -184,15 +196,15 @@ namespace Rapture
 	};
 
 	template<class T, used_t>
-	size_t hash(const T & value)
+	size_t gethash(const T & value)
 	{
-		return std::hash<T>()(value);
+		return hash<T>()(value);
 	}
 
 	template<class T, used_t>
 	size_t ptr_hash(const T * value)
 	{
-		return value != nullptr ? std::hash<T>()(*value) : 0;
+		return value != nullptr ? hash<T>()(*value) : 0;
 	}
 
 	template<class T, skipped_t>
@@ -211,43 +223,40 @@ namespace Rapture
 			return _id;
 		}
 	};
-}
 
-#define use_class_hash(... /* Class */)								\
-	struct hash<__VA_ARGS__> : unary_function<__VA_ARGS__, size_t>	\
-	{																\
-		size_t operator()(const __VA_ARGS__ & val) const noexcept	\
-		{															\
-			return val.hash();										\
-		}															\
-	}																\
+#define use_class_hash(... /* Class */)									\
+	struct hash<__VA_ARGS__> : std::unary_function<__VA_ARGS__, size_t>	\
+	{																	\
+		size_t operator()(const __VA_ARGS__ & val) const noexcept		\
+		{																\
+			return val.hash();											\
+		}																\
+	}																	\
 
-#define use_enum_hash(... /* Enum */)								\
-	struct hash<__VA_ARGS__> : unary_function<__VA_ARGS__, size_t>	\
-	{																\
-		size_t operator()(const __VA_ARGS__ & val) const noexcept	\
-		{															\
-			return std::underlying_type_t<__VA_ARGS__>(val);		\
-		}															\
-	}																\
+#define use_enum_hash(... /* Enum */)									\
+	struct hash<__VA_ARGS__> : std::unary_function<__VA_ARGS__, size_t>	\
+	{																	\
+		size_t operator()(const __VA_ARGS__ & val) const noexcept		\
+		{																\
+			return std::underlying_type_t<__VA_ARGS__>(val);			\
+		}																\
+	}																	\
 
 #define use_enum_key(... /* Enum */)													\
-	struct less<__VA_ARGS__> : binary_function<__VA_ARGS__, __VA_ARGS__, bool>			\
+	struct less<__VA_ARGS__> : std::binary_function<__VA_ARGS__, __VA_ARGS__, bool>		\
 	{																					\
 		bool operator() (const __VA_ARGS__ & a, const __VA_ARGS__ & b) const noexcept	\
 		{																				\
 			return std::underlying_type_t<__VA_ARGS__>(a) <								\
 				std::underlying_type_t<__VA_ARGS__>(b);									\
 		}																				\
-	}																					\
+	}			
 
-namespace std
-{
 	template<class T>
-	use_class_hash(Rapture::Hashed<T>);
+	use_class_hash(Hashed<T>);
 
 	template<>
-	use_class_hash(Rapture::AutoIdentifier);
+	use_class_hash(AutoIdentifier);
 }
 
 //---------------------------------------------------------------------------

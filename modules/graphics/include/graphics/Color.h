@@ -177,7 +177,12 @@ namespace Rapture
 
 		AlignedVector<T> vector() const
 		{
-			return {m};
+			return {this->m};
+		}
+
+		void vector(const Vector<T> & v)
+		{
+			this->data = v.v;
 		}
 
 		T & operator [] (int index)
@@ -199,6 +204,10 @@ namespace Rapture
 		{
 			return this->data[index];
 		}
+
+		static api(graphics) const GenericColor transparent;
+		static api(graphics) const GenericColor white;
+		static api(graphics) const GenericColor black;
 	};
 
 	using colorf	= GenericColor<ColorType::Float, ColorFormat::rgb>;
@@ -261,7 +270,7 @@ namespace Rapture
 		template<ColorFormat format>
 		static inline void cast(GenericColor<ColorType::Float, format> & out, const GenericColor<ColorType::Byte, format> & in)
 		{
-			out.vector = FloatVector(in.vector) / 255.0f;
+			out.vector(FloatVector(in.vector()) / 255.0f);
 		}
 	};
 
@@ -271,7 +280,7 @@ namespace Rapture
 		template<ColorFormat format>
 		static inline void cast(GenericColor<ColorType::Byte, format> & out, const GenericColor<ColorType::Float, format> & in)
 		{
-			out.vector = ByteVector(in.vector * 255.0f);
+			out.vector(ByteVector(in.vector() * 255.0f));
 		}
 	};
 

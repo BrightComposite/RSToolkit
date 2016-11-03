@@ -222,6 +222,19 @@ namespace Rapture
 			glDrawBuffers(static_cast<GLsizei>(buffers.size()), buffers.data());
 		}
 
+		void GLTextureSurface::resize()
+		{
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, id);
+
+			glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width(), height());
+
+			for(auto & tex : _textures)
+				tex->setSize(size());
+
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		}
+
 		void GLTextureSurface::present() const
 		{
 

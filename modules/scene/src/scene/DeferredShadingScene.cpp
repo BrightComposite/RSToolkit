@@ -11,7 +11,7 @@ namespace Rapture
 		graphics.updateUniform<Uniforms::PointLight>(*position, color, float4 {attenuation.constant, attenuation.linear, attenuation.exponential, ambientFactor});
 	}
 
-	DeferredShadingScene::DeferredShadingScene(Widget * widget, const string & name) : Scene(widget, name)
+	DeferredShadingScene::DeferredShadingScene(Widget * widget) : Scene(widget)
 	{
 		_surface = graphics().createSurface(widget->size());
 
@@ -21,6 +21,12 @@ namespace Rapture
 
 		_lightTech.global.init(graphics().getShaderProgram("3d/deferred/light/global"));
 		_lightTech.point.init(graphics().getShaderProgram("3d/deferred/light/point"));
+	}
+
+	void DeferredShadingScene::onWidgetResize(Handle<WidgetResizeMessage> & msg, Widget & w)
+	{
+		Scene::onWidgetResize(msg, w);
+		_surface->setSize(widget().size());
 	}
 
 	Handle<Light> DeferredShadingScene::addLight()
@@ -35,6 +41,7 @@ namespace Rapture
 
 	void DeferredShadingScene::draw(Graphics3D & g, const IntRect & viewport) const
 	{
+		auto dt = hold(g.depthTestState(), true);
 		auto clearColor = g.clearColor();
 		g.updateUniformBuffers();
 
@@ -56,7 +63,7 @@ namespace Rapture
 		space().surface()->clear();
 		g.setClearColor(clearColor);
 
-		auto dt = hold(g.depthTestState(), false);
+		auto dt2 = hold(g.depthTestState(), false);
 
 		g.bind(_positions, 0);
 		g.bind(_normals, 1);
@@ -66,7 +73,7 @@ namespace Rapture
 
 		_lightTech.global->apply(0);
 
-		g.updateUniform<Uniforms::GlobalLight>(vector(*_globalLightColor.vector(), weight));
+		g.updateUniform<Uniforms::GlobalLight>(_globalLightColor);
 		g.meshes2d.quad->draw();
 		
 		auto am = hold(g.accumulationState(), true);

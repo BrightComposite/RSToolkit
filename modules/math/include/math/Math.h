@@ -145,64 +145,64 @@ namespace Rapture
 	template<class T>
 	struct BasicMath<T, MathType::Integral>
 	{
-		static inline T abs(const T & x)
+		static inline T abs(T x)
 		{
 			return std::abs(x);
 		}
 
-		static inline T sign(const T & x)
+		static inline T sign(T x)
 		{
 			return x > 0 ? 1 : x < 0 ? -1 : 0;
 		}
 
-		static inline T sqr(const T & x)
+		static inline T sqr(T x)
 		{
 			return x * x;
 		}
 
-		static inline T pow(const T & x, const T & pow)
+		static inline T pow(T x, T pow)
 		{
 			return static_cast<T>(std::pow(x, pow));
 		}
 
-		static inline T sqrt(const T & x)
+		static inline T sqrt(T x)
 		{
 			return static_cast<T>(std::sqrt(x));
 		}
 
-		static inline T mod(const T & x, const T & y)
+		static inline T mod(T x, T y)
 		{
 			return x % y;
 		}
 
-		static inline T avg(const T & x, const T & y)
+		static inline T avg(T x, T y)
 		{
 			return (x + y) >> 1;
 		}
 
-		static inline const T & clamp(const T & x, const T & low, const T & high)
+		static inline T clamp(T x, T low, T high)
 		{
 			return x > high ? high : x < low ? low : x;
 		}
 
-		static inline T invert(const T & v)
+		static inline T invert(T x)
 		{
-			return 1 / v;
+			return 1 / x;
 		}
 
-		static inline T floor(const T & v)
+		static inline T floor(T x)
 		{
-			return v;
+			return x;
 		}
 
-		static inline T ceil(const T & v)
+		static inline T ceil(T x)
 		{
-			return v;
+			return x;
 		}
 
-		static inline T round(const T & v)
+		static inline T round(T x)
 		{
-			return v;
+			return x;
 		}
 
 		template<class U, useif<not_same_type<U, double>::value>>
@@ -215,15 +215,41 @@ namespace Rapture
 		{
 			return a + (b - a) * t;
 		}
-
-		static inline T round2pow(const T & v)
+		/*
+		static inline T round2pow(T x)
 		{
 			T i = 1;
 
-			while(i < v)
+			while(i < x)
 				i <<= 1;
 
 			return i;
+		}
+		*/
+
+		template<class U = T, skipif<std::is_unsigned<U>::value>>
+		static inline T round2pow(T x)
+		{
+			if(x < 0)
+				return 0;
+
+			--x;
+
+			for(size_t i = 1; i < sizeof(T) * CHAR_BIT; i <<= 1)
+				x |= x >> i;
+
+			return ++x;
+		}
+
+		template<class U = T, useif<std::is_unsigned<U>::value>>
+		static inline T round2pow(T x) // no need to check (x < 0)
+		{
+			--x;
+
+			for(size_t i = 1; i < sizeof(T) * CHAR_BIT; i <<= 1)
+				x |= x >> i;
+
+			return ++x;
 		}
 	};
 

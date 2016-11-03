@@ -32,6 +32,13 @@ namespace Rapture
 	};
 
 	template<typename T>
+	class AlignedList : public list<T, aligned_allocator<T, alignof(T)>>
+	{
+	public:
+		using list<T, aligned_allocator<T, alignof(T)>>::list;
+	};
+
+	template<typename T>
 	void sort(list<T> & l)
 	{
 		l.sort();

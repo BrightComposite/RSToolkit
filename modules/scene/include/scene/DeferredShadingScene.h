@@ -32,15 +32,36 @@ namespace Rapture
 
 	class DeferredShadingScene : public Scene
 	{
+		friend class Scene;
+
+		using OwnHandle = Handle<DeferredShadingScene, DeferredShadingScene>;
+
 	public:
-		api(scene) DeferredShadingScene(Widget * widget, const string & name = "unknown scene");
 		virtual ~DeferredShadingScene() {}
+
+		virtual Handle<Scene> clone(Widget * w) const override
+		{
+			return OwnHandle(w);
+		}
 
 		api(scene) Handle<Light> addLight();
 		api(scene) void setGlobalLightColor(const colorf & color);
 
+		static Handle<DeferredShadingScene> create(Widget * widget)
+		{
+			OwnHandle h(widget);
+			Scene::construct(h);
+
+			return h;
+		}
+
 	protected:
+		friend_owned_handle(DeferredShadingScene, DeferredShadingScene);
+
+		api(scene) DeferredShadingScene(Widget * widget);
+
 		virtual api(scene) void draw(Graphics3D & graphics, const IntRect & viewport) const override;
+		virtual api(scene) void onWidgetResize(Handle<WidgetResizeMessage> & msg, Widget & w) override;
 
 		Handle<TextureSurface> _surface = nullptr;
 		Handle<Texture> _positions = nullptr;

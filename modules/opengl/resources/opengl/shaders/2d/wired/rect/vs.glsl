@@ -1,6 +1,6 @@
 /**
- *	!vertex: p2
- */
+*	!vertex: p2 t
+*/
 #version 330 core
 
 layout(std140) uniform Area
@@ -10,9 +10,23 @@ layout(std140) uniform Area
 	float depth;
 };
 
+layout(std140) uniform Viewport
+{
+	vec2 viewport;
+};
+
 in vec2 position;
+in vec2 texcoord;
+
+out Vertex 
+{
+	vec2 texcoord;
+	vec2 ratio;
+} output;
 
 void main(void)
 {
-    gl_Position = vec4(position * size + pos, depth, 1.0);
+	output.ratio = size * viewport;
+	output.texcoord = texcoord;
+	gl_Position = vec4(position * size + pos, depth, 1.0);
 }

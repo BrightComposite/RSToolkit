@@ -31,16 +31,10 @@ namespace Rapture
 		Raw,
 		Compiled
 	};
-}
 
-namespace std
-{
 	template<>
-	use_enum_hash(Rapture::ShaderType);
-}
+	use_enum_hash(ShaderType);
 
-namespace Rapture
-{
 	subclass(ShaderCode, owned_data<void>);
 
 	using ShaderCodeSet = Dictionary<ShaderType, ShaderCode>;

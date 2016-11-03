@@ -324,6 +324,57 @@ namespace Rapture
 			return Intrin::bit_xor(intrinsic, v);
 		}
 
+		template<class U = T, useif<std::is_integral<U>::value>>
+		Vector operator >> (const Vector & v) const
+		{
+			return Intrin::bit_shr(intrinsic, v);
+		}
+
+		template<class U = T, useif<std::is_integral<U>::value>>
+		Vector operator << (const Vector & v) const
+		{
+			return Intrin::bit_shl(intrinsic, v);
+		}
+
+		Vector bit_and(const Vector & v) const
+		{
+			return Intrin::bit_and(intrinsic, v);
+		}
+
+		Vector bit_or(const Vector & v) const
+		{
+			return Intrin::bit_or(intrinsic, v);
+		}
+
+		Vector bit_xor(const Vector & v) const
+		{
+			return Intrin::bit_xor(intrinsic, v);
+		}
+
+		template<class U = T, useif<std::is_integral<U>::value>>
+		Vector shift(const Vector & v) const
+		{
+			return Intrin::bit_shr(intrinsic, v);
+		}
+
+		template<class U = T, useif<std::is_integral<U>::value>>
+		Vector unshift(const Vector & v) const
+		{
+			return Intrin::bit_shl(intrinsic, v);
+		}
+
+		template<int I, class U = T, useif<std::is_integral<U>::value>>
+		Vector shift() const /* >> */
+		{
+			return Intrin::bit_shr<I>(intrinsic);
+		}
+
+		template<int I, class U = T, useif<std::is_integral<U>::value>>
+		Vector unshift() const /* << */
+		{
+			return Intrin::bit_shl<I>(intrinsic);
+		}
+
 		Vector dot(const Vector & v) const
 		{
 			return Intrin::fillsum(*this * v);

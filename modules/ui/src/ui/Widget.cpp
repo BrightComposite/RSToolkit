@@ -19,7 +19,7 @@ namespace Rapture
 	Widget::Widget(Widget * parent) : Widget(parent, *parent) {}
 	Widget::Widget(UISpace * space) : Widget(space, space->region()) {}
 	Widget::Widget(Widget * parent, const IntRect & area) : Widget(parent->_space, parent, area) {}
-	Widget::Widget(UISpace * space, const IntRect & area) : Widget(space, space->_root, area) {}
+	Widget::Widget(UISpace * space, const IntRect & area) : Widget(space, nullptr, area) {}
 
 	Widget::Widget(UISpace * space, Widget * parent, const IntRect & region) :
 		_parent(parent), _relPos(region.pos()), _absPos(_parent ? _relPos + _parent->_absPos : _relPos), _size(region.size()), _offsets(region), _space(space)
@@ -28,9 +28,12 @@ namespace Rapture
 
 		if(_parent != nullptr)
 			_parent->_children.insert(this);
+
+		setVisibility(true);
+		components.init(this);
 	}
 
-	Widget::Widget(const Widget & widget, Widget * parent) : Widget(widget._space, parent, widget)
+	Widget::Widget(const Widget & widget, Widget * parent) : Widget(parent->_space, parent, widget.region())
 	{
 		_flags = widget._flags;
 
@@ -43,6 +46,8 @@ namespace Rapture
 			setDisplayOrder(widget._displayOrder);
 		else
 			_displayOrder = widget._displayOrder;
+
+		components->set(*widget.components);
 	}
 
 	Widget::~Widget()
@@ -113,7 +118,7 @@ namespace Rapture
 			ch->draw(graphics, r);
 	}
 
-	Handle<Widget> Widget::attach(const Handle<Widget> & child)
+	Widget * Widget::attach(const Handle<Widget> & child)
 	{
 		if(child->_parent != nullptr || child->_space != _space)
 			return child->clone(this);
@@ -144,7 +149,7 @@ namespace Rapture
 
 	void Widget::setVisibility(bool visible)
 	{
-		if(!isDisplayable() || visible == isVisible())
+		if(visible == isVisible())
 			return;
 
 		select_flag(WidgetFlag::Visible, _flags, visible);
@@ -187,9 +192,6 @@ namespace Rapture
 
 	void Widget::setDisplayOrder(int order)
 	{
-		if(!isDisplayable())
-			return;
-
 		setVisibility(true);
 		auto premsg = send<ChangeDisplayOrderMessage>(*this, order, _displayOrder);
 
@@ -491,7 +493,6 @@ namespace Rapture
 	void Widget::read(Handle<WidgetPressMessage> & msg) {}
 	void Widget::read(Handle<WidgetStopPressMessage> & msg) {}
 	void Widget::read(Handle<WidgetReleaseMessage> & msg) {}
-	void Widget::read(Handle<WidgetChangedStateMessage> & msg) {}
 	void Widget::read(Handle<ChangeFocusOrderMessage> & msg) {}
 	void Widget::read(Handle<AfterChangeFocusOrderMessage> & msg) {}
 	void Widget::read(Handle<ChangeDisplayOrderMessage> & msg) {}
@@ -499,6 +500,11 @@ namespace Rapture
 	void Widget::read(Handle<WidgetDrawMessage> & msg) {}
 	void Widget::read(Handle<WidgetMoveMessage> & msg) {}
 	void Widget::read(Handle<AfterWidgetMoveMessage> & msg) {}
+
+	void Widget::read(Handle<WidgetChangedStateMessage> & msg)
+	{
+		_space->invalidate(this);
+	}
 
 	void Widget::read(Handle<WidgetResizeMessage> & msg)
 	{

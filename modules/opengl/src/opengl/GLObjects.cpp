@@ -369,6 +369,9 @@ namespace Rapture
 		{
 			_target = GL_TEXTURE_RECTANGLE;
 
+			_scale[0] = 1.0f;
+			_scale[1] = 1.0f;
+
 			glGenTextures(1, &_id);
 			glBindTexture(_target, _id);
 
@@ -382,6 +385,7 @@ namespace Rapture
 			glTexParameteri(_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
 			glTexImage2D(_target, 0, internalformat, width, height, 0, format, type, nullptr);
+			graphics->checkForErrors();
 		}
 
 		GLImage::GLImage(GLGraphics * graphics, const ImageData & data) : Image(graphics, data), _graphics(graphics)
@@ -408,10 +412,51 @@ namespace Rapture
 
 			glTexParameteri(_target, GL_TEXTURE_WRAP_S, GL_CLAMP);
 			glTexParameteri(_target, GL_TEXTURE_WRAP_T, GL_CLAMP);
-			graphics->checkForErrors();
+
+			if(_size.x != w || _size.y != h)
+			{
+				ImageData img;
+				data.copy({w, h}, img);
+
+				glTexImage2D(_target, 0, internalformat, w, h, 0, format, type, img.ptr);
+				graphics->checkForErrors();
+				return;
+			}
 
 			glTexImage2D(_target, 0, internalformat, w, h, 0, format, type, data.ptr);
 			graphics->checkForErrors();
+		}
+
+		void GLImage::setSize(const IntSize & size)
+		{
+			_size = size;
+			uint w, h;
+
+			if(_target == GL_TEXTURE_RECTANGLE)
+			{
+				w = _size.x;
+				h = _size.y;
+
+				_scale[0] = 1.0f;
+				_scale[1] = 1.0f;
+			}
+			else
+			{
+				w = umath::round2pow(_size.x);
+				h = umath::round2pow(_size.y);
+
+				_scale[0] = float(_size.x) / float(w);
+				_scale[1] = float(_size.y) / float(h);
+			}
+
+			GLint internalformat;
+			GLenum format;
+			GLenum type;
+
+			glImageFormat(_format, &internalformat, &format, &type);
+
+			glBindTexture(_target, _id);
+			glTexImage2D(_target, 0, internalformat, w, h, 0, format, type, nullptr);
 		}
 
 		GLImage::~GLImage()
@@ -422,6 +467,7 @@ namespace Rapture
 		void GLImage::apply() const
 		{
 			glBindTexture(_target, _id);
+			_graphics->updateUniform<Uniforms::ImageScale>(_scale);
 			_graphics->checkForErrors();
 		}
 
@@ -429,6 +475,23 @@ namespace Rapture
 		{
 			if(output == nullptr)
 				throw Exception("Output image buffer should be not-null!");
+
+			glBindTexture(_target, _id);
+
+			int width, height;
+
+			glGetTexLevelParameteriv(_target, 0, GL_TEXTURE_WIDTH, &width);
+			glGetTexLevelParameteriv(_target, 0, GL_TEXTURE_HEIGHT, &height);
+
+			ImageData img;
+			img.area = {width, height};
+			img.format = ImageFormat::bgra;
+			img.alloc();
+
+			glGetTexImage(_target, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.ptr);
+			glBindTexture(_target, 0);
+
+			img.copy(_size, *output);
 		}
 
 		GLUniformAdapter::GLUniformAdapter(GLGraphics * graphics, ShaderType shader, int index, uint size) : UniformAdapter(index, size), _graphics(graphics), _offset(0)

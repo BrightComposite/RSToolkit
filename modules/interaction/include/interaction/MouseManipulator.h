@@ -21,6 +21,11 @@ namespace Rapture
 
 		api(interaction) FloatPoint fetchData();
 
+		virtual Handle<WidgetComponent> clone(Widget * widget) const override
+		{
+			return Handle<MouseManipulator>(widget);
+		}
+
 		api(interaction) void enable();
 		api(interaction) void disable();
 		virtual api(interaction) void toggle();
@@ -41,6 +46,11 @@ namespace Rapture
 	public:
 		api(interaction) MouseDragger(Widget * w);
 		virtual ~MouseDragger() {}
+
+		virtual Handle<WidgetComponent> clone(Widget * widget) const override
+		{
+			return Handle<MouseDragger>(widget);
+		}
 
 	protected:
 		api(interaction) void onMouseDown(Handle<MouseDownMessage> &, Widget &);

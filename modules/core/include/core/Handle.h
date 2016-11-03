@@ -262,6 +262,14 @@ namespace Rapture
 		{
 			return static_cast<T *>(handle._shared);
 		}
+
+		template<class U>
+		static Handle cast(Handle<U> && handle)
+		{
+			Handle h = static_cast<T *>(handle._shared);
+			handle = nullptr;
+			return h;
+		}
 	};
 
 	/**
@@ -512,6 +520,14 @@ namespace Rapture
 		{
 			return static_cast<T *>(h._shared);
 		}
+
+		template<class U>
+		static Handle cast(Handle<U, Owner> && handle)
+		{
+			Handle h = static_cast<T *>(handle._shared);
+			handle = nullptr;
+			return h;
+		}
 	};
 
 	template<class T>
@@ -608,6 +624,14 @@ namespace Rapture
 		static Handle cast(const Handle<const U> & handle)
 		{
 			return static_cast<const T *>(handle._shared);
+		}
+
+		template<class U>
+		static Handle cast(Handle<const U> && handle)
+		{
+			Handle h = static_cast<const T *>(handle._shared);
+			handle = nullptr;
+			return h;
 		}
 	};
 
@@ -847,6 +871,14 @@ namespace Rapture
 		{
 			return static_cast<const T *>(h._shared);
 		}
+
+		template<class U>
+		static Handle cast(Handle<const U, Owner> && handle)
+		{
+			Handle h = static_cast<const T *>(handle._shared);
+			handle = nullptr;
+			return h;
+		}
 	};
 
 	typedef Handle<Shared> VoidHandle;
@@ -876,6 +908,18 @@ namespace Rapture
 		return Handle<T, Owner>::cast(h);
 	}
 
+	template<class T, class U>
+	Handle<T> handle_cast(Handle<U> && h)
+	{
+		return Handle<T>::cast(move(h));
+	}
+
+	template<class T, class U, class Owner>
+	Handle<T, Owner> handle_cast(Handle<U, Owner> && h)
+	{
+		return Handle<T, Owner>::cast(move(h));
+	}
+
 	template<class T, useif<is_shareable<T>::value>>
 	Handle<T> share(T * x)
 	{
@@ -891,7 +935,7 @@ namespace Rapture
 	template<class T>
 	void share(T && x)
 	{
-		static_assert(!is_same<T, T>::value, "RaptureCore error: Can't share the temporary object!");
+		static_assert(false, "RaptureCore error: Can't share the temporary object!");
 	}
 
 	class SharedIdentifier : public EmptyHandle
@@ -899,18 +943,10 @@ namespace Rapture
 	public:
 		SharedIdentifier() : EmptyHandle(default_init) {}
 	};
-}
 
-namespace std
-{
-	template<class T>
-	use_class_hash(Rapture::Handle<T>);
-}
+	template<class ... A>
+	use_class_hash(Handle<A...>);
 
-//---------------------------------------------------------------------------
-
-namespace Rapture
-{
 	template<class T>
 	struct is_uhandle;
 
@@ -950,6 +986,9 @@ namespace Rapture
 		template<class ... A, selectif(1)<is_abstract<T>::value, !is_uhandle_init<T, A...>::value>>
 		explicit UniqueHandle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
 
+		template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
+		UniqueHandle(Handle<U, A...> && h) : Base(forward<Handle<U, A...>>(h)) {}
+
 		UniqueHandle & operator = (const UniqueHandle & h) = delete;
 
 		UniqueHandle & operator = (UniqueHandle && h)
@@ -958,17 +997,17 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class U, useif<based_on<U, T>::value, !is_const<U>::value>>
-		UniqueHandle & operator = (const UniqueHandle<U> & h)
+		template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
+		UniqueHandle & operator = (UniqueHandle<U, A...> && h)
 		{
-			Base::operator = (h);
+			Base::operator = (forward<UniqueHandle<U, A...>>(h));
 			return *this;
 		}
 
-		template<class U, useif<based_on<U, T>::value, !is_const<U>::value>>
-		UniqueHandle & operator = (UniqueHandle<U> && h)
+		template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
+		UniqueHandle & operator = (Handle<U, A...> && h)
 		{
-			Base::operator = (forward<UniqueHandle<U>>(h));
+			Base::operator = (forward<Handle<U, A...>>(h));
 			return *this;
 		}
 
@@ -1031,6 +1070,17 @@ namespace Rapture
 		template<class ... A, selectif(1)<is_abstract<T>::value && !is_uhandle_init<T, A...>::value>>
 		explicit UniqueHandle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
 
+		template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
+		UniqueHandle(Handle<U, A...> && h) : _inner(static_cast<T *>(h.pointer()))
+		{
+		#ifdef _DEBUG
+			if(_inner->_refs > 1)
+				throw std::exception("Can't make unique handle: object has multiple references!");
+		#endif
+			++_inner->_refs;
+			h = nullptr;
+		}
+
 		UniqueHandle & operator = (const UniqueHandle & h) = delete;
 
 		UniqueHandle & operator = (UniqueHandle && h)
@@ -1047,8 +1097,8 @@ namespace Rapture
 			return *this;
 		}
 
-		template<class U, useif<based_on<U, T>::value, !is_const<U>::value>>
-		UniqueHandle & operator = (UniqueHandle<U> && h)
+		template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
+		UniqueHandle & operator = (UniqueHandle<U, A...> && h)
 		{
 			if(void_ptr(this) == void_ptr(&h))
 				return *this;
@@ -1071,6 +1121,23 @@ namespace Rapture
 				delete _inner;
 
 			_inner = ptr;
+
+			return *this;
+		}
+
+		template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
+		UniqueHandle & operator = (Handle<U, A...> && h)
+		{
+			if(_inner)
+				delete _inner;
+
+			_inner = static_cast<T *>(h.pointer());
+		#ifdef _DEBUG
+			if(_inner->_refs > 1)
+				throw std::exception("Can't make unique handle: object has multiple references!");
+		#endif
+			++_inner->_refs;
+			h = nullptr;
 
 			return *this;
 		}
@@ -1334,17 +1401,17 @@ namespace Rapture
 
 //---------------------------------------------------------------------------
 
-#define friend_handle											        \
-	template<class ...>		  friend class  Rapture::Handle;			\
-	template<class ...>		  friend class  Rapture::UniqueHandle;	    \
-	template<class>			  friend struct Rapture::PointerDeleter;	\
-	template<class, class...> friend struct Rapture::is_constructible;
+#define friend_handle														\
+	template<class ...>		  friend class  ::Rapture::Handle;				\
+	template<class ...>		  friend class  ::Rapture::UniqueHandle;	    \
+	template<class>			  friend struct ::Rapture::PointerDeleter;		\
+	template<class, class...> friend struct ::Rapture::is_constructible;
 
-#define friend_owned_handle(...)							            \
-	friend class Rapture::Handle<__VA_ARGS__>;				            \
-	friend class Rapture::UniqueHandle<__VA_ARGS__>;		            \
-	template<class>	friend struct Rapture::PointerDeleter;	            \
-	template<class, class...> friend struct Rapture::is_constructible;
+#define friend_owned_handle(...)											\
+	friend class ::Rapture::Handle<__VA_ARGS__>;				            \
+	friend class ::Rapture::UniqueHandle<__VA_ARGS__>;						\
+	template<class>	friend struct ::Rapture::PointerDeleter;	            \
+	template<class, class...> friend struct ::Rapture::is_constructible;
 
 //---------------------------------------------------------------------------
 #endif

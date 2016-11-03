@@ -136,9 +136,6 @@ namespace Rapture
 		declare_receivers();
 	};
 
-	template<class Subj>
-	using SubjectSet = CustomHashSet<Subj, std::hash<Handle<Subject>>>;
-
 	template<class Msg, class Dst, class ... F, useif<can_construct<Msg, Subject *, F ...>::value>>
 	Handle<Msg> send(Dst & dest, F &&... fields)
 	{
@@ -156,12 +153,9 @@ namespace Rapture
 
 		return message;
 	}
-}
 
-namespace std
-{
 	template<>
-	struct hash<Rapture::Subject> : hash<Rapture::AutoIdentifier> {};
+	struct hash<Subject> : hash<AutoIdentifier> {};
 }
 
 //---------------------------------------------------------------------------

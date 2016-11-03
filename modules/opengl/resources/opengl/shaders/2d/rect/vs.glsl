@@ -10,7 +10,7 @@ layout(std140) uniform Area
 	float depth;
 };
 
-layout(location = 0) in vec2 position;
+in vec2 position;
 
 void main(void)
 {

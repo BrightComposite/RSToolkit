@@ -54,6 +54,9 @@ namespace Rapture
 
 		void setSize(const IntSize & size)
 		{
+			if(size == _viewport.size())
+				return;
+
 			auto tmp = _viewport;
 			_viewport.set(size);
 

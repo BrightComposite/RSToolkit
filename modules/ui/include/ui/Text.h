@@ -21,12 +21,23 @@ namespace Rapture
 	class TextLayer;
 	class StaticTextLayer;
 	class SmartTextLayer;
-	class TextComponent;
+
+	using TextComponent = WidgetLayerComponent<TextLayer>;
 
 	class Text : public Shared
 	{
 	public:
-		api(ui) Text(Graphics * graphics, const WideString & s, const Handle<Font> & font, const Color & color = Color {0.0f, 0.0f, 0.0f}, int fontSize = 14);
+		api(ui) Text(Graphics * graphics, const WideString & s, const Handle<Font> & font, const Color & color = Color::black, int fontSize = 14);
+
+		Handle<Text> clone() const
+		{
+			return Handle<Text>(_graphics, _contents, _font, _color, _fontSize);
+		}
+
+		Handle<Text> clone(Graphics * graphics) const
+		{
+			return Handle<Text>(graphics, _contents, _font, _color, _fontSize);
+		}
 
 		const WideString & contents() const
 		{
@@ -41,18 +52,19 @@ namespace Rapture
 		virtual void setContents(const WideString & contents)
 		{
 			_contents = contents;
+			_size = _font->getTextSize(_graphics, _contents, _fontSize);
 		}
 
 		virtual api(ui) void draw(const IntPoint & pos);
 
 		template<class TextLayerClass = StaticTextLayer, useif<based_on<TextLayerClass, TextLayer>::value>>
-		static void set(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color {0.0f, 0.0f, 0.0f}, int fontSize = 14)
+		static void set(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color::black, int fontSize = 14)
 		{
-			w->require<TextComponent>()->setLayer(Handle<TextLayerClass>(w, Handle<Text>(w->graphics(), s, font, color, fontSize)));
+			w->require<TextComponent>()->set(Unique<TextLayerClass>(w, Handle<Text>(w->graphics(), s, font, color, fontSize)));
 		}
 
-		static api(ui) void setDynamic(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color {0.0f, 0.0f, 0.0f}, int fontSize = 14);
-		static api(ui) void setSmart(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color {0.0f, 0.0f, 0.0f}, int fontSize = 14);
+		static api(ui) void setDynamic(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color::black, int fontSize = 14);
+		static api(ui) void setSmart(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color::black, int fontSize = 14);
 		static api(ui) void setContents(Widget * w, const WideString & s);
 		static api(ui) TextLayer * get(Widget * w);
 		static api(ui) void clear(Widget * w);
@@ -72,15 +84,24 @@ namespace Rapture
 		friend_handle;
 
 	public:
-		api(ui) TextLayer(Widget * w, const Handle<Text> & text);
+		api(ui) TextLayer(Widget * w, Unique<Text> && text);
+
+		TextLayer(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color::black, int fontSize = 14) :
+			TextLayer(w, Unique<Text>(w->graphics(), s, font, color, fontSize)) {}
+
 		virtual ~TextLayer() {}
+
+		virtual Handle<WidgetLayer> clone(Widget * widget) const override
+		{
+			return Handle<TextLayer>(widget, _text->clone());
+		}
 
 		const WideString & contents() const
 		{
 			return _text->contents();
 		}
 
-		const Handle<Text> & text() const
+		Text * text() const
 		{
 			return _text;
 		}
@@ -91,9 +112,9 @@ namespace Rapture
 			update();
 		}
 
-		void setText(const Handle<Text> & contents)
+		void setText(Unique<Text> && contents)
 		{
-			_text = contents;
+			_text = move(contents);
 			update();
 		}
 
@@ -102,35 +123,25 @@ namespace Rapture
 		virtual void update() {}
 
 		Graphics * _graphics;
-		Handle<Text> _text;
+		Unique<Text> _text;
 	};
 
-	class TextComponent : public WidgetComponent
-	{
-	public:
-		api(ui) TextComponent(Widget * widget);
-		api(ui) virtual ~TextComponent();
-
-		const Handle<TextLayer> & layer() const
-		{
-			return _layer;
-		}
-
-		api(ui) void setLayer(const Handle<TextLayer> & layer);
-		api(ui) void setText(const Handle<Text> & contents);
-		api(ui) void setContents(const WideString & text);
-
-	protected:
-		Handle<TextLayer> _layer;
-	};
-
-	create_component(ui, TextComponent);
+	create_layer_component(ui, TextLayer);
 
 	class StaticTextLayer : public TextLayer
 	{
 	public:
-		api(ui) StaticTextLayer(Widget * w, const Handle<Text> & text);
+		api(ui) StaticTextLayer(Widget * w, Unique<Text> && text);
+
+		StaticTextLayer(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color::black, int fontSize = 14) :
+			StaticTextLayer(w, Unique<Text>(w->graphics(), s, font, color, fontSize)) {}
+
 		virtual ~StaticTextLayer() {}
+
+		virtual Handle<WidgetLayer> clone(Widget * widget) const override
+		{
+			return Handle<StaticTextLayer>(widget, _text->clone());
+		}
 
 		void requestData(ImageData * data)
 		{
@@ -148,8 +159,17 @@ namespace Rapture
 	class SmartTextLayer : public StaticTextLayer
 	{
 	public:
-		SmartTextLayer(Widget * w, const Handle<Text> & text) : StaticTextLayer(w, text), drawer(dynamicDraw) {}
+		SmartTextLayer(Widget * w, Unique<Text> && text) : StaticTextLayer(w, move(text)), drawer(dynamicDraw) {}
+
+		SmartTextLayer(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color::black, int fontSize = 14) :
+			SmartTextLayer(w, Unique<Text>(w->graphics(), s, font, color, fontSize)) {}
+
 		virtual ~SmartTextLayer() {}
+
+		virtual Handle<WidgetLayer> clone(Widget * widget) const override
+		{
+			return Handle<SmartTextLayer>(widget, _text->clone());
+		}
 
 	protected:
 		using drawer_t = void(*)(SmartTextLayer * layer, Widget * w);

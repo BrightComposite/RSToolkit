@@ -21,9 +21,8 @@
 namespace Rapture
 {
 	class Font;
-	class FontCache;
+	class Font;
 	class Graphics;
-	apistruct(graphics) Singleton<FontCache>;
 
 	using Rapture::Font; // specially for Windows Font
 
@@ -86,6 +85,19 @@ namespace Rapture
 		wchar_t _character;
 	};
 
+	struct FontFamily;
+
+	enum class FontStyle : int
+	{
+		Regular,
+		Italic,
+		Bold,
+		BoldItalic
+	};
+
+	template<>
+	use_enum_hash(FontStyle);
+
 	class Font : public Object
 	{
 	public:
@@ -99,79 +111,33 @@ namespace Rapture
 		api(graphics) IntSize getTextSize(Graphics * graphics, const string & text, int fontSize);
 		api(graphics) IntSize getTextSize(Graphics * graphics, const wstring & text, int fontSize);
 
+		static api(graphics) void set(const string & name, const Handle<Font> & font, FontStyle style = FontStyle::Regular);
+		static api(graphics) void set(const string & name, const Handle<FontFamily> & family);
+		static api(graphics) void set(const string & name, const initializer_list<pair<FontStyle, Handle<Font>>> & list);
+		static api(graphics) Handle<Font> get(const string & name, FontStyle style = FontStyle::Regular);
+		static api(graphics) Handle<Font> obtain(const string & name, const string & path, FontStyle style = FontStyle::Regular);
+		static api(graphics) void clear();
+
 	protected:
 		virtual Handle<Symbol> & findSymbol(Graphics * graphics, int size, wchar_t character) const = 0;
 		virtual void loadSymbol(Handle<Symbol> & symbol, Graphics * graphics, int size, wchar_t character) const = 0;
+
+		static Dictionary<string, FontFamily> & cache()
+		{
+			static Dictionary<string, FontFamily> _cache;
+			return _cache;
+		}
 
 		template<class string_t>
 		api(graphics) IntSize textSize(Graphics * graphics, const string_t & text, int fontSize);
 	};
 
-	enum class FontStyle : int
-	{
-		Regular,
-		Italic,
-		Bold,
-		BoldItalic
-	};
-}
-
-namespace std
-{
-	template<>
-	use_enum_hash(Rapture::FontStyle);
-}
-
-namespace Rapture
-{
 	struct FontFamily : public Shared
 	{
 		FontFamily() {}
 		FontFamily(const initializer_list<pair<FontStyle, Handle<Font>>> & list) : styles(list.begin(), list.end()) {}
 
 		Dictionary<FontStyle, Font> styles;
-	};
-
-	class FontCache : public Singleton<FontCache>
-	{
-	public:
-		static void set(const string & name, const Handle<Font> & font, FontStyle style = FontStyle::Regular)
-		{
-			auto & family = instance()._cache[name];
-
-			if(family == nullptr)
-				family.init();
-
-			family->styles[style] = font;
-		}
-
-		static void set(const string & name, const Handle<FontFamily> & family)
-		{
-			instance()._cache[name] = family;
-		}
-
-		static void set(const string & name, const initializer_list<pair<FontStyle, Handle<Font>>> & list)
-		{
-			instance()._cache[name].init(list);
-		}
-
-		static Handle<Font> get(const string & name, FontStyle style = FontStyle::Regular)
-		{
-			auto & family = instance()._cache[name];
-
-			if(family == nullptr)
-				return nullptr;
-
-			return family->styles[style];
-		}
-
-		static void clear()
-		{
-			return instance()._cache.clear();
-		}
-
-	protected:
-		Dictionary<string, FontFamily> _cache;
 	};
 }
 

@@ -22,6 +22,13 @@ namespace Rapture
 		return container.erase(std::next(container.begin(), pos));
 	}
 
+	template<class Container, useif<is_iterable<Container>::value>>
+	typename Container::iterator erase(Container & container, int pos, size_t count)
+	{
+		auto i = std::next(container.begin(), pos);
+		return container.erase(i, i + count);
+	}
+
 	template<class Container, typename T, useif<is_iterable<Container>::value>>
 	typename Container::iterator erase(Container & container, const T & value)
 	{
@@ -38,6 +45,61 @@ namespace Rapture
 	bool check(typename Container::const_iterator & iterator, const Container & container)
 	{
 		return iterator != container.cend();
+	}
+
+	template<class T>
+	struct reversed
+	{
+		reversed(T & cont) : _cont(cont) {}
+
+		auto begin()
+		{
+			return _cont.rbegin();
+		}
+
+		auto end()
+		{
+			return _cont.rend();
+		}
+
+		auto cbegin()
+		{
+			return _cont.crbegin();
+		}
+
+		auto cend()
+		{
+			return _cont.crend();
+		}
+
+		auto rbegin()
+		{
+			return _cont.begin();
+		}
+
+		auto rend()
+		{
+			return _cont.end();
+		}
+
+		auto crbegin()
+		{
+			return _cont.cbegin();
+		}
+
+		auto crend()
+		{
+			return _cont.cend();
+		}
+
+	protected:
+		T & _cont;
+	};
+
+	template<class T>
+	reversed<T> reverse(T & cont)
+	{
+		return {cont};
 	}
 
 	template<class T, class A, A T::*member>

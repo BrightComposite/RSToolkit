@@ -11,7 +11,7 @@
 #include <math/Transform.h>
 
 #include <core/addition/Contents.h>
-#include <core/Morpher.h>
+#include <component/Morpher.h>
 
 #include "Shaders.h"
 

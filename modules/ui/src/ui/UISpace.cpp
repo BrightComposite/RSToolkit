@@ -330,6 +330,11 @@ namespace Rapture
 		_clippedCursor = false;
 	}
 
+	void UISpace::setBackgroundColor(const rgb & color)
+	{
+		SetClassLongPtrW(_handle, GCLP_HBRBACKGROUND, (LONG_PTR)CreateSolidBrush(RGB(color.r, color.g, color.b)));
+	}
+
 	void UISpace::read(Handle<KeyDownMessage> & msg)
 	{
 		if(!_enabled)

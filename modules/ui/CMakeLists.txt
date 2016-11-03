@@ -24,10 +24,12 @@ module(SHARED)
 		group(include Headers)
 		files(
 			Cursor.h
-			Panel.h
 			Text.h
+			UIPalette.h
 			UISpace.h
+			UITheme.h
 			Widget.h
+			WidgetLayers.h
 			WidgetEnum.h
 			WidgetMessages.h
 			Window.h
@@ -36,10 +38,11 @@ module(SHARED)
 		group(src Sources)
 		files(
 			Cursor.cpp
-			Panel.cpp
 			Text.cpp
+			UIPalette.cpp
 			UISpace.cpp
 			Widget.cpp
+			WidgetLayers.cpp
 			Window.cpp
 		)
 	endsources()

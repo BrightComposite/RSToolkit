@@ -60,7 +60,18 @@ namespace Rapture
 			connect(this, &CursorComponent::onMouseLeave, *_widget);
 		}
 
+		CursorComponent(Widget * widget, const CursorComponent & component) : CursorComponent(widget)
+		{
+			_cursor = component._cursor;
+			_external = component._external;
+		}
+
 		virtual ~CursorComponent() {}
+
+		virtual Handle<WidgetComponent> clone(Widget * widget) const override
+		{
+			return Handle<CursorComponent>(widget, *this);
+		}
 
 		api(ui) Cursor * cursor();
 		api(ui) void setCursor(Cursor * cursor);
@@ -85,13 +96,24 @@ namespace Rapture
 	public:
 		PressedCursorComponent(Widget * widget) : WidgetComponent(widget)
 		{
-			_cursorComponent = widget->link<CursorComponent>(this);
+			_cursorComponent = widget->components->link<CursorComponent>(this);
 
 			connect(*this, &PressedCursorComponent::onWidgetPress, *_widget);
 			connect(*this, &PressedCursorComponent::onWidgetRelease, *_widget);
 		}
 
+		PressedCursorComponent(Widget * widget, const PressedCursorComponent & component) : PressedCursorComponent(widget)
+		{
+			_button = component._button;
+			_cursors = component._cursors;
+		}
+
 		virtual ~PressedCursorComponent() {}
+
+		virtual Handle<WidgetComponent> clone(Widget * widget) const override
+		{
+			return Handle<PressedCursorComponent>(widget, *this);
+		}
 
 		api(ui) Cursor * cursor(MouseButton button);
 		api(ui) void setCursor(Cursor * cursor, MouseButton button);

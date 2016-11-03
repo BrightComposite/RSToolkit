@@ -12,6 +12,7 @@
 
 #include <meta/Bitmask.h>
 #include <graphics/Surface.h>
+#include <graphics/Color.h>
 
 //---------------------------------------------------------------------------
 
@@ -122,6 +123,8 @@ namespace Rapture
 		api(ui) void clipCursor(const IntRect & region);
 		api(ui) void unclipCursor();
 
+		api(ui) void setBackgroundColor(const rgb & color);
+
 		virtual api(ui) void registerHotkey(int id, int key, int modifiers = 0) {}
 		virtual api(ui) void unregisterHotkey(int id) {}
 
@@ -207,18 +210,13 @@ namespace Rapture
 	class BackgroundWidget : public Widget
 	{
 	public:
-		BackgroundWidget(UISpace * space) : Widget(space)
+		BackgroundWidget(UISpace * space) : Widget(space, space->root())
 		{
-			setVisibility(true);
 			setPlacement(ModelMask::FullSize, {0, 0, 0, 0});
+			setName("Background");
 		}
 
 		virtual ~BackgroundWidget() {}
-
-		virtual bool isDisplayable() const final
-		{
-			return true;
-		}
 	};
 
 #define WS_SIMPLE (WS_POPUP | WS_CLIPCHILDREN | WS_MINIMIZEBOX)

@@ -49,15 +49,15 @@ namespace Rapture
 			if (FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, nullptr, 1) != 0)
 				throw Exception("Can't render glyph to bitmap!");
 
-			FT_BitmapGlyph bitglyph = (FT_BitmapGlyph)glyph;
-			FT_Bitmap & bmp = bitglyph->bitmap;
+			auto bitglyph = reinterpret_cast<FT_BitmapGlyph>(glyph);
+			auto & bmp = bitglyph->bitmap;
 
 			SymbolData data;
 
 			data.character = character;
 
-			data.area = {bmp.width, bmp.rows};
-
+			data.area = { bmp.width, bmp.rows };
+			
 			data.left = bitglyph->left;
 			data.top = size - bitglyph->top;
 
@@ -83,8 +83,9 @@ namespace Rapture
 
 			if(data.width() * data.height() > 0)
 			{
-				data.set(bmp.buffer, bmp.width * bmp.rows);
+				data.set(bmp.buffer, bmp.pitch * bmp.rows);
 				symbol.init(graphics, data);
+				Image::save(initial_path() / (string &)String::assemble(char(character), ".png"), symbol->image());
 			}
 			else
 				symbol.init(data);

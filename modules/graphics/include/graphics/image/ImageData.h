@@ -187,8 +187,10 @@ namespace Rapture
 		typedef OwnedByteData Base;
 		
 	public:
-		ImageData() : Base() {}
+		ImageData() {}
 		ImageData(const ImageData & img) : Base(img), area(img.area), format(img.format) {}
+		ImageData(const UintSize & area, ImageFormat format) : area(area), format(format) { alloc(); }
+
 		virtual ~ImageData() {}
 
 		uint width() const
@@ -199,6 +201,16 @@ namespace Rapture
 		uint height() const
 		{
 			return area.y;
+		}
+
+		byte bpp() const
+		{
+			return preferredBpp(format);
+		}
+
+		uint pitch() const
+		{
+			return preferredBpp(format) * area.x;
 		}
 
 		ImageData & operator = (const ImageData & img)
@@ -219,9 +231,41 @@ namespace Rapture
 			return *this;
 		}
 
+		using Base::alloc;
+
 		void alloc()
 		{
-			Base::alloc(area.x * area.y * preferredBpp(format));
+			Base::alloc(area.y * pitch());
+		}
+
+		void copy(const UintSize & area, ImageData & dest) const
+		{
+			dest.format = format;
+			dest.area = area;
+			dest.alloc();
+
+			if(this->area.x == dest.area.x)
+			{
+				auto s = std::min(dest.size, size);
+				Memory<byte>::move(dest.ptr, ptr, s);
+
+				if(size < dest.size)
+					Memory<byte>::fill(dest.ptr + s, 0, dest.size - s);
+
+				return;
+			}
+
+			Memory<byte>::fill(dest.ptr, 0, dest.size);
+
+			uint spitch = pitch();
+			uint dpitch = dest.pitch();
+			uint pitch = std::min(spitch, dpitch);
+
+			auto * sptr = begin();
+			auto * dptr = dest.begin();
+
+			for(; sptr < end() && dptr < dest.end(); sptr += spitch, dptr += dpitch)
+				Memory<byte>::move(dptr, sptr, pitch);
 		}
 
 		api(graphics) void convert(ImageFormat newFormat);

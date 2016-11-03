@@ -20,8 +20,10 @@
 #include <math/Vector.h>
 #include <math/Matrix.h>
 
+#include <ui/Text.h>
+#include <ui/UIPalette.h>
+#include <ui/WidgetLayers.h>
 #include <ui/Window.h>
-#include <ui/Panel.h>
 
 #include <graphics/font/Font.h>
 
@@ -36,6 +38,7 @@ namespace Rapture
 {
 	static int render(Handle<Window> & window)
 	{
+		window->mouseUpdate();
 		window->invalidate();
 		window->validate();
 
@@ -46,23 +49,13 @@ namespace Rapture
 
 	static int load()
 	{
-		auto graphics = GraphicsProvider::provide();
+		FreeTypeDecoder::initialize();
+		FreeImageConverter::initialize();
 
-		graphics->setClearColor(1.0f, 1.0f, 0.8f);
+		auto graphics = GraphicsProvider::provide();
 
 		Handle<Window> window(graphics, 0, 0, 800, 600);
 
-		Handle<BackgroundWidget> back(window);
-		back->setName("Background");
-
-		auto w = back->append<Panel>(IntRect(10, 10, 100, 100));
-
-		w->attach([](const Widget * w, const IntRect & r) {
-			w->graphics()->setColor<hsv>(0.0f, 1.0f, 1.0f);
-			w->graphics()->rectangle(w->absRegion());
-		});
-
-		window->setCaption(L"Rapture::UI test");
 		window->registerHotkey(HOTKEY_FULLSCREEN, VK_RETURN, MOD_ALT);
 
 		subscribe_on(UISpace, HotkeyMessage, *window)
@@ -92,13 +85,35 @@ namespace Rapture
 		ThreadLoop::add(processWindowMessage);
 		ThreadLoop::add(std::bind(render, window));
 
+		Unique<StandartUIPalette> palette(window);
+
+		auto w = palette->create("label", window->root());
+		w->setPlacement(ModelMask::RightTop, -20, 20, 120, 80);
+
+		ColoredButtonDecorator decorator;
+		/*
+		decorator
+			.background({0.4f, 0.4f, 0.4f})
+			.pressed({0.1f, 0.1f, 0.1f})
+			.hovered({0.6f, 0.6f, 0.6f})
+			.boundary({0.5f, 0.5f, 0.5f}, 1)
+			.decorate(w);
+			*/
+		Text::setContents(w, "Hello!");
+
+		Color backgroundColor(0.2f, 0.2f, 0.2f);
+
+		graphics->setClearColor(backgroundColor);
+		window->setBackgroundColor(backgroundColor);
+
+		window->setCaption("Rapture::UI test");
+
 		window->attachThread();
 		window->show();
 		window->centralize();
 
 		ThreadLoop::run();
 
-		_getch();
 		return 0;
 	}
 

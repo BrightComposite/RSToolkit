@@ -202,19 +202,29 @@ namespace Rapture
 
 		static inline void __vectorcall div(in_type a, in_type b, type & out)
 		{
-			_mm_insert_epi32(out, _mm_extract_epi32(a, 3) / _mm_extract_epi32(b, 3), 3);
-			_mm_insert_epi32(out, _mm_extract_epi32(a, 2) / _mm_extract_epi32(b, 2), 2);
-			_mm_insert_epi32(out, _mm_extract_epi32(a, 1) / _mm_extract_epi32(b, 1), 1);
-			_mm_insert_epi32(out, _mm_extract_epi32(a, 0) / _mm_extract_epi32(b, 0), 0);
+			intrin_cvt<__m128, __m128i>(_mm_div_ps(intrin_cvt<__m128>(a), intrin_cvt<__m128>(b)), out);
 		}
 
 		static inline type __vectorcall div(in_type a, in_type b)
 		{
+			return intrin_cvt<__m128i>(_mm_div_ps(intrin_cvt<__m128>(a), intrin_cvt<__m128>(b)));
+		}
+
+		static inline void __vectorcall mod(in_type a, in_type b, type & out)
+		{
+			_mm_insert_epi32(out, _mm_extract_epi32(a, 3) % _mm_extract_epi32(b, 3), 3);
+			_mm_insert_epi32(out, _mm_extract_epi32(a, 2) % _mm_extract_epi32(b, 2), 2);
+			_mm_insert_epi32(out, _mm_extract_epi32(a, 1) % _mm_extract_epi32(b, 1), 1);
+			_mm_insert_epi32(out, _mm_extract_epi32(a, 0) % _mm_extract_epi32(b, 0), 0);
+		}
+
+		static inline type __vectorcall mod(in_type a, in_type b)
+		{
 			return _mm_set_epi32(
-				_mm_extract_epi32(a, 3) / _mm_extract_epi32(b, 3),
-				_mm_extract_epi32(a, 2) / _mm_extract_epi32(b, 2),
-				_mm_extract_epi32(a, 1) / _mm_extract_epi32(b, 1),
-				_mm_extract_epi32(a, 0) / _mm_extract_epi32(b, 0)
+				_mm_extract_epi32(a, 3) % _mm_extract_epi32(b, 3),
+				_mm_extract_epi32(a, 2) % _mm_extract_epi32(b, 2),
+				_mm_extract_epi32(a, 1) % _mm_extract_epi32(b, 1),
+				_mm_extract_epi32(a, 0) % _mm_extract_epi32(b, 0)
 			);
 		}
 
@@ -353,6 +363,50 @@ namespace Rapture
 		static inline type __vectorcall bit_xor(in_type a, in_type b)
 		{
 			return _mm_xor_si128(a, b);
+		}
+
+		static inline void __vectorcall bit_shr(in_type a, in_type b, type & out)
+		{
+			out = _mm_sra_epi32(a, b);
+		}
+
+		static inline type __vectorcall bit_shr(in_type a, in_type b)
+		{
+			return _mm_sra_epi32(a, b);
+		}
+
+		template<int I>
+		static inline void __vectorcall bit_shr(in_type a, type & out)
+		{
+			out = _mm_srai_epi32(a, I);
+		}
+
+		template<int I>
+		static inline type __vectorcall bit_shr(in_type a)
+		{
+			return _mm_srai_epi32(a, I);
+		}
+
+		static inline void __vectorcall bit_shl(in_type a, in_type b, type & out)
+		{
+			out = _mm_sll_epi32(a, b);
+		}
+
+		static inline type __vectorcall bit_shl(in_type a, in_type b)
+		{
+			return _mm_sll_epi32(a, b);
+		}
+
+		template<int I>
+		static inline void __vectorcall bit_shl(in_type a, type & out)
+		{
+			out = _mm_slli_epi32(a, I);
+		}
+
+		template<int I>
+		static inline type __vectorcall bit_shl(in_type a)
+		{
+			return _mm_slli_epi32(a, I);
 		}
 
 		static inline bool __vectorcall equal(in_type a, in_type b)

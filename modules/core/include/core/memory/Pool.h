@@ -311,13 +311,13 @@ namespace Rapture
 				{
 					--p->_acquired;
 					--_acquired;
-
+					/*
 					if(p != _first && p->_acquired == 0 && _acquired < _pages * blocksCount * 2 / 3)
 					{
 						deletePage(p);
 						return;
 					}
-
+					*/
 					auto offset = static_cast<uint>(ptr - p->_buffer);
 					p->_freeList[offset] = p->_free;
 					p->_free = offset;

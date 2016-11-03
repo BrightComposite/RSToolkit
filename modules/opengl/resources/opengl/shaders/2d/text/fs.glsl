@@ -8,7 +8,7 @@ layout(std140) uniform Color
 	vec4 color;
 };
 
-uniform sampler2D tex;
+uniform sampler2D texture0;
 
 in Vertex 
 {
@@ -19,5 +19,5 @@ out vec4 fscolor;
 
 void main(void)
 {
-	fscolor = vec4(color[0], color[1], color[2], texture2D(tex, input.texcoord)[0] * color[3]);
+	fscolor = vec4(color[0], color[1], color[2], texture2D(texture0, input.texcoord)[0] * color[3]);
 }

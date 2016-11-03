@@ -70,6 +70,16 @@ namespace Rapture
 			return ptr + size;
 		}
 
+		const_iterator begin() const
+		{
+			return ptr;
+		}
+
+		const_iterator end() const
+		{
+			return ptr + size;
+		}
+
 		reverse_iterator rbegin()
 		{
 			return ptr + size;

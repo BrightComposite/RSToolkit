@@ -94,6 +94,27 @@ namespace Rapture
 		}
 	};
 
+	template<>
+	struct IntrinsicCvt<__m32, __m128>
+	{
+		static inline void perform(const __m32 & in, __m128 & out)
+		{
+			out = _mm_set_ps(float(in.w), float(in.z), float(in.y), float(in.x));
+		}
+	};
+
+	template<>
+	struct IntrinsicCvt<__m128, __m32>
+	{
+		static inline void perform(const __m128 & in, __m32 & out)
+		{
+			out.a[0] = byte(IntrinData<float, 4>::get<0>(in));
+			out.a[1] = byte(IntrinData<float, 4>::get<1>(in));
+			out.a[2] = byte(IntrinData<float, 4>::get<2>(in));
+			out.a[3] = byte(IntrinData<float, 4>::get<3>(in));
+		}
+	};
+
 //---------------------------------------------------------------------------
 
 	inline float & _m_hi(__m64 & in)

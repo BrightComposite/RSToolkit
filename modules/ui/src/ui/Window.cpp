@@ -203,7 +203,13 @@ namespace Rapture
 				send<MouseWheelMessage>(root, GET_WHEEL_DELTA_WPARAM(wParam), (int)LOWORD(lParam), (int)HIWORD(lParam), (int)LOWORD(wParam));
 				break;
 			}
-
+			
+			case WM_SIZING:
+			{
+				w.update();
+				break;
+			}
+			
 			case WM_WINDOWPOSCHANGED:
 			{
 				if(!w._shown)
@@ -261,8 +267,12 @@ namespace Rapture
 					break;
 				}
 
+				w.update();
 				break;
 			}
+			
+			case WM_ERASEBKGND:
+				return 1;
 
 			default:
 				return DefWindowProcW(hWnd, message, wParam, lParam);

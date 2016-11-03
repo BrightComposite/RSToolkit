@@ -92,6 +92,56 @@ namespace Rapture
 
 	template IntSize Font::textSize<string>(Graphics * graphics, const string & text, int fontSize);
 	template IntSize Font::textSize<wstring>(Graphics * graphics, const wstring & text, int fontSize);
+
+	void Font::set(const string & name, const Handle<Font> & font, FontStyle style)
+	{
+		auto & family = cache()[name];
+
+		if(family == nullptr)
+			family.init();
+
+		family->styles[style] = font;
+	}
+
+	void Font::set(const string & name, const Handle<FontFamily> & family)
+	{
+		cache()[name] = family;
+	}
+
+	void Font::set(const string & name, const initializer_list<pair<FontStyle, Handle<Font>>> & list)
+	{
+		cache()[name].init(list);
+	}
+
+	Handle<Font> Font::get(const string & name, FontStyle style)
+	{
+		auto & family = cache()[name];
+
+		if(family == nullptr)
+			return nullptr;
+
+		return family->styles[style];
+	}
+
+	Handle<Font> Font::obtain(const string & name, const string & path, FontStyle style)
+	{
+		auto & family = cache()[name];
+
+		if(family == nullptr)
+			family.init();
+
+		auto & font = family->styles[style];
+
+		if(font == nullptr)
+			font = Font::load(path);
+
+		return font;
+	}
+
+	void Font::clear()
+	{
+		return cache().clear();
+	}
 }
 
 //---------------------------------------------------------------------------

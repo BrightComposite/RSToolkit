@@ -60,50 +60,50 @@ struct use_filter_t {};
 #define _useif(S)		S::t = S::t::v, class = S::f
 #define _useif_t(S)		S::t, class
 
-_useif_class(SfinaeUse);
-_useif_class(SfinaeSkip);
+_useif_class(sfinae_use);
+_useif_class(sfinae_skip);
 
 template<int I>
-_useif_class(SfinaeSelect);
+_useif_class(sfinae_select);
 
 //---------------------------------------------------------------------------
 
-#define useif			_useif(SfinaeUse)
-#define skipif			_useif(SfinaeSkip)
-#define selectif(I)		_useif(SfinaeSelect<I>)
+#define useif			_useif(sfinae_use)
+#define skipif			_useif(sfinae_skip)
+#define selectif(I)		_useif(sfinae_select<I>)
 
-#define used_t			_useif_t(SfinaeUse)
-#define skipped_t		_useif_t(SfinaeSkip)
-#define selected_t(I)	_useif_t(SfinaeSelect<I>)
+#define used_t			_useif_t(sfinae_use)
+#define skipped_t		_useif_t(sfinae_skip)
+#define selected_t(I)	_useif_t(sfinae_select<I>)
 
 //---------------------------------------------------------------------------
 
 template<>
-struct use_filter_t<SfinaeUse> : Rapture::identity<typename SfinaeUse::t> {};
+struct use_filter_t<sfinae_use> : Rapture::identity<typename sfinae_use::t> {};
 
 template<bool ... Others>
-struct use_filter_t<SfinaeUse, true, Others...> : use_filter_t<SfinaeUse, Others...> {};
+struct use_filter_t<sfinae_use, true, Others...> : use_filter_t<sfinae_use, Others...> {};
 
 template<bool ... Others>
-struct use_filter_t<SfinaeUse, false, Others...> {};
+struct use_filter_t<sfinae_use, false, Others...> {};
 
 template<int I>
-struct use_filter_t<SfinaeSelect<I>> : Rapture::identity<typename SfinaeSelect<I>::t> {};
+struct use_filter_t<sfinae_select<I>> : Rapture::identity<typename sfinae_select<I>::t> {};
 
 template<int I, bool ... Others>
-struct use_filter_t<SfinaeSelect<I>, true, Others...> : use_filter_t<SfinaeSelect<I>, Others...> {};
+struct use_filter_t<sfinae_select<I>, true, Others...> : use_filter_t<sfinae_select<I>, Others...> {};
 
 template<int I, bool ... Others>
-struct use_filter_t<SfinaeSelect<I>, false, Others...> {};
+struct use_filter_t<sfinae_select<I>, false, Others...> {};
 
 template<bool ... Others>
-struct use_filter_t<SfinaeSkip, false, Others...> : Rapture::identity<typename SfinaeSkip::t> {};
+struct use_filter_t<sfinae_skip, false, Others...> : Rapture::identity<typename sfinae_skip::t> {};
 
 template<bool ... Others>
-struct use_filter_t<SfinaeSkip, true, Others...> : use_filter_t<SfinaeSkip, Others...> {};
+struct use_filter_t<sfinae_skip, true, Others...> : use_filter_t<sfinae_skip, Others...> {};
 
 template<>
-struct use_filter_t<SfinaeSkip> {};
+struct use_filter_t<sfinae_skip> {};
 
 //---------------------------------------------------------------------------
 #endif

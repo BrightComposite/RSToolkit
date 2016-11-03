@@ -23,17 +23,30 @@ namespace Rapture
 		list.push_back(this);
 	}
 
-	Scene::Scene(Widget * widget, const string & name) : Scene(name)
+	Handle<Scene> Scene::construct(const Handle<Scene> & scene)
 	{
-		if(widget->graphics() notkindof (Graphics3D))
+		if(scene->_widget->graphics() notkindof (Graphics3D))
 			throw Exception("Widget for the scene must support 3D graphics!");
 
+		return scene->_widget->
+			append<WidgetLayerComponent<SceneLayer>>()->
+			init(scene)->
+			scene();
+	}
+
+	Scene::Scene(Widget * widget) : Scene()
+	{
 		_widget = widget;
-		_widget->append<Component>(this);
 		connect(this, &Scene::onWidgetResize, *_widget);
 
 		_firstTick = _lastTick = clock::now();
 		_ticks = 0;
+	}
+
+	Scene::~Scene()
+	{
+		for(auto & obj : reverse(_objects))
+			obj = nullptr;
 	}
 
 	Graphics3D & Scene::graphics() const

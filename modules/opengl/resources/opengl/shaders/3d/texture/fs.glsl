@@ -3,7 +3,7 @@
  */
 #version 330 core
 
-uniform sampler2D tex;
+uniform sampler2D texture0;
 
 in Vertex 
 {
@@ -14,5 +14,5 @@ out vec4 fscolor;
 
 void main(void)
 {
-	fscolor = texture2D(tex, input.texcoord);
+	fscolor = texture2D(texture0, input.texcoord);
 }

@@ -10,6 +10,11 @@ layout(std140) uniform Area
 	float depth;
 };
 
+layout(std140) uniform ImageScale
+{
+	vec2 scale;
+};
+
 in vec2 position;
 in vec2 texcoord;
 
@@ -20,6 +25,6 @@ out Vertex
 
 void main(void)
 {
-	output.texcoord = texcoord;
+	output.texcoord = texcoord * scale;
     gl_Position = vec4(position * size + pos, depth, 1.0);
 }

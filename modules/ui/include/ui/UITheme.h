@@ -2,14 +2,23 @@
 
 #pragma once
 
-#ifndef PANEL_H
-#define PANEL_H
+#ifndef UI_THEME_H
+#define UI_THEME_H
 
 //---------------------------------------------------------------------------
 
-#include "Widget.h"
+#include <ui/UIPalette.h>
 
 //---------------------------------------------------------------------------
+
+namespace Rapture
+{
+	class UITheme
+	{
+	public:
+		virtual void apply(UIPalette * palette) = 0;
+	};
+}
 
 //---------------------------------------------------------------------------
 #endif

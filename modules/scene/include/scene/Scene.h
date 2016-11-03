@@ -106,39 +106,23 @@ namespace Rapture
 		friend class Drawable;
 		friend class SceneObject;
 		friend class Widget;
+		friend class SceneLayer;
 
 		deny_copy(Scene);
 
 	public:
-		class Component : public WidgetLayerComponent 
+		virtual api(scene) ~Scene();
+
+		virtual Handle<Scene> clone(Widget * w) const
 		{
-			class Layer : public WidgetLayer
-			{
-			public:
-				Layer(Scene * scene) : WidgetLayer(INT_MAX), _scene(scene) {}
+			return Handle<Scene, Scene>(w);
+		}
 
-			protected:
-				virtual void draw(Widget * w) override
-				{
-					_scene->draw(_scene->graphics(), scaleToSquare(w->absRegion()));
-				}
-
-				Scene * _scene;
-			};
-
-		public:
-			Component(Widget * widget, Scene * scene) : WidgetLayerComponent(widget, UniqueHandle<Layer>(scene)) {}
-			virtual ~Component() {}
-		};
-
-		api(scene) Scene(Widget * widget, const string & name = "unknown scene");
-		virtual ~Scene() {}
-
-		Graphics3D api(scene) & graphics() const;
-		Widget     api(scene) & widget()   const;
-		UISpace    api(scene) & space()    const;
-		Camera     api(scene) * camera()   const;
-		Viewport   api(scene)   viewport() const;
+		api(scene) Graphics3D & graphics() const;
+		api(scene) Widget     & widget()   const;
+		api(scene) UISpace    & space()    const;
+		api(scene) Camera     * camera()   const;
+		api(scene) Viewport     viewport() const;
 
 		api(scene) void setCamera(Camera * camera);
 
@@ -158,11 +142,23 @@ namespace Rapture
 
 		api(scene) matrix normalMatrix(const matrix & model) const;
 
+		static Handle<Scene> create(Widget * widget)
+		{
+			Handle<Scene, Scene> h(widget);
+			Scene::construct(h);
+
+			return h;
+		}
+
 	protected:
-		Scene(const string & name) : Named(name) { setclass(Scene); }
+		friend_owned_handle(Scene, Scene);
+		static api(scene) Handle<Scene> construct(const Handle<Scene> & scene);
+
+		api(scene) Scene(Widget * widget);
+		Scene() { setclass(Scene); }
 
 		virtual api(scene) void draw(Graphics3D & graphics, const IntRect & viewport) const;
-		api(scene) void onWidgetResize(Handle<WidgetResizeMessage> & msg, Widget & w);
+		virtual api(scene) void onWidgetResize(Handle<WidgetResizeMessage> & msg, Widget & w);
 
 		Camera * _camera = nullptr;
 		Widget * _widget = nullptr;
@@ -177,7 +173,31 @@ namespace Rapture
 		ticks_t _ticks = 0;
 	};
 
-	create_component(scene, Scene::Component);
+	class SceneLayer : public WidgetLayer
+	{
+	public:
+		SceneLayer(const Handle<Scene> & scene) : WidgetLayer(limits<int>::max()), _scene(scene) {}
+
+		virtual Handle<WidgetLayer> clone(Widget * widget) const
+		{
+			return Handle<SceneLayer>(_scene->clone(widget));
+		}
+
+		const Handle<Scene> & scene() const
+		{
+			return _scene;
+		}
+
+	protected:
+		virtual void draw(Widget * w) override
+		{
+			_scene->draw(_scene->graphics(), scaleToSquare(w->absRegion()));
+		}
+
+		Handle<Scene> _scene;
+	};
+
+	create_layer_component(scene, SceneLayer);
 
 	class SceneProvider
 	{

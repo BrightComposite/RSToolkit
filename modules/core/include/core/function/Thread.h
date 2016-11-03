@@ -15,7 +15,7 @@
 namespace Rapture
 {
 	using std::thread;
-	using this_thread = std::this_thread;
+	namespace this_thread = std::this_thread;
 
 	struct Thread : public Shared
 	{

@@ -13,6 +13,13 @@
 
 namespace Rapture
 {
+	uniform_class
+	(
+		opengl3_3,
+		ImageScale, 1, Vertex,
+		(float2, scale)
+	);
+
 	namespace OpenGL
 	{
 		class GLImage : public Image
@@ -25,11 +32,13 @@ namespace Rapture
 
 			virtual api(opengl3_3) ~GLImage();
 
+			api(opengl3_3) void setSize(const IntSize & size);
+
 			virtual api(opengl3_3) void apply() const override;
 			virtual api(opengl3_3) void requestData(ImageData * output) const override;
 
 		protected:
-			float _scale[2];
+			float2 _scale;
 			uint  _id;
 			GLenum _target;
 			GLGraphics * _graphics;
@@ -268,6 +277,8 @@ namespace Rapture
 			virtual api(opengl3_3) void addBuffer(Handle<Texture> & texture, ImageFormat format = ImageFormat::rgb) override;
 
 		protected:
+			virtual api(opengl3_3) void resize() override;
+
 			GLGraphics * _graphics;
 			ArrayList<GLImage> _textures;
 			GLuint id;

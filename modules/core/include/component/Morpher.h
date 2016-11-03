@@ -13,63 +13,12 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
-{
-	/**
-	 *	Marks the Base class as a root of morphers hierarchy. But you'll still
-	 *	need to create a pool for morphers based on this root with
-	 *	'create_morph_pool' macro.
-	 */
-#define morph_base(Base) using MorphBase = Base; template<class> friend struct MorphType; template<class> friend struct is_morph_type
-
-	type_checker(is_morph_type, MorphBase);
-
-	/**
-	 *	Creates pool of morphers based on the Base class.
-	 */
-#define create_morph_pool(module, Base)				\
-	template<>										\
-	struct api(module) MorphPool<Base>				\
-	{												\
-		static int increment()						\
-		{											\
-			static std::atomic<int> counter;		\
-			return ++counter;						\
-		}											\
-	}
-
-	/**
-	 *	Creates morpher for the Type.
-	 */
-#define create_morph_type(module, Type)				\
-	template<>										\
-	struct api(module) MorphType<Type>				\
-	{												\
-		using Base = typename Type::MorphBase;		\
-		using Pool = MorphPool<Base>;				\
-													\
-		static const char * name()					\
-		{											\
-			return #Type;							\
-		}											\
-													\
-		static int id()								\
-		{											\
-			static int i = Pool::increment();		\
-			return i;								\
-		}											\
-	}
+#include <component/Morpher.hpp>
 
 //---------------------------------------------------------------------------
 
-#define morphid(Type) MorphType<Type>::id()
-
-	template<class Base>
-	struct MorphPool {};
-
-	template<class T>
-	struct MorphType {};
-
+namespace Rapture
+{
 	template<class Base, class ... Owner>
 	class Morpher
 	{

@@ -1,14 +1,14 @@
 # ASD
 ASD is the multi-functional modular set of C++ libraries. The main purpose of this project is to make development on C++ more effective and clear. It is designed to be cross-platform in the nearest future!
 
-The RS-Toolkit does not only extensively use almost every feature of C++ 11/14 (and 17 too?) standards, it also embodies some useful concepts, such as SFINAE, reference-based memory management, RTTI, static-function-based singletons, message (event) system, etc. The focus is made on compile-time programming.
+ASD does not only extensively use almost every feature of C++ 11/14 (and 17 too?) standards, it also embodies some useful concepts, such as SFINAE, reference-based memory management, RTTI, static-function-based singletons, message (event) system, etc. The focus is made on compile-time programming.
 
 Each library has its own power. There is no need to use all the libraries. Feel free to take only libraries which you need!
 
-The RS-Toolkit uses CMake to build the libraries. There are some additional cmake tools that will help you to create new libraries, add sources and manage dependencies in very, VERY simple way. It is really something different.
+ASD uses CMake to build the libraries. There are some additional cmake tools that will help you to create new libraries, add sources and manage dependencies in very, VERY simple way. It is really something different.
 
 ## Possibilities
-What can you do with this now? Do you want to make a small console application which will calculate something? Of course, The asd-Core and the asd-Math modules will provide all necessary utilities to you. And if you need basic control on application lifetime out-of-box, the asd-Application will help you with that...
+What can you do with this now? Do you want to make a small console application which will calculate something? Of course, The asd-Core and the asd-math modules will provide all necessary utilities to you. And if you need basic control on application lifetime out-of-box, the asd-application will help you with that...
 
 But, maybe, you can wish something more complex. Maybe... A video game? Haha, game development is the REAL destination of ASD! The RST will try to provide as much help to you as it can without decreasing of development flexibility.
 

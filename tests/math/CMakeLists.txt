@@ -1,18 +1,18 @@
 #--------------------------------------------------------
-#	RaptureMath test facility
+#	asdMath test facility
 #--------------------------------------------------------
 
-project(RaptureMathTest CXX)
+project(asdMathTest CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(APPLICATION)
 	dependencies(
-		RaptureApplication "application"
+		asdApplication "application"
 	)
 
 	sources(tests)

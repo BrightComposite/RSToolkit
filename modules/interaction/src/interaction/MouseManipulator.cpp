@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	static const IntPoint center {5, 5};
 
@@ -32,7 +32,7 @@ namespace Rapture
 		// increase smoothness
 		delta.x = fmath::pow(delta.x / center.x, 3) * center.x;
 		delta.y = fmath::pow(delta.y / center.y, 3) * center.y;
-		
+
 		_widget->space()->setCursorPos(center);
 		_current = center;
 
@@ -55,7 +55,7 @@ namespace Rapture
 		if(_enabled)
 			toggle();
 	}
-	
+
 	void MouseManipulator::toggle()
 	{
 		if(!_enabled)

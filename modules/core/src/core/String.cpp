@@ -8,7 +8,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	string narrow(const wstring & wide)
 	{

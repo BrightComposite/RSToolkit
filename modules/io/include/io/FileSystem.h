@@ -15,7 +15,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	using boost::filesystem::file_size;
 	using boost::filesystem::path;
@@ -37,9 +37,9 @@ namespace Rapture
 }
 
 template<class Str>
-inline auto operator + (const Rapture::path & filepath, const Str & s)
+inline auto operator + (const asd::path & filepath, const Str & s)
 {
-	return Rapture::path(filepath).concat(s);
+	return asd::path(filepath).concat(s);
 }
 
 //---------------------------------------------------------------------------

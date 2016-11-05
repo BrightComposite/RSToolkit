@@ -11,7 +11,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	template<class T>
 	struct sfinae_int { sfinae_int(int) {} };
@@ -118,6 +118,8 @@ namespace Rapture
 
 	template<class R, class F, class ... A>
 	using can_transform_to = is_convertible<decltype(declval<F>()(declval<A>()...)), R>;
+
+	method_checker(can_clone, clone);
 
 //---------------------------------------------------------------------------
 

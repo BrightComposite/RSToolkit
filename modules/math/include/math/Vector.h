@@ -15,7 +15,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	template<typename T>
 	struct Vector;

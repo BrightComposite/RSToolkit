@@ -1,26 +1,26 @@
 #--------------------------------------------------------
-#	Rapture UI Test
+#	asd UI Test
 #--------------------------------------------------------
 
-project(RaptureUITest CXX)
+project(asdUITest CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(APPLICATION)
 	dependencies(
-		RaptureApplication "application"
-		RaptureFreeImage   "freeimage"
-		RaptureFreeType    "freetype"
+		asdApplication "application"
+		asdFreeImage   "freeimage"
+		asdFreeType    "freetype"
 	)
 
 if(${USE_DIRECT3D} EQUAL 1)
-    dependencies(RaptureDirect3D11 "direct3d")
+    dependencies(asdDirect3D11 "direct3d")
 else()
-    dependencies(RaptureOpenGL3_3 "opengl")
+    dependencies(asdOpenGL3_3 "opengl")
 endif()
 
 	sources(tests)

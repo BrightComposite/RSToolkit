@@ -1,17 +1,17 @@
 #--------------------------------------------------------
-#	Rapture Input/Output facilities
+#	asd Input/Output facilities
 #--------------------------------------------------------
 
-project(RaptureIO CXX)
+project(asdIO CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(INLINE)
-	dependencies(RaptureMeta "meta")
+	dependencies(asdMeta "meta")
 
 	sources(modules)
 		domain(io)

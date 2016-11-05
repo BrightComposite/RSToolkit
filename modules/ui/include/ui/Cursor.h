@@ -12,7 +12,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	class UISpace;
 	class CursorPool;

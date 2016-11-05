@@ -4,12 +4,12 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	static Entrance open([]()
     {
         // PLACE YOUR CODE HERE! GOOD LUCK :)
-        
+
         return 0;
     });
 }

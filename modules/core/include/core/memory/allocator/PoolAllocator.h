@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	template<typename Pool>
 	using pool_t = typename Pool::type;

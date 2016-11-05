@@ -10,7 +10,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 #define setclass(...) this->_class = getclass(__VA_ARGS__)
 

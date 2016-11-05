@@ -1,23 +1,23 @@
 #--------------------------------------------------------
-#	Rapture FreeImage adaptation
+#	asd FreeImage adaptation
 #--------------------------------------------------------
 
-project(RaptureFreeImage CXX)
+project(asdFreeImage CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(RaptureGraphics "graphics")
+	dependencies(asdGraphics "graphics")
 
 	api(freeimage)
-	
+
 	sources(modules)
 		domain(freeimage)
-		
+
 		group(include Headers)
 		files(FreeImageConverter.h)
 

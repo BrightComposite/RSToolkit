@@ -12,7 +12,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	enum class ColorFormat
 	{

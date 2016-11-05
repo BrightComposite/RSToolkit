@@ -1,3 +1,3 @@
 @echo off
-call rs-make vs32
-call rs-make vs64
+call asd-make vs32
+call asd-make vs64

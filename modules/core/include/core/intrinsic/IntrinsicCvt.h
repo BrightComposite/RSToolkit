@@ -17,7 +17,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 #define mk_shuffle_2(a, b) (((b) << 1) | (a))
 #define mk_shuffle_4(a, b, c, d) (((d) << 6) | ((c) << 4) | ((b) << 2) | (a))

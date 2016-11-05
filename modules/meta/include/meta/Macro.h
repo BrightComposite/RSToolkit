@@ -19,7 +19,7 @@
 #define ARCH_X86
 #endif // defined
 
-#define api(module) rapture_##module##_api
+#define api(module) asd_##module##_api
 
 #ifndef __min
     #define __min(x, y) (((x) < (y)) ? (x) : (y))
@@ -37,17 +37,17 @@
 #endif
 
 #ifdef WIN32
-#define rapture_import_api __declspec(dllimport)
-#define rapture_export_api __declspec(dllexport)
+#define asd_import_api __declspec(dllimport)
+#define asd_export_api __declspec(dllexport)
 #else
-#define rapture_import_api
-#define rapture_export_api
+#define asd_import_api
+#define asd_export_api
 #endif
 
 #define apistruct(module) template struct api(module)
 #define apiclass(module)  template class  api(module)
 
-namespace Rapture
+namespace asd
 {
     using std::forward;
     using std::move;
@@ -122,12 +122,6 @@ namespace Rapture
 	auto acquire(T * object, F functor, A &&... args) -> decltype(functor(object, forward<A>(args)...))
 	{
 		return object != nullptr ? functor(object, forward<A>(args)...) : 0;
-	}
-
-	template<class T, class U, class = enable_if_t<is_convertible<U &&, T>::value>>
-	void fast_cast(T & target, U && source)
-	{
-		target = static_cast<T>(forward<U>(source));
 	}
 
 	template<class T>

@@ -1,8 +1,8 @@
 @echo off
 
-echo ษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-echo บ -------------- Rapture State Toolkit make tool -------------- บ
-echo ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ
+echo ษอออออออออออออออออออออออออออออออออออออออออออออออออป
+echo บ ---------------- ASD make tool ---------------- บ
+echo ศอออออออออออออออออออออออออออออออออออออออออออออออออผ
 
 if "%~1" EQU "all" (
 	set build_vs_86="1"
@@ -50,9 +50,9 @@ set here=%~dp0
 cd ..
 
 if %build_vs_86% EQU "1" (
-	echo =================================================================
-	echo == Making Visual Studio ^(x86^) version of Rapture State Toolkit ==
-	echo =================================================================
+	echo ===============================================
+	echo == Making Visual Studio ^(x86^) version of ASD ==
+	echo ===============================================
 	cmake -E make_directory build-vs-x86
 	cd "build-vs-x86"
 	cmake -G "Visual Studio 14 2015" %here%..
@@ -60,9 +60,9 @@ if %build_vs_86% EQU "1" (
 )
 
 if %build_vs_64% EQU "1"  (
-	echo =================================================================
-	echo == Making Visual Studio ^(x64^) version of Rapture State Toolkit ==
-	echo =================================================================
+	echo ===============================================
+	echo == Making Visual Studio ^(x64^) version of ASD ==
+	echo ===============================================
 	cmake -E make_directory build-vs-x64
 	cd "build-vs-x64"
 	cmake -G "Visual Studio 14 2015 Win64" %here%..
@@ -70,9 +70,9 @@ if %build_vs_64% EQU "1"  (
 )
 
 if %build_cb% EQU "1"  (
-	echo =================================================================
-	echo ====== Making Code Blocks version of Rapture State Toolkit ======
-	echo =================================================================
+	echo ===============================================
+	echo ====== Making Code Blocks version of ASD ======
+	echo ===============================================
 	cmake -E make_directory build-cb
 	cd "build-cb"
 	set CC=x86_64-w64-mingw32-gcc
@@ -82,9 +82,9 @@ if %build_cb% EQU "1"  (
 )
 
 if %build_qt% EQU "1"  (
-	echo =================================================================
-	echo ====== Making Qt Creator version of Rapture State Toolkit =======
-	echo =================================================================
+	echo ===============================================
+	echo ====== Making Qt Creator version of ASD =======
+	echo ===============================================
 	cmake -E make_directory build-qt
 	cd "build-qt"
 	set CC=x86_64-w64-mingw32-gcc
@@ -94,9 +94,9 @@ if %build_qt% EQU "1"  (
 )
 
 if %build_clang% EQU "1"  (
-	echo =================================================================
-	echo ========= Making Clang version of Rapture State Toolkit =========
-	echo =================================================================
+	echo ===============================================
+	echo ========= Making Clang version of ASD =========
+	echo ===============================================
 	cmake -E make_directory build-clang
 	cd "build-clang"
 	set CXX=cl

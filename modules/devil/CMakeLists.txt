@@ -1,18 +1,18 @@
 #--------------------------------------------------------
-#	Rapture DevIL adaptation
+#	asd DevIL adaptation
 #--------------------------------------------------------
 
-project(RaptureDevIL CXX)
+project(asd-DevIL CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_ROOT}/tools/project.cmake)
+include(${ASD_ROOT}/tools/project.cmake)
 
 #--------------------------------------------------------
 
 start_module(
 	SHARED
-	RaptureImageIO "io"
+	asd-ImageIO "io"
 )
 
 set_module_folder(modules)

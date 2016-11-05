@@ -20,7 +20,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	using std::cout;
 	using std::endl;

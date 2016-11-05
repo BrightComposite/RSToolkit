@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	template <> const byte	 IntrinZero<byte>		::value = 0;
 	template <> const int	 IntrinZero<int>		::value = 0;

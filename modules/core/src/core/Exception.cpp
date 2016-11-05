@@ -9,7 +9,7 @@
 
 #define EXC_BUFFER_SIZE 256
 
-namespace Rapture
+namespace asd
 {
 	void viewException(const exception & ex)
 	{

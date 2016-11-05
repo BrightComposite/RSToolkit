@@ -16,7 +16,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	implement_link(OpenGL3_3::GLGraphics);
 
@@ -435,7 +435,7 @@ namespace Rapture
 
 			for(auto & p : _shaderPrograms)
 			{
-				auto id = handle_cast<GLShaderProgram>(valueof(p))->id;
+				auto id = cast::as<GLShaderProgram>(valueof(p))->id;
 				auto block = glGetUniformBlockIndex(id, name);
 
 				if(block != GL_INVALID_INDEX)

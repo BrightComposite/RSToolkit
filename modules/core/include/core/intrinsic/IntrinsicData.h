@@ -30,7 +30,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	template<class T, int N>
 	struct IntrinType {};

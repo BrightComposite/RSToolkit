@@ -12,7 +12,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	using std::thread;
 	namespace this_thread = std::this_thread;

@@ -11,7 +11,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	struct DefaultAllocator
 	{

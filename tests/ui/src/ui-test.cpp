@@ -34,7 +34,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	static int render(Handle<Window> & window)
 	{
@@ -91,14 +91,14 @@ namespace Rapture
 		w->setPlacement(ModelMask::RightTop, -20, 20, 120, 80);
 
 		ColoredButtonDecorator decorator;
-		/*
+
 		decorator
 			.background({0.4f, 0.4f, 0.4f})
 			.pressed({0.1f, 0.1f, 0.1f})
 			.hovered({0.6f, 0.6f, 0.6f})
 			.boundary({0.5f, 0.5f, 0.5f}, 1)
 			.decorate(w);
-			*/
+
 		Text::setContents(w, "Hello!");
 
 		Color backgroundColor(0.2f, 0.2f, 0.2f);
@@ -106,7 +106,7 @@ namespace Rapture
 		graphics->setClearColor(backgroundColor);
 		window->setBackgroundColor(backgroundColor);
 
-		window->setCaption("Rapture::UI test");
+		window->setCaption("asd::UI test");
 
 		window->attachThread();
 		window->show();

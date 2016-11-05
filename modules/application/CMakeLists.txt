@@ -1,24 +1,24 @@
 #--------------------------------------------------------
-#	Rapture Application
+#	asd Application
 #--------------------------------------------------------
 
-project(RaptureApplication CXX)
+project(asdApplication CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(SHARED)
 	dependencies(
-		RaptureCore "core"
-		RapturePlatform "platform"
+		asdCore "core"
+		asdPlatform "platform"
 	)
 
 	sources(modules)
 		domain(application)
-		
+
 		group(include Headers)
 		files(
 			Application.h

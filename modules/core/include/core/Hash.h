@@ -13,7 +13,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	template<class T>
 	struct hash : std::hash<T> {};
@@ -77,7 +77,7 @@ namespace Rapture
 		Hashed & operator = (A && val)
 		{
 			T::operator = (forward<A>(val));
-			_hashValue = Rapture::hash(static_cast<T &>(*this));
+			_hashValue = asd::hash(static_cast<T &>(*this));
 
 			return *this;
 		}
@@ -100,8 +100,8 @@ namespace Rapture
 		T _inner;
 
 	public:
-		Hashed() : _inner(), _hashValue(Rapture::hash(_inner)) {}
-		Hashed(T inner) : _inner(inner), _hashValue(Rapture::hash(_inner)) {}
+		Hashed() : _inner(), _hashValue(asd::hash(_inner)) {}
+		Hashed(T inner) : _inner(inner), _hashValue(asd::hash(_inner)) {}
 		Hashed(const Hashed & val) : _inner(val._inner), _hashValue(val._hashValue) {}
 
 		Hashed & operator = (const Hashed & val)
@@ -115,7 +115,7 @@ namespace Rapture
 		Hashed & operator = (const T & val)
 		{
 			_inner = val;
-			_hashValue = Rapture::hash(_inner);
+			_hashValue = asd::hash(_inner);
 
 			return *this;
 		}

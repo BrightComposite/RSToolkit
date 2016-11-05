@@ -6,13 +6,13 @@ project(@module_path@ CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(APPLICATION)
 	dependencies(
-		RaptureApplication "application"
+		asd-Application "application"
 	)
 
 	sources(tests)

@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	implement_link(Direct3D::D3DGraphics);
 

@@ -16,7 +16,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 #define enum_image_formats(op)	\
 	op(rgb,     3)				\

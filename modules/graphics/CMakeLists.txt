@@ -1,24 +1,24 @@
 #--------------------------------------------------------
-#	Rapture Graphics
+#	asd Graphics
 #--------------------------------------------------------
 
-project(RaptureGraphics CXX)
+project(asdGraphics CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(SHARED)
 	dependencies(
-		RaptureMath "math"
-		RaptureIO "io"
+		asdMath "math"
+		asdIO "io"
 	)
 
 	sources(modules)
 		domain(graphics)
-		
+
 		group(include Headers)
 		files(
 			Color.h

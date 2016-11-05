@@ -9,7 +9,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	wstring getDir(const wstring & path);
 

@@ -6,7 +6,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	using std::ifstream;
 	using std::ios_base;

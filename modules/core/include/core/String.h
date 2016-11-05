@@ -28,7 +28,7 @@ using std::locale;
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	class String;
 	class WideString;
@@ -1180,9 +1180,9 @@ namespace Rapture
 	};
 
 	template<>
-	struct lookup3hash<Rapture::String> : std::unary_function<Rapture::String, size_t>
+	struct lookup3hash<asd::String> : std::unary_function<asd::String, size_t>
 	{
-		typedef Rapture::String _Kty;
+		typedef asd::String _Kty;
 
 		size_t operator () (const _Kty& _Keyval) const
 		{
@@ -1191,9 +1191,9 @@ namespace Rapture
 	};
 
 	template<>
-	struct lookup3hash<Rapture::WideString> : std::unary_function<Rapture::WideString, size_t>
+	struct lookup3hash<asd::WideString> : std::unary_function<asd::WideString, size_t>
 	{
-		typedef Rapture::WideString _Kty;
+		typedef asd::WideString _Kty;
 
 		size_t operator () (const _Kty& _Keyval) const
 		{

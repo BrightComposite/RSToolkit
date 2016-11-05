@@ -1,23 +1,23 @@
 #--------------------------------------------------------
-#	Rapture OpenGL 3.3
+#	asd OpenGL 3.3
 #--------------------------------------------------------
 
-project(RaptureOpenGL3_3 CXX)
+project(asdOpenGL3_3 CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
-include(${RAPTURE_TOOLS}/shaders.cmake)
+include(${ASD_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/shaders.cmake)
 
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(RaptureUI "ui")
+	dependencies(asdUI "ui")
 	api(opengl3_3)
 
 	sources(modules)
 		domain(opengl)
-		
+
 		group(include Headers)
 		files(
 			GLObjects.h
@@ -36,7 +36,7 @@ module(SHARED)
 		)
 
 		domain(opengl/shaders)
-		
+
 		group(resources Resources)
 		shaders(GLSL
 			2d/
@@ -70,7 +70,7 @@ module(SHARED)
 		group(include Headers)
 		domain(opengl/shaders)
 		shaders_output(Shaders.h)
-		
+
 		domain(graphics)
 		files(Provider.h)
 	endsources()

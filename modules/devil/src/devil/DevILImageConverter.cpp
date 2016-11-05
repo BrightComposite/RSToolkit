@@ -8,7 +8,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	void DevILImageConverter::initialize()
 	{

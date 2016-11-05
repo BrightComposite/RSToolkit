@@ -6,7 +6,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	void MotionState::getWorldTransform(btTransform & trans) const
 	{
@@ -37,7 +37,7 @@ namespace Rapture
 	{
 		return _rigidBody->getLinearVelocity();
 	}
-	
+
 	void PhysicalLayer::update(btDynamicsWorld * world, btScalar timeStep)
 	{
 		auto * w = static_cast<PhysicalLayer *>(world->getWorldUserInfo());

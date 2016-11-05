@@ -18,13 +18,13 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	class Font;
 	class Font;
 	class Graphics;
 
-	using Rapture::Font; // specially for Windows Font
+	using asd::Font; // specially for Windows Font
 
 	class SymbolData : public ImageData
 	{

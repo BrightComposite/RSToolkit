@@ -11,7 +11,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 
 #define OPS_ASSIGN(getter)     getter(assign,      =)

@@ -6,7 +6,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	using converter_t = void(*)(ImageData *);
 

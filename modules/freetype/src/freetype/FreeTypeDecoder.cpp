@@ -10,7 +10,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	static FT_Library ft;
 

@@ -15,7 +15,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	template<class ... A>
 	class Handle;
@@ -149,7 +149,7 @@ namespace Rapture
 	/**
 	 *  @brief
 	 *  The Handle class is the very important component in
-	 *	memory-management of Rapture State Toolkit. It is used to fully
+	 *	memory-management of asd. It is used to fully
 	 *	control life-time of objects.
 	 *  It contains functions for allocating, deallocating, referencing and
 	 *  releasing of objects of the type T.
@@ -257,13 +257,13 @@ namespace Rapture
 			static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
 		}
 
-		template<class U>
+		template<class U, useif<std::is_convertible<U *, T *>::value>>
 		static Handle cast(const Handle<U> & handle)
 		{
 			return static_cast<T *>(handle._shared);
 		}
 
-		template<class U>
+		template<class U, useif<std::is_convertible<U *, T *>::value>>
 		static Handle cast(Handle<U> && handle)
 		{
 			Handle h = static_cast<T *>(handle._shared);
@@ -515,13 +515,13 @@ namespace Rapture
 			return ptr_hash<T>(_shared);
 		}
 
-		template<class U>
+		template<class U, useif<std::is_convertible<U *, T *>::value>>
 		static Handle cast(const Handle<U, Owner> & h)
 		{
 			return static_cast<T *>(h._shared);
 		}
 
-		template<class U>
+		template<class U, useif<std::is_convertible<U *, T *>::value>>
 		static Handle cast(Handle<U, Owner> && handle)
 		{
 			Handle h = static_cast<T *>(handle._shared);
@@ -620,13 +620,13 @@ namespace Rapture
 			static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
 		}
 
-		template<class U>
+		template<class U, useif<std::is_convertible<const U *, const T *>::value>>
 		static Handle cast(const Handle<const U> & handle)
 		{
 			return static_cast<const T *>(handle._shared);
 		}
 
-		template<class U>
+		template<class U, useif<std::is_convertible<const U *, const T *>::value>>
 		static Handle cast(Handle<const U> && handle)
 		{
 			Handle h = static_cast<const T *>(handle._shared);
@@ -866,13 +866,13 @@ namespace Rapture
 			return ptr_hash<T>(inptr_());
 		}
 
-		template<class U>
+		template<class U, useif<std::is_convertible<const U *, const T *>::value>>
 		static Handle cast(const Handle<const U, Owner> & h)
 		{
 			return static_cast<const T *>(h._shared);
 		}
 
-		template<class U>
+		template<class U, useif<std::is_convertible<const U *, const T *>::value>>
 		static Handle cast(Handle<const U, Owner> && handle)
 		{
 			Handle h = static_cast<const T *>(handle._shared);
@@ -896,25 +896,25 @@ namespace Rapture
 		static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
 	}
 
-	template<class T, class U>
+	template<class T, class U, useif<std::is_convertible<U *, T *>::value>>
 	Handle<T> handle_cast(const Handle<U> & h)
 	{
 		return Handle<T>::cast(h);
 	}
 
-	template<class T, class U, class Owner>
+	template<class T, class U, class Owner, useif<std::is_convertible<U *, T *>::value>>
 	Handle<T, Owner> handle_cast(const Handle<U, Owner> & h)
 	{
 		return Handle<T, Owner>::cast(h);
 	}
 
-	template<class T, class U>
+	template<class T, class U, useif<std::is_convertible<U *, T *>::value>>
 	Handle<T> handle_cast(Handle<U> && h)
 	{
 		return Handle<T>::cast(move(h));
 	}
 
-	template<class T, class U, class Owner>
+	template<class T, class U, class Owner, useif<std::is_convertible<U *, T *>::value>>
 	Handle<T, Owner> handle_cast(Handle<U, Owner> && h)
 	{
 		return Handle<T, Owner>::cast(move(h));
@@ -935,7 +935,7 @@ namespace Rapture
 	template<class T>
 	void share(T && x)
 	{
-		static_assert(false, "RaptureCore error: Can't share the temporary object!");
+		static_assert(false, "asdCore error: Can't share the temporary object!");
 	}
 
 	class SharedIdentifier : public EmptyHandle
@@ -1232,6 +1232,47 @@ namespace Rapture
 	}
 
 //---------------------------------------------------------------------------
+}
+
+	_useif_class(sfinae_handle);
+
+#define handleif			_useif(sfinae_handle)
+#define handleif_t			_useif_t(sfinae_handle)
+
+	template<bool ... Others>
+	struct use_filter_t<sfinae_handle, Others...> : use_filter_t<sfinae_use, Others...> {};
+
+namespace asd
+{
+	namespace cast
+	{
+		template<class T, class Y, handleif<(based_on<T, Y>::value || based_on<Y, T>::value)>>
+		inline Handle<T> as(const Handle<Y> & x)
+		{
+			return static_cast<T *>(static_cast<Y *>(x));
+		}
+
+		template<class T, class Y, handleif<(based_on<T, Y>::value || based_on<Y, T>::value)>>
+		inline Handle<T> as(Handle<Y> && x)
+		{
+			Handle<T> out = static_cast<T *>(static_cast<Y *>(x));
+			x = nullptr;
+			return out;
+		}
+
+		template<class T, class Y, class Owner, handleif<(based_on<T, Y>::value || based_on<Y, T>::value)>>
+		inline Handle<T, Owner> as(const Handle<Y, Owner> & x)
+		{
+			return Handle<T, Owner>::cast(x);
+		}
+
+		template<class T, class Y, class Owner, handleif<(based_on<T, Y>::value || based_on<Y, T>::value)>>
+		inline Handle<T, Owner> as(Handle<Y, Owner> && x)
+		{
+			return Handle<T, Owner>::cast(move(x));
+		}
+	}
+//---------------------------------------------------------------------------
 
 	template<class T, class R, class C, class ... A>
 	struct method_wrapper<Handle<T>, R(C::*)(A...)>
@@ -1288,34 +1329,6 @@ namespace Rapture
 		T * object;
 		MethodType method;
 	};
-
-//---------------------------------------------------------------------------
-
-	template<class T, class U, useif<is_convertible<U &&, T *>::value>>
-	void fast_cast(Handle<T> & target, U && source)
-	{
-		target = static_cast<T *>(forward<U>(source));
-	}
-
-	template<class T, class U, useif<is_convertible<U &&, T *>::value>>
-	void fast_cast(Unique<T> & target, U && source)
-	{
-		target = static_cast<T *>(forward<U>(source));
-	}
-
-	//---------------------------------------------------------------------------
-
-	template<class T, class Owner>
-	struct VariableInitializer<Handle<T, Owner>>
-	{
-		static Handle<T, Owner> initialize()
-		{
-			return {default_init};
-		}
-	};
-
-	template<class T, class Owner = Empty, class ThreadingModel = CommonThreadingModel>
-	struct HandleSingleton : Shared, CopySingleton<Handle<T, Owner>, ThreadingModel> {};
 
 //---------------------------------------------------------------------------
 
@@ -1401,17 +1414,17 @@ namespace Rapture
 
 //---------------------------------------------------------------------------
 
-#define friend_handle														\
-	template<class ...>		  friend class  ::Rapture::Handle;				\
-	template<class ...>		  friend class  ::Rapture::UniqueHandle;	    \
-	template<class>			  friend struct ::Rapture::PointerDeleter;		\
-	template<class, class...> friend struct ::Rapture::is_constructible;
+#define friend_handle													\
+	template<class ...>		  friend class  ::asd::Handle;				\
+	template<class ...>		  friend class  ::asd::UniqueHandle;	    \
+	template<class>			  friend struct ::asd::PointerDeleter;		\
+	template<class, class...> friend struct ::asd::is_constructible;
 
-#define friend_owned_handle(...)											\
-	friend class ::Rapture::Handle<__VA_ARGS__>;				            \
-	friend class ::Rapture::UniqueHandle<__VA_ARGS__>;						\
-	template<class>	friend struct ::Rapture::PointerDeleter;	            \
-	template<class, class...> friend struct ::Rapture::is_constructible;
+#define friend_owned_handle(...)										\
+	friend class ::asd::Handle<__VA_ARGS__>;				            \
+	friend class ::asd::UniqueHandle<__VA_ARGS__>;						\
+	template<class>	friend struct ::asd::PointerDeleter;	            \
+	template<class, class...> friend struct ::asd::is_constructible;
 
 //---------------------------------------------------------------------------
 #endif

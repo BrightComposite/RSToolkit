@@ -16,7 +16,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	template<>
 	struct Cast<btVector3, vector>
@@ -71,7 +71,7 @@ namespace Rapture
 		}
 	};
 
-	class Physical; 
+	class Physical;
 
 	link_class(physics, Physical, Class<>);
 
@@ -137,7 +137,7 @@ namespace Rapture
 
 		virtual void contactWith(Physical * physical, const ContactInfo & info)
 		{
-		
+
 		}
 
 	protected:

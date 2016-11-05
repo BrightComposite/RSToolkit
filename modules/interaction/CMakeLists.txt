@@ -1,21 +1,21 @@
 #--------------------------------------------------------
-#	Rapture Interaction
+#	asd Interaction
 #--------------------------------------------------------
 
-project(RaptureInteraction CXX)
+project(asd-Interaction CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(RaptureUI "ui")
+	dependencies(asd-UI "ui")
 
 	sources(modules)
 		domain(interaction)
-		
+
 		group(include Headers)
 		files(MouseManipulator.h)
 

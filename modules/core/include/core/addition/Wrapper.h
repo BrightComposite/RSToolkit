@@ -12,7 +12,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	template<class T, class Owner>
 	class Wrapper;

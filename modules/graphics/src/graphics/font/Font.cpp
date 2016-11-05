@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	Symbol::Symbol(Graphics * graphics, const SymbolData & data) :
 		_image(graphics->createImage(data)), _left(data.left), _top(data.top), _advance(data.advance), _character(data.character) {}

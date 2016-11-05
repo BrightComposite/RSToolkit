@@ -11,7 +11,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	inline unsigned long crc32(const void * s, size_t size, unsigned long crc)
 	{

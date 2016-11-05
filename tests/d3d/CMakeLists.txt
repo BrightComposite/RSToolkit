@@ -1,27 +1,27 @@
 #--------------------------------------------------------
-#	Rapture Direct3D Test
+#	asd Direct3D Test
 #--------------------------------------------------------
 
-project(RaptureDirect3DTest CXX)
+project(asd-Direct3DTest CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(APPLICATION)
 	dependencies(
-		RaptureApplication "application"
-		RaptureDirect3D11  "direct3d"
-		RaptureFreeImage   "freeimage"
-		RaptureFreeType    "freetype"
+		asd-Application "application"
+		asd-Direct3D11  "direct3d"
+		asd-FreeImage   "freeimage"
+		asd-FreeType    "freetype"
 	)
 
 	sources(tests)
 		group(include Headers)
 		files(matrix-test.h)
-		
+
 		group(src Sources)
 		files(
 			d3d-test.cpp

@@ -7,12 +7,11 @@
 
 //---------------------------------------------------------------------------
 
-#include "Types.h"
 #include "UseIf.h"
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	template<class T, class Example>
 	struct adapt_type

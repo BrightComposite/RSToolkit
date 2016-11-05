@@ -15,7 +15,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	class SceneObject;
 	class Drawable;

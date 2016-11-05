@@ -4,7 +4,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	void Light::apply(Graphics3D & graphics) const
 	{
@@ -75,7 +75,7 @@ namespace Rapture
 
 		g.updateUniform<Uniforms::GlobalLight>(_globalLightColor);
 		g.meshes2d.quad->draw();
-		
+
 		auto am = hold(g.accumulationState(), true);
 
 		_lightTech.point->apply(0);

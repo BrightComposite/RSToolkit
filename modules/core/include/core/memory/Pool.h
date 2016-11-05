@@ -16,7 +16,7 @@
 
 using std::atomic;
 
-namespace Rapture
+namespace asd
 {
 #define erased_block 0xffffffff
 

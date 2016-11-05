@@ -1,28 +1,28 @@
 #--------------------------------------------------------
-#	Rapture Direct3D11
+#	asd Direct3D11
 #--------------------------------------------------------
 
-project(RaptureDirect3D11 CXX)
+project(asd-Direct3D11 CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
-include(${RAPTURE_TOOLS}/shaders.cmake)
+include(${ASD_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/shaders.cmake)
 
 #--------------------------------------------------------
 
 module(SHARED)
 	dependencies(
-		RaptureUI "ui"
+		asd-UI "ui"
 		)
-	
+
 	sources(modules)
 		domain(direct3d)
-	
+
 		group(include Headers)
 		files(
 			Direct3D11.h
-			
+
 			shaders/
 				Shaders.h
 			)
@@ -38,7 +38,7 @@ module(SHARED)
 			)
 
 		domain(direct3d/shaders)
-		
+
 		group(resources Resources)
 		shaders(HLSL
 			2d/
@@ -67,11 +67,11 @@ module(SHARED)
 				texture/
 					vs.fx ps.fx
 			)
-			
+
 		group(include Headers)
 		domain(direct3d/shaders)
 		shaders_output(Shaders.h)
-		
+
 		domain(graphics)
 		files(Provider.h)
 	endsources()

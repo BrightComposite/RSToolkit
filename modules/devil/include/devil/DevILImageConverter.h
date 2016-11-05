@@ -11,7 +11,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	class DevILImageConverter : public ImageConverter, public Singleton<DevILImageConverter>
 	{

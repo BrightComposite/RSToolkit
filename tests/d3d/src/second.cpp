@@ -11,7 +11,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	using std::bind;
 
@@ -63,7 +63,7 @@ namespace Rapture
 			auto vec1 = XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f);
 			auto vec2 = vec1;
 
-			cout << "Math facilities comparison (Rapture vs DirectX)." << endl;
+			cout << "Math facilities comparison (asd vs DirectX)." << endl;
 			cout << "Each operation is made " << count << " times." << endl;
 			cout << "This test also shows the advantages of Matrix2x2." << endl;
 
@@ -71,10 +71,10 @@ namespace Rapture
 			cout << "---------------------------------------" << endl;
 			cout << endl;
 
-			cout << "Rapture::Vector: " << v1 << endl;
+			cout << "asd::Vector: " << v1 << endl;
 			cout << "DirectX::XMVECTOR: " << vec1 << endl;
 
-			cout << "Rapture::Matrix2x2: " << mat1 << endl;
+			cout << "asd::Matrix2x2: " << mat1 << endl;
 			cout << "DirectX::XMMATRIX: " << MAT << endl;
 
 			cout << endl;
@@ -89,7 +89,7 @@ namespace Rapture
 			}
 
 			t = duration_cast<nanoseconds>(hrc::now() - last).count();
-			cout << "Rapture array_list and matrix2x2 multiplication time: " << t << endl;
+			cout << "asd array_list and matrix2x2 multiplication time: " << t << endl;
 
 			cout << "Vector: " << v2 << endl;
 
@@ -103,7 +103,7 @@ namespace Rapture
 			}
 
 			t = duration_cast<nanoseconds>(hrc::now() - last).count();
-			cout << "Rapture array_list transformation time (2x2): " << t << endl;
+			cout << "asd array_list transformation time (2x2): " << t << endl;
 
 			cout << "Vector: " << v2 << endl;
 
@@ -135,7 +135,7 @@ namespace Rapture
 			}
 
 			t = duration_cast<nanoseconds>(hrc::now() - last).count();
-			cout << "Rapture matrix2x2 multiplication time: " << t << endl;
+			cout << "asd matrix2x2 multiplication time: " << t << endl;
 
 			cout << "Matrix: " << mat2 << endl;
 
@@ -149,7 +149,7 @@ namespace Rapture
 			}
 
 			t = duration_cast<nanoseconds>(hrc::now() - last).count();
-			cout << "Rapture matrix2x2 self-multiplication time: " << t << endl;
+			cout << "asd matrix2x2 self-multiplication time: " << t << endl;
 
 			cout << "Matrix: " << mat2 << endl;
 
@@ -195,7 +195,7 @@ namespace Rapture
 			}
 
 			t = duration_cast<nanoseconds>(hrc::now() - last).count();
-			cout << "Rapture matrix2x2 transpose time: " << t << endl;
+			cout << "asd matrix2x2 transpose time: " << t << endl;
 
 			cout << "Matrix: " << mat2 << endl;
 
@@ -207,7 +207,7 @@ namespace Rapture
 			}
 
 			t = duration_cast<nanoseconds>(hrc::now() - last).count();
-			cout << "Rapture matrix4x4 transpose time: " << t << endl;
+			cout << "asd matrix4x4 transpose time: " << t << endl;
 
 			cout << "Matrix: " << fmat2 << endl;
 
@@ -242,7 +242,7 @@ namespace Rapture
 			}
 
 			t = duration_cast<nanoseconds>(hrc::now() - last).count();
-			cout << "Rapture array_list sin cos time: " << t << endl;
+			cout << "asd array_list sin cos time: " << t << endl;
 
 			cout << "Sin: " << sv << ". Cos: " << cv << endl;
 
@@ -284,7 +284,7 @@ namespace Rapture
 			}
 
 			t = duration_cast<nanoseconds>(hrc::now() - last).count();
-			cout << "Rapture matrix4x4 rotation time: " << t << endl;
+			cout << "asd matrix4x4 rotation time: " << t << endl;
 
 			cout << "Matrix: " << fmat2 << endl;
 
@@ -316,7 +316,7 @@ namespace Rapture
 			}
 
 			t = duration_cast<nanoseconds>(hrc::now() - last).count();
-			cout << "Rapture matrix4x4 rotation time from Euler: " << t << endl;
+			cout << "asd matrix4x4 rotation time from Euler: " << t << endl;
 
 			cout << "Matrix: " << fmat2 << endl;
 
@@ -348,7 +348,7 @@ namespace Rapture
 			}
 
 			t = duration_cast<nanoseconds>(hrc::now() - last).count();
-			cout << "Rapture matrix2x2 inversion time: " << t << endl;
+			cout << "asd matrix2x2 inversion time: " << t << endl;
 
 			cout << "Matrix: " << mat2 << endl;
 
@@ -360,7 +360,7 @@ namespace Rapture
 			}
 
 			t = duration_cast<nanoseconds>(hrc::now() - last).count();
-			cout << "Rapture matrix4x4 inversion time: " << t << endl;
+			cout << "asd matrix4x4 inversion time: " << t << endl;
 
 			cout << "Matrix: " << fmat2 << endl;
 
@@ -374,7 +374,7 @@ namespace Rapture
 			}
 
 			t = duration_cast<nanoseconds>(hrc::now() - last).count();
-			cout << "Rapture matrix2x2 self-inversion time: " << t << endl;
+			cout << "asd matrix2x2 self-inversion time: " << t << endl;
 
 			cout << "Matrix: " << mat2 << endl;
 
@@ -407,7 +407,7 @@ namespace Rapture
 			}
 
 			t = duration_cast<nanoseconds>(hrc::now() - last).count();
-			cout << "Rapture vectors' time: " << t << endl;
+			cout << "asd vectors' time: " << t << endl;
 
 			cout << "Vector1: " << v1 << endl;
 			cout << "Vector2: " << v2 << endl;
@@ -440,7 +440,7 @@ namespace Rapture
 			}
 
 			t = duration_cast<nanoseconds>(hrc::now() - last).count();
-			cout << "Rapture matrix4x4 clear time: " << t << endl;
+			cout << "asd matrix4x4 clear time: " << t << endl;
 			cout << m4 << endl;
 
 			cout << endl;
@@ -457,10 +457,10 @@ namespace Rapture
 			}
 
 			t = duration_cast<nanoseconds>(hrc::now() - last).count();
-			cout << "Rapture matrix4x4 multiplication time: " << t << endl;
+			cout << "asd matrix4x4 multiplication time: " << t << endl;
 			cout << "Matrix: " << mr << endl;
 
-			Rapture::operator << (cout, mr);
+			asd::operator << (cout, mr);
 
 			cout << endl;
 			cout << "---------------------------------------" << endl;
@@ -508,7 +508,7 @@ namespace Rapture
 			}
 
 			t = duration_cast<nanoseconds>(hrc::now() - last).count();
-			cout << "Rapture matrix4x4 determinant time: " << t << endl;
+			cout << "asd matrix4x4 determinant time: " << t << endl;
 			cout << det[0] << endl;
 
 			cout << endl;
@@ -530,7 +530,7 @@ namespace Rapture
 			cout << "---------------------------------------" << endl;
 			cout << endl;
 		}
-		catch(const Rapture::Exception &)
+		catch(const asd::Exception &)
 		{
 			return 1;
 		}

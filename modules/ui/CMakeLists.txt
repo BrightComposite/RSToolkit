@@ -1,26 +1,26 @@
 #--------------------------------------------------------
-#	Rapture User Interface
+#	asd User Interface
 #--------------------------------------------------------
 
-project(RaptureUI CXX)
+project(asdUI CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(SHARED)
 	dependencies(
-		RaptureGraphics		"graphics"
-		RaptureMessage		"message"
-		RaptureApplication	"application"
-		RapturePlatform		"platform"
+		asdGraphics		"graphics"
+		asdMessage		"message"
+		asdApplication	"application"
+		asdPlatform		"platform"
 	)
 
 	sources(modules)
 		domain(ui)
-		
+
 		group(include Headers)
 		files(
 			Cursor.h

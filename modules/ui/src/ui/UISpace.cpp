@@ -11,7 +11,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	implement_link(UISpace);
 
@@ -75,7 +75,7 @@ namespace Rapture
 	HWND createEmptyWindowHandle()
 	{
 		WNDCLASSEXW wcex;
-		getWindowClass(wcex, L"RaptureEmptyWindowClass", emptyWndProc);
+		getWindowClass(wcex, L"asdEmptyWindowClass", emptyWndProc);
 
 		static int windowCounter = 0;
 		WideString caption("empty", windowCounter++);

@@ -1,23 +1,23 @@
 #--------------------------------------------------------
-#	Rapture platform-dependent facilities
+#	asd platform-dependent facilities
 #--------------------------------------------------------
 
-project(RapturePlatform CXX)
+project(asdPlatform CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(RaptureMath "math")
+	dependencies(asdMath "math")
 
 	sources(modules)
 
 	if(WIN32)
 		domain(windows)
-		
+
 		group(include Headers)
 		files(
 			ComException.h
@@ -32,7 +32,7 @@ module(SHARED)
 	elseif(UNIX)
 
 	endif()
-	
+
 	endsources()
 endmodule()
 

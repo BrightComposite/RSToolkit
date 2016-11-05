@@ -1,21 +1,21 @@
 #--------------------------------------------------------
-#	Rapture Physics
+#	asd Physics
 #--------------------------------------------------------
 
-project(RapturePhysics CXX)
+project(asd-Physics CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(RaptureSpace "space")
+	dependencies(asd-Space "space")
 
 	sources(modules)
 		domain(physics)
-		
+
 		group(include Headers)
 		files(
 			Physics.h

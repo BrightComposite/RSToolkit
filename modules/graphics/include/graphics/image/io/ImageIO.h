@@ -15,7 +15,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	class ImageIO;
 	apistruct(graphics) Singleton<ImageIO>;

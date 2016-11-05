@@ -1,22 +1,22 @@
 #--------------------------------------------------------
-#	Rapture FreeType adaptation
+#	asd FreeType adaptation
 #--------------------------------------------------------
 
-project(RaptureFreeType CXX)
+project(asdFreeType CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(RaptureGraphics "graphics")
+	dependencies(asdGraphics "graphics")
 	api(freetype)
-	
+
 	sources(modules)
 		domain(freetype)
-		
+
 		group(include Headers)
 		files(FreeTypeDecoder.h)
 

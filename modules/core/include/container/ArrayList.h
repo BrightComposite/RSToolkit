@@ -24,7 +24,7 @@ namespace std
 	};
 }
 
-namespace Rapture
+namespace asd
 {
 	using std::array_list;
 

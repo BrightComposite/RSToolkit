@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	namespace Direct3D
 	{

@@ -8,7 +8,8 @@
 //---------------------------------------------------------------------------
 
 #include <container/ArrayList.h>
-#include <component/Component.h>
+#include <morph/Component.h>
+#include <morph/Property.h>
 
 #include <message/Subject.h>
 
@@ -18,7 +19,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	class Widget;
 	class WidgetComponent;
@@ -84,7 +85,7 @@ namespace Rapture
 
 	class WidgetComponent : public Component, public Connector
 	{
-		morph_base(WidgetComponent);
+		components_origin(WidgetComponent);
 
 	public:
 		WidgetComponent(Widget * widget) : _widget(widget) {}
@@ -96,7 +97,14 @@ namespace Rapture
 		Widget * _widget;
 	};
 
-	create_morph_pool(ui, WidgetComponent);
+	create_components_from(ui, WidgetComponent);
+
+	class WidgetProperty : public Property
+	{
+		properties_origin(WidgetProperty);
+	};
+
+	create_properties_from(ui, WidgetProperty);
 
 	class Widget : public Subject
 	{
@@ -116,127 +124,53 @@ namespace Rapture
 
 		virtual inline Handle<Widget> clone(Widget * parent = nullptr) const;
 
-		const IntSize & size() const
-		{
-			return _size;
-		}
+		inline const IntSize & size() const;
+		inline int width() const;
+		inline int height() const;
 
-		int width() const
-		{
-			return _size.x;
-		}
+		inline const IntPoint & pos() const;
+		inline int left() const;
+		inline int top() const;
+		inline int right() const;
+		inline int bottom() const;
+		inline int side(int index) const;
 
-		int height() const
-		{
-			return _size.y;
-		}
+		inline operator IntRect () const;
+		inline IntRect region() const;
+		inline IntRect localRegion() const;
+		inline Viewport viewport() const;
 
-		const IntPoint & pos() const
-		{
-			return _relPos;
-		}
+		inline const IntPoint & absPos() const;
+		inline int absLeft() const;
+		inline int absTop() const;
+		inline int absRight() const;
+		inline int absBottom() const;
 
-		int side(int index) const
-		{
-			switch(index)
-			{
-				case 0:
-					return _relPos.x;
-				case 1:
-					return _relPos.y;
-				case 2:
-					return _relPos.x + _size.x;
-				case 3:
-					return _relPos.y + _size.y;
-				default:
-					return 0;
-			}
-		}
+		inline IntRect absRegion() const;
 
-		int left() const
-		{
-			return _relPos.x;
-		}
+		inline ModelMask alignment() const;
+		inline const IntRect & offsets() const;
+		inline const FloatRect & anchors() const;
 
-		int top() const
-		{
-			return _relPos.y;
-		}
+		inline bool isVisible() const;
+		inline bool isFocusable() const;
+		api(ui) bool isPointed() const;
+		api(ui) bool isFocused() const;
+		api(ui) bool isPressed() const;
+		api(ui) bool isPressed(MouseButton button) const;
 
-		int right() const
-		{
-			return _relPos.x + _size.x;
-		}
+		api(ui) MouseButton pressedButtons() const;
 
-		int bottom() const
-		{
-			return _relPos.y + _size.y;
-		}
+		inline int displayOrder() const;
+		inline int focusOrder() const;
 
-		operator IntRect () const
-		{
-			return {_relPos, _size};
-		}
+		api(ui) UISpace * space() const;
+		api(ui) Graphics * graphics() const;
 
-		IntRect region() const
-		{
-			return {_relPos, _size};
-		}
+		api(ui) Widget * findAt(const IntPoint & pt);
 
-		IntRect localRegion() const
-		{
-			return {_size};
-		}
-
-		Viewport viewport() const
-		{
-			return {_size};
-		}
-
-		const IntPoint & absPos() const
-		{
-			return _absPos;
-		}
-
-		int absLeft() const
-		{
-			return _absPos.x;
-		}
-
-		int absTop() const
-		{
-			return _absPos.y;
-		}
-
-		int absRight() const
-		{
-			return _absPos.x + _size.x;
-		}
-
-		int absBottom() const
-		{
-			return _absPos.y + _size.y;
-		}
-
-		IntRect absRegion() const
-		{
-			return {_absPos, _size};
-		}
-
-		ModelMask alignment() const
-		{
-			return _alignment;
-		}
-
-		const IntRect & offsets() const
-		{
-			return _offsets;
-		}
-
-		const FloatRect & anchors() const
-		{
-			return _anchors;
-		}
+		inline Widget * child(int idx) const;
+		inline void all() const;
 
 		inline void setLeft(int value);
 		inline void setTop(int value);
@@ -269,8 +203,6 @@ namespace Rapture
 		inline Handle<WidgetClass> append(A && ...);
 		template<class LayerClass, typename ... A, selectif(1)<is_layer<LayerClass>::value, !is_widget_component<LayerClass>::value, can_construct<LayerClass, A...>::value>>
 		inline LayerClass * append(A && ...);
-		template<class Component, typename ... A, selectif(2)<is_widget_component<Component>::value, can_construct<Component,  Widget *, A...>::value>>
-		inline Handle<Component> append(A && ...);
 
 		api(ui) Widget * attach(const Handle<Widget> & child);
 		api(ui) void detach(Widget * child);
@@ -289,48 +221,8 @@ namespace Rapture
 		template<class Drawer, useif<is_widget_drawer<Drawer>::value>>
 		inline Widget & operator << (const Drawer & drawer);
 
-		bool isVisible() const
-		{
-			return check_flag(WidgetFlag::Visible, _flags);
-		}
-
-		bool isFocusable() const
-		{
-			return check_flag(WidgetFlag::Focusable, _flags);
-		}
-
-		api(ui) bool isPointed() const;
-		api(ui) bool isFocused() const;
-		api(ui) bool isPressed() const;
-		api(ui) bool isPressed(MouseButton button) const;
-
-		api(ui) MouseButton pressedButtons() const;
-
-		int displayOrder() const
-		{
-			return _displayOrder;
-		}
-
-		int focusOrder() const
-		{
-			return _focusOrder;
-		}
-
-		api(ui) UISpace * space() const;
-		api(ui) Graphics * graphics() const;
-
-		api(ui) Widget * findAt(const IntPoint & pt);
-
-		void show()
-		{
-			setVisibility(true);
-		}
-
-		void hide()
-		{
-			setVisibility(false);
-		}
-
+		api(ui) void show();
+		api(ui) void hide();
 		api(ui) void focus();
 
 		api(ui) void setVisibility(bool visible);
@@ -366,9 +258,8 @@ namespace Rapture
 		virtual api(ui) void read(Handle<AfterWidgetMoveMessage> &);
 		virtual api(ui) void read(Handle<WidgetResizeMessage> &);
 
-		using Components = ComponentSet<WidgetComponent, Widget>;
-
-		Unique<Components, Widget> components;
+		bind_components(Widget, WidgetComponent);
+		bind_properties(Widget, WidgetProperty);
 
 	protected:
 		api(ui) Widget(UISpace * space, Widget * parent, const IntRect & region);
@@ -462,7 +353,7 @@ namespace Rapture
 			Handle<WidgetLayerComponent> c(w);
 
 			if(_layer)
-				c->set(handle_cast<T>(_layer->clone(w)));
+				c->set(cast::as<T>(_layer->clone(w)));
 
 			return c;
 		}
@@ -540,6 +431,158 @@ namespace Rapture
 	};
 
 	create_component(ui, CustomLayerComponent);
+
+	inline const IntSize & Widget::size() const
+	{
+		return _size;
+	}
+
+	inline int Widget::width() const
+	{
+		return _size.x;
+	}
+
+	inline int Widget::height() const
+	{
+		return _size.y;
+	}
+
+	inline const IntPoint & Widget::pos() const
+	{
+		return _relPos;
+	}
+
+	inline int Widget::side(int index) const
+	{
+		switch(index)
+		{
+			case 0:
+				return _relPos.x;
+			case 1:
+				return _relPos.y;
+			case 2:
+				return _relPos.x + _size.x;
+			case 3:
+				return _relPos.y + _size.y;
+			default:
+				return 0;
+		}
+	}
+
+	inline int Widget::left() const
+	{
+		return _relPos.x;
+	}
+
+	inline int Widget::top() const
+	{
+		return _relPos.y;
+	}
+
+	inline int Widget::right() const
+	{
+		return _relPos.x + _size.x;
+	}
+
+	inline int Widget::bottom() const
+	{
+		return _relPos.y + _size.y;
+	}
+
+	inline Widget::operator IntRect () const
+	{
+		return {_relPos, _size};
+	}
+
+	inline IntRect Widget::region() const
+	{
+		return {_relPos, _size};
+	}
+
+	inline IntRect Widget::localRegion() const
+	{
+		return {_size};
+	}
+
+	inline Viewport Widget::viewport() const
+	{
+		return {_size};
+	}
+
+	inline const IntPoint & Widget::absPos() const
+	{
+		return _absPos;
+	}
+
+	inline int Widget::absLeft() const
+	{
+		return _absPos.x;
+	}
+
+	inline int Widget::absTop() const
+	{
+		return _absPos.y;
+	}
+
+	inline int Widget::absRight() const
+	{
+		return _absPos.x + _size.x;
+	}
+
+	inline int Widget::absBottom() const
+	{
+		return _absPos.y + _size.y;
+	}
+
+	inline IntRect Widget::absRegion() const
+	{
+		return {_absPos, _size};
+	}
+
+	inline ModelMask Widget::alignment() const
+	{
+		return _alignment;
+	}
+
+	inline const IntRect & Widget::offsets() const
+	{
+		return _offsets;
+	}
+
+	inline const FloatRect & Widget::anchors() const
+	{
+		return _anchors;
+	}
+
+	inline bool Widget::isVisible() const
+	{
+		return check_flag(WidgetFlag::Visible, _flags);
+	}
+
+	inline bool Widget::isFocusable() const
+	{
+		return check_flag(WidgetFlag::Focusable, _flags);
+	}
+
+	inline int Widget::displayOrder() const
+	{
+		return _displayOrder;
+	}
+
+	inline int Widget::focusOrder() const
+	{
+		return _focusOrder;
+	}
+
+	inline Widget * Widget::child(int idx) const
+	{
+		return _displayList[idx];
+	}
+
+	inline void Widget::all() const
+	{
+
+	}
 
 	inline void Widget::setLeft(int value)
 	{
@@ -694,12 +737,6 @@ namespace Rapture
 	inline LayerClass * Widget::append(A && ... args) // append layer
 	{
 		return require<CustomLayerComponent>()->add(Handle<LayerClass>(forward<A>(args)...));
-	}
-
-	template<class Component, typename ... A, selected_t(2)> // append component
-	inline Handle<Component> Widget::append(A && ... args)
-	{
-		return _components.construct<Component>(this, forward<A>(args)...);
 	}
 
 	template<class LayerClass, used_t>

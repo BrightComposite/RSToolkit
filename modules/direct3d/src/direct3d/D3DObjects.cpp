@@ -4,7 +4,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	namespace Direct3D
 	{
@@ -76,7 +76,7 @@ namespace Rapture
 		{
 			if(vd.size % layout->stride != 0)
 				throw Exception("Size of vertex buffer doesn't matches its vertex input layout");
-			
+
 			D3D11_BUFFER_DESC bd;
 			ZeroMemory(&bd, sizeof(bd));
 			bd.Usage = D3D11_USAGE_DEFAULT;
@@ -476,7 +476,7 @@ namespace Rapture
 				elementDesc.InputSlot = 0;
 				elementDesc.AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
 				elementDesc.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-				elementDesc.InstanceDataStepRate = 0;   
+				elementDesc.InstanceDataStepRate = 0;
 
 				if(paramDesc.Mask == 1)
 					elementDesc.Format = DXGI_FORMAT_R32_FLOAT;
@@ -488,7 +488,7 @@ namespace Rapture
 					elementDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 
 				descs.push_back(elementDesc);
-			}       
+			}
 
 			com_assert(
 				graphics->device->CreateInputLayout(descs.data(), static_cast<uint>(descs.size()), vscode->ptr, vscode->size, pInputLayout)

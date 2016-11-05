@@ -6,13 +6,13 @@ project(@module_path@ CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(SHARED)
 	dependencies(
-		# RaptureCore "core"
+		# asd-Core "core"
 	)
 
 	sources(@module_domain@)
@@ -20,7 +20,7 @@ module(SHARED)
 		files(
 			# headers
 		)
-		
+
 		group(src Sources)
 		files(
 			# sources

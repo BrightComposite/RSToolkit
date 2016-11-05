@@ -13,7 +13,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	class FreeImageConverter : public ImageConverter, public Singleton<FreeImageConverter>
 	{

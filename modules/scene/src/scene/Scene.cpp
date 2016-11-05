@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	implement_link(Drawable);
 	implement_link(SceneObject);

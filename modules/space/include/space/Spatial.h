@@ -11,7 +11,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	// Here we make a big decision
 
@@ -188,7 +188,7 @@ namespace Rapture
 #endif
 
 	//---------------------------------------------------------------------------
-	
+
 #pragma warning(push)
 #pragma warning(disable: 4455)
 

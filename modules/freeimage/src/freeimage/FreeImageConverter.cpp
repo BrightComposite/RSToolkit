@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	static void FreeImageErrorHandler(FREE_IMAGE_FORMAT fif, const char * message)
 	{

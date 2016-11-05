@@ -6,7 +6,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	template struct MathConstants<float>;
 	template struct MathConstants<double>;

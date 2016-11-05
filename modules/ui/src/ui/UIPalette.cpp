@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	StandartUIPalette::StandartUIPalette(UISpace * space) : UIPalette(space)
 	{
@@ -13,28 +13,30 @@ namespace Rapture
 		Handle<Widget> label(_space, IntRect {0, 0, 120, 80});
 		Text::setDynamic(label, "", Font::obtain("Arial", "arial.ttf"));
 
-		_collection["button"] = button;
-		_collection["label"] = label;
+		_classes["button"].init("button", button);
+		_classes["label"].init("label", label);
 	}
 
 	Widget * StandartUIPalette::create(const string & classid, Widget * parent)
 	{
-		auto & w = _collection[classid];
+		auto & cl = _classes[classid];
 
-		if(w == nullptr)
+		if(cl == nullptr)
 			return nullptr;
 
-		return w->clone(parent);
+		auto obj = cl->prototype->clone(parent);
+		obj->properties->set(cl);
+		return obj;
 	}
 
 	void StandartUIPalette::add(const string & classid, const Handle<Widget> & prototype)
 	{
-		auto & w = _collection[classid];
+		auto & cl = _classes[classid];
 
-		if(w != nullptr)
+		if(cl != nullptr)
 			throw Exception("Standart UI palette: Widget prototype for class \"", classid, "\" already exists");
 
-		w = prototype;
+		cl.init(classid, prototype);
 	}
 }
 

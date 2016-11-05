@@ -6,7 +6,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	namespace OpenGL
 	{

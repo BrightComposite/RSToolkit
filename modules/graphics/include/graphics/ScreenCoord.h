@@ -11,7 +11,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	subclass(AbsRect, IntRect);
 	subclass(RelRect, FloatRect);

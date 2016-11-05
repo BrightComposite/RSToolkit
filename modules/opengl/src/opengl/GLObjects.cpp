@@ -20,7 +20,7 @@ static T get_gl_function(const char * name, T func)
 #define GLEW_GET_FUN(x) get_gl_function(#x, x)
 #endif
 
-namespace Rapture
+namespace asd
 {
 	namespace OpenGL
 	{

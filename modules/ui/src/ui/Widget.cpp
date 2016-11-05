@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	implement_link(Widget);
 
@@ -30,7 +30,6 @@ namespace Rapture
 			_parent->_children.insert(this);
 
 		setVisibility(true);
-		components.init(this);
 	}
 
 	Widget::Widget(const Widget & widget, Widget * parent) : Widget(parent->_space, parent, widget.region())
@@ -281,6 +280,16 @@ namespace Rapture
 	bool Widget::isFocused() const
 	{
 		return this == _space->focused();
+	}
+
+	void Widget::show()
+	{
+		setVisibility(true);
+	}
+
+	void Widget::hide()
+	{
+		setVisibility(false);
 	}
 
 	void Widget::focus()

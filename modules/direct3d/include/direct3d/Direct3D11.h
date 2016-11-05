@@ -35,7 +35,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	using std::thread;
 
@@ -257,7 +257,7 @@ namespace Rapture
 		};
 
 //---------------------------------------------------------------------------
-		
+
 		class D3DShaderProgram : public ShaderProgram
 		{
 		public:

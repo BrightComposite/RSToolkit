@@ -11,7 +11,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 #define next_ptr(x, ...) *reinterpret_cast<void * __VA_ARGS__ *>(x)
 
@@ -49,7 +49,7 @@ namespace Rapture
 
 		template<class T>
 		friend inline T & getsingleton();
-		
+
 		UnsafeBlockPool() : _head(newPage()) {}
 
 		void * _head;

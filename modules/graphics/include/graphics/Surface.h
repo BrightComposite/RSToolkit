@@ -14,7 +14,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 
 	class RigidSurfaceException : public Exception

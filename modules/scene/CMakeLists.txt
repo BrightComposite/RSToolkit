@@ -1,22 +1,22 @@
 #--------------------------------------------------------
-#	Rapture Scene
+#	asd Scene
 #--------------------------------------------------------
 
-project(RaptureScene CXX)
+project(asd-Scene CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(RaptureUI "ui")
-	dependencies(RaptureSpace "space")
+	dependencies(asd-UI "ui")
+	dependencies(asd-Space "space")
 
 	sources(modules)
 		domain(scene)
-		
+
 		group(include Headers)
 		files(
 			Camera.h

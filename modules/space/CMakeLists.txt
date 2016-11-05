@@ -1,23 +1,23 @@
 #--------------------------------------------------------
-#	Rapture Space
+#	asd Space
 #--------------------------------------------------------
 
-project(RaptureSpace CXX)
+project(asd-Space CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(INLINE)
 	dependencies(
-		RaptureMath "math"
+		asd-Math "math"
 	)
 
 	sources(modules)
 		domain(space)
-	
+
 		group(include Headers)
 		files(
 			Spatial.h

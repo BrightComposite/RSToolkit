@@ -11,20 +11,20 @@
 #include <math/Transform.h>
 
 #include <core/addition/Contents.h>
-#include <component/Morpher.h>
+#include <morph/Morph.h>
 
 #include "Shaders.h"
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	class Graphics3D;
 	class UniformAdapter;
 
 	struct Uniform
 	{
-		morph_base(Uniform);
+		morph_origin(Uniform);
 		deny_copy(Uniform);
 	};
 

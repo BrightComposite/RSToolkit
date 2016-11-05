@@ -1,21 +1,21 @@
 #--------------------------------------------------------
-#	Rapture Message
+#	asd Message
 #--------------------------------------------------------
 
-project(RaptureMessage CXX)
+project(asdMessage CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(RaptureCore "core")
+	dependencies(asdCore "core")
 
 	sources(modules)
 		domain(message)
-		
+
 		group(include Headers)
 		files(
 			Channel.h

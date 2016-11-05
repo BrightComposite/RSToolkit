@@ -11,13 +11,13 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	struct Light : Shared
 	{
 		fvec position = {0.0f, 0.0f, 0.0f};
 		colorf color = {1.0f, 1.0f, 1.0f};
-		
+
 		struct Attenuation
 		{
 			float constant;

@@ -16,7 +16,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	using namespace std::literals;
 

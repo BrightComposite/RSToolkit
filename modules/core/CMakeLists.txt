@@ -1,21 +1,21 @@
 #--------------------------------------------------------
-#	Rapture Core
+#	asd Core
 #--------------------------------------------------------
 
-project(RaptureCore CXX)
+project(asdCore CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(RaptureMeta "meta")
+	dependencies(asdMeta "meta")
 
 	sources(modules)
 		domain(core)
-		
+
 		group(include Headers)
 		files(
 			Class.h
@@ -24,7 +24,7 @@ module(SHARED)
 			Hash.h
 			Object.h
 			String.h
-					
+
 			addition/
 				Cached.h
 				Contents.h
@@ -56,22 +56,22 @@ module(SHARED)
 					DefaultAllocator.h
 					PoolAllocator.h
 			)
-		
+
 		group(src Sources)
 		files(
 			Core.cpp
 			Exception.cpp
 			String.cpp
-					
+
 			algorithm/
 				lookup3.cpp
 				..
 			intrinsic/
 				Intrinsic.cpp
 			)
-		
+
 		domain(container)
-		
+
 		group(include Headers)
 		files(
 			ArrayList.h
@@ -84,15 +84,17 @@ module(SHARED)
 			Stack.h
 			StaticMap.h
 			)
-		
-		domain(component)
-		
+
+		domain(morph)
+
 		group(include Headers)
 		files(
 			Component.h
 			Component.hpp
-			Morpher.h
-			Morpher.hpp
+			Morph.h
+			Morph.hpp
+			Property.h
+			Property.hpp
 			)
 	endsources()
 endmodule()

@@ -1,17 +1,17 @@
 #--------------------------------------------------------
-#	Rapture Small Test
+#	asd Small Test
 #--------------------------------------------------------
 
-project(RaptureSmallTest CXX)
+project(asd-SmallTest CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(APPLICATION)
-	dependencies(RaptureCore "core")
+	dependencies(asd-Core "core")
 
 	sources(tests)
 		group(src Sources)

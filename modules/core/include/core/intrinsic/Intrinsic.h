@@ -14,7 +14,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	template<typename T, int N>
 	struct Intrinsic

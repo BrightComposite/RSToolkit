@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	Text::Text(Graphics * graphics, const WideString & s, const Handle<Font> & font, const Color & color, int fontSize) :
 		_graphics(graphics), _contents(s), _font(font), _color(color), _fontSize(fontSize), _size(font->getTextSize(graphics, s, fontSize)) {}
@@ -21,12 +21,12 @@ namespace Rapture
 
 	void Text::setDynamic(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color, int fontSize)
 	{
-		w->components->require<TextComponent>()->set(Unique<TextLayer>(w, s, font, color, fontSize));
+		cast::as<TextComponent>(w)->set(Unique<TextLayer>(w, s, font, color, fontSize));
 	}
 
 	void Text::setSmart(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color, int fontSize)
 	{
-		w->components->require<TextComponent>()->set(Unique<SmartTextLayer>(w, s, font, color, fontSize));
+		cast::as<TextComponent>(w)->set(Unique<SmartTextLayer>(w, s, font, color, fontSize));
 	}
 
 	void Text::setContents(Widget * w, const WideString & s)

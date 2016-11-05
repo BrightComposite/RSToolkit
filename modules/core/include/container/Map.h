@@ -17,14 +17,14 @@
 
 namespace std
 {
-	template<class K, class T, class Pred = Rapture::less<K>, class Alloc = allocator<pair<const K, T>>>
+	template<class K, class T, class Pred = asd::less<K>, class Alloc = allocator<pair<const K, T>>>
 	struct dictionary : map<K, T, Pred, Alloc>
 	{
 	public:
 		using map<K, T, Pred, Alloc>::map;
 	};
 
-	template<class K, class T, class Pred = Rapture::less<K>, class Alloc = allocator<pair<const K, T>>>
+	template<class K, class T, class Pred = asd::less<K>, class Alloc = allocator<pair<const K, T>>>
 	struct multidictionary : multimap<K, T, Pred, Alloc>
 	{
 	public:
@@ -32,21 +32,21 @@ namespace std
 	};
 }
 
-namespace Rapture
+namespace asd
 {
 	using std::dictionary;
 	using std::multidictionary;
 
-	template<class K, class T, class Hasher = Rapture::hash<K>, class Eq = Rapture::equal_to<K>, class Alloc = std::allocator<pair<const K, T>>>
+	template<class K, class T, class Hasher = asd::hash<K>, class Eq = asd::equal_to<K>, class Alloc = std::allocator<pair<const K, T>>>
 	using map = std::unordered_map<K, T, Hasher, Eq, Alloc>;
 
-	template<class K, class T, class Hasher =  Rapture::hash<K>, class Eq = Rapture::equal_to<K>, class Alloc = std::allocator<pair<const K, T>>>
+	template<class K, class T, class Hasher =  asd::hash<K>, class Eq = asd::equal_to<K>, class Alloc = std::allocator<pair<const K, T>>>
 	using multimap = std::unordered_multimap<K, T, Hasher, Eq, Alloc>;
 
-	template<class K, class T, class Pred = Rapture::less<K>, class Alloc = std::allocator<pair<const K, T>>>
+	template<class K, class T, class Pred = asd::less<K>, class Alloc = std::allocator<pair<const K, T>>>
 	using dict = dictionary<K, T, Pred, Alloc>;
 
-	template<class K, class T, class Pred = Rapture::less<K>, class Alloc = std::allocator<pair<const K, T>>>
+	template<class K, class T, class Pred = asd::less<K>, class Alloc = std::allocator<pair<const K, T>>>
 	using multidict = multidictionary<K, T, Pred, Alloc>;
 
 	template<class K, class V, class ... Owner>

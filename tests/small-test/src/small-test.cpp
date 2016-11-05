@@ -2,7 +2,7 @@
 
 #include <core/Object.h>
 
-using namespace Rapture;
+using namespace asd;
 
 //---------------------------------------------------------------------------
 

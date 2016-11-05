@@ -6,7 +6,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	Handle<Image> Image::load(Graphics * graphics, const path & filepath)
 	{

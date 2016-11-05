@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	ColoredBackgroundDrawer::ColoredBackgroundDrawer(const array_list<Unique<Color>> & colors) : BackgroundDrawer()
 	{

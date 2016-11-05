@@ -1,21 +1,21 @@
 #--------------------------------------------------------
-#	Rapture Math
+#	asd Math
 #--------------------------------------------------------
 
-project(RaptureMath CXX)
+project(asdMath CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(RaptureCore "core")
+	dependencies(asdCore "core")
 
 	sources(modules)
 		domain(math)
-		
+
 		group(include Headers)
 		files(
 			Box.h

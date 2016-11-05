@@ -1,8 +1,8 @@
 #--------------------------------------------------------
-#	Rapture State Toolkit
+#	asd
 #--------------------------------------------------------
 
-project(RaptureStateToolkit CXX)
+project(asd CXX)
 
 cmake_minimum_required(VERSION 3.0)
 

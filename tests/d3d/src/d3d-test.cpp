@@ -37,7 +37,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	using std::bind;
 
@@ -73,8 +73,8 @@ namespace Rapture
 
 	static void loadWindow()
 	{
-		using namespace Rapture;
-		using Rapture::Font;
+		using namespace asd;
+		using asd::Font;
 
 		FreeImageConverter::initialize();
 		FreeTypeDecoder::initialize();
@@ -252,9 +252,9 @@ namespace Rapture
 			Handle<Panel> english_label(back);
 			Handle<Panel> open_file(back);
 
-			WideString engine_text(L"Rapture State Engine");
+			WideString engine_text(L"ASD Engine");
 			WideString english_text(L"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz,-:;\" \'.?!\\/~`");
-			WideString open_file_text(L"Нажмите, чтобы выбрать файл");
+			WideString open_file_text(L"пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ");
 
 			graphics->bind(pristina_font);
 			graphics->setFontSize(24);
@@ -278,9 +278,9 @@ namespace Rapture
 			{
 
 			}, *open_file);
-			
+
 			window->attachThread();
-			window->setCaption(L"Rapture::Direct3D test");
+			window->setCaption(L"asd::Direct3D test");
 			window->centralize();
 			window->show();
 

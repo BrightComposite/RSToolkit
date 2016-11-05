@@ -4,7 +4,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	void Camera::setProjectionMode(ProjectionMode mode)
 	{

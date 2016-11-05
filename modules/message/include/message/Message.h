@@ -12,7 +12,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	class Subject;
 
@@ -35,10 +35,10 @@ namespace Rapture
 	namespace Internals
 	{
 		template<class T>
-		struct Message : Rapture::Message, Rapture::Contents<T>
+		struct Message : asd::Message, asd::Contents<T>
 		{
 			template<class ... A, useif<can_construct_contents<T, A...>::value>>
-			Message(const Subject * source, A &&... args) : Rapture::Message(source), Rapture::Contents<T>(forward<A>(args)...) {}
+			Message(const Subject * source, A &&... args) : asd::Message(source), asd::Contents<T>(forward<A>(args)...) {}
 		};
 	}
 

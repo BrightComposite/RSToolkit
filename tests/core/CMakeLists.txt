@@ -1,19 +1,19 @@
 #--------------------------------------------------------
-#	Rapture Core Test
+#	asd Core Test
 #--------------------------------------------------------
 
-project(RaptureCoreTest CXX)
+project(asdCoreTest CXX)
 
 #--------------------------------------------------------
 
-include(${RAPTURE_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
 module(APPLICATION)
 	dependencies(
-		RaptureApplication "application"
-		RaptureMessage "message"
+		asdApplication "application"
+		asdMessage "message"
 	)
 
 	sources(tests)

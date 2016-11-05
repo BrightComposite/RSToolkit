@@ -20,7 +20,7 @@ namespace std
 #endif // _MSC_VER
 
 
-namespace Rapture
+namespace asd
 {
     using std::declval;
 

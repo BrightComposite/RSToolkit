@@ -14,7 +14,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	template<typename T>
 	struct alignas(sizeof(T) * 4) Quaternion : AlignedAllocator

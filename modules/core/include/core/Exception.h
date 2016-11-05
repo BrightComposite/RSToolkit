@@ -13,7 +13,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	using std::exception;
 	using std::runtime_error;

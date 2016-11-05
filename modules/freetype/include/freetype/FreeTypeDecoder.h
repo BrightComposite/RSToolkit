@@ -13,7 +13,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	class FreeTypeDecoder : public FontDecoder, public Singleton<FreeTypeDecoder>
 	{

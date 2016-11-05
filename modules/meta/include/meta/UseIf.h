@@ -79,7 +79,7 @@ _useif_class(sfinae_select);
 //---------------------------------------------------------------------------
 
 template<>
-struct use_filter_t<sfinae_use> : Rapture::identity<typename sfinae_use::t> {};
+struct use_filter_t<sfinae_use> : asd::identity<typename sfinae_use::t> {};
 
 template<bool ... Others>
 struct use_filter_t<sfinae_use, true, Others...> : use_filter_t<sfinae_use, Others...> {};
@@ -88,7 +88,7 @@ template<bool ... Others>
 struct use_filter_t<sfinae_use, false, Others...> {};
 
 template<int I>
-struct use_filter_t<sfinae_select<I>> : Rapture::identity<typename sfinae_select<I>::t> {};
+struct use_filter_t<sfinae_select<I>> : asd::identity<typename sfinae_select<I>::t> {};
 
 template<int I, bool ... Others>
 struct use_filter_t<sfinae_select<I>, true, Others...> : use_filter_t<sfinae_select<I>, Others...> {};
@@ -97,7 +97,7 @@ template<int I, bool ... Others>
 struct use_filter_t<sfinae_select<I>, false, Others...> {};
 
 template<bool ... Others>
-struct use_filter_t<sfinae_skip, false, Others...> : Rapture::identity<typename sfinae_skip::t> {};
+struct use_filter_t<sfinae_skip, false, Others...> : asd::identity<typename sfinae_skip::t> {};
 
 template<bool ... Others>
 struct use_filter_t<sfinae_skip, true, Others...> : use_filter_t<sfinae_skip, Others...> {};

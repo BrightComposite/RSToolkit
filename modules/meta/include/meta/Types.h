@@ -35,7 +35,7 @@ namespace std
 }
 #endif // _MSC_VER
 
-namespace Rapture
+namespace asd
 {
 	using std::move;
 	using std::forward;

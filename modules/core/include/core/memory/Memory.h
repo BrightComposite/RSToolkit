@@ -56,7 +56,7 @@
 	 *	but Memory<wchar_t>::move() will always be more comfortable... :)
 	 */
 
-namespace Rapture
+namespace asd
 {
 	using boost::alignment::aligned_allocator;
 

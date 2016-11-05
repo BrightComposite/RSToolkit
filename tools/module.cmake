@@ -1,5 +1,5 @@
 #--------------------------------------------------------
-#	Rapture State cmake module facilities
+#	ASD cmake module facilities
 #--------------------------------------------------------
 
 cmake_minimum_required(VERSION 3.0)
@@ -29,10 +29,10 @@ set(OUTPUT_ROOT ${WORKSPACE_ROOT}/${OUTPUT_PATH_SUFFIX} CACHE PATH "Output root"
 set(BINARY_OUTPUT ${WORKSPACE_ROOT}/bin/${MODULE_ARCH} CACHE PATH "Binary output")
 set(LIBRARY_OUTPUT ${WORKSPACE_ROOT}/lib/${MODULE_ARCH} CACHE PATH "Library output")
 
-set(MODULES_ROOT ${RAPTURE_ROOT}/modules CACHE PATH "Modules root")
+set(MODULES_ROOT ${ASD_ROOT}/modules CACHE PATH "Modules root")
 set(WORKSPACE_MODULES_ROOT ${WORKSPACE_ROOT}/modules CACHE PATH "Workspace modules root")
 
-set(THIRD_PARTY ${RAPTURE_ROOT}/third-party CACHE PATH "Third-party directory")
+set(THIRD_PARTY ${ASD_ROOT}/third-party CACHE PATH "Third-party directory")
 set(WORKSPACE_THIRD_PARTY ${WORKSPACE_ROOT}/third-party CACHE PATH "Workspace third-party directory")
 
 if(NOT "${ALTERNATIVE_ROOT}" STREQUAL "")
@@ -121,9 +121,9 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		name_upper(PROJECT_NAME_UPPER ${PROJECT_NAME})
 		name_lower(PROJECT_NAME_LOWER ${PROJECT_NAME})
 
-		set(TEMPLATE_FILE ${RAPTURE_ROOT}/templates/${filename}${SRC_EXT})
-		set(TEMPLATE_FILE_EXT ${RAPTURE_ROOT}/templates/_${SRC_EXT})
-		
+		set(TEMPLATE_FILE ${ASD_ROOT}/templates/${filename}${SRC_EXT})
+		set(TEMPLATE_FILE_EXT ${ASD_ROOT}/templates/_${SRC_EXT})
+
 		message(STATUS "Create new source file ${SRC_FULLPATH}...")
 
 		if(EXISTS ${TEMPLATE_FILE})
@@ -145,20 +145,20 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		string(REPLACE / \\ path ${path})
 		set(CURRENT_SOURCE_GROUP_PATH ${path} CACHE STRING "" FORCE)
 		set(CURRENT_SOURCE_GROUP_NAME ${name} CACHE STRING "" FORCE)
-		
+
 		if(NOT ";${${PROJECT_NAME}_SOURCE_GROUPS};" MATCHES ";${path};")
 			set(${PROJECT_NAME}_SOURCE_GROUPS ${${PROJECT_NAME}_SOURCE_GROUPS};${path} CACHE INTERNAL "" FORCE)
 		endif()
-		
+
 	endfunction()
-	
+
 #	domain function
 
 	function(domain path)
 		string(REPLACE \\ / path ${path})
 		set(CURRENT_SOURCE_DOMAIN ${path} CACHE STRING "" FORCE)
 	endfunction()
-	
+
 #	set_source function
 
 	function(set_source out dir source)
@@ -169,24 +169,24 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			set(${out} ${dir}/${source} PARENT_SCOPE)
 		endif()
 	endfunction()
-	
+
 #	flush_sources function
 
 	function(flush_sources dir)
 		if(NOT "${ARGN}" STREQUAL "")
 			string(REGEX REPLACE "/$" "" dir "${dir}")
 			string(REPLACE / \\ dir "${dir}")
-			
+
 			if("${dir}" STREQUAL "")
 				source_group(${CURRENT_SOURCE_GROUP_NAME} FILES ${ARGN})
 			else()
 				source_group(${CURRENT_SOURCE_GROUP_NAME}\\${dir} FILES ${ARGN})
 			endif()
-			
+
 			set(CURRENT_SOURCE_LIST ${CURRENT_SOURCE_LIST} ${ARGN} CACHE INTERNAL "" FORCE)
-		endif()	
+		endif()
 	endfunction()
-	
+
 #	collect_files function.
 #	Usage:
 #		collect_files(<output list> <tree...>)
@@ -201,10 +201,10 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			if("${entry}" MATCHES ".*/$" OR "${entry}" MATCHES ".*\\$")
 				flush_sources(${CURRENT_SOURCE_DOMAIN}/${dir} ${dir_list})
 				set(dir_list)
-				
+
 				string(REPLACE "\\" "/" entry ${entry})
 				string(REGEX REPLACE "/$" "" entry ${entry})
-				
+
 				if("${dir}" STREQUAL "")
 					set(dir ${entry})
 				else()
@@ -215,7 +215,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 				flush_sources(${CURRENT_SOURCE_DOMAIN}/${dir} ${dir_list})
 				set(dir_list)
 				get_filename_component(dir ${dir} DIRECTORY)
-				
+
 				if("${dir}" STREQUAL "/")
 					set(dir)
 				endif()
@@ -310,13 +310,13 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		endif()
 
 		message("${DIR}")
-		
+
 		if(NOT EXISTS "${DIR}/CMakeLists.txt")
 			file(MAKE_DIRECTORY ${DIR})
 
-			set(TEMPLATE_FILE ${RAPTURE_ROOT}/templates/module/CMakeLists.txt)
-			set(TEMPLATE_FILE_DOMAIN ${RAPTURE_ROOT}/templates/module/${DOMAIN}/CMakeLists.txt)
-			
+			set(TEMPLATE_FILE ${ASD_ROOT}/templates/module/CMakeLists.txt)
+			set(TEMPLATE_FILE_DOMAIN ${ASD_ROOT}/templates/module/${DOMAIN}/CMakeLists.txt)
+
 			set(module_path ${PATH})
 			set(module_domain ${DOMAIN})
 
@@ -425,7 +425,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 	function(sources folder)
 		set(${PROJECT_NAME}_FOLDER ${folder} CACHE STRING "${PROJECT_NAME} folder" FORCE)
-		
+
 		set(CURRENT_SOURCE_DOMAIN CACHE STRING "" FORCE)
 		set(CURRENT_SOURCE_GROUP_PATH src CACHE STRING "" FORCE)
 		set(CURRENT_SOURCE_GROUP_NAME Sources CACHE STRING "" FORCE)
@@ -449,7 +449,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 	function(api_export MODULE)
 		if(NOT "${${MODULE}_API_KEY}" STREQUAL "")
-			set(module rapture_${${MODULE}_API_KEY})
+			set(module asd_${${MODULE}_API_KEY})
 		else()
 			name_lower(module ${MODULE})
 		endif()
@@ -465,7 +465,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 	function(api_import MODULE)
 		if(NOT "${${MODULE}_API_KEY}" STREQUAL "")
-			set(module rapture_${${MODULE}_API_KEY})
+			set(module asd_${${MODULE}_API_KEY})
 		else()
 			name_lower(module ${MODULE})
 		endif()
@@ -518,7 +518,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		else()
 			foreach(DEPENDENCY ${DEPENDENCIES})
 				target_include_directories(${PROJECT_NAME} PRIVATE ${${DEPENDENCY}_INCLUDE_DIRS})
-				
+
 				if(NOT "${${DEPENDENCY}_MODULE_TYPE}" STREQUAL "INLINE")
 					target_link_libraries(${PROJECT_NAME} PRIVATE ${DEPENDENCY})
 				endif()

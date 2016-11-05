@@ -7,21 +7,21 @@
 
 //---------------------------------------------------------------------------
 
-#include <component/Morpher.h>
+#include <morph/Morph.h>
 #include <container/ArrayList.h>
 #include "Message.h"
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 
 
 #define declare_receivers() 					                                                                            \
 	template<class, typename>					                                                                            \
-	friend struct Rapture::Receivers;			                                                                            \
+	friend struct asd::Receivers;			                                                                            \
 												                                                                            \
-	Rapture::ReceiversSet _rcvrs;				                                                                            \
+	asd::ReceiversSet _rcvrs;				                                                                            \
 //----- declare_receivers
 
 #define set_message_dest(Dst, Msg)				                                                                            \
@@ -30,9 +30,9 @@ namespace Rapture
 
 #define bind_message(Dst, Msg)					                                                                            \
 	template<class, typename>					                                                                            \
-	friend struct Rapture::Receivers;			                                                                            \
+	friend struct asd::Receivers;			                                                                            \
 	template<class, typename>					                                                                            \
-	friend struct Rapture::DestGetter;			                                                                            \
+	friend struct asd::DestGetter;			                                                                            \
 												                                                                            \
 	set_message_dest(Dst, Msg)					                                                                            \
 //----- bind_message
@@ -41,9 +41,9 @@ namespace Rapture
 
 #define bind_messages(Dst, ... /* Messages */)	                                                                            \
 	template<class, typename>					                                                                            \
-	friend struct Rapture::Receivers;			                                                                            \
+	friend struct asd::Receivers;			                                                                            \
 	template<class, typename>					                                                                            \
-	friend struct Rapture::DestGetter;			                                                                            \
+	friend struct asd::DestGetter;			                                                                            \
 												                                                                            \
 	pp_seq_foreach(op_bind_message, Dst, pp_tuple_to_seq((__VA_ARGS__)))										            \
 //----- bind_messages
@@ -75,7 +75,7 @@ namespace Rapture
 
 	struct BasicReceivers : Shared
 	{
-		morph_base(BasicReceivers);
+		morph_origin(BasicReceivers);
 	};
 
 	create_morph_pool(message, BasicReceivers);
@@ -83,7 +83,7 @@ namespace Rapture
 	template<class Dst, class Msg>
 	using ReceiversList = array_list<Receiver<Dst, Msg>>;
 
-	using ReceiversSet = Morpher<BasicReceivers>;
+	using ReceiversSet = Morph<BasicReceivers>;
 
 	member_checker(has_receivers, _rcvrs);
 

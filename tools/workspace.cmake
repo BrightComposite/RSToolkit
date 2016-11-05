@@ -1,5 +1,5 @@
 #--------------------------------------------------------
-#	Rapture State global configuration
+#	ASD global configuration
 #--------------------------------------------------------
 
 cmake_minimum_required(VERSION 3.0)
@@ -11,13 +11,13 @@ set(MESSAGES_INDENTATION "" CACHE STRING "Messages indentation" FORCE)
 
 set(WORKSPACE_ROOT ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Workspace root directory")
 
-set(RAPTURE_TOOLS ${CMAKE_CURRENT_LIST_DIR} CACHE PATH "Rapture tools directory")
-get_filename_component(RAPTURE_ROOT ${RAPTURE_TOOLS}/.. ABSOLUTE)
-set(RAPTURE_ROOT ${RAPTURE_ROOT} CACHE PATH "Rapture state toolkit root directory")
+set(ASD_TOOLS ${CMAKE_CURRENT_LIST_DIR} CACHE PATH "ASD tools directory")
+get_filename_component(ASD_ROOT ${ASD_TOOLS}/.. ABSOLUTE)
+set(ASD_ROOT ${ASD_ROOT} CACHE PATH "ASD toolkit root directory")
 
-message("Rapture State Toolkit at ${RAPTURE_ROOT}")
+message("ASD Toolkit at ${ASD_ROOT}")
 
-include(${RAPTURE_TOOLS}/module.cmake)
-include(${RAPTURE_TOOLS}/config.cmake)
+include(${ASD_TOOLS}/module.cmake)
+include(${ASD_TOOLS}/config.cmake)
 
 #--------------------------------------------------------

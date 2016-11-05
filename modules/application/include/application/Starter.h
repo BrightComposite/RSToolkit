@@ -31,7 +31,7 @@ int main()
 
 int wmain(int argc, wchar_t * argv[])
 {
-	using namespace Rapture;
+	using namespace asd;
 
 #ifdef WIN32
 	//ShowWindow(GetConsoleWindow(), SW_HIDE);

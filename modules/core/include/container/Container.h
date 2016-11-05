@@ -8,10 +8,11 @@
 //---------------------------------------------------------------------------
 
 #include <meta/Meta.h>
+#include <boost/iterator/iterator_facade.hpp>
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	type_checker(is_iterable, iterator);
 	type_checker(is_const_iterable, const_iterator);
@@ -114,6 +115,39 @@ namespace Rapture
 		{
 			return a->*member < b->*member;
 		}
+	};
+
+	template<class Cont>
+	class deep_iterator {};
+
+	template<template <class> class Cont, class Elem>
+	class deep_iterator<Cont<Elem>> : public boost::iterator_facade<deep_iterator<Cont<Elem>>, Elem, std::forward_iterator_tag>
+	{
+		friend class boost::iterator_core_access;
+
+		using Container = Cont<Elem>;
+		using underlying = typename Container::iterator;
+
+	public:
+
+	private:
+		Elem & dereference() const
+		{
+			return *it;
+		}
+
+		bool equal(const iter & other) const
+		{
+			return end && other.end;
+		}
+
+		void increment()
+		{
+			///TODO advance(1);
+		}
+
+		underlying it;
+		bool end = false;
 	};
 }
 

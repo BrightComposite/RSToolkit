@@ -20,7 +20,7 @@
 
 api(export) int wmain(int argc, wchar_t * argv[]);
 
-namespace Rapture
+namespace asd
 {
 	class Application;
 	struct Entrance;

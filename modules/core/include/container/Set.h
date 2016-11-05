@@ -14,7 +14,7 @@
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	template<class T, class Pred = less<T>, class Alloc = std::allocator<T>>
 	using set = std::set<T, Pred, Alloc>;

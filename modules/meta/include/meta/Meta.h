@@ -8,11 +8,11 @@
 //---------------------------------------------------------------------------
 
 #include "Adapt.h"
-#include "BoolTypes.h"
+#include "Cast.h"
 
 //---------------------------------------------------------------------------
 
-namespace Rapture
+namespace asd
 {
 	namespace Internals
 	{
@@ -205,15 +205,6 @@ namespace Rapture
 		template <typename Functor, class ... A>
 		static inline void iterate(A &&...) {}
 	};
-
-	template<class From, class To>
-	struct Cast {};
-
-	static_method_checker(has_cast_method, cast);
-
-	template<class From, class To>
-	using can_cast = has_cast_method<Cast<From, To>, To &, const From &>;
-
 }
 
 //---------------------------------------------------------------------------

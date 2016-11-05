@@ -10,10 +10,10 @@ ASD uses CMake to build the libraries. There are some additional cmake tools tha
 ## Possibilities
 What can you do with this now? Do you want to make a small console application which will calculate something? Of course, The asd-Core and the asd-math modules will provide all necessary utilities to you. And if you need basic control on application lifetime out-of-box, the asd-application will help you with that...
 
-But, maybe, you can wish something more complex. Maybe... A video game? Haha, game development is the REAL destination of ASD! The RST will try to provide as much help to you as it can without decreasing of development flexibility.
+But, maybe, you can wish something more complex. Maybe... A video game? Haha, game development is the REAL destination of ASD! It will try to provide as much help to you as it can without decreasing of development flexibility.
 
 ### Graphics
-The basis of every video game is the rendering system. The asd-Graphics is the main part of this system in the RS-Toolkit. It provides the abstract classes which will allow you to draw different 2D and 3D objects. The asd-OpenGL and the asd-Direct3D modules contain the implementations for this abstract classes. And, of course you can use them not only for gamedev but in any project which requires visualisation.
+The basis of every video game is the rendering system. The asd-Graphics is the main part of this system in ASD. It provides the abstract classes which will allow you to draw different 2D and 3D objects. The asd-OpenGL and the asd-Direct3D modules contain the implementations for this abstract classes. And, of course you can use them not only for gamedev but in any project which requires visualisation.
 
 ### Virtual world
 Rendering of graphic objects is not the only thing we need in a video game. We need a place for these objects too. The asd-Scene includes the useful classes to create a virtual world where these objects can be placed in and managed effectively.

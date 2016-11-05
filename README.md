@@ -22,7 +22,7 @@ Rendering of graphic objects is not the only thing we need in a video game. We n
 Usually, some objects should physically interact with each other in video games, and this interaction may be very complex sometimes. ASD contains the asd-Physics module to simplify control on all interactions in virtual worlds by providing the additional physical layer.
 
 ### User interface
-We haven't forget about user interface too. The RST includes the asd-UI module which will help you to create widgets, windows and complex visual components. The main principles of the user interface in the RST are the freedom of choice and lightweight of all components. Widgets in the RST use message system provided by the asd-Core so you can easily control their behaviour.
+We haven't forget about user interface too. ASD includes the asd-UI module which will help you to create widgets, windows and complex visual components. The main principles of the user interface in ASD are the freedom of choice and lightweight of all components. Widgets in ASD use message system provided by the asd-Core so you can easily control their behaviour.
 
 ### Interaction
 The asd-Interaction library provides advanced interaction mechanisms. It is based on components which can be connected to elements of user interface and perform different actions over user input to generate special interaction behaviour and provide some processed data to another subsystems (mouse rotation, dragging and so on).

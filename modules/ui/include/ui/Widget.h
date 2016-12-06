@@ -302,12 +302,14 @@ namespace asd
 		using DisplaySort = MemberSort<Widget, int, &Widget::_displayOrder>;
 		using FocusSort = MemberSort<Widget, int, &Widget::_focusOrder>;
 
-		class Tree : tree<Tree, Set<Widget>>
+		class Tree : public asd::tree<Tree, Set<Widget>>
 		{
 		public:
-			using tree<Tree, Set<Widget>>::tree;
+			using asd::tree<Tree, Set<Widget>>::tree;
 
 		private:
+			friend class asd::tree<Tree, Set<Widget>>;
+
 			static auto child_begin(typename Set<Widget>::iterator & i)
 			{
 				return (*i)->_children.begin();
@@ -602,7 +604,7 @@ namespace asd
 		return _displayList[idx];
 	}
 
-	inline typename Widget::Tree * Widget::tree()
+	inline typename Widget::Tree Widget::tree()
 	{
 		return {_children};
 	}

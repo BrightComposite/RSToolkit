@@ -45,7 +45,7 @@ namespace asd
     {
 		using namespace std;
 
-		Handle<Obj>			obj(nothing);
+		Handle<Obj>			obj(default_init);
 		Handle<Direction>	dir(0, fquat(4.0f, 5.0f, 3.0f));
 		Handle<Position>	pos(0, 0, floatv::right);
 

@@ -3,8 +3,8 @@
 #include <meta/Inheritance.h>
 
 #include <core/String.h>
-#include <core/container/ArrayList.h>
-#include <core/container/Map.h>
+#include <container/ArrayList.h>
+#include <container/Map.h>
 
 #include <message/Subject.h>
 
@@ -82,7 +82,7 @@ namespace asd
 		bind_message(DummySubject, DummyMessage);
 	};
 
-	channels_api(core_test, DummySubject, DummyMessage)
+	channels_api(coretest, DummySubject, DummyMessage)
 
 	class DummyReceiver : public MessageReceiver
 	{

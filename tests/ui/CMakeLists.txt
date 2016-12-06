@@ -15,12 +15,13 @@ module(APPLICATION)
 		application	0.*
 		freeimage	0.*
 		freetype	0.*
+		ui			0.*
 	)
 
 if(${USE_DIRECT3D} EQUAL 1)
-    dependencies("direct3d~=0.*")
+    dependencies(direct3d 	0.*)
 else()
-    dependencies("opengl~=0.*")
+    dependencies(opengl 	0.*)
 endif()
 
 	sources(tests)

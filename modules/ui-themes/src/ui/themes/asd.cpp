@@ -17,7 +17,9 @@ namespace asd
 			.pressed({0.1f, 0.1f, 0.1f})
 			.hovered({0.6f, 0.6f, 0.6f});
 
-		palette->foreach();
+		for(auto & w : palette->space()->root()->tree())
+		{
+		}
 	}
 }
 

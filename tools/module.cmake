@@ -62,10 +62,6 @@ link_directories(${WORKSPACE_ROOT}/lib/${MODULE_ARCH})
 link_directories(${WORKSPACE_ROOT}/lib/${MODULE_ARCH}/release)
 link_directories(${WORKSPACE_ROOT}/lib/${MODULE_ARCH}/debug)
 
-get_filename_component(PROJECT_ID ${PROJECT_SOURCE_DIR} NAME)
-set(PROJECT_NAME_OF_${PROJECT_ID} ${PROJECT_NAME} CACHE STRING "project name of ${PROJECT_ID} module")
-set(PROJECT_VERSION_OF_${PROJECT_ID} ${PROJECT_VERSION} CACHE STRING "project version of ${PROJECT_ID} module")
-
 #--------------------------------------------------------
 
 set(MODULE_TYPES APPLICATION;SHARED;LIBRARY;STATIC;INLINE CACHE INTERNAL "Module types" FORCE)
@@ -348,21 +344,41 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 		message("${MESSAGES_INDENTATION}> Depends on \"${module_id}-${version}\"")
 
-		if(NOT DEFINED PROJECT_NAME_OF_${module_id})
+		if(NOT ";${GUARD_BLOCKS};" MATCHES ";${module_id}_GUARD;")
+			set(module_path)
 			message("${MESSAGES_INDENTATION}> Try to resolve...")
 
 			if(NOT "${${PROJECT_NAME}_ROOT}" STREQUAL "" AND EXISTS "${${PROJECT_NAME}_ROOT}/modules/${module_id}")
-				add_subdirectory("${${PROJECT_NAME}_ROOT}/modules/${module_id}" "${${PROJECT_NAME}_ROOT}/${OUTPUT_module_id_SUFFIX}/ ${module_id}")
+				set(module_path "${${PROJECT_NAME}_ROOT}/modules/${module_id}")
+				message("${MESSAGES_INDENTATION}> Found at ${module_path}")
+				add_subdirectory(${module_path} "${${PROJECT_NAME}_ROOT}/${OUTPUT_PATH_SUFFIX}/${module_id}")
+
 			elseif(EXISTS "${WORKSPACE_MODULES_ROOT}/${module_id}")
-				add_subdirectory("${WORKSPACE_MODULES_ROOT}/${module_id}" "${OUTPUT_ROOT}/${module_id}")
+				set(module_path "${WORKSPACE_MODULES_ROOT}/${module_id}")
+				message("${MESSAGES_INDENTATION}> Found at ${module_path}")
+				add_subdirectory(${module_path} "${OUTPUT_ROOT}/${module_id}")
+
 			elseif(EXISTS "${MODULES_ROOT}/${module_id}")
-				add_subdirectory("${MODULES_ROOT}/${module_id}" "${OUTPUT_ROOT}/${module_id}")
+				set(module_path "${MODULES_ROOT}/${module_id}")
+				message("${MESSAGES_INDENTATION}> Found at ${module_path}")
+				add_subdirectory(${module_path} "${OUTPUT_ROOT}/${module_id}")
+
 			elseif(EXISTS "${WORKSPACE_THIRD_PARTY}/${module_id}")
-				add_subdirectory("${WORKSPACE_THIRD_PARTY}/${module_id}" "${OUTPUT_ROOT}/${module_id}")
+				set(module_path "${WORKSPACE_THIRD_PARTY}/${module_id}")
+				message("${MESSAGES_INDENTATION}> Found at ${module_path}")
+				add_subdirectory(${module_path} "${OUTPUT_ROOT}/${module_id}")
+
 			elseif(EXISTS "${THIRD_PARTY}/${module_id}")
-				add_subdirectory("${THIRD_PARTY}/${module_id}" "${OUTPUT_ROOT}/${module_id}")
+				set(module_path "${THIRD_PARTY}/${module_id}")
+				message("${MESSAGES_INDENTATION}> Found at ${module_path}")
+				add_subdirectory(${module_path} "${OUTPUT_ROOT}/${module_id}")
+
 			else()
 				message(FATAL_ERROR "Couldn't resolve dependency \"${module_id}-${version}\"!")
+			endif()
+
+			if(NOT ";${GUARD_BLOCKS};" MATCHES ";${module_id}_GUARD;")
+				message(FATAL_ERROR "${module_path} is not a module path!")
 			endif()
 		endif()
 
@@ -393,8 +409,12 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 #	module function.
 
 	function(module type)
-		if(NOT ";${GUARD_BLOCKS};" MATCHES ";${PROJECT_NAME}_GUARD;")
-			set(GUARD_BLOCKS ${GUARD_BLOCKS};${PROJECT_NAME}_GUARD CACHE INTERNAL "Guard blocks" FORCE)
+		get_filename_component(PROJECT_ID ${PROJECT_SOURCE_DIR} NAME)
+		set(PROJECT_NAME_OF_${PROJECT_ID} ${PROJECT_NAME} CACHE STRING "project name of ${PROJECT_ID} module")
+		set(PROJECT_VERSION_OF_${PROJECT_ID} ${PROJECT_VERSION} CACHE STRING "project version of ${PROJECT_ID} module")
+
+		if(NOT ";${GUARD_BLOCKS};" MATCHES ";${PROJECT_ID}_GUARD;")
+			set(GUARD_BLOCKS ${GUARD_BLOCKS};${PROJECT_ID}_GUARD CACHE INTERNAL "Guard blocks" FORCE)
 		endif()
 
 		message("${MESSAGES_INDENTATION}+ Add module \"${PROJECT_NAME}\"")
@@ -404,9 +424,9 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		set(${PROJECT_NAME}_MODULE_DEPENDENCIES CACHE INTERNAL "${PROJECT_NAME} module dependencies" FORCE)
 
 		if("${type}" STREQUAL "")
-			message(FATAL_ERROR "Incorrect usage of 'start_module' function! Type of module is not set. List of correct types: (${MODULE_TYPES})")
+			message(FATAL_ERROR "Incorrect usage of 'module' function! Type of module is not set. List of correct types: (${MODULE_TYPES})")
 		elseif(NOT ";${MODULE_TYPES};" MATCHES ";${type};")
-			message(FATAL_ERROR "Incorrect usage of 'start_module' function! List of correct types: (${MODULE_TYPES}). Provided type is ${type}")
+			message(FATAL_ERROR "Incorrect usage of 'module' function! List of correct types: (${MODULE_TYPES}). Provided type is ${type}")
 		endif()
 
 		set(${PROJECT_NAME}_MODULE_TYPE ${type} CACHE STRING "${PROJECT_NAME} module type" FORCE)
@@ -460,15 +480,15 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 	function(api_export MODULE)
 		if(NOT "${${MODULE}_API_KEY}" STREQUAL "")
-			set(module asd_${${MODULE}_API_KEY})
+			set(module ${${MODULE}_API_KEY})
 		else()
 			name_lower(module ${MODULE})
 		endif()
 
 		if(WIN32)
-			add_definitions("-D${module}_api=__declspec(dllexport)")
+			add_definitions("-Dasd_${module}_api=__declspec(dllexport)")
 		else()
-			add_definitions("-D${module}_api")
+			add_definitions("-Dasd_${module}_api")
 		endif()
 	endfunction()
 
@@ -476,15 +496,15 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 	function(api_import MODULE)
 		if(NOT "${${MODULE}_API_KEY}" STREQUAL "")
-			set(module asd_${${MODULE}_API_KEY})
+			set(module ${${MODULE}_API_KEY})
 		else()
 			name_lower(module ${MODULE})
 		endif()
 
 		if(WIN32)
-			add_definitions("-D${module}_api=__declspec(dllimport)")
+			add_definitions("-Dasd_${module}_api=__declspec(dllimport)")
 		else()
-			add_definitions("-D${module}_api")
+			add_definitions("-Dasd_${module}_api")
 		endif()
 	endfunction()
 
@@ -500,7 +520,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		elseif("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "INLINE")
 			add_library(${PROJECT_NAME} STATIC ${${PROJECT_NAME}_SOURCES})
 		elseif("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "")
-			message(FATAL_ERROR "Module type is not set! Call 'start_module' first!")
+			message(FATAL_ERROR "Module type is not set! Call 'module' first!")
 		else()
 			message(FATAL_ERROR "Module type is incorrect! Check the 'start_module' function call")
 		endif()
@@ -687,7 +707,9 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 				message("${MESSAGES_INDENTATION}    Found ${STATIC_LIB}")
 				setup_file(${STATIC_LIB} ${LIBRARY_SOURCE} ${LIBRARY_OUTPUT})
 
-				string(REGEX REPLACE "[^a-zA-Z0-9_-]" _ LIBRARY_NAME ${STATIC_LIB})
+				get_filename_component(LIBRARY_NAME ${STATIC_LIB} NAME_WE)
+				get_filename_component(LIBRARY_DIR ${STATIC_LIB} DIRECTORY)
+				string(REGEX REPLACE "[^a-zA-Z0-9_-]" _ LIBRARY_NAME "${LIBRARY_DIR}-${LIBRARY_NAME}")
 
 				add_library(${LIBRARY_NAME} STATIC IMPORTED)
 				set_target_properties(${LIBRARY_NAME} PROPERTIES IMPORTED_LOCATION ${LIBRARY_OUTPUT}/${STATIC_LIB})

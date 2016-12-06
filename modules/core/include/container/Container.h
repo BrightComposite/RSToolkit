@@ -124,7 +124,10 @@ namespace asd
 	static_method_checker(has_child_begin, child_begin);
 	static_method_checker(has_child_end, child_end);
 
-	template<class impl, class cont, useif<has_child_begin<impl>::value, has_child_end<impl>::value>>
+	template<class ctx>
+	class tree_iterator;
+
+	template<class impl, class cont>
 	class tree
 	{
 	public:
@@ -159,7 +162,7 @@ namespace asd
 	};
 
 	template<class ctx>
-	class tree_iterator : public boost::iterator_facade<tree_iterator<ctx>, typename ctx::container::value_type, std::forward_iterator_tag>
+	class tree_iterator : public boost::iterator_facade<tree_iterator<ctx>, typename ctx::container::value_type, std::forward_iterator_tag, typename ctx::container::reference>
 	{
 		friend class boost::iterator_core_access;
 
@@ -171,9 +174,9 @@ namespace asd
 		tree_iterator(const underlying & begin, const underlying & end) : _node(begin), _terminator(end) {}
 
 	private:
-		auto & dereference() const
+		typename ctx::container::reference dereference() const
 		{
-			return *_node;
+			return _node.value;
 		}
 
 		bool equal(const tree_iterator & other) const

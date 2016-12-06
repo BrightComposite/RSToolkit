@@ -2,7 +2,7 @@
 #	@module_path@ project
 #--------------------------------------------------------
 
-project(@module_path@ CXX)
+project(@module_path@ VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -12,7 +12,7 @@ include(${ASD_TOOLS}/module.cmake)
 
 module(APPLICATION)
 	dependencies(
-		asd-Application "application"
+		application 0.*
 	)
 
 	sources(projects)

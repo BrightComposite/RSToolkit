@@ -2,7 +2,7 @@
 #	asd FreeType adaptation
 #--------------------------------------------------------
 
-project(asdFreeType CXX)
+project(freetype VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -11,7 +11,7 @@ include(${ASD_TOOLS}/module.cmake)
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(asdGraphics "graphics")
+	dependencies(graphics	0.*)
 	api(freetype)
 
 	sources(modules)

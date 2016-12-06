@@ -1,8 +1,8 @@
 #--------------------------------------------------------
-#	asdMath test facility
+#	asd Math test facility
 #--------------------------------------------------------
 
-project(asdMathTest CXX)
+project(mathtest VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -12,7 +12,7 @@ include(${ASD_TOOLS}/module.cmake)
 
 module(APPLICATION)
 	dependencies(
-		asdApplication "application"
+		application	0.*
 	)
 
 	sources(tests)

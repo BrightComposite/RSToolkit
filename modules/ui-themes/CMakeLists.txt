@@ -1,8 +1,8 @@
 #--------------------------------------------------------
-#	asd FreeImage adaptation
+#	asd UI Themes
 #--------------------------------------------------------
 
-project(freeimage VERSION 0.1)
+project(uithemes CXX)
 
 #--------------------------------------------------------
 
@@ -11,21 +11,21 @@ include(${ASD_TOOLS}/module.cmake)
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(graphics	0.*)
-
-	api(freeimage)
+	dependencies(ui	0.*)
 
 	sources(modules)
-		domain(freeimage)
+		domain(ui/themes)
 
 		group(include Headers)
-		files(FreeImageConverter.h)
+		files(
+			asd.h
+		)
 
 		group(src Sources)
-		files(FreeImageConverter.cpp)
+		files(
+			asd.cpp
+		)
 	endsources()
 endmodule()
-
-load_third_party(freeimage)
 
 #--------------------------------------------------------

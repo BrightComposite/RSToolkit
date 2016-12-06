@@ -2,7 +2,7 @@
 #	asd Math
 #--------------------------------------------------------
 
-project(asdMath CXX)
+project(math VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -11,7 +11,7 @@ include(${ASD_TOOLS}/module.cmake)
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(asdCore "core")
+	dependencies(core	0.*)
 
 	sources(modules)
 		domain(math)

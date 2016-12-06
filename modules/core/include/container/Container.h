@@ -2,48 +2,52 @@
 
 #pragma once
 
-#ifndef CONTAINER_H
-#define CONTAINER_H
+#ifndef cONTAINER_H
+#define cONTAINER_H
 
 //---------------------------------------------------------------------------
 
 #include <meta/Meta.h>
 #include <boost/iterator/iterator_facade.hpp>
 
+#include <stack>
+
 //---------------------------------------------------------------------------
 
 namespace asd
 {
+	using std::stack;
+
 	type_checker(is_iterable, iterator);
 	type_checker(is_const_iterable, const_iterator);
 
-	template<class Container, useif<is_iterable<Container>::value>>
-	typename Container::iterator erase(Container & container, int pos)
+	template<class container, useif<is_iterable<container>::value>>
+	typename container::iterator erase(container & container, int pos)
 	{
 		return container.erase(std::next(container.begin(), pos));
 	}
 
-	template<class Container, useif<is_iterable<Container>::value>>
-	typename Container::iterator erase(Container & container, int pos, size_t count)
+	template<class container, useif<is_iterable<container>::value>>
+	typename container::iterator erase(container & container, int pos, size_t count)
 	{
 		auto i = std::next(container.begin(), pos);
 		return container.erase(i, i + count);
 	}
 
-	template<class Container, typename T, useif<is_iterable<Container>::value>>
-	typename Container::iterator erase(Container & container, const T & value)
+	template<class container, typename T, useif<is_iterable<container>::value>>
+	typename container::iterator erase(container & container, const T & value)
 	{
 		return container.erase(std::remove(container.begin(), container.end(), value), container.end()); //move all values equal to the 'value' to the end of the 'container', then erase the end
 	}
 
-	template<class Container, useif<is_iterable<Container>::value>>
-	bool check(typename Container::iterator & iterator, const Container & container)
+	template<class container, useif<is_iterable<container>::value>>
+	bool check(typename container::iterator & iterator, const container & container)
 	{
 		return iterator != container.end();
 	}
 
-	template<class Container, useif<is_const_iterable<Container>::value>>
-	bool check(typename Container::const_iterator & iterator, const Container & container)
+	template<class container, useif<is_const_iterable<container>::value>>
+	bool check(typename container::const_iterator & iterator, const container & container)
 	{
 		return iterator != container.cend();
 	}
@@ -117,37 +121,101 @@ namespace asd
 		}
 	};
 
-	template<class Cont>
-	class deep_iterator {};
+	static_method_checker(has_child_begin, child_begin);
+	static_method_checker(has_child_end, child_end);
 
-	template<template <class> class Cont, class Elem>
-	class deep_iterator<Cont<Elem>> : public boost::iterator_facade<deep_iterator<Cont<Elem>>, Elem, std::forward_iterator_tag>
+	template<class impl, class cont, useif<has_child_begin<impl>::value, has_child_end<impl>::value>>
+	class tree
+	{
+	public:
+		using container = cont;
+		using iterator = tree_iterator<impl>;
+		using const_iterator = tree_iterator<const impl>;
+
+		tree(container & c) : _container(c) {}
+
+		iterator begin()
+		{
+			return {_container.begin(), _container.end()};
+		}
+
+		iterator end()
+		{
+			return {_container.end()};
+		}
+
+		const_iterator cbegin()
+		{
+			return {_container.cbegin(), _container.cend()};
+		}
+
+		const_iterator cend()
+		{
+			return {_container.cend()};
+		}
+
+	private:
+		container & _container;
+	};
+
+	template<class ctx>
+	class tree_iterator : public boost::iterator_facade<tree_iterator<ctx>, typename ctx::container::value_type, std::forward_iterator_tag>
 	{
 		friend class boost::iterator_core_access;
 
-		using Container = Cont<Elem>;
-		using underlying = typename Container::iterator;
+		using container = typename ctx::container;
+		using underlying = conditional_t<is_const<ctx>::value, typename container::iterator, typename container::const_iterator>;
 
 	public:
+		tree_iterator(const underlying & end) : _node(end), _terminator(end) {}
+		tree_iterator(const underlying & begin, const underlying & end) : _node(begin), _terminator(end) {}
 
 	private:
-		Elem & dereference() const
+		auto & dereference() const
 		{
-			return *it;
+			return *_node;
 		}
 
-		bool equal(const iter & other) const
+		bool equal(const tree_iterator & other) const
 		{
-			return end && other.end;
+			return _node == other._node;
 		}
 
 		void increment()
 		{
-			///TODO advance(1);
+			if(_node == _terminator)
+				return;
+
+			auto begin = ctx::child_begin(_node);
+			auto end = ctx::child_end(_node);
+
+			if(begin == end)
+			{
+				_branch.push(_node);
+				_terminators.push(_terminator);
+
+				_node = begin;
+				_terminator = end;
+				return;
+			}
+
+			++_node;
+
+			while(_node == _terminator)
+			{
+				if(_branch.size() == 0)
+					return;
+
+				_node = _branch.pop();
+				_terminator = _terminators.pop();
+			}
 		}
 
-		underlying it;
-		bool end = false;
+		underlying _node;
+		underlying _terminator;
+
+		stack<underlying> _branch;
+		stack<underlying> _terminators;
 	};
 }
 

@@ -2,7 +2,7 @@
 #	asd Direct3D11
 #--------------------------------------------------------
 
-project(asd-Direct3D11 CXX)
+project(direct3d11 VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -12,9 +12,7 @@ include(${ASD_TOOLS}/shaders.cmake)
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(
-		asd-UI "ui"
-		)
+	dependencies(ui	0.*)
 
 	sources(modules)
 		domain(direct3d)

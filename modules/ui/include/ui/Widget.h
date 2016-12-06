@@ -113,6 +113,8 @@ namespace asd
 		friend class UISpace;
 		friend class WidgetLayer;
 
+		class Tree;
+
 	public:
 		api(ui) Widget(Widget * parent);
 		api(ui) Widget(Widget * parent, const IntRect & region);
@@ -170,7 +172,8 @@ namespace asd
 		api(ui) Widget * findAt(const IntPoint & pt);
 
 		inline Widget * child(int idx) const;
-		inline void all() const;
+
+		inline Tree tree();
 
 		inline void setLeft(int value);
 		inline void setTop(int value);
@@ -273,6 +276,7 @@ namespace asd
 		api(ui) void changePlacement(int left, int top, int right, int bottom, ModelMask mask);
 		api(ui) void updateAnchors();
 
+	private:
 		UISpace * _space;
 		Widget * _parent;
 		Set<Widget> _children;
@@ -297,6 +301,25 @@ namespace asd
 
 		using DisplaySort = MemberSort<Widget, int, &Widget::_displayOrder>;
 		using FocusSort = MemberSort<Widget, int, &Widget::_focusOrder>;
+
+		class Tree : tree<Tree, Set<Widget>>
+		{
+		public:
+			using tree<Tree, Set<Widget>>::tree;
+
+		private:
+			static auto child_begin(typename Set<Widget>::iterator & i)
+			{
+				return (*i)->_children.begin();
+			}
+
+			static auto child_end(typename Set<Widget>::iterator & i)
+			{
+				return (*i)->_children.end();
+			}
+		};
+
+		using iterator_t = tree_iterator<Tree>;
 
 		bind_messages(Widget, WidgetMessages)
 	};
@@ -579,9 +602,9 @@ namespace asd
 		return _displayList[idx];
 	}
 
-	inline void Widget::all() const
+	inline typename Widget::Tree * Widget::tree()
 	{
-
+		return {_children};
 	}
 
 	inline void Widget::setLeft(int value)

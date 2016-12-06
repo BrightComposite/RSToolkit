@@ -2,7 +2,7 @@
 #	asd UI Test
 #--------------------------------------------------------
 
-project(asdUITest CXX)
+project(uitest VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -12,15 +12,15 @@ include(${ASD_TOOLS}/module.cmake)
 
 module(APPLICATION)
 	dependencies(
-		asdApplication "application"
-		asdFreeImage   "freeimage"
-		asdFreeType    "freetype"
+		application	0.*
+		freeimage	0.*
+		freetype	0.*
 	)
 
 if(${USE_DIRECT3D} EQUAL 1)
-    dependencies(asdDirect3D11 "direct3d")
+    dependencies("direct3d~=0.*")
 else()
-    dependencies(asdOpenGL3_3 "opengl")
+    dependencies("opengl~=0.*")
 endif()
 
 	sources(tests)

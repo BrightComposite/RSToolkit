@@ -2,7 +2,7 @@
 #	asd Interaction
 #--------------------------------------------------------
 
-project(asd-Interaction CXX)
+project(interaction VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -11,7 +11,7 @@ include(${ASD_TOOLS}/module.cmake)
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(asd-UI "ui")
+	dependencies(ui	0.*)
 
 	sources(modules)
 		domain(interaction)

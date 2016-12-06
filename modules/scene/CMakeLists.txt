@@ -2,7 +2,7 @@
 #	asd Scene
 #--------------------------------------------------------
 
-project(asd-Scene CXX)
+project(scene VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -11,8 +11,10 @@ include(${ASD_TOOLS}/module.cmake)
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(asd-UI "ui")
-	dependencies(asd-Space "space")
+	dependencies(
+		ui		0.*
+		space	0.*
+	)
 
 	sources(modules)
 		domain(scene)

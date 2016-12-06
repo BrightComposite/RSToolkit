@@ -2,7 +2,7 @@
 #	asd User Interface
 #--------------------------------------------------------
 
-project(asdUI CXX)
+project(ui VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -12,10 +12,10 @@ include(${ASD_TOOLS}/module.cmake)
 
 module(SHARED)
 	dependencies(
-		asdGraphics		"graphics"
-		asdMessage		"message"
-		asdApplication	"application"
-		asdPlatform		"platform"
+		graphics	0.*
+		message		0.*
+		application	0.*
+		platform	0.*
 	)
 
 	sources(modules)

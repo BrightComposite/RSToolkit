@@ -2,7 +2,7 @@
 #	asd Physics
 #--------------------------------------------------------
 
-project(asd-Physics CXX)
+project(physics VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -11,7 +11,7 @@ include(${ASD_TOOLS}/module.cmake)
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(asd-Space "space")
+	dependencies(space	0.*)
 
 	sources(modules)
 		domain(physics)

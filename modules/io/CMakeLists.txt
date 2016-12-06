@@ -2,7 +2,7 @@
 #	asd Input/Output facilities
 #--------------------------------------------------------
 
-project(asdIO CXX)
+project(io VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -11,7 +11,7 @@ include(${ASD_TOOLS}/module.cmake)
 #--------------------------------------------------------
 
 module(INLINE)
-	dependencies(asdMeta "meta")
+	dependencies(meta	0.*)
 
 	sources(modules)
 		domain(io)

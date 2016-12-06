@@ -2,7 +2,7 @@
 #	asd platform-dependent facilities
 #--------------------------------------------------------
 
-project(asdPlatform CXX)
+project(platform VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -11,7 +11,7 @@ include(${ASD_TOOLS}/module.cmake)
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(asdMath "math")
+	dependencies(math	0.*)
 
 	sources(modules)
 

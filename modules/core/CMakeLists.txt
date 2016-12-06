@@ -2,7 +2,7 @@
 #	asd Core
 #--------------------------------------------------------
 
-project(asdCore CXX)
+project(core VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -11,7 +11,7 @@ include(${ASD_TOOLS}/module.cmake)
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(asdMeta "meta")
+	dependencies(meta		0.*)
 
 	sources(modules)
 		domain(core)

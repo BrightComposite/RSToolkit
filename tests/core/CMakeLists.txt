@@ -2,7 +2,7 @@
 #	asd Core Test
 #--------------------------------------------------------
 
-project(asdCoreTest CXX)
+project(coretest VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -12,8 +12,8 @@ include(${ASD_TOOLS}/module.cmake)
 
 module(APPLICATION)
 	dependencies(
-		asdApplication "application"
-		asdMessage "message"
+		application 0.*
+		message 	0.*
 	)
 
 	sources(tests)

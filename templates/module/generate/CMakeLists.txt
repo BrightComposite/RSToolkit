@@ -2,7 +2,7 @@
 #	@library_name@ module
 #--------------------------------------------------------
 
-project(@library_name@ CXX)
+project(@library_name@ VERSION 0.1)
 
 #--------------------------------------------------------
 

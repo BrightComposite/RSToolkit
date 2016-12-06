@@ -2,7 +2,7 @@
 #	asd OpenGL 3.3
 #--------------------------------------------------------
 
-project(asdOpenGL3_3 CXX)
+project(opengl3_3 VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -12,7 +12,7 @@ include(${ASD_TOOLS}/shaders.cmake)
 #--------------------------------------------------------
 
 module(SHARED)
-	dependencies(asdUI "ui")
+	dependencies(ui	0.*)
 	api(opengl3_3)
 
 	sources(modules)

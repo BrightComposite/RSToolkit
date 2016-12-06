@@ -2,7 +2,7 @@
 #	module @module_path@
 #--------------------------------------------------------
 
-project(@module_path@ CXX)
+project(@module_path@ VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -12,7 +12,7 @@ include(${ASD_TOOLS}/module.cmake)
 
 module(SHARED)
 	dependencies(
-		# asd-Core "core"
+		# core	0.*
 	)
 
 	sources(@module_domain@)

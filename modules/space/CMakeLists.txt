@@ -2,7 +2,7 @@
 #	asd Space
 #--------------------------------------------------------
 
-project(asd-Space CXX)
+project(space VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -12,7 +12,7 @@ include(${ASD_TOOLS}/module.cmake)
 
 module(INLINE)
 	dependencies(
-		asd-Math "math"
+		math	0.*
 	)
 
 	sources(modules)

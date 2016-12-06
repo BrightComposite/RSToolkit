@@ -2,7 +2,7 @@
 #	asd Application
 #--------------------------------------------------------
 
-project(asdApplication CXX)
+project(application VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -12,8 +12,8 @@ include(${ASD_TOOLS}/module.cmake)
 
 module(SHARED)
 	dependencies(
-		asdCore "core"
-		asdPlatform "platform"
+		core		0.*
+		platform	0.*
 	)
 
 	sources(modules)

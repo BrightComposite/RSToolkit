@@ -2,7 +2,7 @@
 #	asd Graphics
 #--------------------------------------------------------
 
-project(asdGraphics CXX)
+project(graphics VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -12,8 +12,8 @@ include(${ASD_TOOLS}/module.cmake)
 
 module(SHARED)
 	dependencies(
-		asdMath "math"
-		asdIO "io"
+		math	0.*
+		io		0.*
 	)
 
 	sources(modules)

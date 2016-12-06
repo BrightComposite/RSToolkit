@@ -2,7 +2,7 @@
 #	asd Direct3D Test
 #--------------------------------------------------------
 
-project(asd-Direct3DTest CXX)
+project(direct3dtest VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -12,10 +12,10 @@ include(${ASD_TOOLS}/module.cmake)
 
 module(APPLICATION)
 	dependencies(
-		asd-Application "application"
-		asd-Direct3D11  "direct3d"
-		asd-FreeImage   "freeimage"
-		asd-FreeType    "freetype"
+		application	0.*
+		direct3d	0.*
+		freeimage	0.*
+		freetype	0.*
 	)
 
 	sources(tests)

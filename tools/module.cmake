@@ -2,7 +2,7 @@
 #	ASD cmake module facilities
 #--------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.3)
 
 #--------------------------------------------------------
 
@@ -61,6 +61,10 @@ set_output_dir(${WORKSPACE_ROOT}/bin RUNTIME)
 link_directories(${WORKSPACE_ROOT}/lib/${MODULE_ARCH})
 link_directories(${WORKSPACE_ROOT}/lib/${MODULE_ARCH}/release)
 link_directories(${WORKSPACE_ROOT}/lib/${MODULE_ARCH}/debug)
+
+get_filename_component(PROJECT_ID ${PROJECT_SOURCE_DIR} NAME)
+set(PROJECT_NAME_OF_${PROJECT_ID} ${PROJECT_NAME} CACHE STRING "project name of ${PROJECT_ID} module")
+set(PROJECT_VERSION_OF_${PROJECT_ID} ${PROJECT_VERSION} CACHE STRING "project version of ${PROJECT_ID} module")
 
 #--------------------------------------------------------
 
@@ -338,28 +342,35 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 #	require_module function.
 
-	function(require_module name path)
+	function(require_module module_id version)
 		set(MESSAGES_INDENTATION_TEMP ${MESSAGES_INDENTATION})
 		set(MESSAGES_INDENTATION "${MESSAGES_INDENTATION}  " CACHE STRING "Messages indentation" FORCE)
-		message("${MESSAGES_INDENTATION}> Depends on \"${name}\"")
 
-		set(${PROJECT_NAME}_MODULE_DEPENDENCIES ${${PROJECT_NAME}_MODULE_DEPENDENCIES};${name} CACHE INTERNAL "${PROJECT_NAME} module dependencies" FORCE)
+		message("${MESSAGES_INDENTATION}> Depends on \"${module_id}-${version}\"")
 
-		if(NOT ";${GUARD_BLOCKS};" MATCHES ";${name}_GUARD;")
-			if(NOT "${${PROJECT_NAME}_ROOT}" STREQUAL "" AND EXISTS "${${PROJECT_NAME}_ROOT}/modules/${path}")
-				add_subdirectory("${${PROJECT_NAME}_ROOT}/modules/${path}" "${${PROJECT_NAME}_ROOT}/${OUTPUT_PATH_SUFFIX}/ ${path}")
-			elseif(EXISTS "${WORKSPACE_MODULES_ROOT}/${path}")
-				add_subdirectory("${WORKSPACE_MODULES_ROOT}/${path}" "${OUTPUT_ROOT}/${path}")
-			elseif(EXISTS "${MODULES_ROOT}/${path}")
-				add_subdirectory("${MODULES_ROOT}/${path}" "${OUTPUT_ROOT}/${path}")
-			elseif(EXISTS "${WORKSPACE_THIRD_PARTY}/${path}")
-				add_subdirectory("${WORKSPACE_THIRD_PARTY}/${path}" "${OUTPUT_ROOT}/${path}")
-			elseif(EXISTS "${THIRD_PARTY}/${path}")
-				add_subdirectory("${THIRD_PARTY}/${path}" "${OUTPUT_ROOT}/${path}")
+		if(NOT DEFINED PROJECT_NAME_OF_${module_id})
+			message("${MESSAGES_INDENTATION}> Try to resolve...")
+
+			if(NOT "${${PROJECT_NAME}_ROOT}" STREQUAL "" AND EXISTS "${${PROJECT_NAME}_ROOT}/modules/${module_id}")
+				add_subdirectory("${${PROJECT_NAME}_ROOT}/modules/${module_id}" "${${PROJECT_NAME}_ROOT}/${OUTPUT_module_id_SUFFIX}/ ${module_id}")
+			elseif(EXISTS "${WORKSPACE_MODULES_ROOT}/${module_id}")
+				add_subdirectory("${WORKSPACE_MODULES_ROOT}/${module_id}" "${OUTPUT_ROOT}/${module_id}")
+			elseif(EXISTS "${MODULES_ROOT}/${module_id}")
+				add_subdirectory("${MODULES_ROOT}/${module_id}" "${OUTPUT_ROOT}/${module_id}")
+			elseif(EXISTS "${WORKSPACE_THIRD_PARTY}/${module_id}")
+				add_subdirectory("${WORKSPACE_THIRD_PARTY}/${module_id}" "${OUTPUT_ROOT}/${module_id}")
+			elseif(EXISTS "${THIRD_PARTY}/${module_id}")
+				add_subdirectory("${THIRD_PARTY}/${module_id}" "${OUTPUT_ROOT}/${module_id}")
 			else()
-				message(FATAL_ERROR "Can't find dependency ${name}! Path ${path} doesn't exist!")
+				message(FATAL_ERROR "Couldn't resolve dependency \"${module_id}-${version}\"!")
 			endif()
 		endif()
+
+		set(name ${PROJECT_NAME_OF_${module_id}})
+		set(vers ${PROJECT_VERSION_OF_${module_id}})
+		message("${MESSAGES_INDENTATION}> Use \"${name} (${vers})\"")
+
+		set(${PROJECT_NAME}_MODULE_DEPENDENCIES ${${PROJECT_NAME}_MODULE_DEPENDENCIES};${name} CACHE INTERNAL "${PROJECT_NAME} module dependencies" FORCE)
 
 		set(MESSAGES_INDENTATION ${MESSAGES_INDENTATION_TEMP} CACHE STRING "Messages indentation" FORCE)
 	endfunction()
@@ -367,14 +378,14 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 #	dependencies function.
 
 	function(dependencies)
-		set(MODULE_NAME)
+		set(MODULE_ID)
 
 		foreach(ENTRY ${ARGN})
-			if("${MODULE_NAME}" STREQUAL "")
-				set(MODULE_NAME ${ENTRY})
+			if("${MODULE_ID}" STREQUAL "")
+				set(MODULE_ID ${ENTRY})
 			else()
-				require_module(${MODULE_NAME} ${ENTRY})
-				set(MODULE_NAME)
+				require_module(${MODULE_ID} ${ENTRY})
+				set(MODULE_ID)
 			endif()
 		endforeach()
 	endfunction()

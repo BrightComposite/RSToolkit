@@ -19,8 +19,10 @@ namespace asd
 {
 	using std::function;
 
-#ifdef __GNUC__
-#define invoke __invoke
+#if defined(__GNUC__)
+	#define invoke __invoke
+#elif defined(_MSC_VER)
+	#define __thiscall ____thiscall
 #endif // __GNUC__
 
 	typedef function<void()> Action;

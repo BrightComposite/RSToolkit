@@ -108,5 +108,4 @@ message(STATUS "Congratulations! Module ${NAME} has been created! Output is plac
 
 unset(CMAKE_LISTS_INDENTATION CACHE)
 
-
 #--------------------------------------------------------

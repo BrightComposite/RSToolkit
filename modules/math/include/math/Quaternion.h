@@ -268,7 +268,7 @@ namespace asd
 		Quaternion && normalize() &&
 		{
 			v /= VectorMath<T>::sqrt(v.sqr().fillsum());
-			return forward<Quaternion>(*this);
+			return std::forward<Quaternion>(*this);
 		}
 
 		// pitch (x), yaw (y), roll (z)

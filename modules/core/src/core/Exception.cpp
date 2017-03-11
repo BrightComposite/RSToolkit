@@ -2,12 +2,21 @@
 
 #include <core/Exception.h>
 
+#ifdef _MSC_VER
 #include <windows.h>
+#endif
+
 #include <iostream>
 
 //---------------------------------------------------------------------------
 
 #define EXC_BUFFER_SIZE 256
+
+#ifndef _MSC_VER
+	char * strerror_s(char * s, size_t size, error_t e) {
+		return strerror_r(e, s, size);
+	}
+#endif
 
 namespace asd
 {
@@ -21,7 +30,7 @@ namespace asd
 	String stdError()
 	{
 		char buffer[EXC_BUFFER_SIZE];
-		strerror_s(buffer, EXC_BUFFER_SIZE, errno);
+		::strerror_s(buffer, EXC_BUFFER_SIZE, errno);
 
 		return buffer;
 	}
@@ -29,7 +38,7 @@ namespace asd
 	String stdError(errno_t err)
 	{
 		char buffer[EXC_BUFFER_SIZE];
-		strerror_s(buffer, EXC_BUFFER_SIZE, err);
+		::strerror_s(buffer, EXC_BUFFER_SIZE, err);
 
 		return buffer;
 	}

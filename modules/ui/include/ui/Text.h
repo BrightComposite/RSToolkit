@@ -60,7 +60,7 @@ namespace asd
 		template<class TextLayerClass = StaticTextLayer, useif<based_on<TextLayerClass, TextLayer>::value>>
 		static void set(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color::black, int fontSize = 14)
 		{
-			w->require<TextComponent>()->set(Unique<TextLayerClass>(w, Handle<Text>(w->graphics(), s, font, color, fontSize)));
+			w->components->require<TextComponent>()->set(Unique<TextLayerClass>(w, Handle<Text>(w->graphics(), s, font, color, fontSize)));
 		}
 
 		static api(ui) void setDynamic(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color::black, int fontSize = 14);

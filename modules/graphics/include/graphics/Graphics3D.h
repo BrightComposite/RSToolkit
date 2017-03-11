@@ -148,13 +148,13 @@ namespace asd
 		template<class U, typename ... A, useif<is_uniform<U>::value, can_construct_contents<U, A...>::value>>
 		void updateUniform(A && ... args)
 		{
-			uniformAdapter<U>()->update<U>(forward<A>(args)...);
+			uniformAdapter<U>()->template update<U>(forward<A>(args)...);
 		}
 
 		template<class U, useif<is_uniform<U>::value>>
 		void updateUniform(const Contents<U> & contents)
 		{
-			uniformAdapter<U>()->update<U>(contents);
+			uniformAdapter<U>()->template update<U>(contents);
 		}
 
 		void updateUniformBuffers()
@@ -225,10 +225,7 @@ namespace asd
 		}
 
 		template<class U>
-		void uniformChunk(UniformChunk<U> & chunk)
-		{
-			uniformAdapter<U>()->append(chunk);
-		}
+		inline void uniformChunk(UniformChunk<U> & chunk);
 
 		float _depth = 0.0f;
 		StateHandle<bool> _depthTestMode {false};
@@ -243,6 +240,26 @@ namespace asd
 		Map<string, VertexLayout, Graphics3D> _vertexLayouts;
 		Map<string, ShaderProgram> _shaderPrograms;
 	};
+	
+	template<class U>
+	struct UniformChunk : UniformData
+	{
+		static_assert(is_uniform<U>::value, "U must be an uniform");
+		
+		UniformChunk(Graphics3D * graphics) {
+			graphics->uniformChunk(*this);
+		}
+		
+		void fill(const Contents<U> & contents) {
+			Memory<void>::move(bytes.ptr, contents.pointer(), bytes.size);
+		}
+	};
+	
+	template<class U>
+	inline void Graphics3D::uniformChunk(UniformChunk<U> & chunk)
+	{
+		uniformAdapter<U>()->append(chunk);
+	}
 }
 
 //---------------------------------------------------------------------------

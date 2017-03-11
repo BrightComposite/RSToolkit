@@ -2,7 +2,7 @@
 #	@module_path@ test facility
 #--------------------------------------------------------
 
-project(@module_path@ VERSION 0.1)
+project(@module_path@test VERSION 0.1)
 
 #--------------------------------------------------------
 

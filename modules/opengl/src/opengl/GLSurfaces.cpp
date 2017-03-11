@@ -3,8 +3,6 @@
 #include <opengl/GLObjects.h>
 #include <ui/UISpace.h>
 
-#include <iostream>
-
 //---------------------------------------------------------------------------
 
 namespace asd

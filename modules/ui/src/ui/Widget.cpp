@@ -25,7 +25,9 @@ namespace asd
 		_parent(parent), _relPos(region.pos()), _absPos(_parent ? _relPos + _parent->_absPos : _relPos), _size(region.size()), _offsets(region), _space(space)
 	{
 		setclass(Widget);
-
+		
+		components.init(this);
+		
 		if(_parent != nullptr)
 			_parent->_children.insert(this);
 

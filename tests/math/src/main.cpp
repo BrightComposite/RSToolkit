@@ -8,7 +8,6 @@
 #include <math/Transform.h>
 
 #include <iostream>
-#include <conio.h>
 
 //---------------------------------------------------------------------------
 
@@ -57,7 +56,7 @@ namespace asd
 
 		obj->matrix = obj->matrix->transposition();
 
-		_getch();
+		getchar();
         return 0;
     });
 }

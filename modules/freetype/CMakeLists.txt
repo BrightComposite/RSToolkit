@@ -2,7 +2,7 @@
 #	asd FreeType adaptation
 #--------------------------------------------------------
 
-project(freetype4asd VERSION 0.1)
+project(freetype-asd VERSION 0.1)
 
 #--------------------------------------------------------
 

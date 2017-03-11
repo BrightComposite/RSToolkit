@@ -7,8 +7,8 @@
 
 //---------------------------------------------------------------------------
 
-#include <math/Math.h>
 #include <core/intrinsic/Intrinsic.h>
+#include <math/Math.h>
 #include <core/String.h>
 #include <core/memory/Aligned.h>
 #include <core/memory/allocator/AlignedAllocator.h>

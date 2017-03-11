@@ -3,7 +3,6 @@
 #include <meta/Inheritance.h>
 
 #include <core/String.h>
-#include <container/ArrayList.h>
 #include <container/Map.h>
 
 #include <message/Subject.h>
@@ -11,10 +10,12 @@
 #include <application/Application.h>
 #include <iostream>
 #include <chrono>
-#include <conio.h>
 
 #include <thread>
+
+#ifdef _MSC_VER
 #include <vld.h>
+#endif
 
 #include <application/Starter.h>
 
@@ -52,7 +53,7 @@ namespace asd
 	static String s("SomeString");
 	static auto shstr = share(s);
 
-	static time_point<hrc> start;
+	static time_point<hrc, typename hrc::duration> start;
 	static nanoseconds elapsed;
 
 	static string keys[count];
@@ -65,7 +66,7 @@ namespace asd
 		testHandles();
 		//testHandlesSafety(); //bad test
 
-		_getch();
+		getchar();
 		return 0;
 	});
 
@@ -258,7 +259,7 @@ namespace asd
 	static String randomString(int size)
 	{
 		String buf;
-		srand(hrc::now().time_since_epoch().count() % INT_MAX);
+		srand((uint)hrc::now().time_since_epoch().count() % std::numeric_limits<int>::max());
 
 		buf.reserve(size);
 

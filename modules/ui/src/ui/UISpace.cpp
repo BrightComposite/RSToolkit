@@ -1,9 +1,12 @@
 //---------------------------------------------------------------------------
 
 #include <ui/UISpace.h>
+
+#ifdef WIN32
 #include <windows/PointAdapter.h>
 #include <windows/RectAdapter.h>
 #include <windows/ComException.h>
+#endif
 
 #include <application/Application.h>
 

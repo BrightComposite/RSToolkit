@@ -83,23 +83,23 @@ namespace asd
 		ComponentSet(Context * ctx, const ComponentSet & set) : Base(ctx)
 		{
 			for(auto & entry : set.map)
-				map.insert({entry.first, entry.second->clone(ctx)});
+				this->map.insert({entry.first, entry.second->clone(ctx)});
 		}
 
 		using Base::set;
 
 		void set(const ComponentSet & set)
 		{
-			map.clear();
+			this->map.clear();
 
 			for(auto & entry : set.map)
-				map.insert({entry.first, entry.second->clone(ctx)});
+				this->map.insert({entry.first, entry.second->clone(this->ctx)});
 		}
 
 		template<class T, class C, useif<based_on<T, Origin>::value, can_construct<T, Context *>::value>>
 		Handle<T> link(C * component)
 		{
-			auto c = require<T>();
+			auto c = this->template require<T>();
 			c->link(component);
 			return c;
 		}
@@ -107,7 +107,7 @@ namespace asd
 		template<class T, class C, useif<based_on<T, Origin>::value, can_construct<T, Context *>::value>>
 		void unlink(C * component)
 		{
-			auto c = seek<T>();
+			auto c = this->template seek<T>();
 
 			if(c != nullptr)
 				c->unlink(component);
@@ -116,17 +116,17 @@ namespace asd
 		template<class T, useif<based_on<T, Origin>::value>>
 		void remove()
 		{
-			auto i = map.find(morphid(T));
+			auto i = this->map.find(morphid(T));
 
-			if(i == map.end())
+			if(i == this->map.end())
 				return;
 
 			auto & h = valueof(i);
 
 			if(h != nullptr && h->hasLinks())
 				throw LinkedComponentException(h);
-
-			map.erase(i);
+			
+			this->map.erase(i);
 		}
 	};
 
@@ -135,13 +135,13 @@ namespace asd
 		template<class T, class Y, selectif(0)<!is_pointer<Y>::value>, useif<has_components<Y>::value>>
 		inline Handle<T> as(Y && x)
 		{
-			return forward<Y>(x).components->require<T>();
+			return forward<Y>(x).components->template require<T>();
 		}
 
 		template<class T, class Y, selectif(1)<is_pointer<Y>::value>, useif<has_components<std::remove_pointer_t<Y>>::value>>
 		inline Handle<T> as(Y x)
 		{
-			return x->components->require<T>();
+			return x->components->template require<T>();
 		}
 	}
 }

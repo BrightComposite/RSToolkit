@@ -30,7 +30,13 @@ module(SHARED)
 		group(src Sources)
 		files(Message.cpp)
 	elseif(UNIX)
-
+		domain(unix)
+			
+		group(include Headers)
+		files(Platform.h)
+			
+		group(src Sources)
+		files(Platform.cpp)
 	endif()
 
 	endsources()

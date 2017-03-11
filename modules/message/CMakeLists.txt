@@ -19,9 +19,13 @@ module(SHARED)
 		group(include Headers)
 		files(
 			Channel.h
+			Channel.hpp
 			Connect.h
 			Message.h
 			MessageClass.h
+			MessageClass.hpp
+			MessageConnector.h
+			MessageBroadcaster.h
 			Subject.h
 		)
 

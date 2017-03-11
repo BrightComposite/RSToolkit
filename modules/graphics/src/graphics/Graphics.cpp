@@ -8,20 +8,20 @@ namespace asd
 {
 	implement_link(Graphics);
 
-	const GenericColor<ColorType::Float, ColorFormat::rgb> GenericColor<ColorType::Float, ColorFormat::rgb>::transparent = {0, 0, 0, 0};
-	const GenericColor<ColorType::Byte,  ColorFormat::rgb> GenericColor<ColorType::Byte,  ColorFormat::rgb>::transparent = {0, 0, 0, 0};
-	const GenericColor<ColorType::Float, ColorFormat::hsv> GenericColor<ColorType::Float, ColorFormat::hsv>::transparent = {0, 0, 0, 0};
-	const GenericColor<ColorType::Byte,  ColorFormat::hsv> GenericColor<ColorType::Byte,  ColorFormat::hsv>::transparent = {0, 0, 0, 0};
-
-	const GenericColor<ColorType::Float, ColorFormat::rgb> GenericColor<ColorType::Float, ColorFormat::rgb>::white = {1.0f, 1.0f, 1.0f, 1.0f};
-	const GenericColor<ColorType::Byte,  ColorFormat::rgb> GenericColor<ColorType::Byte,  ColorFormat::rgb>::white = {255, 255, 255, 255};
-	const GenericColor<ColorType::Float, ColorFormat::hsv> GenericColor<ColorType::Float, ColorFormat::hsv>::white = {0.0f, 0.0f, 1.0f, 1.0f};
-	const GenericColor<ColorType::Byte,  ColorFormat::hsv> GenericColor<ColorType::Byte,  ColorFormat::hsv>::white = {0, 0, 255, 255};
-
-	const GenericColor<ColorType::Float, ColorFormat::rgb> GenericColor<ColorType::Float, ColorFormat::rgb>::black = {0, 0, 0, 1.0f};
-	const GenericColor<ColorType::Byte,  ColorFormat::rgb> GenericColor<ColorType::Byte,  ColorFormat::rgb>::black = {0, 0, 0, 255};
-	const GenericColor<ColorType::Float, ColorFormat::hsv> GenericColor<ColorType::Float, ColorFormat::hsv>::black = {0, 0, 0, 1.0f};
-	const GenericColor<ColorType::Byte,  ColorFormat::hsv> GenericColor<ColorType::Byte,  ColorFormat::hsv>::black = {0, 0, 0, 255};
+	template<> const GenericColor<ColorType::Float, ColorFormat::rgb> GenericColor<ColorType::Float, ColorFormat::rgb>::transparent = {0, 0, 0, 0};
+	template<> const GenericColor<ColorType::Byte,  ColorFormat::rgb> GenericColor<ColorType::Byte,  ColorFormat::rgb>::transparent = {0, 0, 0, 0};
+	template<> const GenericColor<ColorType::Float, ColorFormat::hsv> GenericColor<ColorType::Float, ColorFormat::hsv>::transparent = {0, 0, 0, 0};
+	template<> const GenericColor<ColorType::Byte,  ColorFormat::hsv> GenericColor<ColorType::Byte,  ColorFormat::hsv>::transparent = {0, 0, 0, 0};
+	
+	template<> const GenericColor<ColorType::Float, ColorFormat::rgb> GenericColor<ColorType::Float, ColorFormat::rgb>::white = {1.0f, 1.0f, 1.0f, 1.0f};
+	template<> const GenericColor<ColorType::Byte,  ColorFormat::rgb> GenericColor<ColorType::Byte,  ColorFormat::rgb>::white = {255, 255, 255, 255};
+	template<> const GenericColor<ColorType::Float, ColorFormat::hsv> GenericColor<ColorType::Float, ColorFormat::hsv>::white = {0.0f, 0.0f, 1.0f, 1.0f};
+	template<> const GenericColor<ColorType::Byte,  ColorFormat::hsv> GenericColor<ColorType::Byte,  ColorFormat::hsv>::white = {0, 0, 255, 255};
+	
+	template<> const GenericColor<ColorType::Float, ColorFormat::rgb> GenericColor<ColorType::Float, ColorFormat::rgb>::black = {0, 0, 0, 1.0f};
+	template<> const GenericColor<ColorType::Byte,  ColorFormat::rgb> GenericColor<ColorType::Byte,  ColorFormat::rgb>::black = {0, 0, 0, 255};
+	template<> const GenericColor<ColorType::Float, ColorFormat::hsv> GenericColor<ColorType::Float, ColorFormat::hsv>::black = {0, 0, 0, 1.0f};
+	template<> const GenericColor<ColorType::Byte,  ColorFormat::hsv> GenericColor<ColorType::Byte,  ColorFormat::hsv>::black = {0, 0, 0, 255};
 
 	void Graphics::bind(Surface * surface)
 	{

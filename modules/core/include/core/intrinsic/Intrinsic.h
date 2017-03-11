@@ -11,6 +11,7 @@
 #include "IntrinsicCvt.h"
 
 #include <meta/Bitmask.h>
+#include <cmath>
 
 //---------------------------------------------------------------------------
 
@@ -48,8 +49,7 @@ namespace asd
 	template struct api(core) IntrinData<int, 4>;
 	template struct api(core) IntrinData<float, 4>;
 
-#ifdef USE_AVX
-
+#if SIMD_LEVEL >= SIMD_AVX
 	template struct api(core) IntrinData<double, 4>;
 
 #define _mm256_reverse_pd(a) _mm256_permute4x64_pd(a, reverse_shuffle_4)
@@ -79,8 +79,7 @@ namespace asd
 	template struct api(core) name<byte>;		\
 	template struct api(core) name<int>;		\
 	template struct api(core) name<int64>;		\
-	template struct api(core) name<float>;		\
-
+	template struct api(core) name<float>;
 #endif
 
 	intrinsic_constant(IntrinZero);
@@ -189,7 +188,8 @@ namespace asd
 		{
 			return _mm_sub_epi32(a, b);
 		}
-
+		
+		#if SIMD_LEVEL >= SIMD_SSE4_1
 		static inline void __vectorcall mul(in_type a, in_type b, type & out)
 		{
 			out = _mm_mullo_epi32(a, b);
@@ -199,6 +199,21 @@ namespace asd
 		{
 			return _mm_mullo_epi32(a, b);
 		}
+		#else
+		static inline void __vectorcall mul(in_type a, in_type b, type & out)
+		{
+			auto tmp1 = _mm_mul_epu32(a,b); /* mul 2, 0*/
+			auto tmp2 = _mm_mul_epu32(_mm_srli_si128(a, 4), _mm_srli_si128(b, 4)); /* mul 3, 1 */
+			out = shuffle2<2, 0, 2, 0>(tmp1, tmp2);
+		}
+		
+		static inline type __vectorcall mul(in_type a, in_type b)
+		{
+			auto tmp1 = _mm_mul_epu32(a,b); /* mul 2, 0*/
+			auto tmp2 = _mm_mul_epu32(_mm_srli_si128(a, 4), _mm_srli_si128(b, 4)); /* mul 3, 1 */
+			return shuffle2<2, 0, 2, 0>(tmp1, tmp2);
+		}
+		#endif
 
 		static inline void __vectorcall div(in_type a, in_type b, type & out)
 		{
@@ -209,13 +224,16 @@ namespace asd
 		{
 			return intrin_cvt<__m128i>(_mm_div_ps(intrin_cvt<__m128>(a), intrin_cvt<__m128>(b)));
 		}
-
+		
+	#if SIMD_LEVEL >= SIMD_SSE4_1
 		static inline void __vectorcall mod(in_type a, in_type b, type & out)
 		{
-			_mm_insert_epi32(out, _mm_extract_epi32(a, 3) % _mm_extract_epi32(b, 3), 3);
-			_mm_insert_epi32(out, _mm_extract_epi32(a, 2) % _mm_extract_epi32(b, 2), 2);
-			_mm_insert_epi32(out, _mm_extract_epi32(a, 1) % _mm_extract_epi32(b, 1), 1);
-			_mm_insert_epi32(out, _mm_extract_epi32(a, 0) % _mm_extract_epi32(b, 0), 0);
+			out = _mm_set_epi32(
+				_mm_extract_epi32(a, 3) % _mm_extract_epi32(b, 3),
+				_mm_extract_epi32(a, 2) % _mm_extract_epi32(b, 2),
+				_mm_extract_epi32(a, 1) % _mm_extract_epi32(b, 1),
+				_mm_extract_epi32(a, 0) % _mm_extract_epi32(b, 0)
+				);
 		}
 
 		static inline type __vectorcall mod(in_type a, in_type b)
@@ -227,7 +245,32 @@ namespace asd
 				_mm_extract_epi32(a, 0) % _mm_extract_epi32(b, 0)
 			);
 		}
-
+	#else
+		static inline void __vectorcall mod(in_type a, in_type b, type & out)
+		{
+			inner x1 = a, x2 = b;
+			
+			out = _mm_set_epi32(
+				x1.w % x2.w,
+				x1.z % x2.z,
+				x1.y % x2.y,
+				x1.x % x2.x
+			);
+		}
+		
+		static inline type __vectorcall mod(in_type a, in_type b)
+		{
+			inner x1 = a, x2 = b;
+			
+			return _mm_set_epi32(
+				x1.w % x2.w,
+				x1.z % x2.z,
+				x1.y % x2.y,
+				x1.x % x2.x
+			);
+		}
+	#endif
+		
 		static inline void __vectorcall sqr(in_type a, type & out)
 		{
 			out = mul(a, a);
@@ -238,12 +281,15 @@ namespace asd
 			return mul(a, a);
 		}
 
+#if SIMD_LEVEL >= SIMD_SSE4_1
 		static inline void __vectorcall invert(in_type a, type & out)
 		{
-			_mm_insert_epi32(out, 1 / _mm_extract_epi32(a, 3), 3);
-			_mm_insert_epi32(out, 1 / _mm_extract_epi32(a, 2), 2);
-			_mm_insert_epi32(out, 1 / _mm_extract_epi32(a, 1), 1);
-			_mm_insert_epi32(out, 1 / _mm_extract_epi32(a, 0), 0);
+			out = _mm_set_epi32(
+				1 / _mm_extract_epi32(a, 3),
+				1 / _mm_extract_epi32(a, 2),
+				1 / _mm_extract_epi32(a, 1),
+				1 / _mm_extract_epi32(a, 0)
+			);
 		}
 
 		static inline type __vectorcall invert(in_type a)
@@ -255,7 +301,29 @@ namespace asd
 				1 / _mm_extract_epi32(a, 0)
 				);
 		}
+#else
+		static inline void __vectorcall invert(in_type a, type & out)
+		{
+			inner x = a;
+			out = _mm_set_epi32(1 / x.w, 1 / x.z, 1 / x.y, 1 / x.x);
+		}
+		
+		static inline type __vectorcall invert(in_type a)
+		{
+			inner x = a;
+			return _mm_set_epi32(1 / x.w, 1 / x.z, 1 / x.y, 1 / x.x);
+		}
+#endif
+		
+		static inline void __vectorcall select(in_type a, in_type b, in_type mask, type & out) {
+			out = bit_or(bit_and(mask, a), bit_andnot(mask, b));
+		}
+		
+		static inline type __vectorcall select(in_type a, in_type b, in_type mask) {
+			return bit_or(bit_and(mask, a), bit_andnot(mask, b));
+		}
 
+#if SIMD_LEVEL >= SIMD_SSE4_1
 		static inline void __vectorcall min(in_type a, in_type b, type & out)
 		{
 			out = _mm_min_epi32(a, b);
@@ -275,7 +343,28 @@ namespace asd
 		{
 			return _mm_max_epi32(a, b);
 		}
-
+#else
+		static inline void __vectorcall min(in_type a, in_type b, type & out)
+		{
+			out = select(a, b, _mm_cmplt_epi32(a, b));
+		}
+		
+		static inline type __vectorcall min(in_type a, in_type b)
+		{
+			return select(a, b, _mm_cmplt_epi32(a, b));
+		}
+		
+		static inline void __vectorcall max(in_type a, in_type b, type & out)
+		{
+			out = select(a, b, _mm_cmpgt_epi32(a, b));
+		}
+		
+		static inline type __vectorcall max(in_type a, in_type b)
+		{
+			return select(a, b, _mm_cmpgt_epi32(a, b));
+		}
+#endif
+		
 		static inline void __vectorcall hadd2(in_type a, in_type b, type & out)
 		{
 			out = _mm_hadd_epi32(a, b);
@@ -317,12 +406,12 @@ namespace asd
 
 		static inline void __vectorcall sqrt(in_type a, type & out)
 		{
-			out = _mm_cvtps_ph(_mm_sqrt_ps(_mm_cvtph_ps(a)), 0);
+			out = _mm_cvtps_epi32(_mm_sqrt_ps(_mm_cvtepi32_ps(a)));
 		}
 
 		static inline type __vectorcall sqrt(in_type a)
 		{
-			return _mm_cvtps_ph(_mm_sqrt_ps(_mm_cvtph_ps(a)), 0);
+			return _mm_cvtps_epi32(_mm_sqrt_ps(_mm_cvtepi32_ps(a)));
 		}
 
 		static inline void __vectorcall bit_and(in_type a, in_type b, type & out)
@@ -468,7 +557,8 @@ namespace asd
 		{
 			return shuffle<3, 2, 1, 0>(a);
 		}
-
+		
+	#if SIMD_LEVEL >= SIMD_SSE4_1
 		template<byte A, byte B, byte C, byte D, useif<(A < 2 && B < 2 && C < 2 && D < 2)>>
 		static inline void __vectorcall blend(in_type a, in_type b, type & out)
 		{
@@ -480,7 +570,7 @@ namespace asd
 		{
 			return _mm_blend_epi16(a, b, mk_mask8(A, B, C, D));
 		}
-
+		
 		template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
 		static inline void __vectorcall shuffle2(in_type a, in_type b, type & out)
 		{
@@ -490,7 +580,6 @@ namespace asd
 				0xF0
 				);
 		}
-
 		template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
 		static inline type __vectorcall shuffle2(in_type a, in_type b)
 		{
@@ -500,6 +589,33 @@ namespace asd
 				0xF0
 				);
 		}
+	#else
+		template<byte A, byte B, byte C, byte D, useif<(A < 2 && B < 2 && C < 2 && D < 2)>>
+		static inline void __vectorcall blend(in_type a, in_type b, type & out)
+		{
+			auto mask = IntrinsicMask<int, IntrinMax, mk_mask4(A, B, C, D)>::get();
+			out = bit_or(bit_andnot(mask, a), bit_and(mask, b));
+		}
+		
+		template<byte A, byte B, byte C, byte D, useif<(A < 2 && B < 2 && C < 2 && D < 2)>>
+		static inline type __vectorcall blend(in_type a, in_type b)
+		{
+			auto mask = IntrinsicMask<int, IntrinMax, mk_mask4(A, B, C, D)>::get();
+			return bit_or(bit_andnot(mask, a), bit_and(mask, b));
+		}
+		
+		template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
+		static inline void __vectorcall shuffle2(in_type a, in_type b, type & out)
+		{
+			out = _mm_castps_si128(_mm_shuffle_ps(_mm_castsi128_ps(a), _mm_castsi128_ps(b), mk_shuffle_4(A, B, C, D)));
+		}
+		
+		template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
+		static inline type __vectorcall shuffle2(in_type a, in_type b)
+		{
+			return _mm_castps_si128(_mm_shuffle_ps(_mm_castsi128_ps(a), _mm_castsi128_ps(b), mk_shuffle_4(A, B, C, D)));
+		}
+	#endif
 
 		template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
 		static inline void __vectorcall shuffle(in_type a, type & out)
@@ -917,25 +1033,36 @@ namespace asd
 		{
 			return _mm_reverse_ps(a);
 		}
-
-		template<byte A, byte B, byte C, byte D, useif<
-			(A < 2 && B < 2 && C < 2 && D < 2)
-			>
-		>
+		
+	#if SIMD_LEVEL >= SIMD_SSE4_1
+		template<byte A, byte B, byte C, byte D, useif<(A < 2 && B < 2 && C < 2 && D < 2)>>
 		static inline void __vectorcall blend(in_type a, in_type b, type & out)
 		{
 			out = _mm_blend_ps(a, b, mk_mask4(A, B, C, D));
 		}
 
-		template<byte A, byte B, byte C, byte D, useif<
-			(A < 2 && B < 2 && C < 2 && D < 2)
-			>
-		>
+		template<byte A, byte B, byte C, byte D, useif<(A < 2 && B < 2 && C < 2 && D < 2)>>
 		static inline type __vectorcall blend(in_type a, in_type b)
 		{
 			return _mm_blend_ps(a, b, mk_mask4(A, B, C, D));
 		}
 
+	#else
+		template<byte A, byte B, byte C, byte D, useif<(A < 2 && B < 2 && C < 2 && D < 2)>>
+		static inline void __vectorcall blend(in_type a, in_type b, type & out)
+		{
+			auto mask = IntrinsicMask<float, IntrinMax, mk_mask4(A, B, C, D)>::get();
+			out = bit_or(bit_andnot(mask, a), bit_and(mask, b));
+		}
+		
+		template<byte A, byte B, byte C, byte D, useif<(A < 2 && B < 2 && C < 2 && D < 2)>>
+		static inline type __vectorcall blend(in_type a, in_type b)
+		{
+			auto mask = IntrinsicMask<float, IntrinMax, mk_mask4(A, B, C, D)>::get();
+			return bit_or(bit_andnot(mask, a), bit_and(mask, b));
+		}
+	#endif
+		
 		template<byte A, byte B, byte C, byte D, useif<
 			(A < 4 && B < 4 && C < 4 && D < 4)
 			>
@@ -960,7 +1087,7 @@ namespace asd
 		>
 		static inline void __vectorcall shuffle(in_type a, type & out)
 		{
-			out = _mm_permute_ps(a, mk_shuffle_4(A, B, C, D));
+			out = _mm_shuffle_ps(a, a, mk_shuffle_4(A, B, C, D));
 		}
 
 		template<byte A, byte B, byte C, byte D, useif<
@@ -969,11 +1096,11 @@ namespace asd
 		>
 		static inline type __vectorcall shuffle(in_type a)
 		{
-			return _mm_permute_ps(a, mk_shuffle_4(A, B, C, D));
+			return _mm_shuffle_ps(a, a, mk_shuffle_4(A, B, C, D));
 		}
 	};
 
-#ifdef USE_AVX
+#if SIMD_LEVEL >= SIMD_AVX
 
 	/**
 	 *	Double intrinsics
@@ -1424,7 +1551,7 @@ namespace asd
 
 		static inline void __vectorcall fill(byte val, inner & out)
 		{
-			out = {val, val, val, val};
+			out = type{val, val, val, val};
 		}
 
 		static inline inner __vectorcall fill(byte val)
@@ -1687,7 +1814,7 @@ namespace asd
 
 		template<byte A, byte B, byte C, byte D, useif<
 			(A < 4 && B < 4 && C < 4 && D < 4)
-			>endif
+			>
 		>
 		static inline void __vectorcall shuffle2(const type & a, const type & b, type & out)
 		{
@@ -1715,7 +1842,7 @@ namespace asd
 
 		template<byte A, byte B, byte C, byte D, useif<
 			(A < 4 && B < 4 && C < 4 && D < 4)
-			>endif
+			>
 		>
 		static inline void __vectorcall shuffle(const type & a, type & out)
 		{

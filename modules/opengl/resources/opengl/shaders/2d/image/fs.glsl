@@ -8,11 +8,11 @@ uniform sampler2D tex;
 in Vertex 
 {
 	vec2 texcoord;
-} input;
+} vtx;
 
 out vec4 fscolor;
 
 void main(void)
 {
-	fscolor = texture2D(tex, input.texcoord);
+	fscolor = texture2D(tex, vtx.texcoord);
 }

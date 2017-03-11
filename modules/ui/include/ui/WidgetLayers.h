@@ -91,13 +91,12 @@ namespace asd
 
 		api(ui) void reset();
 
-		api(ui) void decorate(Widget * w);
+		api(ui) void apply(Widget * w);
 
 	protected:
 		array_list<Unique<Color>> _colors;
 
-		struct
-		{
+		struct {
 			Unique<Color> color;
 			uint width;
 		} _boundary;

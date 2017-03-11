@@ -7,14 +7,51 @@
 
 //---------------------------------------------------------------------------
 
+#include <meta/Preprocessor.h>
+
+//---------------------------------------------------------------------------
+
+#define SIMD_SSE1 	0
+#define SIMD_SSE2 	1
+#define SIMD_SSE3 	2
+#define SIMD_SSSE3 	3
+#define SIMD_SSE4 	4
+#define SIMD_SSE4A 	5
+#define SIMD_SSE4_1 6
+#define SIMD_SSE4_2 7
+
+#define SIMD_AVX 	10
+#define SIMD_AVX2 	11
+
+#define SIMD_LEVEL pp_cat(SIMD_, _SIMD_LEVEL)
+
+//---------------------------------------------------------------------------
+
 #ifdef MSVC
 #include <intrin.h>
 #endif // MSVC
 
-#ifdef USE_AVX
-#include <immintrin.h>
-#else
+#if SIMD_LEVEL >= SIMD_SSE1
+#include <xmmintrin.h>
+#endif
+#if SIMD_LEVEL >= SIMD_SSE2
+#include <emmintrin.h>
+#endif
+#if SIMD_LEVEL >= SIMD_SSE3
+#include <pmmintrin.h>
+#endif
+#if SIMD_LEVEL >= SIMD_SSE4
 #include <tmmintrin.h>
+#endif
+#if SIMD_LEVEL >= SIMD_SSE4A
+#include <ammintrin.h>
+#endif
+#if SIMD_LEVEL >= SIMD_SSE4_1
+#include <smmintrin.h>
+#endif
+
+#if SIMD_LEVEL >= SIMD_AVX
+#include <x86intrin.h>
 #endif
 
 #include <memory.h>
@@ -78,7 +115,8 @@ namespace asd
 	declare_intrin_type(byte,   4, __m32);
 	declare_intrin_type(int,    4, __m128i);
 	declare_intrin_type(float,  4, __m128);
-#ifdef USE_AVX
+	
+#if SIMD_LEVEL >= SIMD_AVX
 	declare_intrin_type(double, 4, __m256d);
 #endif
 	
@@ -98,7 +136,7 @@ namespace asd
 	template<>
 	struct is_intrin<__m128d[2]> : true_type {};
 
-#ifdef USE_AVX
+#if SIMD_LEVEL >= SIMD_AVX
 	template<>
 	struct is_intrin<__m256>	 : true_type {};
 	template<>
@@ -330,6 +368,7 @@ namespace asd
 
 		IntrinData() {}
 		IntrinData(const type & v) : v(v) {}
+		IntrinData(const inner & data) : data(data) {}
 
 		void * operator new (size_t size)
 		{
@@ -371,7 +410,7 @@ namespace asd
 		template<int I, useif<(I < 4)>>
 		static inline void set(type & out, T value)
 		{
-			reinterpret_cast<IntrinData *>(out)->data[I] = value;
+			reinterpret_cast<IntrinData *>(&out)->data[I] = value;
 		}
 	};
 

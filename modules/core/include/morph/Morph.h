@@ -48,11 +48,7 @@ namespace asd
 		Handle<T> seek() const
 		{
 			auto i = map.find(morphid(T));
-
-			if(i == map.end())
-				return nullptr;
-
-			return cast::as<T>(i->second);
+			return i != map.end() ? cast::as<T>(i->second) : nullptr;
 		}
 
 		template<class T, useif<based_on<T, Base>::value>>

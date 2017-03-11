@@ -2,14 +2,15 @@
 
 #pragma once
 
-#ifndef cONTAINER_H
-#define cONTAINER_H
+#ifndef CONTAINER_H
+#define CONTAINER_H
 
 //---------------------------------------------------------------------------
 
 #include <meta/Meta.h>
 #include <boost/iterator/iterator_facade.hpp>
 
+#include <algorithm>
 #include <stack>
 
 //---------------------------------------------------------------------------
@@ -22,34 +23,53 @@ namespace asd
 	type_checker(is_const_iterable, const_iterator);
 
 	template<class container, useif<is_iterable<container>::value>>
-	typename container::iterator erase(container & container, int pos)
+	typename container::iterator erase(container & c, int pos)
 	{
-		return container.erase(std::next(container.begin(), pos));
+		return c.erase(std::next(c.begin(), pos));
 	}
 
 	template<class container, useif<is_iterable<container>::value>>
-	typename container::iterator erase(container & container, int pos, size_t count)
+	typename container::iterator erase(container & c, int pos, size_t count)
 	{
-		auto i = std::next(container.begin(), pos);
-		return container.erase(i, i + count);
+		auto i = std::next(c.begin(), pos);
+		return c.erase(i, i + count);
 	}
 
 	template<class container, typename T, useif<is_iterable<container>::value>>
-	typename container::iterator erase(container & container, const T & value)
+	typename container::iterator erase(container & c, const T & value)
 	{
-		return container.erase(std::remove(container.begin(), container.end(), value), container.end()); //move all values equal to the 'value' to the end of the 'container', then erase the end
+		return c.erase(std::remove(c.begin(), c.end(), value), c.end()); //move all values equal to the 'value' to the end of the 'container', then erase the end
 	}
 
 	template<class container, useif<is_iterable<container>::value>>
-	bool check(typename container::iterator & iterator, const container & container)
+	bool check(typename container::iterator & iterator, const container & c)
 	{
-		return iterator != container.end();
+		return iterator != c.end();
 	}
 
 	template<class container, useif<is_const_iterable<container>::value>>
-	bool check(typename container::const_iterator & iterator, const container & container)
+	bool check(typename container::const_iterator & iterator, const container & c)
 	{
-		return iterator != container.cend();
+		return iterator != c.cend();
+	}
+	
+	template<class T>
+	auto max_index(initializer_list<T> list)
+	{
+		return std::distance(list.begin(), std::max_element(list.begin(), list.end()));
+	}
+	
+	template<class T>
+	auto min_index(initializer_list<T> list)
+	{
+		return std::distance(list.begin(), std::min_element(list.begin(), list.end()));
+	}
+	
+	template<class T>
+	pair<size_t, size_t> minmax_index(initializer_list<T> list)
+	{
+		auto minmax = std::minmax_element(list.begin(), list.end());
+		return {std::distance(list.begin(), minmax.first), std::distance(list.begin(), minmax.second)};
 	}
 
 	template<class T>
@@ -162,7 +182,7 @@ namespace asd
 	};
 
 	template<class ctx>
-	class tree_iterator : public boost::iterator_facade<tree_iterator<ctx>, typename ctx::container::value_type, std::forward_iterator_tag, typename ctx::container::reference>
+	class tree_iterator : public boost::iterator_facade<tree_iterator<ctx>, typename ctx::container::value_type, std::forward_iterator_tag, typename ctx::container::iterator::reference>
 	{
 		friend class boost::iterator_core_access;
 
@@ -174,9 +194,9 @@ namespace asd
 		tree_iterator(const underlying & begin, const underlying & end) : _node(begin), _terminator(end) {}
 
 	private:
-		typename ctx::container::reference dereference() const
+		typename underlying::reference dereference() const
 		{
-			return _node.value;
+			return *_node;
 		}
 
 		bool equal(const tree_iterator & other) const
@@ -209,8 +229,10 @@ namespace asd
 				if(_branch.size() == 0)
 					return;
 
-				_node = _branch.pop();
-				_terminator = _terminators.pop();
+				_node = _branch.top();
+				_terminator = _terminators.top();
+				_branch.pop();
+				_terminators.pop();
 			}
 		}
 

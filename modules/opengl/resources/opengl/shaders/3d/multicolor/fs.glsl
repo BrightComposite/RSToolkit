@@ -6,11 +6,11 @@
 in Vertex 
 {
 	vec4 color;
-} input;
+} vtx;
 
 out vec4 fscolor;
 
 void main(void)
 {
-	fscolor = input.color;
+	fscolor = vtx.color;
 }

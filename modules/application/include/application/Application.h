@@ -7,7 +7,9 @@
 
 //---------------------------------------------------------------------------
 
+#ifdef _MSC_VER
 #include <windows.h>
+#endif
 
 #include <core/addition/Singleton.h>
 #include <container/ArrayList.h>
@@ -39,8 +41,10 @@ namespace asd
 		friend struct Entrance;
 
 	public:
+		#ifdef WIN32
 		static api(application) HINSTANCE getWindowsInstance();
-
+		#endif
+		
 		static api(application) const wstring & getRootPath();
 		static const array_list<wstring> api(application) & startupArguments();
 
@@ -51,22 +55,45 @@ namespace asd
 
 		Application() {}
 
-		static void load();
-		static wstring getExecutionPath(HINSTANCE hInstance);
+		void api(application) pause();
+
+		static api(application) void load();
+		
+#ifdef WIN32
+		static api(application) wstring getExecutionPath(HINSTANCE hInstance);
 
 		HINSTANCE hInstance = nullptr;
+#endif
+		
 		wstring rootPath;
 		array_list<wstring> args;
 
-		EntranceFunction entrance = nullptr;
+		function<int()> entrance = nullptr;
 		int showCommand;
 	};
 
-	struct api(application) Entrance
+	struct Entrance
 	{
-		Entrance(EntranceFunction func);
+		Entrance(EntranceFunction func) {
+			if(Application::instance().entrance != nullptr)
+				throw Exception("Can't set multiple entrances!");
 
-		EntranceFunction func;
+			Application::instance().entrance = func;
+		}
+
+		Entrance(ExitFunction func) {
+			if(Application::instance().entrance != nullptr)
+				throw Exception("Can't set multiple entrances!");
+
+			Application::instance().entrance = [func]() {
+				func();
+
+			#ifdef ASD_CONSOLE
+				Application::instance().pause();
+			#endif
+				return 0;
+			};
+		}
 	};
 }
 

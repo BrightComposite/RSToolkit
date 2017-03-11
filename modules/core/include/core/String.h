@@ -16,6 +16,7 @@
 #include <cctype>
 #include <string>
 #include <sstream>
+#include <bitset>
 
 #include <core/algorithm/lookup3.h>
 
@@ -290,12 +291,6 @@ namespace asd
 			return value;
 		}
 
-		size_t & operator >> (size_t & value)
-		{
-			value = asSize();
-			return value;
-		}
-
 		float & operator >> (float & value)
 		{
 			value = asFloat();
@@ -349,11 +344,19 @@ namespace asd
 
 		String & flood(size_t start, size_t count, char sym, char limiter = '\0');
 
-		template<class T, useif<can_stream_print<T>::value>>
+		template<class T, useif<can_stream_print<T>::value && std::is_integral<T>::value>, useif<(sizeof(T) <= 4)>>
 		static inline String bin(T value)
 		{
 			std::ostringstream s;
-			s << std::bin << std::showbase << value;
+			s << std::bitset<32>(value);
+			return s.str();
+		}
+		
+		template<class T, useif<can_stream_print<T>::value && std::is_integral<T>::value>, skipif<(sizeof(T) <= 4)>>
+		static inline String bin(T value)
+		{
+			std::ostringstream s;
+			s << std::bitset<64>(value);
 			return s.str();
 		}
 
@@ -766,12 +769,6 @@ namespace asd
 			return value;
 		}
 
-		size_t & operator >> (size_t & value)
-		{
-			value = asSize();
-			return value;
-		}
-
 		float & operator >> (float & value)
 		{
 			value = asFloat();
@@ -825,11 +822,19 @@ namespace asd
 
 		WideString & flood(size_t start, size_t count, wchar_t sym, wchar_t limiter = '\0');
 
-		template<class T, useif<can_wstream_print<T>::value>>
+		template<class T, useif<can_wstream_print<T>::value && std::is_integral<T>::value>, useif<(sizeof(T) <= 4)>>
 		static inline WideString bin(T value)
 		{
 			std::wostringstream s;
-			s << std::bin << std::showbase << value;
+			s << std::bitset<32>(value);
+			return s.str();
+		}
+		
+		template<class T, useif<can_wstream_print<T>::value && std::is_integral<T>::value>, skipif<(sizeof(T) <= 4)>>
+		static inline WideString bin(T value)
+		{
+			std::wostringstream s;
+			s << std::bitset<64>(value);
 			return s.str();
 		}
 
@@ -852,8 +857,7 @@ namespace asd
 		template<class T, class ... A, useif<
 			can_construct<WideString, T>::value,
 			can_construct<WideString, A>::value...
-			>
-			endif>
+			>>
 		static inline WideString assemble(T && value, A &&... others)
 		{
 			return WideString(forward<T>(value)).add(forward<A>(others)...);
@@ -862,8 +866,7 @@ namespace asd
 		template<class T, class ... A, useif<
 			can_construct<WideString, T>::value,
 			can_construct<WideString, A>::value...
-			>
-			endif>
+			>>
 		WideString & add(T && value, A &&... others)
 		{
 			operator += (forward<T>(value));
@@ -899,14 +902,14 @@ namespace asd
 
 		WideString & sanitize();
 
-		wchar_t asChar()
+		char asChar()
 		{
-			return this->empty() ? '\0' : this->data()[0];
+			return static_cast<char>(this->empty() ? 0 : this->data()[0]);
 		}
 
-		char asWideChar()
+		wchar_t asWideChar()
 		{
-			return this->empty() ? '\0' : this->data()[0];
+			return this->empty() ? 0 : this->data()[0];
 		}
 
 		int asInt(int radix = 10)

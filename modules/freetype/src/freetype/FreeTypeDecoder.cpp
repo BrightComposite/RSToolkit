@@ -85,7 +85,7 @@ namespace asd
 			{
 				data.set(bmp.buffer, bmp.pitch * bmp.rows);
 				symbol.init(graphics, data);
-				Image::save(initial_path() / (string &)String::assemble(char(character), ".png"), symbol->image());
+				Image::save(initial_path() / (string &&)String::assemble(char(character), ".png"), symbol->image());
 			}
 			else
 				symbol.init(data);

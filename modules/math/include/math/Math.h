@@ -235,7 +235,7 @@ namespace asd
 
 			--x;
 
-			for(size_t i = 1; i < sizeof(T) * CHAR_BIT; i <<= 1)
+			for(size_t i = 1; i < sizeof(T) * 8; i <<= 1)
 				x |= x >> i;
 
 			return ++x;
@@ -246,7 +246,7 @@ namespace asd
 		{
 			--x;
 
-			for(size_t i = 1; i < sizeof(T) * CHAR_BIT; i <<= 1)
+			for(size_t i = 1; i < sizeof(T) * 8; i <<= 1)
 				x |= x >> i;
 
 			return ++x;
@@ -480,8 +480,8 @@ namespace asd
 		Inside  = 0x00,
 		Before  = 0x01,
 		After   = 0x02,
-		InBack  = Before,
-		InFront = After,
+		InBack  = static_cast<int>(Before),
+		InFront = static_cast<int>(After),
 		Around  = 0x03
 	};
 
@@ -491,8 +491,8 @@ namespace asd
 		Y = 0x01,
 		Z = 0x02,
 
-		Horizontal = X,
-		Vertical = Y
+		Horizontal = static_cast<int>(X),
+		Vertical = static_cast<int>(Y)
 	};
 
 	enum class AxisMask
@@ -501,10 +501,10 @@ namespace asd
 		AxisMaskX    = 0x01,
 		AxisMaskY    = 0x02,
 		AxisMaskZ    = 0x04,
-		AxisMaskXY   = AxisMaskX | AxisMaskY,
-		AxisMaskXZ   = AxisMaskX | AxisMaskZ,
-		AxisMaskYZ   = AxisMaskY | AxisMaskZ,
-		AxisMaskXYZ  = AxisMaskX | AxisMaskY | AxisMaskZ,
+		AxisMaskXY   = static_cast<int>(AxisMaskX) | static_cast<int>(AxisMaskY),
+		AxisMaskXZ   = static_cast<int>(AxisMaskX) | static_cast<int>(AxisMaskZ),
+		AxisMaskYZ   = static_cast<int>(AxisMaskY) | static_cast<int>(AxisMaskZ),
+		AxisMaskXYZ  = static_cast<int>(AxisMaskX) | static_cast<int>(AxisMaskY) | static_cast<int>(AxisMaskZ),
 	};
 
 	template<typename T>

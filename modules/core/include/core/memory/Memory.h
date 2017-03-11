@@ -59,17 +59,27 @@
 namespace asd
 {
 	using boost::alignment::aligned_allocator;
-
-	using boost::alignment::aligned_alloc;
 	using boost::alignment::aligned_free;
+	
+	inline auto aligned_alloc(size_t alignment, size_t size) {
+		return boost::alignment::aligned_alloc(alignment, size);
+	}
 
 #ifdef WIN32
 	inline void * aligned_realloc(void * ptr, size_t alignment, size_t size)
 	{
-		::_aligned_realloc(ptr, size, alignment);
+		return ::_aligned_realloc(ptr, size, alignment);
+	}
+#else
+	inline void * aligned_realloc(void * ptr, size_t alignment, size_t size)
+	{
+		void * n = aligned_alloc(alignment, size);
+		memcpy(n, ptr, size);
+		aligned_free(ptr);
+		return n;
 	}
 #endif
-
+	
 	using std::nothrow_t;
 	using std::unique_ptr;
 

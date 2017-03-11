@@ -2,7 +2,7 @@
 
 #include <graphics/font/io/FontIO.h>
 
-#include <iostream>
+#include <fstream>
 
 //---------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ namespace asd
 
 		if(!exists(pth))
 			throw Exception("File ", filepath.string(), " doesn't exist!");
-
+		
 		ifstream input(pth.string(), ios_base::binary);
 
 		raw->alloc(static_cast<size_t>(file_size(pth)));

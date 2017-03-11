@@ -28,13 +28,11 @@ namespace asd
 	template<class T>
 	struct PointerDeleter
 	{
-		static void free(const T * ptr)
-		{
+		static void free(const T * ptr) {
 			delete ptr;
 		}
 
-		void operator()(const T * ptr)
-		{
+		void operator()(const T * ptr) {
 			delete ptr;
 		}
 	};
@@ -49,9 +47,9 @@ namespace asd
 	using ref_counter_t = size_t;
 #endif
 
-    /**
-     *  @brief
-     *  The Shared class is used to store the reference counter which can be
+	/**
+	 *  @brief
+	 *  The Shared class is used to store the reference counter which can be
 	 *	accessed by the Handle class.
 	 *
 	 *	The Shared class by itself is only used by "shareable" objects.
@@ -60,7 +58,7 @@ namespace asd
 	 *	wrapping them into SharedWrappers. Create sheareable classes when you
 	 *	know that objects of these classes will be handled (you will almost
 	 *	always want that).
-     */
+	 */
 	struct Shared : protected DefaultAllocator
 	{
 		template<class ...> friend class Handle;
@@ -78,26 +76,22 @@ namespace asd
 		using Base = std::unique_ptr<T, PointerDeleter<T>>;
 		using Base::unique_ptr;
 
-		UniquePtr & operator = (nullptr_t)
-		{
+		UniquePtr & operator = (nullptr_t) {
 			Base::operator = (nullptr);
 			return (*this);
 		}
 
 		template<class U>
-		UniquePtr & operator = (U && right)
-		{
+		UniquePtr & operator = (U && right) {
 			Base::operator = (forward<U>(right));
 			return (*this);
 		}
 
-		operator T * ()
-		{
+		operator T * () {
 			return Base::get();
 		}
 
-		operator const T * () const
-		{
+		operator const T * () const {
 			return Base::get();
 		}
 	};
@@ -107,33 +101,30 @@ namespace asd
 	template<class T>
 	using is_shareable = is_base_of<Shared, T>;
 
-//---------------------------------------------------------------------------
+	//---------------------------------------------------------------------------
 
-	/**
-	 *  @brief
-	 *	Template struct which provides casts for different handles.
-	 */
+		/**
+		 *  @brief
+		 *	Template struct which provides casts for different handles.
+		 */
 	template<class T>
 	struct SharedCast
 	{
-		static T * toObj(T * shared)
-		{
+		static T * toObj(T * shared) {
 			return shared;
 		}
 
 		template<class U>
-		static T * cast(U * shared)
-		{
+		static T * cast(U * shared) {
 			return static_cast<T *>(shared);
 		}
 
-		static T * toShared(T & x)
-		{
+		static T * toShared(T & x) {
 			return &x;
 		}
 	};
 
-//---------------------------------------------------------------------------
+	//---------------------------------------------------------------------------
 
 	template<class T>
 	struct is_handle;
@@ -144,24 +135,24 @@ namespace asd
 	template<class T, class ... A>
 	struct is_handle_init;
 
-//---------------------------------------------------------------------------
+	//---------------------------------------------------------------------------
 
-	/**
-	 *  @brief
-	 *  The Handle class is the very important component in
-	 *	memory-management of asd. It is used to fully
-	 *	control life-time of objects.
-	 *  It contains functions for allocating, deallocating, referencing and
-	 *  releasing of objects of the type T.
-	 *  The objects of this class store only pointer to the object.
-	 *  They may be statically casted to object-pointer or shared-pointer.
-	 *  Use operator *() to get object.
-	 *  Use this class with pointers to objects (or shared objects, of
-	 *	course).
-	 *	The common version of the Handle class contains Owner template
-	 *	argument. Assignment of objects of this class is denied, and only
-	 *	Owner can do that.
-	 */
+		/**
+		 *  @brief
+		 *  The Handle class is the very important component in
+		 *	memory-management of asd. It is used to fully
+		 *	control life-time of objects.
+		 *  It contains functions for allocating, deallocating, referencing and
+		 *  releasing of objects of the type T.
+		 *  The objects of this class store only pointer to the object.
+		 *  They may be statically casted to object-pointer or shared-pointer.
+		 *  Use operator *() to get object.
+		 *  Use this class with pointers to objects (or shared objects, of
+		 *	course).
+		 *	The common version of the Handle class contains Owner template
+		 *	argument. Assignment of objects of this class is denied, and only
+		 *	Owner can do that.
+		 */
 	template<class ... A>
 	class Handle {};
 
@@ -191,81 +182,70 @@ namespace asd
 		template<class U = T, useif<can_construct<U>::value>>
 		Handle(Empty) : Base(default_init) {}
 
-		template<class ... A, selectif(0)<can_construct<T, A...>::value, (sizeof...(A) > 0)>>
+		template<class ... A, selectif(0) < can_construct<T, A...>::value, (sizeof...(A) > 0) > >
 		explicit Handle(A &&... args) : Base(forward<A>(args)...) {}
 
-		template<class ... A, selectif(1)<is_abstract<T>::value, !is_handle_init<T, A...>::value>>
+		template<class ... A, selectif(1) < is_abstract<T>::value, !is_handle_init<T, A...>::value > >
 		explicit Handle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
 
-		Handle & operator = (const Handle & h)
-		{
+		Handle & operator = (const Handle & h) {
 			Base::operator = (h);
 			return *this;
 		}
 
-		Handle & operator = (Handle && h)
-		{
+		Handle & operator = (Handle && h) {
 			Base::operator = (forward<Handle<T>>(h));
 			return *this;
 		}
 
 		template<class U, class ... A, useif<based_on<U, T>::value && !is_const<U>::value>>
-		Handle & operator = (const Handle<U, A...> & h)
-		{
+		Handle & operator = (const Handle<U, A...> & h) {
 			Base::operator = (h);
 			return *this;
 		}
 
 		template<class U, class ... A, useif<based_on<U, T>::value && !is_const<U>::value>>
-		Handle & operator = (Handle<U, A...> && h)
-		{
+		Handle & operator = (Handle<U, A...> && h) {
 			Base::operator = (forward<Handle<U, A...>>(h));
 			return *this;
 		}
 
-		Handle & operator = (T * shared)
-		{
+		Handle & operator = (T * shared) {
 			Base::operator = (shared);
 			return *this;
 		}
 
-		template<typename ... A, selectif(0)<can_construct<T, A...>::value>>
-		Handle & init(A &&... args)
-		{
+		template<typename ... A, selectif(0) < can_construct<T, A...>::value > >
+		Handle & init(A &&... args) {
 			Base::init(forward<A>(args)...);
 			return *this;
 		}
 
-		template<typename ... A, selectif(0)<can_construct<T, A...>::value>>
-		static Handle create(A &&... args)
-		{
+		template<typename ... A, selectif(0) < can_construct<T, A...>::value > >
+		static Handle create(A &&... args) {
 			T * sh = new T(forward<A>(args)...);
 			--sh->_refs;
 
 			return sh;
 		}
 
-		template<typename ... A, selectif(1)<cant_construct<T, A...>::value, is_abstract<T>::value>>
-		void init(A &&... args)
-		{
+		template<typename ... A, selectif(1) < cant_construct<T, A...>::value, is_abstract<T>::value > >
+		void init(A &&... args) {
 			static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
 		}
 
-		template<typename ... A, selectif(1)<cant_construct<T, A...>::value, is_abstract<T>::value>>
-		static void create(A &&... args)
-		{
+		template<typename ... A, selectif(1) < cant_construct<T, A...>::value, is_abstract<T>::value > >
+		static void create(A &&... args) {
 			static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
 		}
 
 		template<class U, useif<std::is_convertible<U *, T *>::value>>
-		static Handle cast(const Handle<U> & handle)
-		{
+		static Handle cast(const Handle<U> & handle) {
 			return static_cast<T *>(handle._shared);
 		}
 
 		template<class U, useif<std::is_convertible<U *, T *>::value>>
-		static Handle cast(Handle<U> && handle)
-		{
+		static Handle cast(Handle<U> && handle) {
 			Handle h = static_cast<T *>(handle._shared);
 			handle = nullptr;
 			return h;
@@ -278,7 +258,7 @@ namespace asd
 	 */
 	template<class T, class Owner>
 	class Handle<T, Owner> : public Wrapper<T *, Handle<T, Owner>>, protected DefaultAllocator
-    {
+	{
 		template<class...>
 		friend class Handle;
 
@@ -302,24 +282,21 @@ namespace asd
 		template<class U, class ... O, useif<based_on<U, T>::value, !is_const<U>::value>, skipif<same_types<Owner, Types<O...>>::value>>
 		Handle(Handle<U, O...> && h) : _shared(static_cast<T *>(h._shared)) { h._shared = nullptr; }
 
-		template<class ... A, selectif(0) <can_construct<T, A...>::value, (sizeof...(A) > 0)>>
+		template<class ... A, selectif(0) < can_construct<T, A...>::value, (sizeof...(A) > 0) > >
 		explicit Handle(A &&... args) : _shared(new T(forward<A>(args)...)) {}
 
-		template<class ... A, selectif(1) <is_abstract<T>::value, !is_handle_init<T, A...>::value>>
+		template<class ... A, selectif(1) < is_abstract<T>::value, !is_handle_init<T, A...>::value > >
 		explicit Handle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
 
-		void keep()
-		{
+		void keep() {
 			static_assert(based_on<T, Shared>::value, "T must inherit the Shared type");
 
 			if(_shared != nullptr)
 				++_shared->_refs;
 		}
 
-		void release()
-		{
-			if(_shared != nullptr)
-			{
+		void release() {
+			if(_shared != nullptr) {
 				--_shared->_refs;
 
 				if(_shared->_refs <= 0)
@@ -328,8 +305,7 @@ namespace asd
 		}
 
 		template<class U, class ... O, useif<based_on<U, T>::value, !is_const<U>::value>, skipif<same_types<Owner, Types<O...>>::value>>
-		Handle & operator = (const Handle<U, O...> & h)
-		{
+		Handle & operator = (const Handle<U, O...> & h) {
 			if(void_ptr(this) == void_ptr(&h))
 				return *this;
 
@@ -341,8 +317,7 @@ namespace asd
 		}
 
 		template<class U, class ... O, useif<based_on<U, T>::value, !is_const<U>::value>, skipif<same_types<Owner, Types<O...>>::value>>
-		Handle & operator = (Handle<U, O...> && h)
-		{
+		Handle & operator = (Handle<U, O...> && h) {
 			if(void_ptr(this) == void_ptr(&h))
 				return *this;
 
@@ -353,8 +328,7 @@ namespace asd
 			return *this;
 		}
 
-		Handle & operator = (T * shared)
-		{
+		Handle & operator = (T * shared) {
 			release();
 			_shared = shared;
 			keep();
@@ -362,33 +336,29 @@ namespace asd
 			return *this;
 		}
 
-		template<typename ... A, selectif(0)<can_construct<T, A...>::value>>
-		Handle & init(A &&... args)
-		{
+		template<typename ... A, selectif(0) < can_construct<T, A...>::value > >
+		Handle & init(A &&... args) {
 			release();
 			_shared = new T(forward<A>(args)...);
 
 			return *this;
 		}
 
-		template<typename ... A, selectif(1)<cant_construct<T, A...>::value, is_abstract<T>::value>>
-		void init(A &&... args)
-		{
+		template<typename ... A, selectif(1) < cant_construct<T, A...>::value, is_abstract<T>::value > >
+		void init(A &&... args) {
 			static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
 		}
 
-		template<typename ... A, selectif(0)<can_construct<T, A...>::value>>
-		static Handle create(A &&... args)
-		{
+		template<typename ... A, selectif(0) < can_construct<T, A...>::value > >
+		static Handle create(A &&... args) {
 			T * sh = new T(forward<A>(args)...);
 			--sh->_refs;
 
 			return sh;
 		}
 
-		template<typename ... A, selectif(1)<cant_construct<T, A...>::value, is_abstract<T>::value>>
-		static void create(A &&... args)
-		{
+		template<typename ... A, selectif(1) < cant_construct<T, A...>::value, is_abstract<T>::value > >
+		static void create(A &&... args) {
 			static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
 		}
 
@@ -406,13 +376,11 @@ namespace asd
 
 		~Handle() { release(); }
 
-		bool isNull() const
-		{
+		bool isNull() const {
 			return _shared == nullptr;
 		}
 
-		Handle & operator = (const Handle & h)
-		{
+		Handle & operator = (const Handle & h) {
 			if(this == &h)
 				return *this;
 
@@ -423,8 +391,7 @@ namespace asd
 			return *this;
 		}
 
-		Handle & operator = (Handle && h)
-		{
+		Handle & operator = (Handle && h) {
 			if(this == &h)
 				return *this;
 
@@ -436,8 +403,7 @@ namespace asd
 		}
 
 		template<class U, useif<based_on<U, T>::value, not_same_type<U, T>::value, !is_const<U>::value>>
-		Handle & operator = (const Handle<U, Owner> & h)
-		{
+		Handle & operator = (const Handle<U, Owner> & h) {
 			if(void_ptr(this) == void_ptr(&h))
 				return *this;
 
@@ -449,8 +415,7 @@ namespace asd
 		}
 
 		template<class U, useif<based_on<U, T>::value, not_same_type<U, T>::value, !is_const<U>::value>>
-		Handle & operator = (Handle<U, Owner> && h)
-		{
+		Handle & operator = (Handle<U, Owner> && h) {
 			if(void_ptr(this) == void_ptr(&h))
 				return *this;
 
@@ -462,68 +427,60 @@ namespace asd
 		}
 
 		template<class U, class ... A>
-		bool operator == (const Handle<U, A...> & h) const
-		{
+		bool operator == (const Handle<U, A...> & h) const {
 			return _shared == h._shared;
 		}
 
-		bool operator == (T * shared) const
-		{
+		bool operator == (T * shared) const {
 			return _shared == shared;
 		}
 
-		bool operator == (nullptr_t) const
-		{
+		bool operator == (nullptr_t) const {
 			return _shared == nullptr;
 		}
 
 		template<class U>
-		bool operator != (const U & x) const
-		{
+		bool operator != (const U & x) const {
 			return !operator == (x);
 		}
 
 		template<class U>
-		bool operator > (const Handle<U> & h) const
-		{
+		bool operator > (const Handle<U> & h) const {
 			return _shared > h._shared;
 		}
 
 		template<class U>
-		bool operator < (const Handle<U> & h) const
-		{
+		bool operator < (const Handle<U> & h) const {
 			return _shared < h._shared;
 		}
 
-		T * pointer() const
-		{
+		T * pointer() const {
 			return _shared;
 		}
 
-		operator T * () const
-		{
+		T * _() const {
 			return _shared;
 		}
 
-		size_t refs() const
-		{
+		operator T * () const {
+			return _shared;
+		}
+
+		size_t refs() const {
 			return _shared->_refs;
 		}
 
-		size_t hash() const
-		{
+		size_t hash() const {
 			return ptr_hash<T>(_shared);
 		}
 
 		template<class U, useif<std::is_convertible<U *, T *>::value>>
-		static Handle cast(const Handle<U, Owner> & h)
-		{
+		static Handle cast(const Handle<U, Owner> & h) {
 			return static_cast<T *>(h._shared);
 		}
 
 		template<class U, useif<std::is_convertible<U *, T *>::value>>
-		static Handle cast(Handle<U, Owner> && handle)
-		{
+		static Handle cast(Handle<U, Owner> && handle) {
 			Handle h = static_cast<T *>(handle._shared);
 			handle = nullptr;
 			return h;
@@ -555,84 +512,73 @@ namespace asd
 		template<class U = T, useif<can_construct<U>::value>>
 		Handle(Empty) : Base(default_init) {}
 
-		template<class ... A, selectif(0)<can_construct<T, A...>::value && (sizeof...(A) > 0)>>
-		explicit Handle(A &&... args) : Base(forward<A>(args)...) {}
-		template<class ... A, selectif(1)<is_abstract<T>::value, !is_handle_init<T, A...>::value>>
-		explicit Handle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
+		template<class ... A, selectif(0) < can_construct<T, A...>::value && (sizeof...(A) > 0) > >
+				explicit Handle(A &&... args) : Base(forward<A>(args)...) {}
+				template<class ... A, selectif(1) < is_abstract<T>::value, !is_handle_init<T, A...>::value > >
+				explicit Handle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
 
-		Handle & operator = (const Handle & h)
-		{
-			Base::operator = (h);
-			return *this;
-		}
+				Handle & operator = (const Handle & h) {
+					Base::operator = (h);
+					return *this;
+				}
 
-		Handle & operator = (Handle && h)
-		{
-			Base::operator = (forward<Handle>(h));
-			return *this;
-		}
+				Handle & operator = (Handle && h) {
+					Base::operator = (forward<Handle>(h));
+					return *this;
+				}
 
-		template<class U, class ... A, useif<based_on<U, T>::value>>
-		Handle & operator = (const Handle<U, A...> & h)
-		{
-			Base::operator = (h);
-			return *this;
-		}
+				template<class U, class ... A, useif<based_on<U, T>::value>>
+				Handle & operator = (const Handle<U, A...> & h) {
+					Base::operator = (h);
+					return *this;
+				}
 
-		template<class U, class ... A, useif<based_on<U, T>::value>>
-		Handle & operator = (Handle<U, A...> && h)
-		{
-			Base::operator = (forward<Handle<U, A...>>(h));
-			return *this;
-		}
+				template<class U, class ... A, useif<based_on<U, T>::value>>
+				Handle & operator = (Handle<U, A...> && h) {
+					Base::operator = (forward<Handle<U, A...>>(h));
+					return *this;
+				}
 
-		Handle & operator = (const T * shared)
-		{
-			Base::operator = (shared);
-			return *this;
-		}
+				Handle & operator = (const T * shared) {
+					Base::operator = (shared);
+					return *this;
+				}
 
-		template <typename ... A, selectif(0)<can_construct<T, A...>::value>>
-		Handle & init(A &&... args)
-		{
-			Base::init(forward<A>(args)...);
-			return *this;
-		}
+				template <typename ... A, selectif(0) < can_construct<T, A...>::value > >
+				Handle & init(A &&... args) {
+					Base::init(forward<A>(args)...);
+					return *this;
+				}
 
-		template<typename ... A, selectif(0)<can_construct<T, A...>::value>>
-		static Handle create(A &&... args)
-		{
-			auto sh = new T(forward<A>(args)...);
-			--sh->_refs;
+				template<typename ... A, selectif(0) < can_construct<T, A...>::value > >
+				static Handle create(A &&... args) {
+					auto sh = new T(forward<A>(args)...);
+					--sh->_refs;
 
-			return sh;
-		}
+					return sh;
+				}
 
-		template<typename ... A, selectif(1)<cant_construct<T, A...>::value, is_abstract<T>::value>>
-		void init(A &&... args)
-		{
-			static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
-		}
+				template<typename ... A, selectif(1) < cant_construct<T, A...>::value, is_abstract<T>::value > >
+				void init(A &&... args) {
+					static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
+				}
 
-		template<typename ... A, selectif(1)<cant_construct<T, A...>::value, is_abstract<T>::value>>
-		static void create(A &&... args)
-		{
-			static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
-		}
+				template<typename ... A, selectif(1) < cant_construct<T, A...>::value, is_abstract<T>::value > >
+				static void create(A &&... args) {
+					static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
+				}
 
-		template<class U, useif<std::is_convertible<const U *, const T *>::value>>
-		static Handle cast(const Handle<const U> & handle)
-		{
-			return static_cast<const T *>(handle._shared);
-		}
+				template<class U, useif<std::is_convertible<const U *, const T *>::value>>
+				static Handle cast(const Handle<const U> & handle) {
+					return static_cast<const T *>(handle._shared);
+				}
 
-		template<class U, useif<std::is_convertible<const U *, const T *>::value>>
-		static Handle cast(Handle<const U> && handle)
-		{
-			Handle h = static_cast<const T *>(handle._shared);
-			handle = nullptr;
-			return h;
-		}
+				template<class U, useif<std::is_convertible<const U *, const T *>::value>>
+				static Handle cast(Handle<const U> && handle) {
+					Handle h = static_cast<const T *>(handle._shared);
+					handle = nullptr;
+					return h;
+				}
 	};
 
 	template<class T, class Owner>
@@ -661,92 +607,82 @@ namespace asd
 		template<class U = T, useif<can_construct<U>::value>>
 		Handle(Empty) : _shared(new T()) {}
 
-		template<class ... A, selectif(0)<can_construct<T, A...>::value && (sizeof...(A) > 0)>>
-		explicit Handle(A && ... args) : _shared(new T(forward<A>(args)...)) {}
-		template<class ... A, selectif(1)<is_abstract<T>::value, !is_handle_init<T, A...>::value>>
-		explicit Handle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
+		template<class ... A, selectif(0) < can_construct<T, A...>::value && (sizeof...(A) > 0) > >
+			explicit Handle(A && ... args) : _shared(new T(forward<A>(args)...)) {}
+			template<class ... A, selectif(1) < is_abstract<T>::value, !is_handle_init<T, A...>::value > >
+			explicit Handle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
 
-		void keep()
-		{
-			if(_shared != nullptr)
-				++_shared->_refs;
-		}
-
-		void release()
-		{
-			if(_shared != nullptr)
-			{
-				--_shared->_refs;
-
-				if(_shared->_refs <= 0)
-					PointerDeleter<T>::free(_shared);
+			void keep() {
+				if(_shared != nullptr)
+					++_shared->_refs;
 			}
-		}
 
-		template<class U, class ... O, useif<based_on<U, T>::value>, skipif<same_types<Owner, Types<O...>>::value>>
-		Handle & operator = (const Handle<U, O...> & h)
-		{
-			if(void_ptr(this) == void_ptr(&h))
+			void release() {
+				if(_shared != nullptr) {
+					--_shared->_refs;
+
+					if(_shared->_refs <= 0)
+						PointerDeleter<T>::free(_shared);
+				}
+			}
+
+			template<class U, class ... O, useif<based_on<U, T>::value>, skipif<same_types<Owner, Types<O...>>::value>>
+			Handle & operator = (const Handle<U, O...> & h) {
+				if(void_ptr(this) == void_ptr(&h))
+					return *this;
+
+				release();
+				_shared = static_cast<const T *>(h._shared);
+				keep();
+
 				return *this;
+			}
 
-			release();
-			_shared = static_cast<const T *>(h._shared);
-			keep();
+			template<class U, class ... O, useif<based_on<U, T>::value>, skipif<same_types<Owner, Types<O...>>::value>>
+			Handle & operator = (Handle<U, O...> && h) {
+				if(void_ptr(this) == void_ptr(&h))
+					return *this;
 
-			return *this;
-		}
+				release();
+				_shared = static_cast<const T *>(h._shared);
+				h._shared = nullptr;
 
-		template<class U, class ... O, useif<based_on<U, T>::value>, skipif<same_types<Owner, Types<O...>>::value>>
-		Handle & operator = (Handle<U, O...> && h)
-		{
-			if(void_ptr(this) == void_ptr(&h))
 				return *this;
+			}
 
-			release();
-			_shared = static_cast<const T *>(h._shared);
-			h._shared = nullptr;
+			Handle & operator = (const T * shared) {
+				release();
+				_shared = shared;
+				keep();
 
-			return *this;
-		}
+				return *this;
+			}
 
-		Handle & operator = (const T * shared)
-		{
-			release();
-			_shared = shared;
-			keep();
+			template<typename ... A, selectif(0) < can_construct<T, A...>::value > >
+			Handle & init(A &&... args) {
+				release();
+				_shared = new T(forward<A>(args)...);
 
-			return *this;
-		}
+				return *this;
+			}
 
-		template<typename ... A, selectif(0)<can_construct<T, A...>::value>>
-		Handle & init(A &&... args)
-		{
-			release();
-			_shared = new T(forward<A>(args)...);
+			template<typename ... A, selectif(1) < cant_construct<T, A...>::value, is_abstract<T>::value > >
+			void init(A &&... args) {
+				static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
+			}
 
-			return *this;
-		}
+			template<class ... A, selectif(0) < can_construct<T, A...>::value > >
+			static Handle create(A &&... args) {
+				T * sh = new T(forward<A>(args)...);
+				--sh->_refs;
 
-		template<typename ... A, selectif(1)<cant_construct<T, A...>::value, is_abstract<T>::value>>
-		void init(A &&... args)
-		{
-			static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
-		}
+				return sh;
+			}
 
-		template<class ... A, selectif(0)<can_construct<T, A...>::value>>
-		static Handle create(A &&... args)
-		{
-			T * sh = new T(forward<A>(args)...);
-			--sh->_refs;
-
-			return sh;
-		}
-
-		template<typename ... A, selectif(1)<cant_construct<T, A...>::value>>
-		static void create(A &&... args)
-		{
-			static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
-		}
+			template<typename ... A, selectif(1) < cant_construct<T, A...>::value > >
+			static void create(A &&... args) {
+				static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
+			}
 
 	public:
 		Handle() : _shared(nullptr) {}
@@ -757,13 +693,11 @@ namespace asd
 
 		~Handle() { release(); }
 
-		bool isNull() const
-		{
+		bool isNull() const {
 			return _shared == nullptr;
 		}
 
-		Handle & operator = (const Handle & h)
-		{
+		Handle & operator = (const Handle & h) {
 			if(this == &h)
 				return *this;
 
@@ -774,8 +708,7 @@ namespace asd
 			return *this;
 		}
 
-		Handle & operator = (Handle && h)
-		{
+		Handle & operator = (Handle && h) {
 			if(this == &h)
 				return *this;
 
@@ -787,8 +720,7 @@ namespace asd
 		}
 
 		template<class U, useif<based_on<U, T>::value, not_same_type<U, T>::value>>
-		Handle & operator = (const Handle<U, Owner> & h)
-		{
+		Handle & operator = (const Handle<U, Owner> & h) {
 			if(void_ptr(this) == void_ptr(&h))
 				return *this;
 
@@ -800,8 +732,7 @@ namespace asd
 		}
 
 		template<class U, useif<based_on<U, T>::value, not_same_type<U, T>::value>>
-		Handle & operator = (Handle<U, Owner> && h)
-		{
+		Handle & operator = (Handle<U, Owner> && h) {
 			if(void_ptr(this) == void_ptr(&h))
 				return *this;
 
@@ -813,68 +744,60 @@ namespace asd
 		}
 
 		template<class U>
-		bool operator == (const Handle<U> & h) const
-		{
+		bool operator == (const Handle<U> & h) const {
 			return h._shared == _shared;
 		}
 
-		bool operator == (const T * shared) const
-		{
+		bool operator == (const T * shared) const {
 			return _shared == shared;
 		}
 
-		bool operator == (nullptr_t) const
-		{
+		bool operator == (nullptr_t) const {
 			return _shared == nullptr;
 		}
 
 		template <class U>
-		bool operator != (const U & x) const
-		{
+		bool operator != (const U & x) const {
 			return !operator == (x);
 		}
 
 		template<class U>
-		bool operator > (const Handle<U> & h) const
-		{
+		bool operator > (const Handle<U> & h) const {
 			return _shared > h._shared;
 		}
 
 		template<class U>
-		bool operator < (const Handle<U> & h) const
-		{
+		bool operator < (const Handle<U> & h) const {
 			return _shared < h._shared;
 		}
 
-		const T * pointer() const
-		{
+		const T * pointer() const {
 			return _shared;
 		}
 
-		operator const T * () const
-		{
+		const T * _() const {
 			return _shared;
 		}
 
-		size_t refs() const
-		{
+		operator const T * () const {
+			return _shared;
+		}
+
+		size_t refs() const {
 			return _shared->_refs;
 		}
 
-		size_t hash() const
-		{
-			return ptr_hash<T>(inptr_());
+		size_t hash() const {
+			return ptr_hash<T>(_shared);
 		}
 
 		template<class U, useif<std::is_convertible<const U *, const T *>::value>>
-		static Handle cast(const Handle<const U, Owner> & h)
-		{
+		static Handle cast(const Handle<const U, Owner> & h) {
 			return static_cast<const T *>(h._shared);
 		}
 
 		template<class U, useif<std::is_convertible<const U *, const T *>::value>>
-		static Handle cast(Handle<const U, Owner> && handle)
-		{
+		static Handle cast(Handle<const U, Owner> && handle) {
 			Handle h = static_cast<const T *>(handle._shared);
 			handle = nullptr;
 			return h;
@@ -884,58 +807,49 @@ namespace asd
 	typedef Handle<Shared> VoidHandle;
 	typedef Handle<SharedEmpty> EmptyHandle;
 
-	template<class T, class ... A, selectif(0)<can_construct<T, A...>::value>>
-	Handle<T> handle(A &&... args)
-	{
+	template<class T, class ... A, selectif(0) < can_construct<T, A...>::value > >
+	Handle<T> handle(A &&... args) {
 		return Handle<T>::create(forward<A>(args)...);
 	}
 
-	template<class T, class ... A, selectif(1)<cant_construct<T, A...>::value>>
-	void handle(A &&... args)
-	{
+	template<class T, class ... A, selectif(1) < cant_construct<T, A...>::value > >
+	void handle(A &&... args) {
 		static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
 	}
 
 	template<class T, class U, useif<std::is_convertible<U *, T *>::value>>
-	Handle<T> handle_cast(const Handle<U> & h)
-	{
+	Handle<T> handle_cast(const Handle<U> & h) {
 		return Handle<T>::cast(h);
 	}
 
 	template<class T, class U, class Owner, useif<std::is_convertible<U *, T *>::value>>
-	Handle<T, Owner> handle_cast(const Handle<U, Owner> & h)
-	{
+	Handle<T, Owner> handle_cast(const Handle<U, Owner> & h) {
 		return Handle<T, Owner>::cast(h);
 	}
 
 	template<class T, class U, useif<std::is_convertible<U *, T *>::value>>
-	Handle<T> handle_cast(Handle<U> && h)
-	{
+	Handle<T> handle_cast(Handle<U> && h) {
 		return Handle<T>::cast(move(h));
 	}
 
 	template<class T, class U, class Owner, useif<std::is_convertible<U *, T *>::value>>
-	Handle<T, Owner> handle_cast(Handle<U, Owner> && h)
-	{
+	Handle<T, Owner> handle_cast(Handle<U, Owner> && h) {
 		return Handle<T, Owner>::cast(move(h));
 	}
 
 	template<class T, useif<is_shareable<T>::value>>
-	Handle<T> share(T * x)
-	{
+	Handle<T> share(T * x) {
 		return x;
 	}
 
 	template<class T>
-	Handle<T> share(T & x)
-	{
+	Handle<T> share(T & x) {
 		return &x;
 	}
 
 	template<class T>
-	void share(T && x)
-	{
-		static_assert(false, "asdCore error: Can't share the temporary object!");
+	void share(T && x) {
+		static_assert(!is_pointer<T *>::value, "ASD core error: Can't share the temporary object!");
 	}
 
 	class SharedIdentifier : public EmptyHandle
@@ -956,7 +870,7 @@ namespace asd
 	template<class T, class ... A>
 	struct is_uhandle_init;
 
-//---------------------------------------------------------------------------
+	//---------------------------------------------------------------------------
 
 	template<class ... A>
 	class UniqueHandle {};
@@ -981,60 +895,53 @@ namespace asd
 		template<class U = T, useif<can_construct<U>::value>>
 		UniqueHandle(Empty) : Base(default_init) {}
 
-		template<class ... A, selectif(0)<can_construct<T, A...>::value && (sizeof...(A) > 0)>>
-		explicit UniqueHandle(A && ... args) : Base(forward<A>(args)...) {}
-		template<class ... A, selectif(1)<is_abstract<T>::value, !is_uhandle_init<T, A...>::value>>
-		explicit UniqueHandle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
+		template<class ... A, selectif(0) < can_construct<T, A...>::value && (sizeof...(A) > 0) > >
+				explicit UniqueHandle(A && ... args) : Base(forward<A>(args)...) {}
+				template<class ... A, selectif(1) < is_abstract<T>::value, !is_uhandle_init<T, A...>::value > >
+				explicit UniqueHandle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
 
-		template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
-		UniqueHandle(Handle<U, A...> && h) : Base(forward<Handle<U, A...>>(h)) {}
+				template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
+				UniqueHandle(Handle<U, A...> && h) : Base(forward<Handle<U, A...>>(h)) {}
 
-		UniqueHandle & operator = (const UniqueHandle & h) = delete;
+				UniqueHandle & operator = (const UniqueHandle & h) = delete;
 
-		UniqueHandle & operator = (UniqueHandle && h)
-		{
-			Base::operator = (forward<UniqueHandle>(h));
-			return *this;
-		}
+				UniqueHandle & operator = (UniqueHandle && h) {
+					Base::operator = (forward<UniqueHandle>(h));
+					return *this;
+				}
 
-		template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
-		UniqueHandle & operator = (UniqueHandle<U, A...> && h)
-		{
-			Base::operator = (forward<UniqueHandle<U, A...>>(h));
-			return *this;
-		}
+				template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
+				UniqueHandle & operator = (UniqueHandle<U, A...> && h) {
+					Base::operator = (forward<UniqueHandle<U, A...>>(h));
+					return *this;
+				}
 
-		template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
-		UniqueHandle & operator = (Handle<U, A...> && h)
-		{
-			Base::operator = (forward<Handle<U, A...>>(h));
-			return *this;
-		}
+				template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
+				UniqueHandle & operator = (Handle<U, A...> && h) {
+					Base::operator = (forward<Handle<U, A...>>(h));
+					return *this;
+				}
 
-		UniqueHandle & operator = (T * shared)
-		{
-			Base::operator = (shared);
-			return *this;
-		}
+				UniqueHandle & operator = (T * shared) {
+					Base::operator = (shared);
+					return *this;
+				}
 
-		template<typename ... A, useif<can_construct<T, A...>::value>>
-		UniqueHandle & init(A &&... args)
-		{
-			Base::init(forward<A>(args)...);
-			return *this;
-		}
+				template<typename ... A, useif<can_construct<T, A...>::value>>
+				UniqueHandle & init(A &&... args) {
+					Base::init(forward<A>(args)...);
+					return *this;
+				}
 
-		template<class ... A, useif<can_construct<T, A...>::value>>
-		static UniqueHandle create(A &&... args)
-		{
-			return new T(forward<A>(args)...);
-		}
+				template<class ... A, useif<can_construct<T, A...>::value>>
+				static UniqueHandle create(A &&... args) {
+					return new T(forward<A>(args)...);
+				}
 
-		template<class ... A, skipif<can_construct<T, A...>::value || !is_abstract<T>::value>>
-		static void create(A &&... args)
-		{
-			static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
-		}
+				template<class ... A, skipif<can_construct<T, A...>::value || !is_abstract<T>::value>>
+				static void create(A &&... args) {
+					static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
+				}
 	};
 
 	/**
@@ -1066,104 +973,96 @@ namespace asd
 		UniqueHandle(Empty) : _inner(new T()) {}
 
 		template<class ... A, useif<can_construct<T, A...>::value, (sizeof...(A) > 0)>>
-		explicit UniqueHandle(A && ... args) : _inner(new T(forward<A>(args)...)) {}
-		template<class ... A, selectif(1)<is_abstract<T>::value && !is_uhandle_init<T, A...>::value>>
-		explicit UniqueHandle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
+			explicit UniqueHandle(A && ... args) : _inner(new T(forward<A>(args)...)) {}
+			template<class ... A, selectif(1) < is_abstract<T>::value && !is_uhandle_init<T, A...>::value > >
+			explicit UniqueHandle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
 
-		template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
-		UniqueHandle(Handle<U, A...> && h) : _inner(static_cast<T *>(h.pointer()))
-		{
-		#ifdef _DEBUG
-			if(_inner->_refs > 1)
-				throw std::exception("Can't make unique handle: object has multiple references!");
-		#endif
-			++_inner->_refs;
-			h = nullptr;
-		}
+			template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
+			UniqueHandle(Handle<U, A...> && h) : _inner(static_cast<T *>(h.pointer())) {
+			#ifdef _DEBUG
+				if(_inner->_refs > 1)
+					throw std::exception("Can't make unique handle: object has multiple references!");
+			#endif
+				++_inner->_refs;
+				h = nullptr;
+			}
 
-		UniqueHandle & operator = (const UniqueHandle & h) = delete;
+			UniqueHandle & operator = (const UniqueHandle & h) = delete;
 
-		UniqueHandle & operator = (UniqueHandle && h)
-		{
-			if(this == &h)
+			UniqueHandle & operator = (UniqueHandle && h) {
+				if(this == &h)
+					return *this;
+
+				if(_inner)
+					delete _inner;
+
+				_inner = h._inner;
+				h._inner = nullptr;
+
 				return *this;
+			}
 
-			if(_inner)
-				delete _inner;
+			template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
+			UniqueHandle & operator = (UniqueHandle<U, A...> && h) {
+				if(void_ptr(this) == void_ptr(&h))
+					return *this;
 
-			_inner = h._inner;
-			h._inner = nullptr;
+				if(_inner)
+					delete _inner;
 
-			return *this;
-		}
+				_inner = static_cast<T *>(h._inner);
+				h._inner = nullptr;
 
-		template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
-		UniqueHandle & operator = (UniqueHandle<U, A...> && h)
-		{
-			if(void_ptr(this) == void_ptr(&h))
 				return *this;
+			}
 
-			if(_inner)
-				delete _inner;
+			UniqueHandle & operator = (T * ptr) {
+				if(void_ptr(ptr) == void_ptr(_inner))
+					return *this;
 
-			_inner = static_cast<T *>(h._inner);
-			h._inner = nullptr;
+				if(_inner)
+					delete _inner;
 
-			return *this;
-		}
+				_inner = ptr;
 
-		UniqueHandle & operator = (T * ptr)
-		{
-			if(void_ptr(ptr) == void_ptr(_inner))
 				return *this;
+			}
 
-			if(_inner)
-				delete _inner;
+			template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
+			UniqueHandle & operator = (Handle<U, A...> && h) {
+				if(_inner)
+					delete _inner;
 
-			_inner = ptr;
+				_inner = static_cast<T *>(h.pointer());
+			#ifdef _DEBUG
+				if(_inner->_refs > 1)
+					throw std::exception("Can't make unique handle: object has multiple references!");
+			#endif
+				++_inner->_refs;
+				h = nullptr;
 
-			return *this;
-		}
+				return *this;
+			}
 
-		template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
-		UniqueHandle & operator = (Handle<U, A...> && h)
-		{
-			if(_inner)
-				delete _inner;
+			template<typename ... A, useif<can_construct<T, A...>::value>>
+			UniqueHandle & init(A &&... args) {
+				if(_inner)
+					delete _inner;
 
-			_inner = static_cast<T *>(h.pointer());
-		#ifdef _DEBUG
-			if(_inner->_refs > 1)
-				throw std::exception("Can't make unique handle: object has multiple references!");
-		#endif
-			++_inner->_refs;
-			h = nullptr;
+				_inner = new T(forward<A>(args)...);
 
-			return *this;
-		}
+				return *this;
+			}
 
-		template<typename ... A, useif<can_construct<T, A...>::value>>
-		UniqueHandle & init(A &&... args)
-		{
-			if(_inner)
-				delete _inner;
+			template<class ... A, useif<can_construct<T, A...>::value>>
+			static UniqueHandle create(A &&... args) {
+				return new T(forward<A>(args)...);
+			}
 
-			_inner = new T(forward<A>(args)...);
-
-			return *this;
-		}
-
-		template<class ... A, useif<can_construct<T, A...>::value>>
-		static UniqueHandle create(A &&... args)
-		{
-			return new T(forward<A>(args)...);
-		}
-
-		template<class ... A, skipif<can_construct<T, A...>::value || !is_abstract<T>::value>>
-		static void create(A &&... args)
-		{
-			static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
-		}
+			template<class ... A, skipif<can_construct<T, A...>::value || !is_abstract<T>::value>>
+			static void create(A &&... args) {
+				static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
+			}
 
 	public:
 		UniqueHandle() : _inner(nullptr) {}
@@ -1171,47 +1070,43 @@ namespace asd
 
 		~UniqueHandle() { if(_inner != nullptr) delete _inner; }
 
-		bool isNull() const
-		{
+		bool isNull() const {
 			return _inner == nullptr;
 		}
 
 		template<class U>
-		bool operator == (const UniqueHandle<U> & h) const
-		{
+		bool operator == (const UniqueHandle<U> & h) const {
 			return _inner == h._inner;
 		}
 
-		bool operator == (nullptr_t) const
-		{
+		bool operator == (nullptr_t) const {
 			return _inner == nullptr;
 		}
 
 		template<class U>
-		bool operator != (const U & x) const
-		{
+		bool operator != (const U & x) const {
 			return !operator == (x);
 		}
 
 		template<class U>
-		bool operator > (const UniqueHandle<U> & h) const
-		{
+		bool operator > (const UniqueHandle<U> & h) const {
 			return _inner > h._inner;
 		}
 
 		template<class U>
-		bool operator < (const UniqueHandle<U> & h) const
-		{
+		bool operator < (const UniqueHandle<U> & h) const {
 			return _inner < h._inner;
 		}
 
-		T * pointer() const
-		{
+		T * pointer() const {
 			return _inner;
 		}
 
-		operator T * () const
-		{
+		T * _() const {
+			return _inner;
+		}
+
+		operator T * () const {
 			return _inner;
 		}
 	};
@@ -1220,67 +1115,60 @@ namespace asd
 	using Unique = UniqueHandle<T, A...>;
 
 	template<class T, class ... A, useif<can_construct<T, A...>::value>>
-	UniqueHandle<T> unique_handle(A &&... args)
-	{
+	UniqueHandle<T> unique_handle(A &&... args) {
 		return UniqueHandle<T>::create(forward<A>(args)...);
 	}
 
 	template<class T, class ... A, skipif<can_construct<T, A...>::value>>
-	void unique_handle(A &&... args)
-	{
+	void unique_handle(A &&... args) {
 		static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
 	}
 
-//---------------------------------------------------------------------------
+	//---------------------------------------------------------------------------
 }
 
-	_useif_class(sfinae_handle);
+_useif_class(sfinae_handle);
 
 #define handleif			_useif(sfinae_handle)
 #define handleif_t			_useif_t(sfinae_handle)
 
-	template<bool ... Others>
-	struct use_filter_t<sfinae_handle, Others...> : use_filter_t<sfinae_use, Others...> {};
+template<bool ... Others>
+struct use_filter_t<sfinae_handle, Others...> : use_filter_t<sfinae_use, Others...> {};
 
 namespace asd
 {
 	namespace cast
 	{
 		template<class T, class Y, handleif<(based_on<T, Y>::value || based_on<Y, T>::value)>>
-		inline Handle<T> as(const Handle<Y> & x)
-		{
+		inline Handle<T> as(const Handle<Y> & x) {
 			return static_cast<T *>(static_cast<Y *>(x));
 		}
 
 		template<class T, class Y, handleif<(based_on<T, Y>::value || based_on<Y, T>::value)>>
-		inline Handle<T> as(Handle<Y> && x)
-		{
+		inline Handle<T> as(Handle<Y> && x) {
 			Handle<T> out = static_cast<T *>(static_cast<Y *>(x));
 			x = nullptr;
 			return out;
 		}
 
 		template<class T, class Y, class Owner, handleif<(based_on<T, Y>::value || based_on<Y, T>::value)>>
-		inline Handle<T, Owner> as(const Handle<Y, Owner> & x)
-		{
+		inline Handle<T, Owner> as(const Handle<Y, Owner> & x) {
 			return Handle<T, Owner>::cast(x);
 		}
 
 		template<class T, class Y, class Owner, handleif<(based_on<T, Y>::value || based_on<Y, T>::value)>>
-		inline Handle<T, Owner> as(Handle<Y, Owner> && x)
-		{
+		inline Handle<T, Owner> as(Handle<Y, Owner> && x) {
 			return Handle<T, Owner>::cast(move(x));
 		}
 	}
-//---------------------------------------------------------------------------
+	//---------------------------------------------------------------------------
 
 	template<class T, class R, class C, class ... A>
 	struct method_wrapper<Handle<T>, R(C::*)(A...)>
 	{
 		typedef R(__thiscall C::*MethodType)(A ...);
 
-		R operator()(A ... args)
-		{
+		R operator()(A ... args) {
 			return (object->*method)(forward<A>(args)...);
 		}
 
@@ -1289,12 +1177,11 @@ namespace asd
 	};
 
 	template<class T, class R, class C, class ... A>
-	struct method_wrapper<Handle<T>, R (C::*)(A...) const>
+	struct method_wrapper<Handle<T>, R(C::*)(A...) const>
 	{
 		typedef R(__thiscall C::*MethodType)(A ...) const;
 
-		R operator()(A ... args)
-		{
+		R operator()(A ... args) {
 			return (object->*method)(forward<A>(args)...);
 		}
 
@@ -1307,8 +1194,7 @@ namespace asd
 	{
 		typedef R(__thiscall C::*MethodType)(A ...);
 
-		R operator()(A ... args)
-		{
+		R operator()(A ... args) {
 			return (object->*method)(forward<A>(args)...);
 		}
 
@@ -1317,12 +1203,11 @@ namespace asd
 	};
 
 	template<class T, class R, class C, class ... A>
-	struct method_wrapper<Handle<T> &, R (C::*)(A...) const>
+	struct method_wrapper<Handle<T> &, R(C::*)(A...) const>
 	{
 		typedef R(__thiscall C::*MethodType)(A ...) const;
 
-		R operator()(A ... args)
-		{
+		R operator()(A ... args) {
 			return (object->*method)(forward<A>(args)...);
 		}
 
@@ -1330,7 +1215,7 @@ namespace asd
 		MethodType method;
 	};
 
-//---------------------------------------------------------------------------
+	//---------------------------------------------------------------------------
 
 	namespace Internals
 	{
@@ -1391,10 +1276,10 @@ namespace asd
 		static const bool value =
 			sizeof...(A) == 1 && (
 			(based_on<FirstType, T>::value && std::is_pointer<FirstType>::value) ||
-			is_handle_of<FirstType, T>::value ||
-			same_type<FirstType, nullptr_t>::value ||
-			same_type<FirstType, Empty>::value
-			);
+				is_handle_of<FirstType, T>::value ||
+				same_type<FirstType, nullptr_t>::value ||
+				same_type<FirstType, Empty>::value
+				);
 	};
 
 	template<class T, class ... A>
@@ -1405,10 +1290,10 @@ namespace asd
 		static const bool value =
 			sizeof...(A) == 1 && (
 			(based_on<FirstType, T>::value && std::is_pointer<FirstType>::value) ||
-			is_uhandle_of<FirstType, T>::value ||
-			same_type<FirstType, nullptr_t>::value ||
-			same_type<FirstType, Empty>::value
-			);
+				is_uhandle_of<FirstType, T>::value ||
+				same_type<FirstType, nullptr_t>::value ||
+				same_type<FirstType, Empty>::value
+				);
 	};
 }
 

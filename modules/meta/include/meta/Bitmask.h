@@ -70,7 +70,7 @@ namespace asd
 	template<size_t Mask, int offset>
 	struct has_bit
 	{
-		static const bool value = (Mask >> offset) & 1;
+		static const bool value = static_cast<bool>((Mask >> offset) & 1);
 	};
 
 	namespace Internals
@@ -79,14 +79,14 @@ namespace asd
 		struct unfold_mask {};
 
 		template<size_t Mask, int ... Values>
-		struct unfold_mask<Mask, integer_sequence<int, Values...>>
+		struct unfold_mask<Mask, std::integer_sequence<int, Values...>>
 		{
 			typedef integer_sequence<bool, has_bit<Mask, Values>::value...> type;
 		};
 	}
 
 	template<size_t Mask, int size>
-	using unfold_mask = typename Internals::unfold_mask<Mask, make_integer_sequence<int, size>>::type;
+	using unfold_mask = typename Internals::unfold_mask<Mask, std::make_integer_sequence<int, size>>::type;
 }
 
 //---------------------------------------------------------------------------

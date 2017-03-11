@@ -17,7 +17,7 @@
 
 #define bind_components(cl, origin) \
 	using bound_components = ComponentSet<origin, cl>; \
-	Unique<bound_components, cl> components = Unique<bound_components, cl>(this);
+	Unique<bound_components, cl> components;
 
 namespace asd
 {

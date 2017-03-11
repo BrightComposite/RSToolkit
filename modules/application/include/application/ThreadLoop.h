@@ -26,8 +26,9 @@ namespace asd
 
 	class ThreadLoop : public Singleton<ThreadLoop, ThreadLocalModel>
 	{
-		typedef function<int()> Iteration;
 		friend Singleton<ThreadLoop, ThreadLocalModel>;
+
+		using Iteration = function<int()>;
 
 	public:
 		static void run()
@@ -87,14 +88,36 @@ namespace asd
 			instance().active = false;
 		}
 
-		static void add(const Iteration & iteration)
+		// Conditional iterations
+		template<class F, useif<is_same<decltype(declval<F>()()), int>::value>>
+		static void add(F & iteration)
 		{
 			instance().iterations.emplace_back(iteration);
 		}
 
-		static void add(Iteration && iteration)
+		template<class F, useif<is_same<decltype(declval<F>()()), int>::value>>
+		static void add(F && iteration)
 		{
-			instance().iterations.emplace_back(forward<Iteration>(iteration));
+			instance().iterations.emplace_back(forward<F>(iteration));
+		}
+
+		// Clean iterations
+		template<class F, skipif<is_same<decltype(declval<F>()()), int>::value>>
+		static void add(F & iteration)
+		{
+			instance().iterations.emplace_back([&iteration]() {
+				iteration();
+				return 0;
+			});
+		}
+
+		template<class F, skipif<is_same<decltype(declval<F>()()), int>::value>>
+		static void add(F && iteration)
+		{
+			instance().iterations.emplace_back([iteration]() {
+				iteration();
+				return 0;
+			});
 		}
 
 	protected:

@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------
 
-#include <core\intrinsic\Intrinsic.h>
+#include <core/intrinsic/Intrinsic.h>
 #include <limits>
 
 //---------------------------------------------------------------------------
@@ -10,22 +10,22 @@ namespace asd
 	template <> const byte	 IntrinZero<byte>		::value = 0;
 	template <> const int	 IntrinZero<int>		::value = 0;
 	template <> const int64	 IntrinZero<int64>		::value = 0;
-	template <> const float  IntrinZero<float>		::value = 0.0f;
+	template <> const float   IntrinZero<float>		::value = 0.0f;
 
-	template <> const float  IntrinMax<float>		::value = IntrinData<float, 4>::get<0>(IntrinData<float, 4>(_mm_castsi128_ps(_mm_set1_epi32(0xFFFF'FFFF))));
+	template <> const float   IntrinMax<float>		::value = IntrinData<float, 4>::get<0>(IntrinData<float, 4>(_mm_castsi128_ps(_mm_set1_epi32(0xFFFF'FFFF))));
 	template <> const byte	 IntrinMax<byte>		::value = 0xFF;
 	template <> const int	 IntrinMax<int>			::value = 0xFFFF'FFFF;
 	template <> const int64	 IntrinMax<int64>		::value = 0xFFFF'FFFF'FFFF'FFFF;
 	
-	template <> const byte   IntrinSignmask<byte>	::value = 0x80;
-	template <> const int    IntrinSignmask<int>	::value = 0x8000'0000;
-	template <> const int64  IntrinSignmask<int64>	::value = 0x8000'0000'0000'0000;
-	template <> const float  IntrinSignmask<float>	::value = IntrinData<float, 4>::get<0>(IntrinData<float, 4>(_mm_castsi128_ps(_mm_set1_epi32(0x8000'0000))));
+	template <> const byte    IntrinSignmask<byte>	::value = 0x80;
+	template <> const int     IntrinSignmask<int>	::value = 0x8000'0000;
+	template <> const int64   IntrinSignmask<int64>	::value = 0x8000'0000'0000'0000;
+	template <> const float   IntrinSignmask<float>	::value = IntrinData<float, 4>::get<0>(IntrinData<float, 4>(_mm_castsi128_ps(_mm_set1_epi32(0x8000'0000))));
 
 	template <> const byte	 IntrinNofrac<byte>		::value = 0;
 	template <> const int	 IntrinNofrac<int>		::value = 0;
 	template <> const int64	 IntrinNofrac<int64>	::value = 0;
-	template <> const float  IntrinNofrac<float>	::value = 8388608.0f; // float(0x80'0000)
+	template <> const float   IntrinNofrac<float>	::value = 8388608.0f; // float(0x80'0000)
 
 	const Intrinsic<int, 4>   ::inner Intrinsic<int, 4>   ::maximum  = IntrinsicMask<int,    IntrinMax,      mk_mask4(1, 1, 1, 1)>::get();
 	const Intrinsic<int, 4>   ::inner Intrinsic<int, 4>   ::signmask = IntrinsicMask<int,    IntrinSignmask, mk_mask4(1, 1, 1, 1)>::get();

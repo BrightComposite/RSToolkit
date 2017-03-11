@@ -2,7 +2,7 @@
 
 #include <graphics/image/io/ImageIO.h>
 
-#include <iostream>
+#include <fstream>
 
 //---------------------------------------------------------------------------
 

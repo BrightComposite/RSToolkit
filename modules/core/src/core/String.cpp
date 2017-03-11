@@ -8,6 +8,14 @@
 
 //---------------------------------------------------------------------------
 
+static char * strtok_s(char * s, const char * delim, char ** save) {
+	return strtok_r(s, delim, save);
+}
+
+static wchar_t * wcstok_s(wchar_t * s, const wchar_t * delim, wchar_t ** save) {
+	return wcstok(s, delim, save);
+}
+
 namespace asd
 {
 	string narrow(const wstring & wide)
@@ -25,7 +33,7 @@ namespace asd
 		typedef wstring::traits_type::state_type state_type;
 		typedef codecvt<wchar_t, char, state_type> CVT;
 
-		const CVT & cvt = use_facet<CVT>(loc);
+		const CVT & cvt = std::use_facet<CVT>(loc);
 		string narrow(cvt.max_length() * wide.size(), '\0');
 		state_type state;
 
@@ -89,7 +97,7 @@ namespace asd
 		typedef string::traits_type::state_type state_type;
 		typedef codecvt<char, wchar_t, state_type> CVT;
 
-		const CVT & cvt = use_facet<CVT>(loc);
+		const CVT & cvt = std::use_facet<CVT>(loc);
 		wstring wide(cvt.max_length() * narrow.size(), '\0');
 		state_type state;
 
@@ -592,7 +600,8 @@ namespace asd
 	{
 		return s[0];
 	}
-
+	
+#ifdef _MSC_VER
 	double toDouble(const wchar_t * s)
 	{
 		return _wtof(s);
@@ -607,13 +616,38 @@ namespace asd
 	{
 		return (int)_wtoi(s);
 	}
-
+	
 	long toLong(const wchar_t * s)
 	{
 		WideString str(s);
 		return str.isHexDigits() ? str.asLong(16) : str.asLong(10);
 	}
-
+#else
+	double toDouble(const wchar_t * s)
+	{
+		wchar_t * end;
+		return wcstod(s, &end);
+	}
+	
+	float toFloat(const wchar_t * s)
+	{
+		wchar_t * end;
+		return wcstof(s, &end);
+	}
+	
+	int toInt(const wchar_t * s)
+	{
+		wchar_t * end;
+		return static_cast<int>(wcstol(s, &end, 10));
+	}
+	
+	long toLong(const wchar_t * s)
+	{
+		wchar_t * end;
+		return static_cast<int>(wcstol(s, &end, WideString(s).isHexDigits() ? 16 : 10));
+	}
+#endif
+	
 	String operator "" _s(const char * s, size_t unitsCount)
 	{
 		return {s, unitsCount};

@@ -104,7 +104,7 @@ namespace asd
 	 *	<blocksCount> MUST be a power of 2 and MUST NOT be greater than
 	 *	0x10000 because of memory optimization of indices.
 	 *
-	 *	Each pool allocates <blocksCount> * sizeof(<type>) bytes.
+	 *	Each pool allocates <blocksCount> * sizeof(<T>) bytes.
 	 *	If there is more memory needed, next pool is allocated automatically.
 	 */
 	template<class T, uint blocksCount>
@@ -168,7 +168,7 @@ namespace asd
 			++_count;
 		}
 
-		static const size_t blockSize = sizeof(type);
+		static const size_t blockSize = sizeof(T);
 
 	private:
 		static const ushort lastBlock = static_cast<ushort>(blocksCount - 1);

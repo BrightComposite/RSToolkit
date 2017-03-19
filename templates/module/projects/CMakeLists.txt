@@ -23,6 +23,8 @@ module(APPLICATION)
 	endsources()
 endmodule()
 
-load_third_party(vld)
+if(${WIN32})
+	vendor(vld)
+endif()
 
 #--------------------------------------------------------

@@ -1,18 +1,12 @@
 ## ASD .gitignore
 
 *
-!commands/
-!data/
-!modules/
+!code/
 !templates/
-!tests/
 !tools/
-!third-party/
-!commands/**/*
-!data/**/*
-!modules/**/*
+!vendor/
+!code/**/*
 !templates/**/*
-!tests/**/*
 !tools/**/*
 **/*.*
 !*.cpp
@@ -28,5 +22,7 @@
 !.gitignore
 !.gitattributes
 !README.md
-!third-party/*.gz
+!vendor/*.tar.gz
+!vendor/*.tar.gz.*
+vendor/*.cat.tar.gz
 **/.vscode/

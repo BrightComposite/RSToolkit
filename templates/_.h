@@ -16,6 +16,7 @@ namespace asd
 	class ${filename}
 	{
 	public:
+		
 	};
 }
 

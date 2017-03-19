@@ -43,7 +43,6 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";VENDOR_TOOL_GUARD;")
                 if(WIN32)
                     execute_process(COMMAND copy /b ${VENDOR_KEY}.tar.gz.* ${VENDOR_KEY}.cat.tar.gz WORKING_DIRECTORY "${VENDOR_ARCHIVE_DIR}" RESULT_VARIABLE RESULT)
                 elseif(UNIX)
-                    execute_process(COMMAND sh -c "rm -f ${VENDOR_KEY}.cat.tar.gz" WORKING_DIRECTORY "${VENDOR_ARCHIVE_DIR}" RESULT_VARIABLE RESULT)
                     execute_process(COMMAND sh -c "cat ${VENDOR_KEY}.tar.gz.* >> ${VENDOR_KEY}.cat.tar.gz" WORKING_DIRECTORY "${VENDOR_ARCHIVE_DIR}" RESULT_VARIABLE RESULT)
                 endif()
 
@@ -52,15 +51,23 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";VENDOR_TOOL_GUARD;")
                 endif()
                 
                 execute_process(COMMAND ${CMAKE_COMMAND} -E tar xfz "${VENDOR_KEY}.cat.tar.gz" WORKING_DIRECTORY "${VENDOR_ARCHIVE_DIR}" RESULT_VARIABLE RESULT)
+                
+                if(NOT ${RESULT} EQUAL 0)
+                    message(FATAL_ERROR "Can't extract archive!")
+                endif()
+                
+                if(UNIX)
+                    execute_process(COMMAND sh -c "rm -f ${VENDOR_KEY}.cat.tar.gz" WORKING_DIRECTORY "${VENDOR_ARCHIVE_DIR}" RESULT_VARIABLE RESULT)
+                endif()
             else()
                 message(STATUS "Extract vendor library '${VENDOR_KEY}' from ${VENDOR_KEY}.tar.gz")
                 execute_process(COMMAND ${CMAKE_COMMAND} -E tar xfz "${VENDOR_KEY}.tar.gz" WORKING_DIRECTORY "${VENDOR_ARCHIVE_DIR}" RESULT_VARIABLE RESULT)
-        endif()
-
-            if(NOT ${RESULT} EQUAL 0)
-                message(FATAL_ERROR "Can't extract archive!")
+                
+                if(NOT ${RESULT} EQUAL 0)
+                    message(FATAL_ERROR "Can't extract archive!")
+                endif()
             endif()
-            
+
 			if(NOT EXISTS ${VENDOR_DIR})
 				message(FATAL_ERROR "Can't extract the archive with vendor library '${VENDOR_KEY}'!")
 			endif()

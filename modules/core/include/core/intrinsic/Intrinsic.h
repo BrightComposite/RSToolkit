@@ -11,6 +11,7 @@
 #include "IntrinsicCvt.h"
 
 #include <meta/Bitmask.h>
+#include <cmath>
 
 //---------------------------------------------------------------------------
 
@@ -31,11 +32,11 @@ namespace asd
 
 	namespace Internals
 	{
-		template<class T, template<class T> class Constant, class S>
+		template<class T, template<class> class Constant, class S>
 		struct intrinsic_mask {};
 	}
 
-	template<class T, template<class T> class Constant, size_t Mask, int N = 4>
+	template<class T, template<class> class Constant, size_t Mask, int N = 4>
 	struct IntrinsicMask
 	{
 		template<useif<Intrinsic<T, N>::implemented>>
@@ -88,6 +89,14 @@ namespace asd
 	intrinsic_constant(IntrinSignmask);
 	intrinsic_constant(IntrinNofrac);
 
+#ifndef _MSC_VER
+	extern __inline __m128i __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+	_mm_mullo_epi32 (__m128i __X, __m128i __Y)
+	{
+		return (__m128i) ((__v4su)__X * (__v4su)__Y);
+	}
+#endif
+	
 	/**
 	 *	Integer intrinsics
 	 */
@@ -1422,11 +1431,6 @@ namespace asd
 			out = {val, val, val, val};
 		}
 
-		static inline void __vectorcall fill(byte val, inner & out)
-		{
-			out = {val, val, val, val};
-		}
-
 		static inline inner __vectorcall fill(byte val)
 		{
 			return type {val, val, val, val};
@@ -1449,7 +1453,7 @@ namespace asd
 
 		static inline inner __vectorcall sub(const type & a, const type & b)
 		{
-			return __m32 {byte(a.x - b.x), byte(a.y - b.y), byte(a.z - b.z), byte(a.w - b.w)};
+			return type {byte(a.x - b.x), byte(a.y - b.y), byte(a.z - b.z), byte(a.w - b.w)};
 		}
 
 		static inline void __vectorcall mul(const type & a, const type & b, type & out)
@@ -1459,7 +1463,7 @@ namespace asd
 
 		static inline inner __vectorcall mul(const type & a, const type & b)
 		{
-			return __m32 {byte(a.x * b.x), byte(a.y * b.y), byte(a.z * b.z), byte(a.w * b.w)};
+			return type {byte(a.x * b.x), byte(a.y * b.y), byte(a.z * b.z), byte(a.w * b.w)};
 		}
 
 		static inline void __vectorcall div(const type & a, const type & b, type & out)
@@ -1469,7 +1473,7 @@ namespace asd
 
 		static inline inner __vectorcall div(const type & a, const type & b)
 		{
-			return __m32 {byte(a.x / b.x), byte(a.y / b.y), byte(a.z / b.z), byte(a.w / b.w)};
+			return type {byte(a.x / b.x), byte(a.y / b.y), byte(a.z / b.z), byte(a.w / b.w)};
 		}
 
 		static inline void __vectorcall sqr(const type & a, type & out)
@@ -1479,7 +1483,7 @@ namespace asd
 
 		static inline inner __vectorcall sqr(const type & a)
 		{
-			return __m32 {byte(a.x * a.x), byte(a.y * a.y), byte(a.z * a.z), byte(a.w * a.w)};
+			return type {byte(a.x * a.x), byte(a.y * a.y), byte(a.z * a.z), byte(a.w * a.w)};
 		}
 
 		static inline void __vectorcall invert(const type & a, type & out)
@@ -1499,7 +1503,7 @@ namespace asd
 
 		static inline inner __vectorcall min(const type & a, const type & b)
 		{
-			return __m32 {std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z), std::min(a.w, b.w)};
+			return type {std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z), std::min(a.w, b.w)};
 		}
 
 		static inline void __vectorcall max(const type & a, const type & b, type & out)
@@ -1509,7 +1513,7 @@ namespace asd
 
 		static inline inner __vectorcall max(const type & a, const type & b)
 		{
-			return __m32 {std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z), std::max(a.w, b.w)};
+			return type {std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z), std::max(a.w, b.w)};
 		}
 
 		static inline void __vectorcall hadd2(const type & a, const type & b, type & out)
@@ -1529,7 +1533,7 @@ namespace asd
 
 		static inline inner __vectorcall hadd(const type & a)
 		{
-			return __m32 {byte(a.x + a.y), byte(a.z + a.w), 0, 0};
+			return type {byte(a.x + a.y), byte(a.z + a.w), 0, 0};
 		}
 
 		static inline byte __vectorcall sum(const type & a)
@@ -1556,7 +1560,7 @@ namespace asd
 
 		static inline inner __vectorcall sqrt(const type & a)
 		{
-			return __m32 {byte(std::sqrt(a.x)), byte(std::sqrt(a.y)), byte(std::sqrt(a.z)), byte(std::sqrt(a.w))};
+			return type {byte(std::sqrt(a.x)), byte(std::sqrt(a.y)), byte(std::sqrt(a.z)), byte(std::sqrt(a.w))};
 		}
 
 		static inline void __vectorcall bit_and(const type & a, const type & b, type & out)
@@ -1687,7 +1691,7 @@ namespace asd
 
 		template<byte A, byte B, byte C, byte D, useif<
 			(A < 4 && B < 4 && C < 4 && D < 4)
-			>endif
+			>
 		>
 		static inline void __vectorcall shuffle2(const type & a, const type & b, type & out)
 		{
@@ -1715,7 +1719,7 @@ namespace asd
 
 		template<byte A, byte B, byte C, byte D, useif<
 			(A < 4 && B < 4 && C < 4 && D < 4)
-			>endif
+			>
 		>
 		static inline void __vectorcall shuffle(const type & a, type & out)
 		{
@@ -1742,7 +1746,7 @@ namespace asd
 
 	namespace Internals
 	{
-		template<class T, template<class T> class Constant, bool ... Values>
+		template<class T, template<class> class Constant, bool ... Values>
 		struct intrinsic_mask<T, Constant, std::integer_sequence<bool, Values...>>
 		{
 			static const int size = sizeof...(Values);

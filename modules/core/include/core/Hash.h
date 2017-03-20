@@ -29,7 +29,7 @@ namespace asd
 	{
 		size_t operator()(const T &) const
 		{
-			static_assert(false, "There is no hash function provided for this type!");
+			static_assert(!is_pointer<T *>::value, "There is no hash function provided for this type!");
 		}
 	};
 
@@ -52,7 +52,7 @@ namespace asd
 
 	public:
 		template<typename ... A, useif<can_construct<T, A...>::value>>
-		Hashed(A &&... args) : T(forward<A>(args)...), _hashValue(std::hash<Hashed>()(static_cast<const T &>(*this))) {}
+		Hashed(A &&... args) : T(forward<A>(args)...), _hashValue(gethash(static_cast<const T &>(*this))) {}
 
 		Hashed(const Hashed & val) : T(val), _hashValue(val._hashValue) {}
 		Hashed(Hashed && val) : T(forward<Hashed>(val)), _hashValue(val._hashValue) {}
@@ -77,7 +77,7 @@ namespace asd
 		Hashed & operator = (A && val)
 		{
 			T::operator = (forward<A>(val));
-			_hashValue = asd::hash(static_cast<T &>(*this));
+			_hashValue = gethash(static_cast<T &>(*this));
 
 			return *this;
 		}
@@ -100,8 +100,8 @@ namespace asd
 		T _inner;
 
 	public:
-		Hashed() : _inner(), _hashValue(asd::hash(_inner)) {}
-		Hashed(T inner) : _inner(inner), _hashValue(asd::hash(_inner)) {}
+		Hashed() : _inner(), _hashValue(gethash(_inner)) {}
+		Hashed(T inner) : _inner(inner), _hashValue(gethash(_inner)) {}
 		Hashed(const Hashed & val) : _inner(val._inner), _hashValue(val._hashValue) {}
 
 		Hashed & operator = (const Hashed & val)
@@ -115,7 +115,7 @@ namespace asd
 		Hashed & operator = (const T & val)
 		{
 			_inner = val;
-			_hashValue = asd::hash(_inner);
+			_hashValue = gethash(_inner);
 
 			return *this;
 		}
@@ -163,13 +163,13 @@ namespace asd
 	template<class X, class Y>
 	inline size_t mixhash(const X & first, const Y & second)
 	{
-		return hash(first) ^ hash(first);
+		return gethash(first) ^ gethash(first);
 	}
 
 	template<class X, class Y>
 	inline void mixhash(const X & first, const Y & second, size_t & result)
 	{
-		result = hash(first) ^ hash(first);
+		result = gethash(first) ^ gethash(first);
 	}
 
 	struct AutoIdentifier
@@ -219,7 +219,7 @@ namespace asd
 	public:
 		static PointerId & id()
 		{
-			static PointerId _id(StaticIdentifier::id);
+			static PointerId _id(&StaticIdentifier::id);
 			return _id;
 		}
 	};
@@ -250,7 +250,7 @@ namespace asd
 			return std::underlying_type_t<__VA_ARGS__>(a) <								\
 				std::underlying_type_t<__VA_ARGS__>(b);									\
 		}																				\
-	}			
+	}
 
 	template<class T>
 	use_class_hash(Hashed<T>);

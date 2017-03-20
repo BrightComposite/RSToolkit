@@ -2,7 +2,7 @@
 #	asd FreeImage adaptation
 #--------------------------------------------------------
 
-project(freeimage4asd VERSION 0.1)
+project(freeimage-asd VERSION 0.1)
 
 #--------------------------------------------------------
 

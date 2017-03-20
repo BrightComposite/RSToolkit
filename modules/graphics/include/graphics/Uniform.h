@@ -48,13 +48,11 @@ namespace asd
 	{
 		static_assert(is_uniform<U>::value, "U must be an uniform");
 
-		UniformChunk(Graphics3D * graphics)
-		{
+		UniformChunk(Graphics3D * graphics) {
 			graphics->uniformChunk(*this);
 		}
 
-		void fill(const Contents<U> & contents)
-		{
+		void fill(const Contents<U> & contents) {
 			Memory<void>::move(data.ptr, contents.pointer(), data.size);
 		}
 	};
@@ -65,14 +63,12 @@ namespace asd
 		UniformAdapter(int index, uint size) : _index(index), _size(size) {}
 
 		template<class U, class ... A, useif<can_construct_contents<U, A...>::value>>
-		void update(A &&... args)
-		{
+		void update(A &&... args) {
 			update(Contents<U>(forward<A>(args)...).pointer());
 		}
 
 		template<class U>
-		void update(const Contents<U> & contents)
-		{
+		void update(const Contents<U> & contents) {
 			update(contents.pointer());
 		}
 
@@ -155,7 +151,7 @@ namespace asd
 		Area, 4, Vertex,
 		(float2, pos)
 		(float2, size)
-		(float,  depth)
+		(float, depth)
 	);
 
 	uniform_class

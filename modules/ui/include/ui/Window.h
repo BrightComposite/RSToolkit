@@ -105,7 +105,6 @@ namespace asd
 		api(ui) WideString getCaption();
 
 		api(ui) void close();
-		api(ui) void attachThread();
 
 	protected:
 		api(ui) void makeFullscreen();

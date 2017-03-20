@@ -88,13 +88,13 @@ namespace asd
 	}
 
 	template<class T>
-	size_t max_index(initializer_list<T> list)
+	auto max_index(initializer_list<T> list)
 	{
 		return std::distance(list.begin(), std::max_element(list.begin(), list.end()));
 	}
 
 	template<class T>
-	size_t min_index(initializer_list<T> list)
+	auto min_index(initializer_list<T> list)
 	{
 		return std::distance(list.begin(), std::min_element(list.begin(), list.end()));
 	}
@@ -201,6 +201,7 @@ namespace asd
 #define repeat(var, times) for(remove_cv_t<decltype(times)> var = 0; var < times; ++var)
 
 #define inscope()
+#define with(Type, ...) for(Type _, int _I = 0; _I < 1; ++_I)
 
 #define deny_copy(... /* Class */) \
 	__VA_ARGS__(const __VA_ARGS__ &) = delete; \

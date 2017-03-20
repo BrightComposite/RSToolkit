@@ -131,4 +131,7 @@ else()
 	function(shaders lang)
 		collect_files(shaders_list ${ARGN})
 	endfunction()
+
+	function(shaders_output out)
+	endfunction()
 endif()

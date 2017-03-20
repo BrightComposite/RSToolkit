@@ -6,6 +6,10 @@ cmake_minimum_required(VERSION 3.3)
 
 #--------------------------------------------------------
 
+include(${ASD_TOOLS}/utils.cmake)
+
+#--------------------------------------------------------
+
 if(WIN32)
 	set(CMAKE_SHARED_LIBRARY_PREFIX "" CACHE INTERNAL "Cmake shared lib prefix")
 endif()
@@ -16,13 +20,11 @@ else()
 	set(MODULE_ARCH x86 CACHE INTERNAL "Project architecture")
 endif()
 
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-	set(OUTPUT_PATH_SUFFIX build-vs-${MODULE_ARCH} CACHE PATH "Output path suffix")
-elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
-	set(OUTPUT_PATH_SUFFIX build-cb CACHE PATH "Output path suffix")
-elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
-	set(OUTPUT_PATH_SUFFIX build-clang CACHE PATH "Output path suffix")
+if("${MAKE_TARGET_DIR}" STREQUAL "")
+	set(MAKE_TARGET_DIR build)
 endif()
+
+set(OUTPUT_PATH_SUFFIX ${MAKE_TARGET_DIR} CACHE PATH "Output path suffix")
 
 set(OUTPUT_ROOT ${WORKSPACE_ROOT}/${OUTPUT_PATH_SUFFIX} CACHE PATH "Output root")
 
@@ -309,8 +311,6 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			set(DIR "${WORKSPACE_ROOT}/${DIR}")
 		endif()
 
-		message("${DIR}")
-
 		if(NOT EXISTS "${DIR}/CMakeLists.txt")
 			file(MAKE_DIRECTORY ${DIR})
 
@@ -336,6 +336,49 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		add_subdirectory("${DIR}" "${OUTPUT_DIR}")
 	endfunction()
 
+	function(add_command command)
+		set(DIR "${command}")
+		set(ROOT "${ARGV1}")
+		set(DOMAIN "commands")
+
+		set(DIR "${DOMAIN}/${DIR}")
+
+		if(NOT "${ROOT}" STREQUAL "")
+			if(NOT IS_ABSOLUTE "${ROOT}")
+				message(FATAL_ERROR "add_module: a third argument (module root) must be an absolute path or empty")
+			endif()
+
+			set(OUTPUT_DIR "${ROOT}/${OUTPUT_PATH_SUFFIX}/${DIR}")
+			set(DIR "${ROOT}/${DIR}")
+		else()
+			set(OUTPUT_DIR "${OUTPUT_ROOT}/${DIR}")
+			set(DIR "${WORKSPACE_ROOT}/${DIR}")
+		endif()
+
+		message(${DIR})
+
+		if(NOT EXISTS "${DIR}/CMakeLists.txt")
+			file(MAKE_DIRECTORY ${DIR})
+
+			set(TEMPLATE_FILE ${ASD_ROOT}/templates/command/CMakeLists.txt)
+
+			set(module_path ${PATH})
+			set(module_domain ${DOMAIN})
+
+			if(EXISTS "${TEMPLATE_FILE}")
+				configure_file(${TEMPLATE_FILE} ${DIR}/CMakeLists.txt @ONLY)
+			else()
+				message(FATAL_ERROR "Can't create new module \"${PATH}\"")
+			endif()
+		endif()
+
+		if(NOT "${ROOT}" STREQUAL "")
+			set(ALTERNATIVE_ROOT "${ROOT}" CACHE PATH "")
+		endif()
+
+		add_subdirectory("${DIR}" "${OUTPUT_DIR}")
+	endfunction()
+
 #	require_module function.
 
 	function(require_module module_id version)
@@ -346,31 +389,31 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 		if(NOT ";${GUARD_BLOCKS};" MATCHES ";${module_id}_GUARD;")
 			set(module_path)
-			message("${MESSAGES_INDENTATION}> Try to resolve...")
+			color_message(BLACK "${MESSAGES_INDENTATION}* Try to resolve...")
 
 			if(NOT "${${PROJECT_NAME}_ROOT}" STREQUAL "" AND EXISTS "${${PROJECT_NAME}_ROOT}/modules/${module_id}")
 				set(module_path "${${PROJECT_NAME}_ROOT}/modules/${module_id}")
-				message("${MESSAGES_INDENTATION}> Found at ${module_path}")
+				color_message(WHITE "${MESSAGES_INDENTATION}* Found at ${module_path}")
 				add_subdirectory(${module_path} "${${PROJECT_NAME}_ROOT}/${OUTPUT_PATH_SUFFIX}/${module_id}")
 
 			elseif(EXISTS "${WORKSPACE_MODULES_ROOT}/${module_id}")
 				set(module_path "${WORKSPACE_MODULES_ROOT}/${module_id}")
-				message("${MESSAGES_INDENTATION}> Found at ${module_path}")
+				color_message(WHITE "${MESSAGES_INDENTATION}* Found at ${module_path}")
 				add_subdirectory(${module_path} "${OUTPUT_ROOT}/${module_id}")
 
 			elseif(EXISTS "${MODULES_ROOT}/${module_id}")
 				set(module_path "${MODULES_ROOT}/${module_id}")
-				message("${MESSAGES_INDENTATION}> Found at ${module_path}")
+				color_message(WHITE "${MESSAGES_INDENTATION}* Found at ${module_path}")
 				add_subdirectory(${module_path} "${OUTPUT_ROOT}/${module_id}")
 
 			elseif(EXISTS "${WORKSPACE_THIRD_PARTY}/${module_id}")
 				set(module_path "${WORKSPACE_THIRD_PARTY}/${module_id}")
-				message("${MESSAGES_INDENTATION}> Found at ${module_path}")
+				color_message(WHITE "${MESSAGES_INDENTATION}* Found at ${module_path}")
 				add_subdirectory(${module_path} "${OUTPUT_ROOT}/${module_id}")
 
 			elseif(EXISTS "${THIRD_PARTY}/${module_id}")
 				set(module_path "${THIRD_PARTY}/${module_id}")
-				message("${MESSAGES_INDENTATION}> Found at ${module_path}")
+				color_message(WHITE "${MESSAGES_INDENTATION}* Found at ${module_path}")
 				add_subdirectory(${module_path} "${OUTPUT_ROOT}/${module_id}")
 
 			else()
@@ -384,7 +427,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 		set(name ${PROJECT_NAME_OF_${module_id}})
 		set(vers ${PROJECT_VERSION_OF_${module_id}})
-		message("${MESSAGES_INDENTATION}> Use \"${name} (${vers})\"")
+		color_message(BLACK "${MESSAGES_INDENTATION}* Use \"${name} (${vers})\"")
 
 		set(${PROJECT_NAME}_MODULE_DEPENDENCIES ${${PROJECT_NAME}_MODULE_DEPENDENCIES};${name} CACHE INTERNAL "${PROJECT_NAME} module dependencies" FORCE)
 
@@ -417,7 +460,18 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			set(GUARD_BLOCKS ${GUARD_BLOCKS};${PROJECT_ID}_GUARD CACHE INTERNAL "Guard blocks" FORCE)
 		endif()
 
-		message("${MESSAGES_INDENTATION}+ Add module \"${PROJECT_NAME}\"")
+		message("")
+		if("${type}" STREQUAL "APPLICATION")
+			if("${ARGN}" STREQUAL "CONSOLE")
+				message("${MESSAGES_INDENTATION}+ Add console app \"${PROJECT_NAME}\"")
+				add_definitions("-DASD_CONSOLE")
+			else()
+				message("${MESSAGES_INDENTATION}+ Add app \"${PROJECT_NAME}\"")
+			endif()
+		else()
+			message("${MESSAGES_INDENTATION}+ Add module \"${PROJECT_NAME}\"")
+			#message("${MESSAGES_INDENTATION}+ Add module \"${PROJECT_NAME}\"")
+		endif()
 
 		set(${PROJECT_NAME}_SOURCES CACHE INTERNAL "${PROJECT_NAME} sources" FORCE)
 		set(${PROJECT_NAME}_INCLUDE_DIRS CACHE INTERNAL "${PROJECT_NAME} include directories" FORCE)
@@ -486,9 +540,9 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		endif()
 
 		if(WIN32)
-			add_definitions("-Dasd_${module}_api=__declspec(dllexport)")
+			add_definitions(-Dasd_${module}_api=__declspec(dllexport))
 		else()
-			add_definitions("-Dasd_${module}_api")
+			add_definitions(-Dasd_${module}_api=)
 		endif()
 	endfunction()
 
@@ -502,9 +556,9 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		endif()
 
 		if(WIN32)
-			add_definitions("-Dasd_${module}_api=__declspec(dllimport)")
+			add_definitions(-Dasd_${module}_api=__declspec(dllimport))
 		else()
-			add_definitions("-Dasd_${module}_api")
+			add_definitions(-Dasd_${module}_api=)
 		endif()
 	endfunction()
 
@@ -599,10 +653,10 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		endif()
 
 		if("${ARGV1}" STREQUAL "COMPONENT" AND NOT "${ARGV2}" STREQUAL "")
-			message("${MESSAGES_INDENTATION}  Depends on ${LIBRARY_PATH}:${ARGV2}")
+			message("${MESSAGES_INDENTATION}  > Depends on ${LIBRARY_PATH}:${ARGV2}")
 			set(PATH_SUFFIX ${ARGV2}/${MODULE_ARCH})
 		else()
-			message("${MESSAGES_INDENTATION}  Depends on ${LIBRARY_PATH}")
+			message("${MESSAGES_INDENTATION}  > Depends on ${LIBRARY_PATH}")
 			set(PATH_SUFFIX ${MODULE_ARCH})
 		endif()
 
@@ -631,7 +685,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			)
 
 			foreach(STATIC_LIB ${STATIC_LIBS})
-				message("${MESSAGES_INDENTATION}    Found ${STATIC_LIB}")
+				message("${MESSAGES_INDENTATION}  * Found ${STATIC_LIB}")
 				setup_file(${STATIC_LIB} ${LIBRARY_SOURCE} ${LIBRARY_OUTPUT})
 			endforeach()
 		endif()
@@ -670,10 +724,10 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 		if("${ARGV1}" STREQUAL "COMPONENT" AND NOT "${ARGV2}" STREQUAL "")
 			set(COMPONENT_NAME ${ARGV2})
-			message("${MESSAGES_INDENTATION}  Depends on ${LIBRARY_PATH}:${COMPONENT_NAME}")
+			message("${MESSAGES_INDENTATION}  > Depends on ${LIBRARY_PATH}:${COMPONENT_NAME}")
 			set(PATH_SUFFIX ${COMPONENT_NAME}/${MODULE_ARCH})
 		else()
-			message("${MESSAGES_INDENTATION}  Depends on ${LIBRARY_PATH}")
+			message("${MESSAGES_INDENTATION}  > Depends on ${LIBRARY_PATH}")
 			set(PATH_SUFFIX ${MODULE_ARCH})
 		endif()
 
@@ -704,7 +758,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			)
 
 			foreach(STATIC_LIB ${STATIC_LIBS})
-				message("${MESSAGES_INDENTATION}    Found ${STATIC_LIB}")
+				message("${MESSAGES_INDENTATION}  * Found ${STATIC_LIB}")
 				setup_file(${STATIC_LIB} ${LIBRARY_SOURCE} ${LIBRARY_OUTPUT})
 
 				get_filename_component(LIBRARY_NAME ${STATIC_LIB} NAME_WE)

@@ -131,17 +131,22 @@ namespace asd
 	typedef unsigned long long  ullong;
 
 #ifdef __GNUC__
-	typedef int              	errno_t;
-	typedef long              __time32_t;
-	typedef __int64           __time64_t;
+	using  __int8 =  int8_t;
+	using __int16 = int16_t;
+	using __int32 = int32_t;
+	using __int64 = int64_t;
+	
+	using   errno_t  =   int;
+	using __time32_t =   long;
+	using __time64_t = __int64;
 #endif // __GNUC__
 
-	typedef unsigned __int8   __uint8;
-	typedef unsigned __int16  __uint16;
-	typedef unsigned __int32  __uint32;
-	typedef unsigned __int64  __uint64;
+	using __uint8  = std::make_unsigned_t< __int8>;
+	using __uint16 = std::make_unsigned_t<__int16>;
+	using __uint32 = std::make_unsigned_t<__int32>;
+	using __uint64 = std::make_unsigned_t<__int64>;
 
-	typedef __int64 int64;
+	using int64 = __int64;
 
 #ifndef _SSIZE_T_
 #define _SSIZE_T_

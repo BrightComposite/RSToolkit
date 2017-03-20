@@ -13,8 +13,7 @@ namespace asd
 {
 	implement_link(Window);
 
-	Window::Window(Graphics * graphics, const IntRect & rect, const WideString & caption) : UISpace(graphics, rect.size(), createWindowHandle(rect, caption, L"asdWindowClass", wndProc))
-	{
+	Window::Window(Graphics * graphics, const IntRect & rect, const WideString & caption) : UISpace(graphics, rect.size(), createWindowHandle(rect, caption, L"asdWindowClass", wndProc)) {
 		setclass(Window);
 
 		RectAdapter a;
@@ -30,21 +29,18 @@ namespace asd
 
 		registerHotkey(HOTKEY_FULLSCREEN, VK_RETURN, MOD_ALT);
 
-		subscribe_on(UISpace, HotkeyMessage, *this)
-		{
-			auto window = static_cast<Window *>(&dest);
-
-			switch(msg->id)
-			{
-				case HOTKEY_FULLSCREEN:
-					window->toggleFullscreen();
-					break;
-			}
-		};
+		subscription(*this) {
+			onmessage(HotkeyMessage) {
+				switch(msg->id) {
+					case HOTKEY_FULLSCREEN:
+						dest.toggleFullscreen();
+						break;
+				}
+			};
+		}
 	}
 
-	LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-	{
+	LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 		PAINTSTRUCT ps;
 		HDC hdc;
 
@@ -56,17 +52,14 @@ namespace asd
 		Window & w = *window;
 		Widget & root = *w._root;
 
-		switch(message)
-		{
-			case WM_PAINT:
-			{
+		switch(message) {
+			case WM_PAINT: {
 				hdc = BeginPaint(hWnd, &ps);
 				EndPaint(hWnd, &ps);
 				break;
 			}
 
-			case WM_CLOSE:
-			{
+			case WM_CLOSE: {
 				w._closed = true;
 
 				if(w._clippedCursor)
@@ -76,25 +69,20 @@ namespace asd
 				break;
 			}
 
-			case WM_DESTROY:
-			{
+			case WM_DESTROY: {
 				send<WindowCloseMessage>(w);
 				break;
 			}
 
-			case WM_ACTIVATE:
-			{
+			case WM_ACTIVATE: {
 				w._active = LOWORD(wParam) != 0;
 
-				if(LOWORD(wParam) == 0 && !w._closed)
-				{
+				if(LOWORD(wParam) == 0 && !w._closed) {
 					w.setFullscreen(false);
-					
+
 					if(w._clippedCursor)
 						ClipCursor(nullptr);
-				}
-				else
-				{
+				} else {
 					if(w._clippedCursor)
 						w.updateCursorClipRect();
 				}
@@ -103,10 +91,8 @@ namespace asd
 			}
 
 			case WM_KEYDOWN:
-			case WM_SYSKEYDOWN:
-			{
-				switch((int)wParam)
-				{
+			case WM_SYSKEYDOWN: {
+				switch((int)wParam) {
 					case VK_TAB:
 					{
 						if(hi_bit_mask::state(GetKeyState(VK_SHIFT)))
@@ -122,96 +108,81 @@ namespace asd
 				break;
 			}
 
-			case WM_CHAR:
-			{
+			case WM_CHAR: {
 				send<CharMessage>(w, (int)wParam, (int)(lParam & 0xFFFF), (get_bit<30>(lParam) == 0), (get_bit<24>(lParam) != 0));
 				break;
 			}
 
-			case WM_HOTKEY:
-			{
+			case WM_HOTKEY: {
 				send<HotkeyMessage>(w, (int)wParam);
 				break;
 			}
 
 			case WM_KEYUP:
-			case WM_SYSKEYUP:
-			{
+			case WM_SYSKEYUP: {
 				send<KeyUpMessage>(w, (int)wParam, (int)(lParam & 0xFFFF), (get_bit<30>(lParam) == 0), (get_bit<24>(lParam) != 0));
 				break;
 			}
 
-			case WM_LBUTTONDOWN:
-			{
+			case WM_LBUTTONDOWN: {
 				send<MouseDownMessage>(w, MouseButton::Left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
-			case WM_MBUTTONDOWN:
-			{
+			case WM_MBUTTONDOWN: {
 				send<MouseDownMessage>(w, MouseButton::Middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
-			case WM_RBUTTONDOWN:
-			{
+			case WM_RBUTTONDOWN: {
 				send<MouseDownMessage>(w, MouseButton::Right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
-			case WM_LBUTTONUP:
-			{
+			case WM_LBUTTONUP: {
 				w._mouseState.unpress(MouseButton::Left);
 				send<MouseUpMessage>(w, MouseButton::Left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
-			case WM_MBUTTONUP:
-			{
+			case WM_MBUTTONUP: {
 				w._mouseState.unpress(MouseButton::Middle);
 				send<MouseUpMessage>(w, MouseButton::Middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
-			case WM_RBUTTONUP:
-			{
+			case WM_RBUTTONUP: {
 				w._mouseState.unpress(MouseButton::Right);
 				send<MouseUpMessage>(w, MouseButton::Right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
-			case WM_LBUTTONDBLCLK:
-			{
+			case WM_LBUTTONDBLCLK: {
 				send<MouseDblClickMessage>(root, MouseButton::Left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
-			case WM_MBUTTONDBLCLK:
-			{
+			case WM_MBUTTONDBLCLK: {
 				send<MouseDblClickMessage>(root, MouseButton::Middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
-			case WM_RBUTTONDBLCLK:
-			{
+			case WM_RBUTTONDBLCLK: {
 				send<MouseDblClickMessage>(root, MouseButton::Right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 				break;
 			}
 
-			case WM_MOUSEWHEEL:
-			{
+			case WM_MOUSEWHEEL: {
 				send<MouseWheelMessage>(root, GET_WHEEL_DELTA_WPARAM(wParam), (int)LOWORD(lParam), (int)HIWORD(lParam), (int)LOWORD(wParam));
 				break;
 			}
-			
-			case WM_SIZING:
-			{
+
+			case WM_SIZING: {
 				w.update();
 				break;
 			}
-			
-			case WM_WINDOWPOSCHANGED:
-			{
+
+			case WM_WINDOWPOSCHANGED: {
 				if(!w._shown)
 					break;
 
@@ -222,55 +193,52 @@ namespace asd
 
 				if(pos.x != w._outerRegion.left || pos.y != w._outerRegion.top)
 					send<UIMoveMessage>(w, a.rect.left, a.rect.top);
-				
+
 				w._outerRegion.setPlacement(pos.x, pos.y, pos.cx, pos.cy);
 
 				WINDOWPLACEMENT wp {};
 				GetWindowPlacement(hWnd, &wp);
 
-				if(wp.showCmd == SW_SHOWNORMAL || w._width != a.width() || w._height != a.height())
-				{
+				if(wp.showCmd == SW_SHOWNORMAL || w._width != a.width() || w._height != a.height()) {
 					w._width = a.width();
 					w._height = a.height();
 
 					send<UIResizeMessage>(w, w._width, w._height);
 				}
 
-				if(check_flag(SWP_HIDEWINDOW, pos.flags))
-				{
+				if(check_flag(SWP_HIDEWINDOW, pos.flags)) {
 					w._state = WindowState::Hidden;
 					break;
 				}
 
-				switch(wp.showCmd)
-				{
-				case SW_HIDE:
-					w._state = WindowState::Hidden;
-					break;
+				switch(wp.showCmd) {
+					case SW_HIDE:
+						w._state = WindowState::Hidden;
+						break;
 
-				case SW_MAXIMIZE:
-					w._state = WindowState::Maximized;
-					break;
+					case SW_MAXIMIZE:
+						w._state = WindowState::Maximized;
+						break;
 
-				case SW_MINIMIZE:
-				case SW_SHOWMINIMIZED:
-				case SW_SHOWMINNOACTIVE:
-					w._state = WindowState::Minimized;
-					break;
+					case SW_MINIMIZE:
+					case SW_SHOWMINIMIZED:
+					case SW_SHOWMINNOACTIVE:
+						w._state = WindowState::Minimized;
+						break;
 
-				case SW_RESTORE:
-				case SW_SHOWNORMAL:
-					w._state = WindowState::Normal;
-					break;
+					case SW_RESTORE:
+					case SW_SHOWNORMAL:
+						w._state = WindowState::Normal;
+						break;
 
-				case SW_SHOW:
-					break;
+					case SW_SHOW:
+						break;
 				}
 
 				w.update();
 				break;
 			}
-			
+
 			case WM_ERASEBKGND:
 				return 1;
 
@@ -281,8 +249,7 @@ namespace asd
 		return 0;
 	}
 
-	static void getMonitorSize(int & width, int & height)
-	{
+	static void getMonitorSize(int & width, int & height) {
 		DEVMODE devMode = {0};
 
 		devMode.dmSize = sizeof(DEVMODE);
@@ -293,14 +260,12 @@ namespace asd
 		height = devMode.dmPelsHeight;
 	}
 
-	void Window::setFullscreen(bool fullscreen)
-	{
+	void Window::setFullscreen(bool fullscreen) {
 		if(_fullscreen != fullscreen)
 			toggleFullscreen();
 	}
 
-	void Window::makeFullscreen()
-	{
+	void Window::makeFullscreen() {
 		_windowedPlacement.length = sizeof(WINDOWPLACEMENT);
 		GetWindowPlacement(_handle, &_windowedPlacement);
 
@@ -318,8 +283,7 @@ namespace asd
 		GetWindowPlacement(_handle, &_fullscreenPlacement);
 	}
 
-	void Window::restoreSize()
-	{
+	void Window::restoreSize() {
 		send<UIFullscreenMessage>(*this, false);
 
 		SetWindowLongW(_handle, GWL_STYLE, WS_CAPTION);
@@ -329,8 +293,7 @@ namespace asd
 		SetWindowPlacement(_handle, &_windowedPlacement);
 	}
 
-	void Window::toggleFullscreen()
-	{
+	void Window::toggleFullscreen() {
 		_fullscreen = !_fullscreen;
 
 		if(_fullscreen)
@@ -339,8 +302,7 @@ namespace asd
 			restoreSize();
 	}
 
-	void Window::centralize()
-	{
+	void Window::centralize() {
 		if(_shown && (_state != WindowState::Normal || _fullscreen))
 			return;
 
@@ -353,18 +315,15 @@ namespace asd
 		_outerRegion.setPlacement(x, y, w, h);
 	}
 
-	void Window::registerHotkey(int id, int key, int modifiers)
-	{
+	void Window::registerHotkey(int id, int key, int modifiers) {
 		RegisterHotKey(_handle, id, modifiers, key);
 	}
 
-	void Window::unregisterHotkey(int id)
-	{
+	void Window::unregisterHotkey(int id) {
 		UnregisterHotKey(_handle, id);
 	}
 
-	void Window::setBorderStyle(BorderStyle style)
-	{
+	void Window::setBorderStyle(BorderStyle style) {
 		if(_borderStyle == style)
 			return;
 
@@ -372,22 +331,20 @@ namespace asd
 		applyBorderStyle();
 	}
 
-	void Window::applyBorderStyle()
-	{
-		switch(_borderStyle)
-		{
-		case BorderStyle::Normal:
-			_normalStyle = WS_OVERLAPPEDWINDOW;
-			break;
-		case BorderStyle::Static:
-			_normalStyle = WS_BORDER;
-			break;
-		case BorderStyle::Fixed:
-			_normalStyle = WS_CAPTION;
-			break;
-		case BorderStyle::None:
-			_normalStyle = WS_POPUP | WS_MINIMIZEBOX;
-			break;
+	void Window::applyBorderStyle() {
+		switch(_borderStyle) {
+			case BorderStyle::Normal:
+				_normalStyle = WS_OVERLAPPEDWINDOW;
+				break;
+			case BorderStyle::Static:
+				_normalStyle = WS_BORDER;
+				break;
+			case BorderStyle::Fixed:
+				_normalStyle = WS_CAPTION;
+				break;
+			case BorderStyle::None:
+				_normalStyle = WS_POPUP | WS_MINIMIZEBOX;
+				break;
 		}
 
 		SetWindowLongW(_handle, GWL_STYLE, _normalStyle);
@@ -396,13 +353,11 @@ namespace asd
 			ShowWindow(_handle, SW_SHOW);
 	}
 
-	void Window::setCaption(const WideString & caption)
-	{
+	void Window::setCaption(const WideString & caption) {
 		SetWindowTextW(_handle, caption.c_str());
 	}
 
-	WideString Window::getCaption()
-	{
+	WideString Window::getCaption() {
 		auto length = GetWindowTextLengthW(_handle);
 		auto text = Memory<wchar_t>::allocate(length);
 
@@ -414,30 +369,27 @@ namespace asd
 		return s;
 	}
 
-	void Window::setState(WindowState value)
-	{
-		switch(value)
-		{
-		case WindowState::Hidden:
-			hide();
-			break;
+	void Window::setState(WindowState value) {
+		switch(value) {
+			case WindowState::Hidden:
+				hide();
+				break;
 
-		case WindowState::Maximized:
-			maximize();
-			break;
+			case WindowState::Maximized:
+				maximize();
+				break;
 
-		case WindowState::Minimized:
-			minimize();
-			break;
+			case WindowState::Minimized:
+				minimize();
+				break;
 
-		case WindowState::Normal:
-			restore();
-			break;
+			case WindowState::Normal:
+				restore();
+				break;
 		}
 	}
 
-	void Window::show()
-	{
+	void Window::show() {
 		if(_shown && _state != WindowState::Hidden)
 			return;
 
@@ -446,48 +398,36 @@ namespace asd
 		SetForegroundWindow(_handle);
 	}
 
-	void Window::minimize()
-	{
+	void Window::minimize() {
 		if(!_shown || _state == WindowState::Minimized)
 			return;
 
 		ShowWindow(_handle, SW_MINIMIZE);
 	}
 
-	void Window::maximize()
-	{
+	void Window::maximize() {
 		if(!_shown || _state == WindowState::Maximized)
 			return;
 
 		ShowWindow(_handle, SW_SHOWMAXIMIZED);
 	}
 
-	void Window::restore()
-	{
+	void Window::restore() {
 		if(!_shown || _state == WindowState::Normal)
 			return;
 
 		ShowWindow(_handle, SW_RESTORE);
 	}
 
-	void Window::hide()
-	{
+	void Window::hide() {
 		if(!_shown || _state == WindowState::Hidden)
 			return;
 
 		ShowWindow(_handle, SW_HIDE);
 	}
 
-	void Window::close()
-	{
+	void Window::close() {
 		SendMessageW(_handle, WM_CLOSE, 0, 0);
-	}
-
-	void Window::attachThread()
-	{
-		connect([](Handle<WindowCloseMessage> & msg, Window & dest) {
-			ThreadLoop::stop();
-		}, *this);
 	}
 }
 

@@ -2,12 +2,21 @@
 
 #include <core/Exception.h>
 
+#ifdef _MSC_VER
 #include <windows.h>
+#endif
+
 #include <iostream>
 
 //---------------------------------------------------------------------------
 
 #define EXC_BUFFER_SIZE 256
+
+#ifndef _MSC_VER
+	char * strerror_s(char * buffer, size_t size, error_t err) {
+		return strerror_r(err, buffer, size);
+	}
+#endif
 
 namespace asd
 {

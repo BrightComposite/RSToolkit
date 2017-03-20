@@ -8,7 +8,7 @@ namespace asd
 {
 	static Entrance open([]()
     {
-        // PLACE YOUR CODE HERE! GOOD LUCK :)
+        // Let's start from here!
 
         return 0;
     });

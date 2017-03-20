@@ -289,13 +289,13 @@ namespace asd
 			value = asUnsignedLong();
 			return value;
 		}
-
+/*
 		size_t & operator >> (size_t & value)
 		{
 			value = asSize();
 			return value;
 		}
-
+*/
 		float & operator >> (float & value)
 		{
 			value = asFloat();
@@ -349,6 +349,7 @@ namespace asd
 
 		String & flood(size_t start, size_t count, char sym, char limiter = '\0');
 
+#ifdef _MSC_VER
 		template<class T, useif<can_stream_print<T>::value>>
 		static inline String bin(T value)
 		{
@@ -356,7 +357,20 @@ namespace asd
 			s << std::bin << std::showbase << value;
 			return s.str();
 		}
-
+#else
+		template<class T, useif<std::is_integral<T>::value>>
+		static inline String bin(T value)
+		{
+			std::ostringstream s;
+			int x = 1 << (sizeof(value) * 8 - 1);
+			
+			for(int i = sizeof(value) * 8 - 1; i >= 0; --i, x >>= 1) {
+				s << ((value & x) >> i);
+			}
+			
+			return "0b" + s.str();
+		}
+#endif
 		template<class T, useif<can_stream_print<T>::value>>
 		static inline String oct(T value)
 		{
@@ -765,13 +779,13 @@ namespace asd
 			value = asUnsignedLong();
 			return value;
 		}
-
+/*
 		size_t & operator >> (size_t & value)
 		{
 			value = asSize();
 			return value;
 		}
-
+*/
 		float & operator >> (float & value)
 		{
 			value = asFloat();
@@ -825,6 +839,7 @@ namespace asd
 
 		WideString & flood(size_t start, size_t count, wchar_t sym, wchar_t limiter = '\0');
 
+#ifdef _MSC_VER
 		template<class T, useif<can_wstream_print<T>::value>>
 		static inline WideString bin(T value)
 		{
@@ -832,7 +847,20 @@ namespace asd
 			s << std::bin << std::showbase << value;
 			return s.str();
 		}
-
+#else
+		template<class T, useif<std::is_integral<T>::value>>
+		static inline WideString bin(T value)
+		{
+			std::wostringstream s;
+			int x = 1 << (sizeof(value) * 8 - 1);
+			
+			for(int i = sizeof(value) * 8 - 1; i >= 0; --i, x >>= 1) {
+				s << ((value & x) >> i);
+			}
+			
+			return L"0b" + s.str();
+		}
+#endif
 		template<class T, useif<can_wstream_print<T>::value>>
 		static inline WideString oct(T value)
 		{
@@ -852,8 +880,7 @@ namespace asd
 		template<class T, class ... A, useif<
 			can_construct<WideString, T>::value,
 			can_construct<WideString, A>::value...
-			>
-			endif>
+			>>
 		static inline WideString assemble(T && value, A &&... others)
 		{
 			return WideString(forward<T>(value)).add(forward<A>(others)...);
@@ -862,8 +889,7 @@ namespace asd
 		template<class T, class ... A, useif<
 			can_construct<WideString, T>::value,
 			can_construct<WideString, A>::value...
-			>
-			endif>
+			>>
 		WideString & add(T && value, A &&... others)
 		{
 			operator += (forward<T>(value));
@@ -898,15 +924,15 @@ namespace asd
 		};
 
 		WideString & sanitize();
-
-		wchar_t asChar()
+		
+		char asChar()
 		{
-			return this->empty() ? '\0' : this->data()[0];
+			return  static_cast<char>(this->empty() ? 0 :this->data()[0]);
 		}
-
-		char asWideChar()
+		
+		wchar_t asWideChar()
 		{
-			return this->empty() ? '\0' : this->data()[0];
+			return this->empty() ? L'\0' : this->data()[0];
 		}
 
 		int asInt(int radix = 10)

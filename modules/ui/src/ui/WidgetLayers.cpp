@@ -157,7 +157,7 @@ namespace asd
 		_boundary.width = 1;
 	}
 
-	void ColoredButtonDecorator::decorate(Widget * w)
+	void ColoredButtonDecorator::apply(Widget * w)
 	{
 		w->components->require<BackgroundDrawerComponent>()->set(Unique<ColoredBackgroundDrawer>(_colors));
 

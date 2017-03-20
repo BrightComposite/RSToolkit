@@ -1,12 +1,15 @@
+
 ## ASD .gitignore
 
 *
+!commands/
 !data/
 !modules/
 !templates/
 !tests/
 !tools/
 !third-party/
+!commands/**/*
 !data/**/*
 !modules/**/*
 !templates/**/*

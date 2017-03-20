@@ -29,13 +29,10 @@ namespace asd
 
 	template<class T>
 	using is_widget = based_on<T, Widget>;
-
 	template<class T>
 	using is_widget_component = based_on<T, WidgetComponent>;
-
 	template<class T>
 	using is_layer = based_on<T, WidgetLayer>;
-
 	template<class T>
 	using is_widget_drawer = is_callable<T, const Widget *, const IntRect &>;
 
@@ -44,38 +41,31 @@ namespace asd
 	class MouseState
 	{
 	public:
-		MouseButton buttons() const
-		{
+		MouseButton buttons() const {
 			return _buttons;
 		}
 
-		bool isPressed() const
-		{
+		bool isPressed() const {
 			return _buttons != MouseButton::None;
 		}
 
-		bool isPressed(MouseButton button) const
-		{
+		bool isPressed(MouseButton button) const {
 			return check_flag(button, _buttons);
 		}
 
-		bool hasPressed(MouseButton buttons) const
-		{
+		bool hasPressed(MouseButton buttons) const {
 			return has_some_flags(buttons, _buttons);
 		}
 
-		void press(MouseButton button)
-		{
+		void press(MouseButton button) {
 			set_flag(button, _buttons);
 		}
 
-		void unpress(MouseButton button)
-		{
+		void unpress(MouseButton button) {
 			clear_flag(button, _buttons);
 		}
 
-		void unpress()
-		{
+		void unpress() {
 			_buttons = MouseButton::None;
 		}
 
@@ -116,6 +106,9 @@ namespace asd
 		class Tree;
 
 	public:
+		template<class XPack>
+		Widget(const XPack & pack) {}
+
 		api(ui) Widget(Widget * parent);
 		api(ui) Widget(Widget * parent, const IntRect & region);
 		api(ui) Widget(UISpace * space);
@@ -202,9 +195,9 @@ namespace asd
 		static api(ui) void calculateRegionRect(IntRect & out, const IntRect & offsets, const FloatRect & anchors, const Widget & parent);
 		static api(ui) void calculateOffsets(IntRect & out, const Widget & region, const Widget & parent);
 
-		template<class WidgetClass, typename ... A, selectif(0)<is_widget<WidgetClass>::value, can_construct<WidgetClass, Widget *, A...>::value>>
+		template<class WidgetClass, typename ... A, selectif(0) < is_widget<WidgetClass>::value, can_construct<WidgetClass, Widget *, A...>::value > >
 		inline Handle<WidgetClass> append(A && ...);
-		template<class LayerClass, typename ... A, selectif(1)<is_layer<LayerClass>::value, !is_widget_component<LayerClass>::value, can_construct<LayerClass, A...>::value>>
+		template<class LayerClass, typename ... A, selectif(1) < is_layer<LayerClass>::value, !is_widget_component<LayerClass>::value, can_construct<LayerClass, A...>::value > >
 		inline LayerClass * append(A && ...);
 
 		api(ui) Widget * attach(const Handle<Widget> & child);
@@ -308,16 +301,14 @@ namespace asd
 			using asd::tree<Tree, Set<Widget>>::tree;
 
 		private:
-			friend class asd::tree<Tree, Set<Widget>>;
+			friend asd::tree<Tree, Set<Widget>>::iterator;
 
-			static auto child_begin(typename Set<Widget>::iterator & i)
-			{
-				return (*i)->_children.begin();
+			static auto child_begin(typename Set<Widget>::iterator & i) {
+				return i->_()->_children.begin();
 			}
 
-			static auto child_end(typename Set<Widget>::iterator & i)
-			{
-				return (*i)->_children.end();
+			static auto child_end(typename Set<Widget>::iterator & i) {
+				return i->_()->_children.end();
 			}
 		};
 
@@ -328,7 +319,7 @@ namespace asd
 
 	channels_api(ui, Widget, WidgetMessages)
 
-	template<>
+		template<>
 	struct hash<Widget> : hash<Subject> {};
 
 	class WidgetLayer : public Shared
@@ -341,8 +332,7 @@ namespace asd
 
 		virtual Handle<WidgetLayer> clone(Widget * widget) const = 0;
 
-		int order() const
-		{
+		int order() const {
 			return _order;
 		}
 
@@ -362,19 +352,16 @@ namespace asd
 	public:
 		WidgetLayerComponent(Widget * widget) : WidgetComponent(widget) {}
 
-		virtual ~WidgetLayerComponent()
-		{
+		virtual ~WidgetLayerComponent() {
 			if(_layer != nullptr)
 				_widget->detach(_layer);
 		}
 
-		T * layer() const
-		{
+		T * layer() const {
 			return _layer;
 		}
 
-		virtual Handle<WidgetComponent> clone(Widget * w) const override
-		{
+		virtual Handle<WidgetComponent> clone(Widget * w) const override {
 			Handle<WidgetLayerComponent> c(w);
 
 			if(_layer)
@@ -382,10 +369,9 @@ namespace asd
 
 			return c;
 		}
-		
+
 		template<class ... A, useif<can_construct<T, A...>::value>>
-		T * init(A &&... args)
-		{
+		T * init(A &&... args) {
 			if(_layer != nullptr)
 				_widget->detach(_layer);
 
@@ -395,8 +381,7 @@ namespace asd
 			return _layer;
 		}
 
-		void set(Unique<T> && layer)
-		{
+		void set(Unique<T> && layer) {
 			if(_layer != nullptr)
 				_widget->detach(_layer);
 
@@ -418,8 +403,7 @@ namespace asd
 		CustomLayer(const WidgetDrawer & drawer, int order = 0) : WidgetLayer(order), drawer(drawer) {}
 		virtual ~CustomLayer() {}
 
-		virtual Handle<WidgetLayer> clone(Widget * widget) const override
-		{
+		virtual Handle<WidgetLayer> clone(Widget * widget) const override {
 			return Handle<CustomLayer>(drawer, _order);
 		}
 
@@ -434,8 +418,7 @@ namespace asd
 	public:
 		CustomLayerComponent(Widget * w) : WidgetComponent(w) {}
 
-		virtual Handle<WidgetComponent> clone(Widget * widget) const override
-		{
+		virtual Handle<WidgetComponent> clone(Widget * widget) const override {
 			Handle<CustomLayerComponent> c(widget);
 
 			for(auto & l : _layers)
@@ -445,8 +428,7 @@ namespace asd
 		}
 
 		template<class LayerClass, useif<is_layer<LayerClass>::value>>
-		LayerClass * add(const Handle<LayerClass> & layer)
-		{
+		LayerClass * add(const Handle<LayerClass> & layer) {
 			_layers.push_back(layer);
 			return _widget->attach(layer);
 		}
@@ -457,30 +439,24 @@ namespace asd
 
 	create_component(ui, CustomLayerComponent);
 
-	inline const IntSize & Widget::size() const
-	{
+	inline const IntSize & Widget::size() const {
 		return _size;
 	}
 
-	inline int Widget::width() const
-	{
+	inline int Widget::width() const {
 		return _size.x;
 	}
 
-	inline int Widget::height() const
-	{
+	inline int Widget::height() const {
 		return _size.y;
 	}
 
-	inline const IntPoint & Widget::pos() const
-	{
+	inline const IntPoint & Widget::pos() const {
 		return _relPos;
 	}
 
-	inline int Widget::side(int index) const
-	{
-		switch(index)
-		{
+	inline int Widget::side(int index) const {
+		switch(index) {
 			case 0:
 				return _relPos.x;
 			case 1:
@@ -494,208 +470,168 @@ namespace asd
 		}
 	}
 
-	inline int Widget::left() const
-	{
+	inline int Widget::left() const {
 		return _relPos.x;
 	}
 
-	inline int Widget::top() const
-	{
+	inline int Widget::top() const {
 		return _relPos.y;
 	}
 
-	inline int Widget::right() const
-	{
+	inline int Widget::right() const {
 		return _relPos.x + _size.x;
 	}
 
-	inline int Widget::bottom() const
-	{
+	inline int Widget::bottom() const {
 		return _relPos.y + _size.y;
 	}
 
-	inline Widget::operator IntRect () const
-	{
+	inline Widget::operator IntRect () const {
 		return {_relPos, _size};
 	}
 
-	inline IntRect Widget::region() const
-	{
+	inline IntRect Widget::region() const {
 		return {_relPos, _size};
 	}
 
-	inline IntRect Widget::localRegion() const
-	{
+	inline IntRect Widget::localRegion() const {
 		return {_size};
 	}
 
-	inline Viewport Widget::viewport() const
-	{
+	inline Viewport Widget::viewport() const {
 		return {_size};
 	}
 
-	inline const IntPoint & Widget::absPos() const
-	{
+	inline const IntPoint & Widget::absPos() const {
 		return _absPos;
 	}
 
-	inline int Widget::absLeft() const
-	{
+	inline int Widget::absLeft() const {
 		return _absPos.x;
 	}
 
-	inline int Widget::absTop() const
-	{
+	inline int Widget::absTop() const {
 		return _absPos.y;
 	}
 
-	inline int Widget::absRight() const
-	{
+	inline int Widget::absRight() const {
 		return _absPos.x + _size.x;
 	}
 
-	inline int Widget::absBottom() const
-	{
+	inline int Widget::absBottom() const {
 		return _absPos.y + _size.y;
 	}
 
-	inline IntRect Widget::absRegion() const
-	{
+	inline IntRect Widget::absRegion() const {
 		return {_absPos, _size};
 	}
 
-	inline ModelMask Widget::alignment() const
-	{
+	inline ModelMask Widget::alignment() const {
 		return _alignment;
 	}
 
-	inline const IntRect & Widget::offsets() const
-	{
+	inline const IntRect & Widget::offsets() const {
 		return _offsets;
 	}
 
-	inline const FloatRect & Widget::anchors() const
-	{
+	inline const FloatRect & Widget::anchors() const {
 		return _anchors;
 	}
 
-	inline bool Widget::isVisible() const
-	{
+	inline bool Widget::isVisible() const {
 		return check_flag(WidgetFlag::Visible, _flags);
 	}
 
-	inline bool Widget::isFocusable() const
-	{
+	inline bool Widget::isFocusable() const {
 		return check_flag(WidgetFlag::Focusable, _flags);
 	}
 
-	inline int Widget::displayOrder() const
-	{
+	inline int Widget::displayOrder() const {
 		return _displayOrder;
 	}
 
-	inline int Widget::focusOrder() const
-	{
+	inline int Widget::focusOrder() const {
 		return _focusOrder;
 	}
 
-	inline Widget * Widget::child(int idx) const
-	{
+	inline Widget * Widget::child(int idx) const {
 		return _displayList[idx];
 	}
 
-	inline typename Widget::Tree Widget::tree()
-	{
+	inline typename Widget::Tree Widget::tree() {
 		return {_children};
 	}
 
-	inline void Widget::setLeft(int value)
-	{
+	inline void Widget::setLeft(int value) {
 		changePlacement(value, top(), right(), bottom(), ModelMask::Left);
 	}
 
-	inline void Widget::setTop(int value)
-	{
+	inline void Widget::setTop(int value) {
 		changePlacement(left(), value, right(), bottom(), ModelMask::Top);
 	}
 
-	inline void Widget::setRight(int value)
-	{
+	inline void Widget::setRight(int value) {
 		changePlacement(left(), top(), value, bottom(), ModelMask::Right);
 	}
 
-	inline void Widget::setBottom(int value)
-	{
+	inline void Widget::setBottom(int value) {
 		changePlacement(left(), top(), right(), value, ModelMask::Bottom);
 	}
 
-	inline void Widget::setWidth(int value)
-	{
+	inline void Widget::setWidth(int value) {
 		changeSize(value, height(), ModelMask::Horizontal);
 	}
 
-	inline void Widget::setHeight(int value)
-	{
+	inline void Widget::setHeight(int value) {
 		changeSize(width(), value, ModelMask::Vertical);
 	}
 
-	inline void Widget::setRegion(const IntRect & r)
-	{
+	inline void Widget::setRegion(const IntRect & r) {
 		changePlacement(r.left, r.top, r.right, r.bottom, ModelMask::FullSize);
 	}
 
-	inline void Widget::setPos(int left, int top)
-	{
+	inline void Widget::setPos(int left, int top) {
 		changePlacement(left, top, left + width(), top + height(), ModelMask::FullSize);
 	}
 
-	inline void Widget::setPos(const IntPoint & pt)
-	{
+	inline void Widget::setPos(const IntPoint & pt) {
 		changePlacement(pt.x, pt.y, pt.x + width(), pt.y + height(), ModelMask::FullSize);
 	}
 
-	inline void Widget::setSize(int width, int height)
-	{
+	inline void Widget::setSize(int width, int height) {
 		changeSize(width, height, ModelMask::FullSize);
 	}
 
-	inline void Widget::setSize(const IntSize & size)
-	{
+	inline void Widget::setSize(const IntSize & size) {
 		changeSize(size.x, size.y, ModelMask::FullSize);
 	}
 
-	inline void Widget::setPlacement(int left, int top, int width, int height)
-	{
+	inline void Widget::setPlacement(int left, int top, int width, int height) {
 		changePlacement(left, top, left + width, top + height, ModelMask::FullSize);
 	}
 
-	inline void Widget::setPlacement(const IntPoint & pt, const IntSize & size)
-	{
+	inline void Widget::setPlacement(const IntPoint & pt, const IntSize & size) {
 		changePlacement(pt.x, pt.y, pt.x + size.x, pt.y + size.y, ModelMask::FullSize);
 	}
 
-	inline void Widget::setPlacement(ModelMask alignment, const IntRect & offsets)
-	{
+	inline void Widget::setPlacement(ModelMask alignment, const IntRect & offsets) {
 		_offsets = offsets;
 		setAlignment(alignment);
 	}
 
-	inline void Widget::setPlacement(ModelMask alignment, int left, int top, int width, int height)
-	{
+	inline void Widget::setPlacement(ModelMask alignment, int left, int top, int width, int height) {
 		_offsets.set(left, top, left, top);
 		setAlignment(alignment);
 		setSize(width, height);
 	}
 
-	inline void Widget::setPlacement(ModelMask alignment, const IntPoint & offset, const IntSize & size)
-	{
+	inline void Widget::setPlacement(ModelMask alignment, const IntPoint & offset, const IntSize & size) {
 		_offsets.set(offset.x, offset.y, offset.x, offset.y);
 		setAlignment(alignment);
 		setSize(size);
 	}
 
-	inline void Widget::setPlacement(const FloatRect & anchors, const IntRect & offsets)
-	{
+	inline void Widget::setPlacement(const FloatRect & anchors, const IntRect & offsets) {
 		_alignment = ModelMask::Custom;
 		_anchors = anchors;
 		_offsets = offsets;
@@ -703,8 +639,7 @@ namespace asd
 		updateAnchors();
 	}
 
-	inline void Widget::setAlignment(ModelMask alignment)
-	{
+	inline void Widget::setAlignment(ModelMask alignment) {
 		if(_alignment == alignment)
 			return;
 
@@ -713,48 +648,42 @@ namespace asd
 		if(_alignment == ModelMask::Custom)
 			return;
 
-		_anchors.left   = check_flag(ModelMask::Left,   _alignment) ? 0.0f : 1.0f;
-		_anchors.top    = check_flag(ModelMask::Top,    _alignment) ? 0.0f : 1.0f;
-		_anchors.right  = check_flag(ModelMask::Right,  _alignment) ? 1.0f : 0.0f;
+		_anchors.left = check_flag(ModelMask::Left, _alignment) ? 0.0f : 1.0f;
+		_anchors.top = check_flag(ModelMask::Top, _alignment) ? 0.0f : 1.0f;
+		_anchors.right = check_flag(ModelMask::Right, _alignment) ? 1.0f : 0.0f;
 		_anchors.bottom = check_flag(ModelMask::Bottom, _alignment) ? 1.0f : 0.0f;
 
 		updateAnchors();
 	}
 
-	inline void Widget::setOffset(int side, int value)
-	{
+	inline void Widget::setOffset(int side, int value) {
 		_offsets[side] = value;
 		updateAnchors();
 	}
 
-	inline void Widget::setOffsets(const IntRect & offsets)
-	{
+	inline void Widget::setOffsets(const IntRect & offsets) {
 		_offsets = offsets;
 		updateAnchors();
 	}
 
-	inline void Widget::setAnchor(int side, float value)
-	{
+	inline void Widget::setAnchor(int side, float value) {
 		_alignment = ModelMask::Custom;
 		_anchors[side] = value;
 		updateAnchors();
 	}
 
-	inline void Widget::setAnchors(const FloatRect & anchors)
-	{
+	inline void Widget::setAnchors(const FloatRect & anchors) {
 		_alignment = ModelMask::Custom;
 		_anchors = anchors;
 		updateAnchors();
 	}
 
-	inline Handle<Widget> Widget::clone(Widget * parent) const
-	{
+	inline Handle<Widget> Widget::clone(Widget * parent) const {
 		return Handle<Widget>(*this, parent);
 	}
 
 	template<class WidgetClass, typename ... A, selected_t(0)> // append widget
-	inline Handle<WidgetClass> Widget::append(A && ... args)
-	{
+	inline Handle<WidgetClass> Widget::append(A && ... args) {
 		return Handle<WidgetClass>(this, forward<A>(args)...);
 	}
 
@@ -765,34 +694,29 @@ namespace asd
 	}
 
 	template<class LayerClass, used_t>
-	inline LayerClass * Widget::attach(LayerClass * layer)
-	{
+	inline LayerClass * Widget::attach(LayerClass * layer) {
 		_layers.insert(std::upper_bound(_layers.begin(), _layers.end(), layer, WidgetLayer::Sorter()), layer); // sorted insert
 		return layer;
 	}
 
 	template<class LayerClass, used_t>
-	inline LayerClass * Widget::attach(const Handle<LayerClass> & layer)
-	{
+	inline LayerClass * Widget::attach(const Handle<LayerClass> & layer) {
 		_layers.insert(std::upper_bound(_layers.begin(), _layers.end(), layer, WidgetLayer::Sorter()), layer); // sorted insert
 		return layer;
 	}
 
 	template<class LayerClass, used_t>
-	inline LayerClass * Widget::attach(const Unique<LayerClass> & layer)
-	{
+	inline LayerClass * Widget::attach(const Unique<LayerClass> & layer) {
 		_layers.emplace(std::upper_bound(_layers.begin(), _layers.end(), layer, WidgetLayer::Sorter()), layer); // sorted insert
 		return layer;
 	}
 
 	template<class Drawer, used_t>
-	inline CustomLayer * Widget::attach(const Drawer & drawer, int order)
-	{
+	inline CustomLayer * Widget::attach(const Drawer & drawer, int order) {
 		return append<CustomLayer>(drawer, order);
 	}
 
-	inline void Widget::setLayerOrder(WidgetLayer * layer, int order)
-	{
+	inline void Widget::setLayerOrder(WidgetLayer * layer, int order) {
 		auto i = std::find(_layers.begin(), _layers.end(), layer);
 
 		if(i == _layers.end())
@@ -808,14 +732,12 @@ namespace asd
 			std::rotate(i, i + 1, std::lower_bound(std::next(i), _layers.end(), *i, WidgetLayer::Sorter()));
 	}
 
-	inline void Widget::detach(WidgetLayer * layer)
-	{
+	inline void Widget::detach(WidgetLayer * layer) {
 		erase(_layers, layer);
 	}
 
 	template<class Drawer, used_t>
-	inline Widget & Widget::operator << (const Drawer & drawer)
-	{
+	inline Widget & Widget::operator << (const Drawer & drawer) {
 		attach(drawer);
 		return *this;
 	}

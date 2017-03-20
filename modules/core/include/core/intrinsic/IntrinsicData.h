@@ -14,7 +14,7 @@
 #ifdef USE_AVX
 #include <immintrin.h>
 #else
-#include <tmmintrin.h>
+#include <x86intrin.h>
 #endif
 
 #include <memory.h>
@@ -52,7 +52,7 @@ namespace asd
 			};
 
 			__int16 i;
-			byte a[2];
+			array<byte, 2> a;
 		};
 	};
 
@@ -66,7 +66,7 @@ namespace asd
 			};
 
 			__int32 i;
-			byte a[4];
+			array<byte, 4> a;
 		};
 	};
 

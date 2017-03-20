@@ -25,7 +25,7 @@ namespace asd
 		typedef wstring::traits_type::state_type state_type;
 		typedef codecvt<wchar_t, char, state_type> CVT;
 
-		const CVT & cvt = use_facet<CVT>(loc);
+		const CVT & cvt = std::use_facet<CVT>(loc);
 		string narrow(cvt.max_length() * wide.size(), '\0');
 		state_type state;
 
@@ -89,7 +89,7 @@ namespace asd
 		typedef string::traits_type::state_type state_type;
 		typedef codecvt<char, wchar_t, state_type> CVT;
 
-		const CVT & cvt = use_facet<CVT>(loc);
+		const CVT & cvt = std::use_facet<CVT>(loc);
 		wstring wide(cvt.max_length() * narrow.size(), '\0');
 		state_type state;
 
@@ -593,6 +593,7 @@ namespace asd
 		return s[0];
 	}
 
+#ifdef _MSC_VER
 	double toDouble(const wchar_t * s)
 	{
 		return _wtof(s);
@@ -607,7 +608,26 @@ namespace asd
 	{
 		return (int)_wtoi(s);
 	}
-
+#else
+	double toDouble(const wchar_t * s)
+	{
+		wchar_t * end = nullptr;
+		return wcstod(s, &end);
+	}
+	
+	float toFloat(const wchar_t * s)
+	{
+		wchar_t * end = nullptr;
+		return wcstof(s, &end);
+	}
+	
+	int toInt(const wchar_t * s)
+	{
+		wchar_t * end = nullptr;
+		return (int)wcstol(s, &end, 10);
+	}
+#endif
+	
 	long toLong(const wchar_t * s)
 	{
 		WideString str(s);

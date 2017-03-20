@@ -51,22 +51,41 @@ namespace asd
 
 		Application() {}
 
-		static void load();
-		static wstring getExecutionPath(HINSTANCE hInstance);
+		void api(application) pause();
+
+		static api(application) void load();
+		static api(application) wstring getExecutionPath(HINSTANCE hInstance);
 
 		HINSTANCE hInstance = nullptr;
 		wstring rootPath;
 		array_list<wstring> args;
 
-		EntranceFunction entrance = nullptr;
+		function<int()> entrance = nullptr;
 		int showCommand;
 	};
 
-	struct api(application) Entrance
+	struct Entrance
 	{
-		Entrance(EntranceFunction func);
+		Entrance(EntranceFunction func) {
+			if(Application::instance().entrance != nullptr)
+				throw Exception("Can't set multiple entrances!");
 
-		EntranceFunction func;
+			Application::instance().entrance = func;
+		}
+
+		Entrance(ExitFunction func) {
+			if(Application::instance().entrance != nullptr)
+				throw Exception("Can't set multiple entrances!");
+
+			Application::instance().entrance = [func]() {
+				func();
+
+			#ifdef ASD_CONSOLE
+				Application::instance().pause();
+			#endif
+				return 0;
+			};
+		}
 	};
 }
 

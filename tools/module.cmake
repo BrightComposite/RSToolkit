@@ -7,6 +7,7 @@ cmake_minimum_required(VERSION 3.3)
 #--------------------------------------------------------
 
 include(${ASD_TOOLS}/utils.cmake)
+include(${ASD_TOOLS}/vendor.cmake)
 
 #--------------------------------------------------------
 
@@ -21,21 +22,34 @@ else()
 endif()
 
 if("${MAKE_TARGET_DIR}" STREQUAL "")
-	set(MAKE_TARGET_DIR build)
+	if("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 14 2015")
+		set(MAKE_TARGET_DIR build-vs-x86)
+	elseif("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 14 2015 Win64")
+		set(MAKE_TARGET_DIR build-vs-x64)
+	elseif("${CMAKE_GENERATOR}" STREQUAL "CodeBlocks - Unix Makefiles")
+		set(MAKE_TARGET_DIR build-cb)
+	elseif("${CMAKE_GENERATOR}" STREQUAL "Ninja")
+		set(MAKE_TARGET_DIR build-ninja)
+	elseif("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 14 2015 Win64")
+		set(MAKE_TARGET_DIR build-vs-x64)
+	elseif("${CMAKE_GENERATOR}" STREQUAL "Unix Makefiles")
+		set(MAKE_TARGET_DIR build-unix)
+	else()
+		set(MAKE_TARGET_DIR build)
+	endif()
 endif()
 
-set(OUTPUT_PATH_SUFFIX ${MAKE_TARGET_DIR} CACHE PATH "Output path suffix")
+set(OUTPUT_PATH_SUFFIX "${MAKE_TARGET_DIR}" CACHE PATH "Output path suffix" FORCE)
+set(OUTPUT_ROOT "${WORKSPACE_ROOT}/output/${OUTPUT_PATH_SUFFIX}" CACHE PATH "Output root" FORCE)
 
-set(OUTPUT_ROOT ${WORKSPACE_ROOT}/${OUTPUT_PATH_SUFFIX} CACHE PATH "Output root")
+set(BINARY_OUTPUT ${WORKSPACE_ROOT}/output/bin/${MODULE_ARCH} CACHE PATH "Binary output" FORCE)
+set(LIBRARY_OUTPUT ${WORKSPACE_ROOT}/output/lib/${MODULE_ARCH} CACHE PATH "Library output" FORCE)
 
-set(BINARY_OUTPUT ${WORKSPACE_ROOT}/bin/${MODULE_ARCH} CACHE PATH "Binary output")
-set(LIBRARY_OUTPUT ${WORKSPACE_ROOT}/lib/${MODULE_ARCH} CACHE PATH "Library output")
+set(MODULES_ROOT ${ASD_ROOT}/code/modules CACHE PATH "Modules root" FORCE)
+set(WORKSPACE_MODULES_ROOT ${WORKSPACE_ROOT}/code/modules CACHE PATH "Workspace modules root" FORCE)
 
-set(MODULES_ROOT ${ASD_ROOT}/modules CACHE PATH "Modules root")
-set(WORKSPACE_MODULES_ROOT ${WORKSPACE_ROOT}/modules CACHE PATH "Workspace modules root")
-
-set(THIRD_PARTY ${ASD_ROOT}/third-party CACHE PATH "Third-party directory")
-set(WORKSPACE_THIRD_PARTY ${WORKSPACE_ROOT}/third-party CACHE PATH "Workspace third-party directory")
+set(VENDOR_ROOT ${ASD_ROOT}/vendor CACHE PATH "Vendor directory" FORCE)
+set(WORKSPACE_VENDOR_ROOT ${WORKSPACE_ROOT}/vendor CACHE PATH "Workspace vendor directory" FORCE)
 
 if(NOT "${ALTERNATIVE_ROOT}" STREQUAL "")
 	set(${PROJECT_NAME}_ROOT "${ALTERNATIVE_ROOT}" CACHE PATH "")
@@ -56,13 +70,13 @@ function(set_output_dir DIR TYPE)
 	set(${OUTPUT_DIR}_RELWITHDEBINFO ${${OUTPUT_DIR}}/withdebinfo CACHE PATH "Cmake ${TYPE} relwithdebinfo output")
 endfunction()
 
-set_output_dir(${WORKSPACE_ROOT}/lib ARCHIVE)
-set_output_dir(${WORKSPACE_ROOT}/lib LIBRARY)
-set_output_dir(${WORKSPACE_ROOT}/bin RUNTIME)
+set_output_dir(${WORKSPACE_ROOT}/output/lib ARCHIVE)
+set_output_dir(${WORKSPACE_ROOT}/output/lib LIBRARY)
+set_output_dir(${WORKSPACE_ROOT}/output/bin RUNTIME)
 
-link_directories(${WORKSPACE_ROOT}/lib/${MODULE_ARCH})
-link_directories(${WORKSPACE_ROOT}/lib/${MODULE_ARCH}/release)
-link_directories(${WORKSPACE_ROOT}/lib/${MODULE_ARCH}/debug)
+link_directories(${WORKSPACE_ROOT}/output/lib/${MODULE_ARCH})
+link_directories(${WORKSPACE_ROOT}/output/lib/${MODULE_ARCH}/release)
+link_directories(${WORKSPACE_ROOT}/output/lib/${MODULE_ARCH}/debug)
 
 #--------------------------------------------------------
 
@@ -76,66 +90,6 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 #--------------------------------------------------------
 #	Functions
 #--------------------------------------------------------
-
-	function(name_upper out name)
-		string(REGEX REPLACE "([a-z])([A-Z])" "\\1_\\2" NAME ${name})
-		string(REGEX REPLACE "[^A-Za-z0-9_]" "_" NAME ${NAME})
-		string(TOUPPER ${NAME} NAME)
-
-		set(${out} ${NAME} PARENT_SCOPE)
-	endfunction()
-
-	function(name_lower out name)
-		string(REGEX REPLACE "([a-z])([A-Z])" "\\1_\\2" NAME ${name})
-		string(REGEX REPLACE "[^A-Za-z0-9_]" "_" NAME ${NAME})
-		string(TOLOWER ${NAME} NAME)
-
-		set(${out} ${NAME} PARENT_SCOPE)
-	endfunction()
-
-	function(escape_regular OUT_STR STR)
-		string(REPLACE "\\" "\\\\" BUF "${STR}")
-		string(REPLACE "/" "\\/" BUF "${BUF}")
-		string(REPLACE "+" "\\+" BUF "${BUF}")
-		string(REPLACE "." "\\." BUF "${BUF}")
-		string(REPLACE ":" "\\:" BUF "${BUF}")
-
-		set(${OUT_STR} ${BUF} PARENT_SCOPE)
-	endfunction()
-
-#	create_source function.
-
-	function(create_source SRC_ROOT SRC_PATH)
-		set(SRC_FULLPATH ${SRC_ROOT}/${SRC_PATH})
-
-		get_filename_component(SRC_DIR  ${SRC_FULLPATH} DIRECTORY)
-		get_filename_component(SRC_EXT  ${SRC_FULLPATH} EXT)
-		get_filename_component(SRC_SHORT_DIR  ${SRC_PATH} DIRECTORY)
-
-		get_filename_component(filename ${SRC_FULLPATH} NAME_WE)
-		set(short_path ${SRC_SHORT_DIR}/${filename})
-
-		if(NOT EXISTS ${SRC_DIR})
-			file(MAKE_DIRECTORY ${SRC_DIR})
-		endif()
-
-		name_upper(FILE_NAME ${filename})
-		name_upper(PROJECT_NAME_UPPER ${PROJECT_NAME})
-		name_lower(PROJECT_NAME_LOWER ${PROJECT_NAME})
-
-		set(TEMPLATE_FILE ${ASD_ROOT}/templates/${filename}${SRC_EXT})
-		set(TEMPLATE_FILE_EXT ${ASD_ROOT}/templates/_${SRC_EXT})
-
-		message(STATUS "Create new source file ${SRC_FULLPATH}...")
-
-		if(EXISTS ${TEMPLATE_FILE})
-			configure_file(${TEMPLATE_FILE} ${SRC_FULLPATH})
-		elseif(EXISTS ${TEMPLATE_FILE_EXT})
-			configure_file(${TEMPLATE_FILE_EXT} ${SRC_FULLPATH})
-		else()
-			file(WRITE ${SRC_FULLPATH} "")
-		endif()
-	endfunction()
 
 #	group function
 
@@ -300,7 +254,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			endif()
 
 			set(OUTPUT_DIR "${ROOT}/${OUTPUT_PATH_SUFFIX}/${DIR}")
-			set(DIR "${ROOT}/${DIR}")
+			set(DIR "${ROOT}/code/${DIR}")
 		else()
 			if("${DOMAIN}" STREQUAL "modules")
 				set(OUTPUT_DIR "${OUTPUT_ROOT}/${PATH}")
@@ -308,7 +262,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 				set(OUTPUT_DIR "${OUTPUT_ROOT}/${DIR}")
 			endif()
 
-			set(DIR "${WORKSPACE_ROOT}/${DIR}")
+			set(DIR "${WORKSPACE_ROOT}/code/${DIR}")
 		endif()
 
 		if(NOT EXISTS "${DIR}/CMakeLists.txt")
@@ -345,17 +299,15 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 		if(NOT "${ROOT}" STREQUAL "")
 			if(NOT IS_ABSOLUTE "${ROOT}")
-				message(FATAL_ERROR "add_module: a third argument (module root) must be an absolute path or empty")
+				message(FATAL_ERROR "add_command: a third argument (module root) must be an absolute path or empty")
 			endif()
 
-			set(OUTPUT_DIR "${ROOT}/${OUTPUT_PATH_SUFFIX}/${DIR}")
-			set(DIR "${ROOT}/${DIR}")
+			set(OUTPUT_DIR "${ROOT}/output/${OUTPUT_PATH_SUFFIX}/${DIR}")
+			set(DIR "${ROOT}/code/${DIR}")
 		else()
 			set(OUTPUT_DIR "${OUTPUT_ROOT}/${DIR}")
-			set(DIR "${WORKSPACE_ROOT}/${DIR}")
+			set(DIR "${WORKSPACE_ROOT}/code/${DIR}")
 		endif()
-
-		message(${DIR})
 
 		if(NOT EXISTS "${DIR}/CMakeLists.txt")
 			file(MAKE_DIRECTORY ${DIR})
@@ -391,10 +343,10 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			set(module_path)
 			color_message(BLACK "${MESSAGES_INDENTATION}* Try to resolve...")
 
-			if(NOT "${${PROJECT_NAME}_ROOT}" STREQUAL "" AND EXISTS "${${PROJECT_NAME}_ROOT}/modules/${module_id}")
-				set(module_path "${${PROJECT_NAME}_ROOT}/modules/${module_id}")
+			if(NOT "${${PROJECT_NAME}_ROOT}" STREQUAL "" AND EXISTS "${${PROJECT_NAME}_ROOT}/code/modules/${module_id}")
+				set(module_path "${${PROJECT_NAME}_ROOT}/code/modules/${module_id}")
 				color_message(WHITE "${MESSAGES_INDENTATION}* Found at ${module_path}")
-				add_subdirectory(${module_path} "${${PROJECT_NAME}_ROOT}/${OUTPUT_PATH_SUFFIX}/${module_id}")
+				add_subdirectory(${module_path} "${${PROJECT_NAME}_ROOT}/output/${OUTPUT_PATH_SUFFIX}/${module_id}")
 
 			elseif(EXISTS "${WORKSPACE_MODULES_ROOT}/${module_id}")
 				set(module_path "${WORKSPACE_MODULES_ROOT}/${module_id}")
@@ -406,13 +358,13 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 				color_message(WHITE "${MESSAGES_INDENTATION}* Found at ${module_path}")
 				add_subdirectory(${module_path} "${OUTPUT_ROOT}/${module_id}")
 
-			elseif(EXISTS "${WORKSPACE_THIRD_PARTY}/${module_id}")
-				set(module_path "${WORKSPACE_THIRD_PARTY}/${module_id}")
+			elseif(EXISTS "${WORKSPACE_VENDOR_ROOT}/${module_id}")
+				set(module_path "${WORKSPACE_VENDOR_ROOT}/${module_id}")
 				color_message(WHITE "${MESSAGES_INDENTATION}* Found at ${module_path}")
 				add_subdirectory(${module_path} "${OUTPUT_ROOT}/${module_id}")
 
-			elseif(EXISTS "${THIRD_PARTY}/${module_id}")
-				set(module_path "${THIRD_PARTY}/${module_id}")
+			elseif(EXISTS "${VENDOR_ROOT}/${module_id}")
+				set(module_path "${VENDOR_ROOT}/${module_id}")
 				color_message(WHITE "${MESSAGES_INDENTATION}* Found at ${module_path}")
 				add_subdirectory(${module_path} "${OUTPUT_ROOT}/${module_id}")
 
@@ -463,14 +415,13 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		message("")
 		if("${type}" STREQUAL "APPLICATION")
 			if("${ARGN}" STREQUAL "CONSOLE")
-				message("${MESSAGES_INDENTATION}+ Add console app \"${PROJECT_NAME}\"")
+				color_message(GREEN "${MESSAGES_INDENTATION}+ Add console app \"${PROJECT_NAME}\"")
 				add_definitions("-DASD_CONSOLE")
 			else()
-				message("${MESSAGES_INDENTATION}+ Add app \"${PROJECT_NAME}\"")
+				color_message(GREEN "${MESSAGES_INDENTATION}+ Add app \"${PROJECT_NAME}\"")
 			endif()
 		else()
-			message("${MESSAGES_INDENTATION}+ Add module \"${PROJECT_NAME}\"")
-			#message("${MESSAGES_INDENTATION}+ Add module \"${PROJECT_NAME}\"")
+			color_message(GREEN "${MESSAGES_INDENTATION}+ Add module \"${PROJECT_NAME}\"")
 		endif()
 
 		set(${PROJECT_NAME}_SOURCES CACHE INTERNAL "${PROJECT_NAME} sources" FORCE)
@@ -540,9 +491,9 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		endif()
 
 		if(WIN32)
-			add_definitions(-Dasd_${module}_api=__declspec(dllexport))
+			add_definitions("-Dasd_${module}_api=__declspec(dllexport)")
 		else()
-			add_definitions(-Dasd_${module}_api=)
+			add_definitions("-Dasd_${module}_api=")
 		endif()
 	endfunction()
 
@@ -556,9 +507,9 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		endif()
 
 		if(WIN32)
-			add_definitions(-Dasd_${module}_api=__declspec(dllimport))
+			add_definitions("-Dasd_${module}_api=__declspec(dllimport)")
 		else()
-			add_definitions(-Dasd_${module}_api=)
+			add_definitions("-Dasd_${module}_api=")
 		endif()
 	endfunction()
 
@@ -615,179 +566,5 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 				api_import(${DEPENDENCY})
 			endif()
 		endforeach()
-	endfunction()
-
-#	setup_file function
-
-	function(setup_file FILE_PATH SOURCE DEST)
-		if(NOT EXISTS ${DEST}/${FILE_PATH})
-			get_filename_component(FILE_DIR ${FILE_PATH} DIRECTORY)
-			file(COPY ${SOURCE}/${FILE_PATH} DESTINATION ${DEST}/${FILE_DIR})
-		endif()
-	endfunction()
-
-#	setup_third_party function
-
-	function(setup_third_party LIBRARY_PATH)
-		    if(EXISTS ${WORKSPACE_THIRD_PARTY}/${LIBRARY_PATH})
-			set(THIRD_PARTY_DIR ${WORKSPACE_THIRD_PARTY}/${LIBRARY_PATH})
-		elseif(EXISTS ${THIRD_PARTY}/${LIBRARY_PATH})
-			set(THIRD_PARTY_DIR ${THIRD_PARTY}/${LIBRARY_PATH})
-		elseif(EXISTS "${WORKSPACE_THIRD_PARTY}/${LIBRARY_PATH}.tar.gz")
-			set(THIRD_PARTY_DIR ${WORKSPACE_THIRD_PARTY}/${LIBRARY_PATH})
-			set(THIRD_PARTY_ARCHIVE 1)
-		elseif(EXISTS "${THIRD_PARTY}/${LIBRARY_PATH}.tar.gz")
-			set(THIRD_PARTY_DIR ${THIRD_PARTY}/${LIBRARY_PATH})
-			set(THIRD_PARTY_ARCHIVE 1)
-		else()
-			message(FATAL_ERROR "Can't find third-party library '${LIBRARY_PATH}'!")
-		endif()
-
-		if(NOT "${THIRD_PARTY_ARCHIVE}" STREQUAL "")
-			message(STATUS "Extract third-party library '${LIBRARY_PATH}' from ${THIRD_PARTY_DIR}.tar.gz")
-			execute_process(COMMAND ${CMAKE_COMMAND} -E tar xfz "${LIBRARY_PATH}.tar.gz" WORKING_DIRECTORY "${THIRD_PARTY}")
-
-			if(NOT EXISTS ${THIRD_PARTY_DIR})
-				message(FATAL_ERROR "Can't extract the archive with third-party library '${LIBRARY_PATH}'!")
-			endif()
-		endif()
-
-		if("${ARGV1}" STREQUAL "COMPONENT" AND NOT "${ARGV2}" STREQUAL "")
-			message("${MESSAGES_INDENTATION}  > Depends on ${LIBRARY_PATH}:${ARGV2}")
-			set(PATH_SUFFIX ${ARGV2}/${MODULE_ARCH})
-		else()
-			message("${MESSAGES_INDENTATION}  > Depends on ${LIBRARY_PATH}")
-			set(PATH_SUFFIX ${MODULE_ARCH})
-		endif()
-
-		set(BINARY_SOURCE ${THIRD_PARTY_DIR}/bin/${PATH_SUFFIX})
-		set(LIBRARY_SOURCE ${THIRD_PARTY_DIR}/lib/${PATH_SUFFIX})
-
-		if(EXISTS ${BINARY_SOURCE})
-			file(GLOB_RECURSE SHARED_LIBS RELATIVE ${BINARY_SOURCE}
-				${BINARY_SOURCE}/*${CMAKE_SHARED_LIBRARY_SUFFIX}
-			)
-
-			foreach(SHARED_LIB ${SHARED_LIBS})
-				get_filename_component(SHARED_LIB_NAME ${SHARED_LIB} NAME)
-				get_filename_component(SHARED_LIB_DIR ${SHARED_LIB} DIRECTORY)
-
-				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_OUTPUT}/${SHARED_LIB_DIR}/release)
-				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_OUTPUT}/${SHARED_LIB_DIR}/minsize)
-				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_OUTPUT}/${SHARED_LIB_DIR}/withdebinfo)
-				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_OUTPUT}/${SHARED_LIB_DIR}/debug)
-			endforeach()
-		endif()
-
-		if(EXISTS ${LIBRARY_SOURCE})
-			file(GLOB_RECURSE STATIC_LIBS RELATIVE ${LIBRARY_SOURCE}
-				${LIBRARY_SOURCE}/*${CMAKE_STATIC_LIBRARY_SUFFIX}
-			)
-
-			foreach(STATIC_LIB ${STATIC_LIBS})
-				message("${MESSAGES_INDENTATION}  * Found ${STATIC_LIB}")
-				setup_file(${STATIC_LIB} ${LIBRARY_SOURCE} ${LIBRARY_OUTPUT})
-			endforeach()
-		endif()
-
-		if(EXISTS ${THIRD_PARTY_DIR}/include)
-			add_module_include_dirs(${THIRD_PARTY_DIR}/include)
-		endif()
-
-	endfunction()
-
-#	load_third_party function
-
-	function(load_third_party LIBRARY_PATH)
-		    if(EXISTS ${WORKSPACE_THIRD_PARTY}/${LIBRARY_PATH})
-			set(THIRD_PARTY_DIR ${WORKSPACE_THIRD_PARTY}/${LIBRARY_PATH})
-		elseif(EXISTS ${THIRD_PARTY}/${LIBRARY_PATH})
-			set(THIRD_PARTY_DIR ${THIRD_PARTY}/${LIBRARY_PATH})
-		elseif(EXISTS "${WORKSPACE_THIRD_PARTY}/${LIBRARY_PATH}.tar.gz")
-			set(THIRD_PARTY_DIR ${WORKSPACE_THIRD_PARTY}/${LIBRARY_PATH})
-			set(THIRD_PARTY_ARCHIVE 1)
-		elseif(EXISTS "${THIRD_PARTY}/${LIBRARY_PATH}.tar.gz")
-			set(THIRD_PARTY_DIR ${THIRD_PARTY}/${LIBRARY_PATH})
-			set(THIRD_PARTY_ARCHIVE 1)
-		else()
-			message(FATAL_ERROR "Can't find third-party library '${LIBRARY_PATH}'!")
-		endif()
-
-		if(NOT "${THIRD_PARTY_ARCHIVE}" STREQUAL "")
-			message(STATUS "Extract third-party library '${LIBRARY_PATH}' from ${THIRD_PARTY_DIR}.tar.gz")
-			execute_process(COMMAND ${CMAKE_COMMAND} -E tar xfz "${LIBRARY_PATH}.tar.gz" WORKING_DIRECTORY "${THIRD_PARTY}")
-
-			if(NOT EXISTS ${THIRD_PARTY_DIR})
-				message(FATAL_ERROR "Can't extract the archive with third-party library '${LIBRARY_PATH}'!")
-			endif()
-		endif()
-
-		if("${ARGV1}" STREQUAL "COMPONENT" AND NOT "${ARGV2}" STREQUAL "")
-			set(COMPONENT_NAME ${ARGV2})
-			message("${MESSAGES_INDENTATION}  > Depends on ${LIBRARY_PATH}:${COMPONENT_NAME}")
-			set(PATH_SUFFIX ${COMPONENT_NAME}/${MODULE_ARCH})
-		else()
-			message("${MESSAGES_INDENTATION}  > Depends on ${LIBRARY_PATH}")
-			set(PATH_SUFFIX ${MODULE_ARCH})
-		endif()
-
-		set(BINARY_SOURCE ${THIRD_PARTY_DIR}/bin/${PATH_SUFFIX})
-		set(LIBRARY_SOURCE ${THIRD_PARTY_DIR}/lib/${PATH_SUFFIX})
-
-		if(EXISTS ${BINARY_SOURCE})
-			file(GLOB_RECURSE SHARED_LIBS RELATIVE ${BINARY_SOURCE}
-				${BINARY_SOURCE}/*${CMAKE_SHARED_LIBRARY_SUFFIX}
-				${BINARY_SOURCE}/*.manifest
-				${BINARY_SOURCE}/*.pdb
-			)
-
-			foreach(SHARED_LIB ${SHARED_LIBS})
-				get_filename_component(SHARED_LIB_NAME ${SHARED_LIB} NAME)
-				get_filename_component(SHARED_LIB_DIR ${SHARED_LIB} DIRECTORY)
-
-				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_OUTPUT}/${SHARED_LIB_DIR}/release)
-				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_OUTPUT}/${SHARED_LIB_DIR}/minsize)
-				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_OUTPUT}/${SHARED_LIB_DIR}/withdebinfo)
-				setup_file(${SHARED_LIB_NAME} ${BINARY_SOURCE}/${SHARED_LIB_DIR} ${BINARY_OUTPUT}/${SHARED_LIB_DIR}/debug)
-			endforeach()
-		endif()
-
-		if(EXISTS ${LIBRARY_SOURCE})
-			file(GLOB_RECURSE STATIC_LIBS RELATIVE ${LIBRARY_SOURCE}
-				${LIBRARY_SOURCE}/*${CMAKE_STATIC_LIBRARY_SUFFIX}
-			)
-
-			foreach(STATIC_LIB ${STATIC_LIBS})
-				message("${MESSAGES_INDENTATION}  * Found ${STATIC_LIB}")
-				setup_file(${STATIC_LIB} ${LIBRARY_SOURCE} ${LIBRARY_OUTPUT})
-
-				get_filename_component(LIBRARY_NAME ${STATIC_LIB} NAME_WE)
-				get_filename_component(LIBRARY_DIR ${STATIC_LIB} DIRECTORY)
-				string(REGEX REPLACE "[^a-zA-Z0-9_-]" _ LIBRARY_NAME "${LIBRARY_DIR}-${LIBRARY_NAME}")
-
-				add_library(${LIBRARY_NAME} STATIC IMPORTED)
-				set_target_properties(${LIBRARY_NAME} PROPERTIES IMPORTED_LOCATION ${LIBRARY_OUTPUT}/${STATIC_LIB})
-
-				if("${STATIC_LIB}" MATCHES "debug/")
-					target_link_libraries(${PROJECT_NAME} PUBLIC debug ${LIBRARY_NAME})
-				elseif("${STATIC_LIB}" MATCHES "release/")
-					target_link_libraries(${PROJECT_NAME} PUBLIC optimized ${LIBRARY_NAME})
-				else()
-					target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRARY_NAME})
-				endif()
-			endforeach()
-
-			file(GLOB_RECURSE STATIC_DEBUG_DATABASES RELATIVE ${LIBRARY_SOURCE}
-				${LIBRARY_SOURCE}/*.pdb
-			)
-
-			foreach(DEBUG_DB ${STATIC_DEBUG_DATABASES})
-				setup_file(${DEBUG_DB} ${LIBRARY_SOURCE} ${BINARY_OUTPUT})
-			endforeach()
-		endif()
-
-		if(EXISTS ${THIRD_PARTY_DIR}/include)
-			add_module_include_dirs(${THIRD_PARTY_DIR}/include)
-		endif()
 	endfunction()
 endif()

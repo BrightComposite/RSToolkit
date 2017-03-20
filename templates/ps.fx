@@ -15,5 +15,5 @@ struct VS_OUTPUT
 
 float4 main(VS_OUTPUT input) : SV_Target
 {
-    return color;
+	return color;
 }

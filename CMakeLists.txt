@@ -11,6 +11,8 @@ project(asd VERSION 0.1)
 include(tools/workspace.cmake)
 include(tools/module.cmake)
 
+add_module(glx tests)
+
 add_module(ui-themes modules)
 
 add_module(core    tests)

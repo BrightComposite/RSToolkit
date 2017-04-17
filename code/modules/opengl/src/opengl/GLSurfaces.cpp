@@ -34,7 +34,7 @@ namespace asd
 
 		void DepthSurface::apply() const
 		{
-#ifdef WIN32
+#if BOOST_OS_WINDOWS
 			wglMakeCurrent(_deviceCtx, _graphics->context());
 #endif
 			glViewport(0, 0, width(), height());
@@ -56,7 +56,7 @@ namespace asd
 
 		void UISurface::createRenderTarget()
 		{
-#ifdef WIN32
+#if BOOST_OS_WINDOWS
 			_deviceCtx = ::GetDC(_space->handle());
 			GLGraphics::setPixelFormat(_deviceCtx);
 
@@ -72,23 +72,30 @@ namespace asd
 
 				throw Exception("Can't create render context!");
 			}
+#elif BOOST_OS_LINUX
+			if(glXMakeCurrent(_graphics->display(), _space->handle(), _graphics->context()) == GL_FALSE) {
+				throw Exception("Can't bind render context!");
+			}
 #endif
 		}
 
 		void UISurface::releaseRenderTarget()
 		{
-#ifdef WIN32
+#if BOOST_OS_WINDOWS
 			if(_graphics->surface() == this)
 				wglMakeCurrent(nullptr, nullptr);
 
 			::DeleteDC(_deviceCtx);
 			_deviceCtx = nullptr;
+#elif BOOST_OS_LINUX
+			if(_graphics->surface() == this)
+				glXMakeCurrent(_graphics->display(), 0, 0);
 #endif
 		}
 
 		void UISurface::apply() const
 		{
-#ifdef WIN32
+#if BOOST_OS_WINDOWS
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			wglMakeCurrent(_deviceCtx, _graphics->context());
 #endif
@@ -97,8 +104,10 @@ namespace asd
 
 		void UISurface::present() const
 		{
-#ifdef WIN32
+#if BOOST_OS_WINDOWS
 			SwapBuffers(_deviceCtx);
+#elif BOOST_OS_LINUX
+			glXSwapBuffers(_graphics->display(), _space->handle());
 #endif
 		}
 

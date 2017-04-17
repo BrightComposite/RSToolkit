@@ -10,7 +10,7 @@ include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-module(SHARED)
+module(STATIC)
 	dependencies(meta	0.*)
 
 	sources(modules)

@@ -14,11 +14,6 @@ namespace asd
 {
 	wstring getDir(const wstring & path);
 
-	static array_list<Entrance *> & entrances() {
-		static array_list<Entrance *> e;
-		return e;
-	}
-
 #ifdef WIN32
 	void Application::main(int argc, wchar_t * argv[]) {
 		auto & inst = instance();

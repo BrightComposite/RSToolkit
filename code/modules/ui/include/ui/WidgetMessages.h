@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <message/Message.h>
+#include <message/Display.h>
 #include <core/Handle.h>
 #include <math/Rect.h>
 

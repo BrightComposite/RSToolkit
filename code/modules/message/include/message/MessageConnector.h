@@ -10,7 +10,7 @@
 #include <container/ArrayList.h>
 #include <forward_list>
 
-#include "Message.h"
+#include "Display.h"
 
 //---------------------------------------------------------------------------
 

@@ -11,7 +11,7 @@ include(${ASD_TOOLS}/shaders.cmake)
 
 #--------------------------------------------------------
 
-module(SHARED)
+module(STATIC)
 	dependencies(ui	0.*)
 	api(opengl3_3)
 
@@ -96,4 +96,5 @@ else()
 		
 	target_link_libraries(${PROJECT_NAME} PRIVATE ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
 endif()
+
 #--------------------------------------------------------

@@ -257,7 +257,7 @@ namespace asd
 
 	template void Graphics::draw<string>(Graphics * graphics, const string & text, int x, int y, int & newx);
 	template void Graphics::draw<wstring>(Graphics * graphics, const wstring & text, int x, int y, int & newx);
-
+	
 	void ScreenCoord::toRel(const IntRect & rectAbs, const IntSize & viewport, FloatPoint & posRel, FloatSize & sizeRel)
 	{
 		toRel(rectAbs.minPos(), viewport, posRel);

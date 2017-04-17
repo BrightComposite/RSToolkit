@@ -86,7 +86,7 @@ namespace asd
 	template<typename T, typename R, typename C, typename ... A>
 	struct method_wrapper<T &, R(C::*)(A...)>
 	{
-		typedef R(__thiscall C::*MethodType)(A...);
+		typedef R(THISCALL C::*MethodType)(A...);
 
 		R operator()(A ... args)
 		{
@@ -100,7 +100,7 @@ namespace asd
 	template<typename T, typename R, typename C, typename ... A>
 	struct method_wrapper<T *, R(C::*)(A...)>
 	{
-		typedef R(__thiscall C::*MethodType)(A...);
+		typedef R(THISCALL C::*MethodType)(A...);
 
 		R operator()(A ... args)
 		{
@@ -114,7 +114,7 @@ namespace asd
 	template<typename T, typename R, typename C, typename ... A>
 	struct method_wrapper<T, R(C::*)(A...) const>
 	{
-		typedef R(__thiscall C::*MethodType)(A...) const;
+		typedef R(THISCALL C::*MethodType)(A...) const;
 
 		R operator()(A ... args)
 		{
@@ -128,7 +128,7 @@ namespace asd
 	template<typename T, typename R, typename C, typename ... A>
 	struct method_wrapper<T &, R(C::*)(A...) const>
 	{
-		typedef R(__thiscall C::*MethodType)(A...) const;
+		typedef R(THISCALL C::*MethodType)(A...) const;
 
 		R operator()(A ... args)
 		{
@@ -142,7 +142,7 @@ namespace asd
 	template<typename T, typename R, typename C, typename ... A>
 	struct method_wrapper<T *, R(C::*)(A...) const>
 	{
-		typedef R(__thiscall C::*MethodType)(A...) const;
+		typedef R(THISCALL C::*MethodType)(A...) const;
 
 		R operator()(A ... args)
 		{

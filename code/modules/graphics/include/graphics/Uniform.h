@@ -44,7 +44,20 @@ namespace asd
 	};
 
 	template<class U>
-	struct UniformChunk;
+	struct UniformChunk : UniformData
+	{
+		static_assert(is_uniform<U>::value, "U must be an uniform");
+
+		UniformChunk(Graphics3D * graphics)
+		{
+			graphics->uniformChunk(*this);
+		}
+
+		void fill(const Contents<U> & contents)
+		{
+			Memory<void>::move(data.ptr, contents.pointer(), data.size);
+		}
+	};
 
 	class UniformAdapter : public Shared
 	{

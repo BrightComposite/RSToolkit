@@ -1547,7 +1547,7 @@ namespace asd
 
 		static inline void __vectorcall fill(byte val, inner & out)
 		{
-			out = type{val, val, val, val};
+			out = {val, val, val, val};
 		}
 
 		static inline inner __vectorcall fill(byte val)

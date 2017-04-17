@@ -633,7 +633,7 @@ namespace asd
 	{
 		return (int)_wtoi(s);
 	}
-	
+
 	long toLong(const wchar_t * s)
 	{
 		WideString str(s);

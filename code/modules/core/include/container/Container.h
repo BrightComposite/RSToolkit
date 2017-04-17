@@ -10,7 +10,6 @@
 #include <meta/Meta.h>
 #include <boost/iterator/iterator_facade.hpp>
 
-#include <algorithm>
 #include <stack>
 
 //---------------------------------------------------------------------------
@@ -51,25 +50,6 @@ namespace asd
 	bool check(typename container::const_iterator & iterator, const container & c)
 	{
 		return iterator != c.cend();
-	}
-	
-	template<class T>
-	auto max_index(initializer_list<T> list)
-	{
-		return std::distance(list.begin(), std::max_element(list.begin(), list.end()));
-	}
-	
-	template<class T>
-	auto min_index(initializer_list<T> list)
-	{
-		return std::distance(list.begin(), std::min_element(list.begin(), list.end()));
-	}
-	
-	template<class T>
-	pair<size_t, size_t> minmax_index(initializer_list<T> list)
-	{
-		auto minmax = std::minmax_element(list.begin(), list.end());
-		return {std::distance(list.begin(), minmax.first), std::distance(list.begin(), minmax.second)};
 	}
 
 	template<class T>

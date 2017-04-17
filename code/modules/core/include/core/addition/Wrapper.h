@@ -63,13 +63,13 @@ namespace asd
 		}
 
 		template<typename R, typename ... A>
-		inline auto operator ->* (R(__thiscall T::*method)(A...)) const
+		inline auto operator ->* (R(THISCALL T::*method)(A...)) const
 		{
 			return wrap_method(pointer(), method);
 		}
 
 		template<typename R, typename ... A>
-		inline auto operator ->* (R(__thiscall T::*method)(A...) const) const
+		inline auto operator ->* (R(THISCALL T::*method)(A...) const) const
 		{
 			return wrap_method(pointer(), method);
 		}

@@ -999,6 +999,13 @@ namespace asd
 				_inner = h._inner;
 				h._inner = nullptr;
 
+			return *this;
+		}
+
+		template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
+		UniqueHandle & operator = (UniqueHandle<U, A...> && h)
+		{
+			if(void_ptr(this) == void_ptr(&h))
 				return *this;
 			}
 
@@ -1013,6 +1020,9 @@ namespace asd
 				_inner = static_cast<T *>(h._inner);
 				h._inner = nullptr;
 
+		UniqueHandle & operator = (T * ptr)
+		{
+			if(void_ptr(ptr) == void_ptr(_inner))
 				return *this;
 			}
 
@@ -1166,7 +1176,7 @@ namespace asd
 	template<class T, class R, class C, class ... A>
 	struct method_wrapper<Handle<T>, R(C::*)(A...)>
 	{
-		typedef R(__thiscall C::*MethodType)(A ...);
+		typedef R(THISCALL C::*MethodType)(A ...);
 
 		R operator()(A ... args) {
 			return (object->*method)(forward<A>(args)...);
@@ -1179,7 +1189,7 @@ namespace asd
 	template<class T, class R, class C, class ... A>
 	struct method_wrapper<Handle<T>, R(C::*)(A...) const>
 	{
-		typedef R(__thiscall C::*MethodType)(A ...) const;
+		typedef R(THISCALL C::*MethodType)(A ...) const;
 
 		R operator()(A ... args) {
 			return (object->*method)(forward<A>(args)...);
@@ -1192,7 +1202,7 @@ namespace asd
 	template<class T, class R, class C, class ... A>
 	struct method_wrapper<Handle<T> &, R(C::*)(A...)>
 	{
-		typedef R(__thiscall C::*MethodType)(A ...);
+		typedef R(THISCALL C::*MethodType)(A ...);
 
 		R operator()(A ... args) {
 			return (object->*method)(forward<A>(args)...);
@@ -1205,7 +1215,7 @@ namespace asd
 	template<class T, class R, class C, class ... A>
 	struct method_wrapper<Handle<T> &, R(C::*)(A...) const>
 	{
-		typedef R(__thiscall C::*MethodType)(A ...) const;
+		typedef R(THISCALL C::*MethodType)(A ...) const;
 
 		R operator()(A ... args) {
 			return (object->*method)(forward<A>(args)...);

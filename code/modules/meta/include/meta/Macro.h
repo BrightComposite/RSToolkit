@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <utility>
+#include <algorithm>
 #include "Preprocessor.h"
 #include "Flag.h"
 
@@ -85,6 +86,25 @@ namespace asd
 		x = x - x % a;
 
 		return x;
+	}
+
+	template<class T>
+	size_t max_index(initializer_list<T> list)
+	{
+		return std::distance(list.begin(), std::max_element(list.begin(), list.end()));
+	}
+
+	template<class T>
+	size_t min_index(initializer_list<T> list)
+	{
+		return std::distance(list.begin(), std::min_element(list.begin(), list.end()));
+	}
+
+	template<class T>
+	pair<size_t, size_t> minmax_index(initializer_list<T> list)
+	{
+		auto minmax = std::minmax_element(list.begin(), list.end());
+		return {std::distance(list.begin(), minmax.first), std::distance(list.begin(), minmax.second)};
 	}
 
 	template<class T, class F, class ... A, class = decltype(declval<const T>() != nullptr)>
@@ -182,7 +202,6 @@ namespace asd
 #define repeat(var, times) for(remove_cv_t<decltype(times)> var = 0; var < times; ++var)
 
 #define inscope()
-#define with(Type, ...) int pp_cat(_, __LINE__) = 0; for(Type _; pp_cat(_, __LINE__) < 1; ++pp_cat(_, __LINE__))
 
 #define deny_copy(... /* Class */) \
 	__VA_ARGS__(const __VA_ARGS__ &) = delete; \

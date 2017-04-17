@@ -28,7 +28,7 @@
 #include <ui/Cursor.h>
 #include <ui/Text.h>
 
-#include <windows/Message.h>
+#include <windows/Display.h>
 
 #include <vld.h>
 

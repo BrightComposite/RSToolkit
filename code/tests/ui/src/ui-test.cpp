@@ -36,9 +36,11 @@ namespace asd
 		FreeTypeDecoder::initialize();
 		FreeImageConverter::initialize();
 
+		Display display;
+		
 		Color backgroundColor(0.2f, 0.2f, 0.2f);
 
-		auto graphics = GraphicsProvider::provide();
+		auto graphics = GraphicsProvider::provide(display);
 		graphics->setClearColor(backgroundColor);
 
 		Handle<Window> window(graphics, 0, 0, 800, 600, L"asd::UI test");
@@ -94,6 +96,8 @@ namespace asd
 			ThreadLoop::run();
 		});
 */
+		std::cout << "Run thread loop..." << std::endl;
+		
 		ThreadLoop::run();
 
 		return 0;

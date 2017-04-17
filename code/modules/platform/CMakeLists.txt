@@ -10,7 +10,7 @@ include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-module(SHARED)
+module(STATIC)
 	dependencies(math	0.*)
 
 	sources(modules)
@@ -22,21 +22,21 @@ module(SHARED)
 		files(
 			ComException.h
 			ComHandle.h
-			Message.h
+			Display.h
 			PointAdapter.h
 			RectAdapter.h
 			)
 
 		group(src Sources)
-		files(Message.cpp)
+		files(Display.cpp)
 	elseif(UNIX)
 		domain(unix)
 			
 		group(include Headers)
-		files(Platform.h)
+		files(Display.h)
 			
 		group(src Sources)
-		files(Platform.cpp)
+		files(Display.cpp)
 	endif()
 
 	endsources()

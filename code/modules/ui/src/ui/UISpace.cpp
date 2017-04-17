@@ -2,7 +2,7 @@
 
 #include <ui/UISpace.h>
 
-#ifdef WIN32
+#if BOOST_OS_WINDOWS
 #include <windows/PointAdapter.h>
 #include <windows/RectAdapter.h>
 #include <windows/ComException.h>
@@ -92,15 +92,8 @@ namespace asd
 
 		return hWnd;
 	}
-#endif
-
-#ifdef WIN32
-	UISpace::UISpace(Graphics * graphics, const IntSize & size, HWND handle) : _handle(handle), _width(size.x), _height(size.y), _graphics(graphics)
-#else
 	
-	UISpace::UISpace(Graphics * graphics, const IntSize & size) : _width(size.x), _height(size.y), _graphics(graphics)
-#endif
-	{
+	UISpace::UISpace(Graphics * graphics, const IntSize & size, HWND handle) : _handle(handle), _width(size.x), _height(size.y), _graphics(graphics) {
 		setclass(UISpace);
 		
 		_surface = graphics->createSurface(this);
@@ -111,11 +104,60 @@ namespace asd
 		
 		//_cursor = Cursor::default();
 	}
+#elif BOOST_OS_LINUX
+	UISpace::UISpace(Graphics * graphics, const IntSize & size) : _width(size.x), _height(size.y), _graphics(graphics) {
+		setclass(UISpace);
+		
+		_display = graphics->display();
+		
+		if(_display == nullptr) {
+			throw Exception("Can't open X display");
+		}
+		
+		auto vinfo = graphics->visualInfo();
+		auto root = DefaultRootWindow(_display);
+		
+		XSetWindowAttributes swa;
+		swa.colormap = XCreateColormap(_display, root, vinfo->visual, AllocNone);
+		swa.event_mask = ExposureMask | KeyPressMask;
+		
+		_handle = XCreateWindow(_display, root, 0, 0, 600, 600, 0, vinfo->depth, InputOutput, vinfo->visual, CWColormap | CWEventMask, &swa);
+		
+		if(_handle == 0) {
+			throw Exception("Can't create X window");
+		}
+		
+		pool()[_handle] = this;
+		
+		_wm.DELETE_WINDOW = XInternAtom(_display, "WM_DELETE_WINDOW", False);
+		XSetWMProtocols(_display, _handle, &_wm.DELETE_WINDOW, 1);
+		
+		_surface = graphics->createSurface(this);
+		_graphics->bind(_surface);
+		
+		_root.init(this, region());
+		_focused = _focusList.end();
+		
+		//_cursor = Cursor::default();
+	}
+#endif
 	
 	UISpace::~UISpace() {
 		_focused = _focusList.end();
 		send<UIDestroyMessage>(this);
 		_root = nullptr;
+		
+#if BOOST_OS_LINUX
+		if(_display != nullptr) {
+			if(_handle != 0) {
+				pool().erase(_handle);
+				XDestroyWindow(_display, _handle);
+				_handle = 0;
+			}
+			
+			XCloseDisplay(_display);
+		}
+#endif
 	}
 	
 	void UISpace::invalidate() {
@@ -534,7 +576,7 @@ namespace asd
 		}
 		
 		MouseButton buttons = MouseButton::None;
-	#ifdef WIN32
+		#ifdef WIN32
 		if(hi_bit_mask::state(GetKeyState(VK_LBUTTON))) {
 			set_flag(MouseButton::Left, buttons);
 		}
@@ -546,9 +588,9 @@ namespace asd
 		if(hi_bit_mask::state(GetKeyState(VK_RBUTTON))) {
 			set_flag(MouseButton::Right, buttons);
 		}
-	#else
+		#else
 		// TODO: implement mouse buttons update stuff
-	#endif
+		#endif
 		
 		unpress(MouseButton(~buttons), msg->x, msg->y, 0);
 		

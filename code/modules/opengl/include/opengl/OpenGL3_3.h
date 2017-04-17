@@ -19,15 +19,19 @@
 
 #define GLEW_STATIC
 
-#ifdef _WIN32
+#if BOOST_OS_WINDOWS
 	#include <GL/glew.h>
 	#include <GL/wglew.h>
-#else
+#elif BOOST_OS_LINUX
+#define GL_GLEXT_PROTOTYPES
+#define GLX_GLXEXT_PROTOTYPES
 	#include <GL/glxew.h>
 	#include <GL/gl.h>
-#endif // _WIN32
+	#include <GL/glu.h>
+	#include <GL/glx.h>
+#endif
 
-#ifdef _DEBUG
+#if ASD_DEBUG
 #define GL_DEBUG
 #endif
 
@@ -52,13 +56,14 @@ namespace asd
 	
 	namespace OpenGL3_3
 	{
-	#ifdef _WIN32
+	#if BOOST_OS_WINDOWS
 		using DeviceContext = HDC;
 		using Context = HGLRC;
-	#else
-		using DeviceContext = Display *;
+		using WindowHandle = HWND;
+	#elif BOOST_OS_LINUX
 		using Context = ::GLXContext;
-	#endif // _WIN32
+		using WindowHandle = ::Window;
+	#endif
 
 		struct GLUniformBinding
 		{
@@ -122,12 +127,12 @@ namespace asd
 				return _context;
 			}
 
-#ifdef WIN32
+#if BOOST_OS_WINDOWS
 			static api(opengl3_3) void setPixelFormat(HDC dc);
 #endif
 
 		protected:
-			api(opengl3_3) GLGraphics();
+			api(opengl3_3) GLGraphics(const Display & d);
 			virtual api(opengl3_3) ~GLGraphics();
 
 			virtual api(opengl3_3) Handle<UniformAdapter> & init(Handle<UniformAdapter> & adapter, const char * name, ShaderType shader, int index, size_t size) override;
@@ -138,11 +143,10 @@ namespace asd
 			api(opengl3_3) void initDevice();
 			api(opengl3_3) void initShaders();
 		
-#ifdef WIN32
-			HWND _wnd;
+			WindowHandle _wnd;
+#if BOOST_OS_WINDOWS
 			DeviceContext _device;
 #endif
-			
 			Context _context;
 
 			array_list<GLUniformBinding> _uniformBindings;

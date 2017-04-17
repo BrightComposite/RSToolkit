@@ -11,7 +11,7 @@ include(${ASD_TOOLS}/shaders.cmake)
 
 #--------------------------------------------------------
 
-module(SHARED)
+module(STATIC)
 	dependencies(ui	0.*)
 
 	sources(modules)

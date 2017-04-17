@@ -202,7 +202,7 @@ namespace asd
 
 	Figure3D::Figure3D(Graphics3D * graphics, const FigureData & data) : Figure(graphics, data), view(createMesh(graphics, data), graphics->techniques2d.figure) {}
 
-	Graphics3D::Graphics3D()
+	Graphics3D::Graphics3D(const Display & d) : Graphics(d)
 	{ 
 		setclass(Graphics3D); 
 

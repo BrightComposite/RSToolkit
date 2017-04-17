@@ -217,7 +217,9 @@ namespace asd
 			api(opengl3_3) void createDepthStencil();
 
 			GLGraphics * _graphics;
+#if BOOST_OS_WINDOWS
 			DeviceContext _deviceCtx = nullptr;
+#endif
 		};
 
 		class DepthSurface : public GLSurface

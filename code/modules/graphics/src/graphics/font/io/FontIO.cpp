@@ -17,10 +17,24 @@ namespace asd
 
 		auto raw = handle<OwnedByteData>();
 		path pth = filepath;
-
-		if(!exists(pth))
+		
+	#if BOOST_OS_WINDOWS
+		if(!exists(pth)) {
 			pth = path("C:/Windows/Fonts") / filepath;
-
+		}
+	#elif BOOST_OS_LINUX
+		if(!exists(pth)) {
+			for(auto s : {"/usr/share/fonts", "/usr/local/share/fonts", "~/.fonts"}) {
+				path out;
+				
+				if(find_file(s, filepath, out)) {
+					pth = out;
+					break;
+				}
+			}
+		}
+	#endif
+		
 		if(!exists(pth))
 			throw Exception("File ", filepath.string(), " doesn't exist!");
 		

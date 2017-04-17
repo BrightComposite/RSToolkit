@@ -2,8 +2,8 @@
 
 #pragma once
 
-#ifndef WINDOW_MESSAGE_H
-#define WINDOW_MESSAGE_H
+#ifndef DISPLAY_H
+#define DISPLAY_H
 
 //---------------------------------------------------------------------------
 
@@ -13,7 +13,12 @@
 
 namespace asd
 {
-	api(platform) int processWindowMessage();
+	class Display
+	{
+	public:
+		api(platform)
+		int dispatchMessages();
+	};
 }
 
 //---------------------------------------------------------------------------

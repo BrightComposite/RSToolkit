@@ -29,7 +29,7 @@ namespace asd
 		friend class IndexedMesh;
 
 	public:
-		api(graphics) Graphics3D();
+		api(graphics) Graphics3D(const Display & d);
 		virtual ~Graphics3D() {}
 
 		using Graphics::bind;

@@ -75,8 +75,8 @@ set_output_dir(${WORKSPACE_ROOT}/output/lib LIBRARY)
 set_output_dir(${WORKSPACE_ROOT}/output/bin RUNTIME)
 
 link_directories(${WORKSPACE_ROOT}/output/lib/${MODULE_ARCH})
-link_directories(${WORKSPACE_ROOT}/output/lib/${MODULE_ARCH}/release)
 link_directories(${WORKSPACE_ROOT}/output/lib/${MODULE_ARCH}/debug)
+link_directories(${WORKSPACE_ROOT}/output/lib/${MODULE_ARCH}/release)
 
 #--------------------------------------------------------
 
@@ -490,7 +490,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			name_lower(module ${MODULE})
 		endif()
 
-		if(WIN32)
+		if(WIN32 AND "${${MODULE}_MODULE_TYPE}" STREQUAL "SHARED")
 			add_definitions("-Dasd_${module}_api=__declspec(dllexport)")
 		else()
 			add_definitions("-Dasd_${module}_api=")
@@ -506,7 +506,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			name_lower(module ${MODULE})
 		endif()
 
-		if(WIN32)
+		if(WIN32 AND "${${MODULE}_MODULE_TYPE}" STREQUAL "SHARED")
 			add_definitions("-Dasd_${module}_api=__declspec(dllimport)")
 		else()
 			add_definitions("-Dasd_${module}_api=")
@@ -531,7 +531,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		endif()
 
 		set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-		set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+		#set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 		if(NOT "${${PROJECT_NAME}_FOLDER}" STREQUAL "")
 			set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${${PROJECT_NAME}_FOLDER})
@@ -562,9 +562,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		endif()
 
 		foreach(DEPENDENCY ${DEPENDENCIES})
-			if("${${DEPENDENCY}_MODULE_TYPE}" STREQUAL "SHARED")
-				api_import(${DEPENDENCY})
-			endif()
+			api_import(${DEPENDENCY})
 		endforeach()
 	endfunction()
 endif()

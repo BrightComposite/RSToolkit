@@ -1,14 +1,13 @@
 //---------------------------------------------------------------------------
 
-#include <windows/Message.h>
+#include <windows/Display.h>
 #include <windows.h>
 
 //---------------------------------------------------------------------------
 
 namespace asd
 {
-	int processWindowMessage()
-	{
+	int Display::dispatchMessages() {
 		static MSG msg = {0};
 
 		if(PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))

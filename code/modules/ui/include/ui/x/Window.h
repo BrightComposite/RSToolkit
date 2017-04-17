@@ -14,9 +14,6 @@
 #include <ui/WindowEnum.h>
 #include <ui/UISpace.h>
 
-#include <X11/X.h>
-#include <X11/Xlib.h>
-
 //---------------------------------------------------------------------------
 
 namespace asd
@@ -70,8 +67,8 @@ namespace asd
 		
 		api(ui) void setState(WindowState state) {} //;
 		
-		api(ui) void show() {} //;
-		api(ui) void hide() {} //;
+		api(ui) void show();
+		api(ui) void hide();
 		api(ui) void minimize() {} //;
 		api(ui) void maximize() {} //;
 		api(ui) void restore() {} //;
@@ -93,8 +90,8 @@ namespace asd
 			return _state;
 		}
 		
-		api(ui) void setCaption(const WideString & caption) {} //;
-		api(ui) WideString getCaption() { return L""; } //;
+		api(ui) void setCaption(const WideString & caption);
+		api(ui) WideString getCaption();
 		
 		api(ui) void close() {} //;
 	
@@ -105,8 +102,6 @@ namespace asd
 		
 		bool _shown = false;
 		
-		::Display * _display;
-		::Window _handle, _rootHandle;
 		LongRect _outerRegion;
 		
 		WindowState _state = WindowState::Hidden;

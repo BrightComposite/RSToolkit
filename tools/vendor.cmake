@@ -75,6 +75,10 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";VENDOR_TOOL_GUARD;")
 
 		set(ARGUMENTS ${ARGN})
 
+		if(NOT EXISTS ${VENDOR_DIR}/setup.cmake)
+			message(FATAL_ERROR "Can't setup vendor project '${VENDOR_KEY}': there is no setup.cmake file!")
+		endif()
+			
         include(${VENDOR_DIR}/setup.cmake)
 		message("${MESSAGES_INDENTATION}	* Use vendor library at ${VENDOR_DIR}")
     endfunction()

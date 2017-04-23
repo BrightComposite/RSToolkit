@@ -807,12 +807,12 @@ namespace asd
 	typedef Handle<Shared> VoidHandle;
 	typedef Handle<SharedEmpty> EmptyHandle;
 
-	template<class T, class ... A, selectif(0) < can_construct<T, A...>::value > >
+	template<class T, class ... A, selectif(0)<can_construct<T, A...>::value>>
 	Handle<T> handle(A &&... args) {
 		return Handle<T>::create(forward<A>(args)...);
 	}
 
-	template<class T, class ... A, selectif(1) < cant_construct<T, A...>::value > >
+	template<class T, class ... A, selectif(1) <cant_construct<T, A...>::value >>
 	void handle(A &&... args) {
 		static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
 	}
@@ -973,106 +973,98 @@ namespace asd
 		UniqueHandle(Empty) : _inner(new T()) {}
 
 		template<class ... A, useif<can_construct<T, A...>::value, (sizeof...(A) > 0)>>
-			explicit UniqueHandle(A && ... args) : _inner(new T(forward<A>(args)...)) {}
-			template<class ... A, selectif(1) < is_abstract<T>::value && !is_uhandle_init<T, A...>::value > >
-			explicit UniqueHandle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
+		explicit UniqueHandle(A && ... args) : _inner(new T(forward<A>(args)...)) {}
+		
+		template<class ... A, selectif(1) < is_abstract<T>::value && !is_uhandle_init<T, A...>::value > >
+		explicit UniqueHandle(A &&... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
 
-			template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
-			UniqueHandle(Handle<U, A...> && h) : _inner(static_cast<T *>(h.pointer())) {
-			#ifdef _DEBUG
-				if(_inner->_refs > 1)
-					throw std::exception("Can't make unique handle: object has multiple references!");
-			#endif
-				++_inner->_refs;
-				h = nullptr;
-			}
+		template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
+		UniqueHandle(Handle<U, A...> && h) : _inner(static_cast<T *>(h.pointer())) {
+		#ifdef _DEBUG
+			if(_inner->_refs > 1)
+				throw std::exception("Can't make unique handle: object has multiple references!");
+		#endif
+			++_inner->_refs;
+			h = nullptr;
+		}
 
-			UniqueHandle & operator = (const UniqueHandle & h) = delete;
+		UniqueHandle & operator = (const UniqueHandle & h) = delete;
 
-			UniqueHandle & operator = (UniqueHandle && h) {
-				if(this == &h)
-					return *this;
+		UniqueHandle & operator = (UniqueHandle && h) {
+			if(this == &h)
+				return *this;
 
-				if(_inner)
-					delete _inner;
+			if(_inner)
+				delete _inner;
 
-				_inner = h._inner;
-				h._inner = nullptr;
+			_inner = h._inner;
+			h._inner = nullptr;
 
 			return *this;
 		}
 
 		template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
-		UniqueHandle & operator = (UniqueHandle<U, A...> && h)
-		{
+		UniqueHandle & operator = (UniqueHandle<U, A...> && h) {
 			if(void_ptr(this) == void_ptr(&h))
 				return *this;
-			}
-
-			template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
-			UniqueHandle & operator = (UniqueHandle<U, A...> && h) {
-				if(void_ptr(this) == void_ptr(&h))
-					return *this;
-
-				if(_inner)
-					delete _inner;
-
-				_inner = static_cast<T *>(h._inner);
-				h._inner = nullptr;
-
+			
+			if(_inner)
+				delete _inner;
+			
+			_inner = static_cast<T *>(h._inner);
+			h._inner = nullptr;
+			
+			return *this;
+		}
+	
 		UniqueHandle & operator = (T * ptr)
 		{
 			if(void_ptr(ptr) == void_ptr(_inner))
 				return *this;
-			}
 
-			UniqueHandle & operator = (T * ptr) {
-				if(void_ptr(ptr) == void_ptr(_inner))
-					return *this;
+			if(_inner)
+				delete _inner;
 
-				if(_inner)
-					delete _inner;
+			_inner = ptr;
 
-				_inner = ptr;
+			return *this;
+		}
 
-				return *this;
-			}
+		template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
+		UniqueHandle & operator = (Handle<U, A...> && h) {
+			if(_inner)
+				delete _inner;
 
-			template<class U, class ... A, useif<based_on<U, T>::value, !is_const<U>::value>>
-			UniqueHandle & operator = (Handle<U, A...> && h) {
-				if(_inner)
-					delete _inner;
+			_inner = static_cast<T *>(h.pointer());
+		#ifdef _DEBUG
+			if(_inner->_refs > 1)
+				throw std::exception("Can't make unique handle: object has multiple references!");
+		#endif
+			++_inner->_refs;
+			h = nullptr;
 
-				_inner = static_cast<T *>(h.pointer());
-			#ifdef _DEBUG
-				if(_inner->_refs > 1)
-					throw std::exception("Can't make unique handle: object has multiple references!");
-			#endif
-				++_inner->_refs;
-				h = nullptr;
+			return *this;
+		}
 
-				return *this;
-			}
+		template<typename ... A, useif<can_construct<T, A...>::value>>
+		UniqueHandle & init(A &&... args) {
+			if(_inner)
+				delete _inner;
 
-			template<typename ... A, useif<can_construct<T, A...>::value>>
-			UniqueHandle & init(A &&... args) {
-				if(_inner)
-					delete _inner;
+			_inner = new T(forward<A>(args)...);
 
-				_inner = new T(forward<A>(args)...);
+			return *this;
+		}
 
-				return *this;
-			}
+		template<class ... A, useif<can_construct<T, A...>::value>>
+		static UniqueHandle create(A &&... args) {
+			return new T(forward<A>(args)...);
+		}
 
-			template<class ... A, useif<can_construct<T, A...>::value>>
-			static UniqueHandle create(A &&... args) {
-				return new T(forward<A>(args)...);
-			}
-
-			template<class ... A, skipif<can_construct<T, A...>::value || !is_abstract<T>::value>>
-			static void create(A &&... args) {
-				static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
-			}
+		template<class ... A, skipif<can_construct<T, A...>::value || !is_abstract<T>::value>>
+		static void create(A &&... args) {
+			static_assert(!is_abstract<T>::value, "Can't construct an abstract class");
+		}
 
 	public:
 		UniqueHandle() : _inner(nullptr) {}
@@ -1176,7 +1168,7 @@ namespace asd
 	template<class T, class R, class C, class ... A>
 	struct method_wrapper<Handle<T>, R(C::*)(A...)>
 	{
-		typedef R(THISCALL C::*MethodType)(A ...);
+		typedef R(__thiscall C::*MethodType)(A ...);
 
 		R operator()(A ... args) {
 			return (object->*method)(forward<A>(args)...);
@@ -1189,7 +1181,7 @@ namespace asd
 	template<class T, class R, class C, class ... A>
 	struct method_wrapper<Handle<T>, R(C::*)(A...) const>
 	{
-		typedef R(THISCALL C::*MethodType)(A ...) const;
+		typedef R(__thiscall C::*MethodType)(A ...) const;
 
 		R operator()(A ... args) {
 			return (object->*method)(forward<A>(args)...);
@@ -1202,7 +1194,7 @@ namespace asd
 	template<class T, class R, class C, class ... A>
 	struct method_wrapper<Handle<T> &, R(C::*)(A...)>
 	{
-		typedef R(THISCALL C::*MethodType)(A ...);
+		typedef R(__thiscall C::*MethodType)(A ...);
 
 		R operator()(A ... args) {
 			return (object->*method)(forward<A>(args)...);
@@ -1215,7 +1207,7 @@ namespace asd
 	template<class T, class R, class C, class ... A>
 	struct method_wrapper<Handle<T> &, R(C::*)(A...) const>
 	{
-		typedef R(THISCALL C::*MethodType)(A ...) const;
+		typedef R(__thiscall C::*MethodType)(A ...) const;
 
 		R operator()(A ... args) {
 			return (object->*method)(forward<A>(args)...);

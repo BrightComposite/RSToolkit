@@ -53,7 +53,7 @@ namespace asd
 
 	public:
 		template<typename ... A, useif<can_construct<T, A...>::value>>
-		Hashed(A &&... args) : T(forward<A>(args)...), _hashValue(std::hash<Hashed>()(static_cast<const T &>(*this))) {}
+		Hashed(A &&... args) : T(forward<A>(args)...), _hashValue(asd::hash<Hashed>()(static_cast<const T &>(*this))) {}
 
 		Hashed(const Hashed & val) : T(val), _hashValue(val._hashValue) {}
 		Hashed(Hashed && val) : T(forward<Hashed>(val)), _hashValue(val._hashValue) {}
@@ -147,7 +147,7 @@ namespace asd
 	{
 	public:
 		using Hashed<T>::Hashed;
-
+		
 		template<class A>
 		Hashed & operator = (A && val)
 		{

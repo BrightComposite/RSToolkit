@@ -50,13 +50,12 @@ namespace asd
 
 		auto * w = palette.create("label", window->root());
 
-		with(ColoredButtonDecorator) {
-			_.background({0.4f, 0.4f, 0.4f});
-			_.pressed({0.1f, 0.1f, 0.1f});
-			_.hovered({0.6f, 0.6f, 0.6f});
-			_.boundary({0.5f, 0.5f, 0.5f}, 1);
-			_.apply(w);
-		}
+		ColoredButtonDecorator decorator;
+		decorator.background({0.4f, 0.4f, 0.4f});
+		decorator.pressed({0.1f, 0.1f, 0.1f});
+		decorator.hovered({0.6f, 0.6f, 0.6f});
+		decorator.boundary({0.5f, 0.5f, 0.5f}, 1);
+		decorator.apply(w);
 
 		window->show();
 		window->centralize();

@@ -1,8 +1,6 @@
 //---------------------------------------------------------------------------
 
 #include <core/String.h>
-#include <core/addition/Named.h>
-#include <core/Exception.h>
 
 #include <codecvt>
 #include <locale>

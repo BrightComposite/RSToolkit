@@ -527,7 +527,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		elseif("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "")
 			message(FATAL_ERROR "Module type is not set! Call 'module' first!")
 		else()
-			message(FATAL_ERROR "Module type is incorrect! Check the 'start_module' function call")
+			message(FATAL_ERROR "Module type is incorrect! Check the 'module' function call")
 		endif()
 
 		set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
@@ -546,6 +546,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		api_export(${PROJECT_NAME})
 
 		collect_dependencies(DEPENDENCIES ${PROJECT_NAME})
+		message("${DEPENDENCIES}")
 
 		if("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "INLINE")
 			foreach(DEPENDENCY ${DEPENDENCIES})

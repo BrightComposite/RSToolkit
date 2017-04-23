@@ -18,10 +18,10 @@ namespace asd
 	using std::list;
 
 	template<typename T, class ... Owner>
-	class List : public list<Handle<T, Owner...>>
+	class List : public list<asd::Handle<T, Owner...>>
 	{
 	public:
-		using list<Handle<T, Owner...>>::list;
+		using list<asd::Handle<T, Owner...>>::list;
 	};
 
 	template<typename T>
@@ -32,10 +32,10 @@ namespace asd
 	};
 
 	template<typename T>
-	class AlignedList : public list<T, aligned_allocator<T, alignof(T)>>
+	class AlignedList : public list<T, boost::alignment::aligned_allocator<T, alignof(T)>>
 	{
 	public:
-		using list<T, aligned_allocator<T, alignof(T)>>::list;
+		using list<T, boost::alignment::aligned_allocator<T, alignof(T)>>::list;
 	};
 
 	template<typename T>

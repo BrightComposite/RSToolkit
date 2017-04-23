@@ -33,7 +33,6 @@ using std::locale;
 namespace asd
 {
 	class String;
-	
 	class WideString;
 	
 	api(core)

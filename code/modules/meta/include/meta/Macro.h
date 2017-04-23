@@ -89,13 +89,13 @@ namespace asd
 	}
 
 	template<class T>
-	size_t max_index(initializer_list<T> list)
+	auto max_index(initializer_list<T> list)
 	{
 		return std::distance(list.begin(), std::max_element(list.begin(), list.end()));
 	}
 
 	template<class T>
-	size_t min_index(initializer_list<T> list)
+	auto min_index(initializer_list<T> list)
 	{
 		return std::distance(list.begin(), std::min_element(list.begin(), list.end()));
 	}

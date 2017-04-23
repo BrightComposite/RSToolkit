@@ -58,7 +58,7 @@ struct use_filter_t {};
 // S - the sfinae class, t - the enum type, identifies filter, f - the filter, B... - the sequence of filter expressions
 #define _useif_class(S)	struct S { enum t { v }; template<bool ... B> using f = typename use_filter_t<S, B...>::type; }
 // "S::t = S::t::v" - removes ambiguity by the different S::t enums, "class = S::f" - applies sfinae filter
-#define _useif(S)		typename S::t = S::v, class = S::f
+#define _useif(S)		typename S::t = S::v, class = typename S::f
 #define _useif_t(S)		typename S::t, class
 
 _useif_class(sfinae_use);

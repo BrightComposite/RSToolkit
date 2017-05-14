@@ -6,7 +6,6 @@
 !tools/
 !vendor/
 !code/**/*
-!templates/**/*
 !tools/**/*
 **/*.*
 !*.cpp
@@ -22,6 +21,7 @@
 !.gitignore
 !.gitattributes
 !README.md
+!templates/**/*.*
 !vendor/*.tar.gz
 !vendor/*.tar.gz.*
 vendor/*.cat.tar.gz

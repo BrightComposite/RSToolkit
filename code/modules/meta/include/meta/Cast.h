@@ -29,14 +29,26 @@ namespace asd
 			return static_cast<T>(forward<Y>(x));
 		}
 
-		template<class T, class Y, useif<can_cast<Y &&, T>::value>>
+		template<class T, class Y, useif<can_cast<Y, T>::value>>
 		inline remove_reference_t<T> as(Y && x)
 		{
 			using Out = remove_reference_t<T>;
 
 			Out out;
-			Cast<Y &&, Out>::cast(out, forward<Y>(x));
+			Cast<Y, Out>::cast(out, forward<Y>(x));
 			return out;
+		}
+		
+		template<class T, class Y, useif<std::is_convertible<Y &&, T &>::value>, useif<(based_on<T, Y>::value || based_on<Y, T>::value)>>
+		inline void to(T & out, Y && x)
+		{
+			out = static_cast<T>(forward<Y>(x));
+		}
+		
+		template<class T, class Y, useif<can_cast<Y, T>::value>>
+		inline void to(T & out, Y && x)
+		{
+			Cast<Y, T>::cast(out, forward<Y>(x));
 		}
 
 		template<class T, class Y, useif<

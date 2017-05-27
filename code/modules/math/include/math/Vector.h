@@ -365,13 +365,13 @@ namespace asd
 		template<int I, class U = T, useif<std::is_integral<U>::value>>
 		Vector shift() const /* >> */
 		{
-			return Intrin::bit_shr<I>(intrinsic);
+			return Intrin::template bit_shr<I>(intrinsic);
 		}
 
 		template<int I, class U = T, useif<std::is_integral<U>::value>>
 		Vector unshift() const /* << */
 		{
-			return Intrin::bit_shl<I>(intrinsic);
+			return Intrin::template bit_shl<I>(intrinsic);
 		}
 
 		Vector dot(const Vector & v) const

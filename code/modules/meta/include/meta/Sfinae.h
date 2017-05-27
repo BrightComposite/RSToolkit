@@ -120,6 +120,7 @@ namespace asd
 	using can_transform_to = is_convertible<decltype(declval<F>()(declval<A>()...)), R>;
 
 	method_checker(can_clone, clone);
+	method_checker(is_pointerable, operator->);
 
 //---------------------------------------------------------------------------
 

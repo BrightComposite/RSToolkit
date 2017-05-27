@@ -79,7 +79,7 @@ namespace asd
 		friend class UISpace;
 	
 	public:
-		Graphics(const Display &) { setclass(Graphics); }
+		Graphics() { setclass(Graphics); }
 		
 		virtual ~Graphics() {}
 		
@@ -271,8 +271,8 @@ namespace asd
 	template<class G>
 	struct CommonGraphicsProvider
 	{
-		static inline Handle<G> provide(const Display & d) {
-			Handle<G, CommonGraphicsProvider<G>> graphics(d);
+		static inline Handle<G> provide() {
+			Handle<G, CommonGraphicsProvider<G>> graphics(default_init);
 			graphics->initFacilities();
 			return graphics;
 		}

@@ -218,7 +218,7 @@ namespace asd
 
 #undef implement_vector_coefs
 
-	template<> const Quaternion<float>  Quaternion<float> ::identity;
+	template<> const Quaternion<float> Quaternion<float>::identity {};
 
 #ifdef USE_AVX
 	template<> const Quaternion<double> Quaternion<double>::identity;

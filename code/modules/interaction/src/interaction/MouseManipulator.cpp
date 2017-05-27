@@ -62,7 +62,7 @@ namespace asd
 		{
 			_initial = _widget->space()->cursorPos();
 			_current = center;
-			_widget->space()->hideCursor();
+//			_widget->space()->hideCursor();
 			_widget->space()->setCursorPos(center);
 			_widget->space()->clipCursor({IntPoint{0, 0}, center * 2 + IntPoint{1, 1}});
 		}
@@ -70,7 +70,7 @@ namespace asd
 		{
 			_widget->space()->unclipCursor();
 			_widget->space()->setCursorPos(_initial);
-			_widget->space()->showCursor();
+//			_widget->space()->showCursor();
 		}
 
 		_enabled = !_enabled;

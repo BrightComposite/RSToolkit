@@ -15,9 +15,10 @@ add_module(glx tests)
 
 add_module(ui-themes modules)
 
-add_module(core    tests)
-add_module(math    tests)
-add_module(ui      tests)
-add_module(message tests)
+add_module(core    	tests)
+add_module(math    	tests)
+add_module(ui      	tests)
+add_module(message 	tests)
+add_module(handle	tests)
 
 add_command(check)

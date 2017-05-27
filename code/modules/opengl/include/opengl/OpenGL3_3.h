@@ -132,7 +132,7 @@ namespace asd
 #endif
 
 		protected:
-			api(opengl3_3) GLGraphics(const Display & d);
+			api(opengl3_3) GLGraphics();
 			virtual api(opengl3_3) ~GLGraphics();
 
 			virtual api(opengl3_3) Handle<UniformAdapter> & init(Handle<UniformAdapter> & adapter, const char * name, ShaderType shader, int index, size_t size) override;

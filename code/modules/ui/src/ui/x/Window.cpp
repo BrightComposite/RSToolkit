@@ -8,7 +8,7 @@ namespace asd
 {
 	implement_link(Window);
 	
-	Window::Window(Graphics * graphics, const IntRect & rect, const WideString & caption) : UISpace(graphics, rect.size()) {
+	Window::Window(Graphics * graphics, const IntRect & rect, const String & caption) : UISpace(graphics, rect.size()) {
 		setclass(Window);
 		
 		setCaption(caption);
@@ -22,14 +22,14 @@ namespace asd
 		XUnmapWindow(_display, _handle);
 	}
 	
-	void Window::setCaption(const WideString & caption) {
-		XStoreName(_display, _handle, to_utf8(caption).c_str());
+	void Window::setCaption(const String & caption) {
+		XStoreName(_display, _handle, caption.c_str());
 	}
 	
-	WideString Window::getCaption() {
+	String Window::getCaption() {
 		char * caption = nullptr;
 		XFetchName(_display, _handle, &caption);
-		WideString out = from_utf8(caption);
+		String out(caption);
 		XFree(caption);
 		return out;
 	}

@@ -28,10 +28,12 @@ namespace asd
 		if(scene->_widget->graphics() notkindof (Graphics3D))
 			throw Exception("Widget for the scene must support 3D graphics!");
 
-		return scene->_widget->
-			append<WidgetLayerComponent<SceneLayer>>()->
-			init(scene)->
-			scene();
+		return scene
+			->_widget
+			->components
+			->require<WidgetLayerComponent<SceneLayer>>()
+			->init(scene)
+			->scene();
 	}
 
 	Scene::Scene(Widget * widget) : Scene()

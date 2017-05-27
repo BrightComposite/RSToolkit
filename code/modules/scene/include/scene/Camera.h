@@ -105,7 +105,7 @@ namespace asd
 		Rotation _pitch;
 		Rotation _yaw;
 		Rotation _roll;
-		scalar3  _angles = {0.0f, 0.0f, 0.0f};
+		scalar3  _angles = {{0.0x, 0.0x, 0.0x}};
 		ProjectionMode _projectionMode = ProjectionMode::Ortho;
 		AlignedMatrix<scalar> _projectionMatrix;
 		AlignedMatrix<scalar> _viewMatrix;

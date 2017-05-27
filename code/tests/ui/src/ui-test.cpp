@@ -30,20 +30,24 @@
 
 //---------------------------------------------------------------------------
 
+/**
+ * [ ] Create graphics and windows from Display
+ * [ ] Inject font and image libraries to graphics
+ * [ ] Change global thread loop to event loop
+ */
+
 namespace asd
 {
 	static Entrance open([]() {
-		FreeTypeDecoder::initialize();
-		FreeImageConverter::initialize();
+		FreeTypeDecoder::initialize(); //! GLOBAL STATE
+		FreeImageConverter::initialize(); //! GLOBAL STATE
 
-		Display display;
-		
 		Color backgroundColor(0.2f, 0.2f, 0.2f);
 
-		auto graphics = GraphicsProvider::provide(display);
+		auto graphics = GraphicsProvider::provide(); /// Create graphics from Display
 		graphics->setClearColor(backgroundColor);
 
-		Handle<Window> window(graphics, 0, 0, 800, 600, L"asd::UI test");
+		Handle<Window> window(graphics, 0, 0, 800, 600, "asd::ui test"); /// MAKE FACTORY?
 		window->setBackgroundColor(backgroundColor);
 
 		StandartUIPalette palette(window);
@@ -61,13 +65,13 @@ namespace asd
 		window->centralize();
 
 		subscription(*window) {
-			onmessage(KeyUpMessage) {
-				switch(msg->key) {
-					/*case VK_ESCAPE:
-						dest.close();
-						break;*/
-				}
-			};
+//			onmessage(KeyUpMessage) {
+//				switch(msg->key) {
+//					/*case VK_ESCAPE:
+//						dest.close();
+//						break;*/
+//				}
+//			};
 
 			onmessage(WindowCloseMessage) {
 				ThreadLoop::stop();
@@ -78,9 +82,7 @@ namespace asd
 		ThreadLoop::add(processWindowMessage);
 #endif
 		
-		ThreadLoop::add([&window]() {
-			window->mouseUpdate();
-		});
+		ThreadLoop::add(make_method(window, mouseUpdate));
 
 /*
 		thread th([&window]() {
@@ -88,9 +90,7 @@ namespace asd
 				ThreadLoop::stop();
 			};
 */
-		ThreadLoop::add([&window]() {
-			window->update();
-		});
+		ThreadLoop::add(make_method(window, update));
 /*
 			ThreadLoop::run();
 		});

@@ -57,7 +57,7 @@ namespace asd
 
 	class SceneObjectComponent : public Shared
 	{
-		component_base(SceneObjectComponent);
+		components_origin(SceneObjectComponent);
 
 	public:
 		SceneObjectComponent(SceneObject * object) : _object(object) {}
@@ -76,9 +76,9 @@ namespace asd
 		SceneObject * _object;
 	};
 
-	create_component_pool(scene, SceneObjectComponent);
+	create_components_from(scene, SceneObjectComponent);
 
-	using SceneObjectComponents = ComponentSet<SceneObjectComponent>;
+	//using SceneObjectComponents = ComponentSet<SceneObjectComponent, Scene>;
 
 	class Drawable
 	{

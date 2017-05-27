@@ -105,7 +105,7 @@ namespace asd
 		template<class F, skipif<is_same<decltype(declval<F>()()), int>::value>>
 		static void add(F & iteration)
 		{
-			instance().iterations.emplace_back([&iteration]() {
+			instance().iterations.emplace_back([&iteration]() mutable {
 				iteration();
 				return 0;
 			});
@@ -114,7 +114,7 @@ namespace asd
 		template<class F, skipif<is_same<decltype(declval<F>()()), int>::value>>
 		static void add(F && iteration)
 		{
-			instance().iterations.emplace_back([iteration]() {
+			instance().iterations.emplace_back([iteration]() mutable {
 				iteration();
 				return 0;
 			});

@@ -24,6 +24,7 @@ namespace asd
 		int dispatchMessages();
 	
 	private:
+		XEvent _event;
 		::Display * _display;
 	};
 }

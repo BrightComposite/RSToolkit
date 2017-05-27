@@ -21,7 +21,7 @@
 !.gitignore
 !.gitattributes
 !README.md
-!templates/**/*.*
+!templates/**/*
 !vendor/*.tar.gz
 !vendor/*.tar.gz.*
 vendor/*.cat.tar.gz

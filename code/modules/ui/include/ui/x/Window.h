@@ -25,10 +25,10 @@ namespace asd
 	class Window : public UISpace
 	{
 	public:
-		Window(Graphics * graphics, long left, long top, long width, long height, const WideString & caption = L"") : Window(graphics, IntRect {left, top, left + width, top + height}, caption) {}
-		Window(Graphics * graphics, long width, long height, const WideString & caption = L"") : Window(graphics, IntSize {width, height}, caption) {}
-		Window(Graphics * graphics, const IntSize & size, const WideString & caption = L"") : Window(graphics, IntRect {0, 0, size.x, size.y}, caption) {}
-		api(ui) Window(Graphics * graphics, const IntRect & rect, const WideString & caption = L"");
+		Window(Graphics * graphics, long left, long top, long width, long height, const String & caption = L"") : Window(graphics, IntRect {left, top, left + width, top + height}, caption) {}
+		Window(Graphics * graphics, long width, long height, const String & caption = L"") : Window(graphics, IntSize {width, height}, caption) {}
+		Window(Graphics * graphics, const IntSize & size, const String & caption = L"") : Window(graphics, IntRect {0, 0, size.x, size.y}, caption) {}
+		api(ui) Window(Graphics * graphics, const IntRect & rect, const String & caption = L"");
 		
 		virtual ~Window() {}
 		
@@ -90,8 +90,8 @@ namespace asd
 			return _state;
 		}
 		
-		api(ui) void setCaption(const WideString & caption);
-		api(ui) WideString getCaption();
+		api(ui) void setCaption(const String & caption);
+		api(ui) String getCaption();
 		
 		api(ui) void close() {} //;
 	

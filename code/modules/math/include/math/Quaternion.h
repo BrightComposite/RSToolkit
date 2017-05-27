@@ -308,7 +308,7 @@ namespace asd
 				return *this = {axis.normalize(), Math<T>::pi};
 			}
 
-			v = cross(from, to).blend<0, 0, 0, 1>(VectorType::one + d); // orthogonal vector [x y z] and rotation angle [w]
+			v = cross(from, to).template blend<0, 0, 0, 1>(VectorType::one + d); // orthogonal vector [x y z] and rotation angle [w]
 			return normalize();
 		}
 

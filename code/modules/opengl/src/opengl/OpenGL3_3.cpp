@@ -115,7 +115,7 @@ namespace asd
 			}
 		};
 		
-		GLGraphics::GLGraphics(const Display & d) : Graphics3D(d) {
+		GLGraphics::GLGraphics() : Graphics3D() {
 			setclass(GLGraphics);
 			
 			initDevice();

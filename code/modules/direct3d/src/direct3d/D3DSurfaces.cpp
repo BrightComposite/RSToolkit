@@ -2,7 +2,7 @@
 
 #include <direct3d/Direct3D11.h>
 
-#include <ui/UISpace.h>
+#include <ui/ui_space.h>
 
 //---------------------------------------------------------------------------
 
@@ -278,7 +278,7 @@ namespace asd
 			createRenderTarget();
 		}
 
-		void UISurface::onUIResize(Handle<UIResizeMessage> & msg, UISpace & space)
+		void UISurface::onUIResize(handle<UIResizeMessage> & msg, UISpace & space)
 		{
 			if(msg->width == 0 || msg->height == 0)
 				return;
@@ -289,12 +289,12 @@ namespace asd
 			space.invalidate();
 		}
 
-		void UISurface::onUIFullscreen(Handle<UIFullscreenMessage> & msg, UISpace & space)
+		void UISurface::onUIFullscreen(handle<UIFullscreenMessage> & msg, UISpace & space)
 		{
 			createSwapChain(msg->fullscreen);
 		}
 
-		void UISurface::onUIDestroy(Handle<UIDestroyMessage> & msg, UISpace & space)
+		void UISurface::onUIDestroy(handle<UIDestroyMessage> & msg, UISpace & space)
 		{
 			_swapChain->SetFullscreenState(FALSE, nullptr);
 
@@ -302,7 +302,7 @@ namespace asd
 				_graphics->bind(null<Surface>());
 		}
 
-		TextureSurface::TextureSurface(D3DGraphics * graphics, const IntSize & size, Handle<Image> & image) : RenderTargetSurface(graphics, size), _texture(graphics, size.x, size.y)
+		TextureSurface::TextureSurface(D3DGraphics * graphics, const IntSize & size, handle<Image> & image) : RenderTargetSurface(graphics, size), _texture(graphics, size.x, size.y)
 		{
 			com_assert(
 				_graphics->device->CreateRenderTargetView(_texture->_handle, nullptr, &_renderView)

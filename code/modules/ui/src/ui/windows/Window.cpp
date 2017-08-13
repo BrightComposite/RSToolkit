@@ -4,7 +4,7 @@
 #include <windows/RectAdapter.h>
 #include <graphics/Graphics.h>
 
-#include <application/ThreadLoop.h>
+#include <application/thread_loop.h>
 
 #include <windows.h>
 

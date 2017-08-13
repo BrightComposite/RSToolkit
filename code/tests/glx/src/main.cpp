@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------
 
-#include <application/Starter.h>
+#include <application/starter.h>
 
 //---------------------------------------------------------------------------
 
@@ -40,7 +40,7 @@ namespace asd
 		glEnd();
 	}
 	
-	static Entrance _([]() {
+	static entrance _([]() {
 		using namespace std;
 		
 		auto d = XOpenDisplay(NULL);

@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include "Display.h"
+#include "Message.h"
 
 //---------------------------------------------------------------------------
 
@@ -68,7 +68,7 @@ namespace asd
 #define onmessage(Msg)																										\
 	using pp_cat(__TMP_TYPE_, __LINE__) = decay_t<decltype(__DST__)>;                                                       \
 	asd::Channel<pp_cat(__TMP_TYPE_, __LINE__), Msg>::receivers(__DST__) +=                                                 \
-		[](asd::Handle<Msg> & msg, pp_cat(__TMP_TYPE_, __LINE__) & dest)
+		[](asd::handle<Msg> & msg, pp_cat(__TMP_TYPE_, __LINE__) & dest)
 //----- onmessage
 }
 //---------------------------------------------------------------------------

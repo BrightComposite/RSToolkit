@@ -6,11 +6,7 @@
 
 namespace asd
 {
-	implement_link(Window);
-	
-	Window::Window(Graphics * graphics, const IntRect & rect, const String & caption) : UISpace(graphics, rect.size()) {
-		setclass(Window);
-		
+	Window::Window(asd::graphics * graphics, const int_rect & rect, const String & caption) : ui_space(graphics, rect.size()) {
 		setCaption(caption);
 	}
 	

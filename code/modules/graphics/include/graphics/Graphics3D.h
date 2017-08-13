@@ -15,43 +15,41 @@
 namespace asd
 {
 	class Graphics3D;
-
-	link_class(graphics, Graphics3D, Class<Graphics>);
-
-	using Texture = Image;
+	
+	using Texture = image;
 	using TextureSurface = ImageSurface;
 
-	class Graphics3D : public Graphics
+	class Graphics3D : public graphics
 	{
 		deny_copy(Graphics3D);
 
-		friend class Mesh;
+		friend class mesh;
 		friend class IndexedMesh;
 
 	public:
 		api(graphics) Graphics3D();
 		virtual ~Graphics3D() {}
 
-		using Graphics::bind;
-		using Graphics::draw;
+		using graphics::bind;
+		using graphics::draw;
 
-		virtual api(graphics) void bind(const Handle<Texture> & texture, uint index);
+		virtual api(graphics) void bind(const handle<Texture> & texture, uint index);
 
-		virtual api(graphics) void rectangle(const IntRect & rect) override final;
-		virtual api(graphics) void ellipse(const IntRect & rect) override final;
-		virtual api(graphics) void rectangle(const SqRect & rect) override final;
-		virtual api(graphics) void ellipse(const SqRect & rect) override final;
+		virtual api(graphics) void rectangle(const math::int_rect & rect) override final;
+		virtual api(graphics) void ellipse(const math::int_rect & rect) override final;
+		virtual api(graphics) void rectangle(const sq_rect & rect) override final;
+		virtual api(graphics) void ellipse(const sq_rect & rect) override final;
 
-		api(graphics) void setArea(const IntRect & rect);
-		api(graphics) void setArea(const SqRect & rect);
+		api(graphics) void setArea(const math::int_rect & rect);
+		api(graphics) void setArea(const sq_rect & rect);
 
-		virtual api(graphics) void draw(const Figure * figure, const IntRect & bounds) override final;
-		virtual api(graphics) void draw(const Figure * figure, const FloatTransform & transform) override final;
-		virtual api(graphics) void draw(const Image * image, const IntRect & rect) override final;
-		virtual api(graphics) void draw(const Image * image, const SqRect & rect) override final;
+		virtual api(graphics) void draw(const Figure * figure, const math::int_rect & bounds) override final;
+		virtual api(graphics) void draw(const Figure * figure, const math::float_transform & transform) override final;
+		virtual api(graphics) void draw(const image * image, const math::int_rect & rect) override final;
+		virtual api(graphics) void draw(const image * image, const sq_rect & rect) override final;
 		virtual api(graphics) void draw(const Symbol * symbol, int x, int y) override final;
 
-		api(graphics) VertexLayout * getVertexLayout(const string & fingerprint);
+		api(graphics) vertex_layout * getVertexLayout(const string & fingerprint);
 		api(graphics) VertexElement * getVertexElement(const string & key);
 
 		api(graphics) void registerVertexElement(const string & key, const string & semantic, uint units);
@@ -63,29 +61,29 @@ namespace asd
 		}
 
 		api(graphics) void addShaderPrograms(const RawShaderCode * codeSets, size_t count);
-		api(graphics) const Handle<ShaderProgram> & getShaderProgram(const string & id);
+		api(graphics) const handle<ShaderProgram> & getShaderProgram(const string & id);
 
-		virtual void addShaderProgram(const string & id, VertexLayout * layout, ShaderCodeSet & codeSet) = 0;
+		virtual void addShaderProgram(const string & id, vertex_layout * layout, ShaderCodeSet & codeSet) = 0;
 
-		virtual Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) = 0;
-		virtual Handle<MeshBuilder> createMesh() = 0;
+		virtual handle<vertex_buffer> createVertexBuffer(vertex_layout * layout, const vertex_data & data) = 0;
+		virtual handle<mesh_builder> createMesh() = 0;
 
-		Handle<Mesh> createMesh(const Handle<VertexBuffer> & buffer, VertexTopology topology = VertexTopology::Triangles)
+		handle<mesh> createMesh(const handle<vertex_buffer> & buffer, vertex_topology topology = vertex_topology::triangles)
 		{
 			return createMesh()->buffer(buffer)->topology(topology)->ready();
 		}
 
-		Handle<Mesh> createMesh(const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles)
+		handle<mesh> createMesh(const handle<vertex_buffer> & buffer, const vertex_indices & indices, vertex_topology topology = vertex_topology::triangles)
 		{
 			return createMesh()->buffer(buffer)->indices(indices)->topology(topology)->ready();
 		}
 
-		Handle<Mesh> createMesh(VertexLayout * layout, const VertexData & data, VertexTopology topology = VertexTopology::Triangles)
+		handle<mesh> createMesh(vertex_layout * layout, const vertex_data & data, vertex_topology topology = vertex_topology::triangles)
 		{
 			return createMesh(createVertexBuffer(layout, data), topology);
 		}
 
-		Handle<Mesh> createMesh(VertexLayout * layout, const VertexData & data, const VertexIndices & indices, VertexTopology topology = VertexTopology::Triangles)
+		handle<mesh> createMesh(vertex_layout * layout, const vertex_data & data, const vertex_indices & indices, vertex_topology topology = vertex_topology::triangles)
 		{
 			return createMesh(createVertexBuffer(layout, data), indices, topology);
 		}
@@ -130,17 +128,17 @@ namespace asd
 			*_accumulationMode = mode;
 		}
 
-		State<bool> * depthTestState()
+		state<bool> * depthTestState()
 		{
 			return _depthTestMode;
 		}
 
-		State<bool> * blendState()
+		state<bool> * blendState()
 		{
 			return _blendMode;
 		}
 
-		State<bool> * accumulationState()
+		state<bool> * accumulationState()
 		{
 			return _accumulationMode;
 		}
@@ -152,7 +150,7 @@ namespace asd
 		}
 
 		template<class U, useif<is_uniform<U>::value>>
-		void updateUniform(const Contents<U> & contents)
+		void updateUniform(const contents<U> & contents)
 		{
 			uniformAdapter<U>()->template update<U>(contents);
 		}
@@ -165,42 +163,42 @@ namespace asd
 
 		struct
 		{
-			Handle<FxTechnique, Graphics3D> rectangle;
-			Handle<FxTechnique, Graphics3D> ellipse;
-			Handle<FxTechnique, Graphics3D> wired_rectangle;
-			Handle<FxTechnique, Graphics3D> wired_ellipse;
-			Handle<FxTechnique, Graphics3D> figure;
-			Handle<FxTechnique, Graphics3D> image;
-			Handle<FxTechnique, Graphics3D> text;
+			handle<FxTechnique> rectangle;
+			handle<FxTechnique> ellipse;
+			handle<FxTechnique> wired_rectangle;
+			handle<FxTechnique> wired_ellipse;
+			handle<FxTechnique> figure;
+			handle<FxTechnique> image;
+			handle<FxTechnique> text;
 		} techniques2d;
 
 		struct
 		{
-			Handle<FxTechnique, Graphics3D> color;
-			Handle<FxTechnique, Graphics3D> multicolor;
-			Handle<FxTechnique, Graphics3D> texture;
+			handle<FxTechnique> color;
+			handle<FxTechnique> multicolor;
+			handle<FxTechnique> texture;
 		} techniques3d;
 
 		struct
 		{
-			Handle<const Mesh, Graphics3D> quad;
-			Handle<const Mesh, Graphics3D> texquad;
-			Handle<const Mesh, Graphics3D> linequad;
+			handle<const mesh> quad;
+			handle<const mesh> texquad;
+			handle<const mesh> linequad;
 		} meshes2d;
 
 		struct
 		{
-			Handle<const Mesh, Graphics3D> quad;
-			Handle<const Mesh, Graphics3D> texquad;
-			Handle<const Mesh, Graphics3D> linequad;
+			handle<const mesh> quad;
+			handle<const mesh> texquad;
+			handle<const mesh> linequad;
 
-			Handle<const Mesh, Graphics3D> cube;
-			Handle<const Mesh, Graphics3D> texcube;
-			Handle<const Mesh, Graphics3D> colorcube;
-			Handle<const Mesh, Graphics3D> normalcube;
-			Handle<const Mesh, Graphics3D> normaltexcube;
-			Handle<const Mesh, Graphics3D> normalcolorcube;
-			Handle<const Mesh, Graphics3D> linecube;
+			handle<const mesh> cube;
+			handle<const mesh> texcube;
+			handle<const mesh> colorcube;
+			handle<const mesh> normalcube;
+			handle<const mesh> normaltexcube;
+			handle<const mesh> normalcolorcube;
+			handle<const mesh> linecube;
 		} meshes3d;
 
 	protected:
@@ -215,13 +213,13 @@ namespace asd
 
 		api(graphics) void clearFacilities();
 
-		virtual Handle<UniformAdapter> & init(Handle<UniformAdapter> & adapter, const char * name, ShaderType shader, int index, size_t size) = 0;
+		virtual handle<UniformAdapter> & init(handle<UniformAdapter> & adapter, const char * name, ShaderType shader, int index, size_t size) = 0;
 		
 		template<class U>
 		UniformAdapter * uniformAdapter()
 		{
 			auto & a = _uniforms[morphid(U)];
-			return a != nullptr ? a : init(a, U::name(), U::shader, U::index, sizeof(Contents<U>));
+			return a != nullptr ? a : init(a, U::name(), U::shader, U::index, sizeof(contents<U>));
 		}
 
 		template<class U>
@@ -236,8 +234,8 @@ namespace asd
 
 		ArrayList<Texture> _textures;
 
-		Dictionary<string, VertexElement, Graphics3D> _vertexElements;
-		Map<string, VertexLayout, Graphics3D> _vertexLayouts;
+		Dictionary<string, VertexElement> _vertexElements;
+		Map<string, vertex_layout> _vertexLayouts;
 		Map<string, ShaderProgram> _shaderPrograms;
 	};
 	
@@ -250,8 +248,8 @@ namespace asd
 			graphics->uniformChunk(*this);
 		}
 		
-		void fill(const Contents<U> & contents) {
-			Memory<void>::move(bytes.ptr, contents.pointer(), bytes.size);
+		void fill(const contents<U> & contents) {
+			memory<void>::move(bytes.ptr, contents.pointer(), bytes.size);
 		}
 	};
 	

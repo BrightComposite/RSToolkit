@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------
 
-#include <application/Starter.h>
+#include <application/starter.h>
 #include <message/Subject.h>
 
 #include <iostream>
@@ -41,7 +41,7 @@ namespace asd
 
 	channels_api(messagetest, DummySubject, DummyMessage1, DummyMessage2, DummyMessage3)
 
-	static Entrance open([]() {
+	static entrance open([]() {
 		DummySubject subject;
 
 		for(int i = 0; i < 4000; ++i) {
@@ -64,7 +64,7 @@ namespace asd
 		 *	  map + forward_list time: 41-53x
 		 *	  dictionary + array_list time: 24-42x
 		 *
-		 *  (x is 1µs on my PC)
+		 *  (x is 1ï¿½s on my PC)
 		 */
 
 		auto start = hrc::now();

@@ -14,7 +14,7 @@ namespace asd
 			addShaderPrograms(shaders, array_size<decltype(shaders)>::value);
 		}
 
-		void D3DGraphics::setShaderProgram(const string & id, VertexLayout * layout, const Handle<ShaderCodeSet> & codeSet)
+		void D3DGraphics::setShaderProgram(const string & id, VertexLayout * layout, const handle<ShaderCodeSet> & codeSet)
 		{
 			shaderPrograms[id] = handle<D3DShaderProgram>(this, layout, codeSet);
 		}

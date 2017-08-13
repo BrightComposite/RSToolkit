@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include "Memory.h"
+#include "memory.h"
 
 #include <atomic>
 #include <mutex>
@@ -20,7 +20,7 @@ namespace asd
 {
 #define erased_block 0xffffffff
 
-	struct ThreadSafePool {};
+	struct thread_safe_pool {};
 
 	/**
 	 *	@brief
@@ -31,23 +31,23 @@ namespace asd
 	 *	Each pool allocates <blocksCount> * sizeof(<type>) bytes.
 	 *	If there is more memory needed, next pool is allocated automatically.
 	 */
-	template<class T, uint blocksCount = 0x1000, class ThreadPolicy = Empty>
-	class BlockPool
+	template<class T, uint blocksCount = 0x1000, class ThreadPolicy = empty>
+	class block_pool
 	{
-		deny_copy(BlockPool);
+		deny_copy(block_pool);
 
 	public:
-		BlockPool()
+		block_pool()
 		{
-			_buffer = Memory<T, 8>::allocate(blocksCount);
+			_buffer = memory<T, 8>::allocate(blocksCount);
 			_first = _buffer;
 			_last = _buffer + blocksCount;
 			_free = nullptr;
 		}
 
-		~BlockPool()
+		~block_pool()
 		{
-			Memory<T, 8>::free(_buffer);
+			memory<T, 8>::free(_buffer);
 
 			if(_next != nullptr)
 				delete _next;
@@ -87,12 +87,12 @@ namespace asd
 		void * _last;
 		void * _free;
 
-		BlockPool * _next = nullptr;
+		block_pool * _next = nullptr;
 
 		T * next_alloc()
 		{
 			if(_next == nullptr)
-				_next = new BlockPool();
+				_next = new block_pool();
 
 			return _next->allocate();
 		}
@@ -108,22 +108,22 @@ namespace asd
 	 *	If there is more memory needed, next pool is allocated automatically.
 	 */
 	template<class T, uint blocksCount>
-	class BlockPool<T, blocksCount, ThreadSafePool> : protected std::mutex
+	class block_pool<T, blocksCount, thread_safe_pool> : protected std::mutex
 	{
-		deny_copy(BlockPool);
+		deny_copy(block_pool);
 
 	public:
-		BlockPool()
+		block_pool()
 		{
-			_buffer = Memory<T>::allocate(blocksCount);
+			_buffer = memory<T>::allocate(blocksCount);
 
 			for(register ushort i = 0; i <= lastBlock; ++i)
 				_freeList[i] = i;
 		}
 
-		~BlockPool()
+		~block_pool()
 		{
-			Memory<T>::free(_buffer);
+			memory<T>::free(_buffer);
 
 			if(_next != nullptr)
 				delete _next;
@@ -142,7 +142,7 @@ namespace asd
 				return next_alloc();
 			}
 
-			uint & place = _freeList[++_head % blocksCount];
+			volatile uint & place = _freeList[++_head % blocksCount];
 
 			while(place == erased_block);
 
@@ -172,15 +172,15 @@ namespace asd
 
 	private:
 		static const ushort lastBlock = static_cast<ushort>(blocksCount - 1);
-		static const uint lastElement = lastBlock * blockSize;
+		static const uint lastElement = static_cast<uint>(lastBlock * blockSize);
 
 		T * _buffer;
 		uint _freeList[blocksCount];
-		atomic<ushort> _count = blocksCount;
+		atomic<ushort> _count = static_cast<ushort>(blocksCount);
 		atomic<ushort> _head = 0;
 		atomic<ushort> _tail = 0;
 
-		BlockPool * _next = nullptr;
+		block_pool * _next = nullptr;
 
 		T * next_alloc()
 		{
@@ -189,7 +189,7 @@ namespace asd
 				lock();
 
 				if(_next == nullptr)
-					_next = new BlockPool();
+					_next = new block_pool();
 
 				unlock();
 			}
@@ -209,22 +209,22 @@ namespace asd
 	 *
 	 *	Data isn't erasing while freeing, it is the difference from BlockPool
 	 */
-	template<class T, uint blocksCount = 0x1000, class ThreadPolicy = Empty>
-	class DataPool
+	template<class T, uint blocksCount = 0x1000, class ThreadPolicy = empty>
+	class data_pool
 	{
-		deny_copy(DataPool);
+		deny_copy(data_pool);
 
-		struct Page
+		struct page
 		{
-			Page(DataPool * pool, Page * prev) : _pool(pool), _prev(prev)
+			page(data_pool * pool, page * prev) : _pool(pool), _prev(prev)
 			{
-				_buffer = Memory<T>::allocate(blocksCount);
+				_buffer = memory<T>::allocate(blocksCount);
 
 				if(_prev != nullptr)
 					_prev->_next = this;
 			}
 
-			~Page()
+			~page()
 			{
 				if(_allocated > 0)
 				{
@@ -232,15 +232,15 @@ namespace asd
 						ptr->~T();
 				}
 
-				Memory<T>::free(_buffer);
+				memory<T>::free(_buffer);
 
 				if(_prev != nullptr)
 					delete _prev;
 			}
 
-			DataPool * _pool;
-			Page * _prev;
-			Page * _next = nullptr;
+			data_pool * _pool;
+			page * _prev;
+			page * _next = nullptr;
 
 			T * _buffer;
 			uint _freeList[blocksCount];
@@ -250,20 +250,20 @@ namespace asd
 		};
 
 	public:
-		DataPool()
+		data_pool()
 		{
-			_first = new Page(this, nullptr);
+			_first = new page(this, nullptr);
 			_current = _first;
 		}
 
-		~DataPool()
+		~data_pool()
 		{
 			delete _current;
 		}
 
 		T * acquire()
 		{
-			Page * p = _first;
+			page * p = _first;
 
 			while(p != nullptr)
 			{
@@ -289,7 +289,7 @@ namespace asd
 			if(_current->_allocated >= blocksCount)
 			{
 				++_pages;
-				_current = new Page(this, _current);
+				_current = new page(this, _current);
 			}
 
 			T * ptr = _current->_buffer + _current->_allocated;
@@ -303,7 +303,7 @@ namespace asd
 
 		void free(T * ptr)
 		{
-			Page * p = _current;
+			page * p = _current;
 
 			while(p != nullptr)
 			{
@@ -330,7 +330,7 @@ namespace asd
 
 		void freeAll()
 		{
-			Page * p = _first;
+			page * p = _first;
 
 			while(p != nullptr)
 			{
@@ -363,7 +363,7 @@ namespace asd
 		static const ushort lastBlock = static_cast<ushort>(blocksCount - 1);
 		static const uint lastElement = lastBlock * blockSize;
 
-		void deletePage(Page * p)
+		void deletePage(page * p)
 		{
 			--_pages;
 			_allocated -= p->_allocated;
@@ -383,8 +383,8 @@ namespace asd
 		size_t _acquired = 0;
 		size_t _allocated = 0;
 		uint   _pages = 1;
-		Page * _first = nullptr;
-		Page * _current = nullptr;
+		page * _first = nullptr;
+		page * _current = nullptr;
 		
 		static void clear(uint (& freeList)[blocksCount], uint count)
 		{
@@ -401,7 +401,7 @@ namespace asd
 				uint list[blocksCount];
 			} f;
 
-			Memory<uint>::move(freeList, f.list, count);
+			memory<uint>::move(freeList, f.list, count);
 			freeList[count - 1] = erased_block;
 		};
 	};

@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <ui/Widget.h>
+#include <ui/widget.h>
 #include <graphics/Color.h>
 
 //---------------------------------------------------------------------------
@@ -35,16 +35,16 @@ namespace asd
 	class ColoredBackgroundDrawer : public BackgroundDrawer
 	{
 	public:
-		api(ui) ColoredBackgroundDrawer(const array_list<Unique<Color>> & colors);
+		api(ui) ColoredBackgroundDrawer(const array_list<unique<Color>> & colors);
 
 		virtual ~ColoredBackgroundDrawer() {}
 
-		virtual api(ui) Handle<WidgetLayer> clone(Widget * widget) const override;
+		virtual api(ui) handle<WidgetLayer> clone(widget * w) const override;
 
 	protected:
-		virtual api(ui) void draw(Widget * w) override;
+		virtual api(ui) void draw(widget * w) override;
 
-		array_list<Unique<Color>> _colors;
+		array_list<unique<Color>> _colors;
 	};
 	
 	class ColoredBoundaryDrawer : public BoundaryDrawer
@@ -54,10 +54,10 @@ namespace asd
 
 		virtual ~ColoredBoundaryDrawer() {}
 
-		virtual api(ui) Handle<WidgetLayer> clone(Widget * widget) const override;
+		virtual api(ui) handle<WidgetLayer> clone(widget * widget) const override;
 
 	protected:
-		virtual api(ui) void draw(Widget * w) override;
+		virtual api(ui) void draw(widget * w) override;
 
 		Color _color;
 		uint _width;
@@ -91,13 +91,13 @@ namespace asd
 
 		api(ui) void reset();
 
-		api(ui) void apply(Widget * w);
+		api(ui) void apply(widget * w);
 
 	protected:
-		array_list<Unique<Color>> _colors;
+		array_list<unique<Color>> _colors;
 
 		struct {
-			Unique<Color> color;
+			unique<Color> color;
 			uint width;
 		} _boundary;
 	};

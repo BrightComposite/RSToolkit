@@ -65,20 +65,20 @@ namespace asd
 		FullSize = (int)Horizontal | (int)Vertical
     };
 
-	enum class WidgetFlag
+	enum class WidgetFlag : byte
 	{
 		Visible   = 1 << 0,
 		Focusable = 1 << 1
 	};
 
-	enum class WidgetState
+	enum class WidgetState : byte
 	{
 		Normal  = 0,
-		Pointed = 1,
-		Pressed = 2,
-		Focused = 4
+		Pointed = 1 << 0,
+		Pressed = 1 << 1,
+		Focused = 1 << 2
 	};
-
+	
 	adapt_enum_flags(MouseButton);
 	adapt_enum_flags(ModelMask);
 	adapt_enum_flags(WidgetFlag);

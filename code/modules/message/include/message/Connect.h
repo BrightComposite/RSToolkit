@@ -18,13 +18,13 @@ namespace asd
 //---------------------------------------------------------------------------
 
 	template<class Dst, typename Msg, useif<is_message<Msg>::value>>
-	void connect(Connector & c, const function<void(Handle<Msg> &, Dst &)> & receiver);
+	void connect(Connector & c, const function<void(handle<Msg> &, Dst &)> & receiver);
 	template<class Dst, typename Msg, class RealDst, useif<is_message<Msg>::value, is_dest<RealDst, Msg>::value, based_on<RealDst, Dst>::value>>
-	void connect(Connector & c, const function<void(Handle<Msg> &, Dst &)> & receiver, RealDst & dest);
+	void connect(Connector & c, const function<void(handle<Msg> &, Dst &)> & receiver, RealDst & dest);
 
 //---------------------------------------------------------------------------
 
-	class BasicConnection : public Shared
+	class BasicConnection : public shareable
 	{
 	public:
 		BasicConnection(size_t id) : id(id) {}
@@ -34,7 +34,7 @@ namespace asd
 		size_t id;
 	};
 
-	template<class Dst, typename Msg, class RealDst = Empty>
+	template<class Dst, typename Msg, class RealDst = empty>
 	class Connection : public BasicConnection
 	{
 	public:
@@ -46,7 +46,7 @@ namespace asd
 	};
 
 	template<class Dst, typename Msg>
-	class Connection<Dst, Msg, Empty> : public BasicConnection
+	class Connection<Dst, Msg, empty> : public BasicConnection
 	{
 	public:
 		Connection(size_t id) : BasicConnection(id) {}
@@ -56,20 +56,20 @@ namespace asd
 	class Connector
 	{
 		template<class Dst, typename Msg, used_t>
-		friend void connect(Connector &, const function<void(Handle<Msg> &, Dst &)> &);
+		friend void connect(Connector &, const function<void(handle<Msg> &, Dst &)> &);
 		template<class Dst, typename Msg, class RealDst, used_t>
-		friend void connect(Connector &, const function<void(Handle<Msg> &, Dst &)> &, RealDst &);
+		friend void connect(Connector &, const function<void(handle<Msg> &, Dst &)> &, RealDst &);
 
 		template<class Dst, typename Msg>
 		void add(size_t id)
 		{
-			_connections.push_back(Handle<Connection<Dst, Msg>>(id));
+			_connections.push_back(handle<Connection<Dst, Msg>>(id));
 		}
 
 		template<class Dst, typename Msg, class RealDst>
 		void add(size_t id, RealDst & dest)
 		{
-			_connections.push_back(Handle<Connection<Dst, Msg, RealDst>>(id, dest));
+			_connections.push_back(handle<Connection<Dst, Msg, RealDst>>(id, dest));
 		}
 
 		ArrayList<BasicConnection> _connections;
@@ -82,15 +82,15 @@ namespace asd
 	 */
 
 	template<class Dst, typename Msg, typename MsgDst = message_dst_t<Dst, Msg>, useif<is_message<Msg>::value>, useif<is_same<MsgDst, Dst>::value>>
-	void connect(const function<void(Handle<Msg> &, Dst &)> & receiver)
+	void connect(const function<void(handle<Msg> &, Dst &)> & receiver)
 	{
 		Channel<Dst, Msg>::connect(receiver);
 	}
 
 	template<class Dst, typename Msg, typename MsgDst = message_dst_t<Dst, Msg>, useif<is_message<Msg>::value>, skipif<is_same<MsgDst, Dst>::value>, useif<is_base_of<MsgDst, Dst>::value>>
-	void connect(const function<void(Handle<Msg> &, Dst &)> & receiver)
+	void connect(const function<void(handle<Msg> &, Dst &)> & receiver)
 	{
-		Channel<MsgDst, Msg>::connect(make_function([&receiver](Handle<Msg> & msg, MsgDst & dst) {
+		Channel<MsgDst, Msg>::connect(make_function([&receiver](handle<Msg> & msg, MsgDst & dst) {
 			receiver(msg, static_cast<Dst &>(dst));
 		}));
 	}
@@ -114,15 +114,15 @@ namespace asd
 	}
 
 	template<class Dst, typename Msg, class RealDst, typename MsgDst = message_dst_t<Dst, Msg>, useif<is_message<Msg>::value, is_dest<RealDst, Msg>::value, based_on<RealDst, Dst>::value>, useif<is_same<MsgDst, Dst>::value>>
-	void connect(const function<void(Handle<Msg> &, Dst &)> & receiver, RealDst & dest)
+	void connect(const function<void(handle<Msg> &, Dst &)> & receiver, RealDst & dest)
 	{
 		Channel<Dst, Msg>::connect(dest, receiver);
 	}
 
 	template<class Dst, typename Msg, class RealDst, typename MsgDst = message_dst_t<Dst, Msg>, useif<is_message<Msg>::value, is_dest<RealDst, Msg>::value, based_on<RealDst, Dst>::value>, skipif<is_same<MsgDst, Dst>::value>, useif<is_base_of<MsgDst, Dst>::value>>
-	void connect(const function<void(Handle<Msg> &, Dst &)> & receiver)
+	void connect(const function<void(handle<Msg> &, Dst &)> & receiver)
 	{
-		Channel<MsgDst, Msg>::connect(make_function([&receiver](Handle<Msg> & msg, MsgDst & dst) {
+		Channel<MsgDst, Msg>::connect(make_function([&receiver](handle<Msg> & msg, MsgDst & dst) {
 			receiver(msg, static_cast<Dst &>(dst));
 		}));
 	}
@@ -152,7 +152,7 @@ namespace asd
 	 */
 
 	template<class Dst, typename Msg, used_t>
-	void connect(Connector & c, const function<void(Handle<Msg> &, Dst &)> & receiver)
+	void connect(Connector & c, const function<void(handle<Msg> &, Dst &)> & receiver)
 	{
 		c.add<Dst, Msg>(Channel<Dst, Msg>::connect(receiver));
 	}
@@ -176,7 +176,7 @@ namespace asd
 	}
 
 	template<class Dst, typename Msg, class RealDst, used_t>
-	void connect(Connector & c, const function<void(Handle<Msg> &, Dst &)> & receiver, RealDst & dest)
+	void connect(Connector & c, const function<void(handle<Msg> &, Dst &)> & receiver, RealDst & dest)
 	{
 		c.add<Dst, Msg>(Channel<Dst, Msg>::connect(dest, receiver), dest);
 	}

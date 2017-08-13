@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
 #include <interaction/MouseManipulator.h>
-#include <ui/UISpace.h>
+#include <ui/ui_space.h>
 
 //---------------------------------------------------------------------------
 
@@ -39,7 +39,7 @@ namespace asd
 		return delta;
 	}
 
-	void MouseManipulator::callback(Handle<MouseMoveMessage> & msg, UISpace & space)
+	void MouseManipulator::callback(handle<MouseMoveMessage> & msg, UISpace & space)
 	{
 		_current.set(msg->x, msg->y);
 	}
@@ -81,7 +81,7 @@ namespace asd
 		connect(this, &MouseDragger::onMouseDown, *w);
 	}
 
-	void MouseDragger::onMouseDown(Handle<MouseDownMessage> &, Widget &)
+	void MouseDragger::onMouseDown(handle<MouseDownMessage> &, Widget &)
 	{
 
 	}

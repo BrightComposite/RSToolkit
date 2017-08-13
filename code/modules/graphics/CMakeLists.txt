@@ -1,5 +1,5 @@
 #--------------------------------------------------------
-#	asd Graphics
+#	asd graphics
 #--------------------------------------------------------
 
 project(graphics VERSION 0.1)
@@ -26,17 +26,17 @@ module(STATIC)
 			GraphicModel.h
 			Graphics.h
 			Graphics3D.h
-			Mesh.h
+			mesh.h
 			ScreenCoord.h
 			ShaderCode.h
 			Shaders.h
-			Surface.h
+			surface.h
 			Uniform.h
-			VertexLayout.h
+			vertex_layout.h
 
 			image/
-				Image.h
-				ImageData.h
+				image.h
+				image_data.h
 
 				io/
 					ImageIO.h
@@ -54,8 +54,8 @@ module(STATIC)
 			Graphics3D.cpp
 
 			image/
-				Image.cpp
-				ImageData.cpp
+				image.cpp
+				image_data.cpp
 
 				io/
 					ImageIO.cpp

@@ -7,9 +7,9 @@
 
 //---------------------------------------------------------------------------
 
-#include <message/Display.h>
-#include <core/Handle.h>
-#include <math/Rect.h>
+#include <message/Message.h>
+#include <core/handle.h>
+#include <math/rect.h>
 
 #include "WidgetEnum.h"
 
@@ -260,8 +260,8 @@ namespace asd
 	message_class
 	(
 		WidgetDrawMessage,
-		(Handle<IntRect>, DrawRegion)
-		(Handle<IntRect>, ClipRegion)
+		(handle<math::int_rect>, DrawRegion)
+		(handle<math::int_rect>, ClipRegion)
 	);
 
 //---------------------------------------------------------------------------

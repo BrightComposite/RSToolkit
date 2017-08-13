@@ -24,5 +24,6 @@
 !templates/**/*
 !vendor/*.tar.gz
 !vendor/*.tar.gz.*
+*_OLD.*
 vendor/*.cat.tar.gz
 **/.vscode/

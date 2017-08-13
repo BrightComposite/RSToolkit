@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/Handle.h>
+#include <core/handle.h>
 
 #include <list>
 
@@ -17,11 +17,11 @@ namespace asd
 {
 	using std::list;
 
-	template<typename T, class ... Owner>
-	class List : public list<asd::Handle<T, Owner...>>
+	template<typename T>
+	class List : public list<handle<T>>
 	{
 	public:
-		using list<asd::Handle<T, Owner...>>::list;
+		using list<handle<T>>::list;
 	};
 
 	template<typename T>

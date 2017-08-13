@@ -34,20 +34,20 @@ namespace asd
 	{
 		friend class Scene;
 
-		using OwnHandle = Handle<DeferredShadingScene, DeferredShadingScene>;
+		using OwnHandle = handle<DeferredShadingScene, DeferredShadingScene>;
 
 	public:
 		virtual ~DeferredShadingScene() {}
 
-		virtual Handle<Scene> clone(Widget * w) const override
+		virtual handle<Scene> clone(Widget * w) const override
 		{
 			return OwnHandle(w);
 		}
 
-		api(scene) Handle<Light> addLight();
+		api(scene) handle<Light> addLight();
 		api(scene) void setGlobalLightColor(const colorf & color);
 
-		static Handle<DeferredShadingScene> create(Widget * widget)
+		static handle<DeferredShadingScene> create(Widget * widget)
 		{
 			OwnHandle h(widget);
 			Scene::construct(h);
@@ -61,20 +61,20 @@ namespace asd
 		api(scene) DeferredShadingScene(Widget * widget);
 
 		virtual api(scene) void draw(Graphics3D & graphics, const IntRect & viewport) const override;
-		virtual api(scene) void onWidgetResize(Handle<WidgetResizeMessage> & msg, Widget & w) override;
+		virtual api(scene) void onWidgetResize(handle<WidgetResizeMessage> & msg, Widget & w) override;
 
-		Handle<TextureSurface> _surface = nullptr;
-		Handle<Texture> _positions = nullptr;
-		Handle<Texture> _normals = nullptr;
-		Handle<Texture> _colors = nullptr;
+		handle<TextureSurface> _surface = nullptr;
+		handle<Texture> _positions = nullptr;
+		handle<Texture> _normals = nullptr;
+		handle<Texture> _colors = nullptr;
 
 		ArrayList<Light> _lights;
 		colorf _globalLightColor = {0.0f, 0.0f, 0.0f};
 
 		struct
 		{
-			Handle<FxTechnique> global = nullptr;
-			Handle<FxTechnique> point = nullptr;
+			handle<FxTechnique> global = nullptr;
+			handle<FxTechnique> point = nullptr;
 		} _lightTech;
 	};
 }

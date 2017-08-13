@@ -16,9 +16,9 @@
 #define create_properties_from(module, .../*base class*/) create_morph_pool(module, __VA_ARGS__)
 #define create_property(module, .../*component class*/) create_morph_type(module, __VA_ARGS__)
 
-#define bind_properties(cl, origin)								\
+#define bind_properties(clazz, origin)								\
 	using bound_properties = PropertiesSet<origin>;				\
-	Unique<bound_properties, cl> properties = {default_init};	\
+	unique<bound_properties> properties = {_};	\
 
 
 //---------------------------------------------------------------------------

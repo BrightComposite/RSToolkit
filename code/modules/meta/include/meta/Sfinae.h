@@ -29,7 +29,7 @@ namespace asd
 		static false_type _(...);						                                                                    \
 																                                                            \
 	public:														                                                            \
-		static constexpr bool value = decltype(_<T>(0))::value;	                                                            \
+		static constexpr bool value = identity_t<decltype(_<T>(0))>::value;	                                                            \
 	};
 
 #define function_checker(name, func)							                                                            \
@@ -43,7 +43,7 @@ namespace asd
 		static false_type _(...);						                                                                    \
 																                                                            \
 	public:														                                                            \
-		static constexpr bool value = decltype(_<A...>(0))::value;	                                                        \
+		static constexpr bool value = identity_t<decltype(_<A...>(0))>::value;	                                                        \
 	};
 
 #define method_checker(name, method)					                                                                    \
@@ -57,7 +57,7 @@ namespace asd
 		static false_type _(...);						                                                                    \
 																                                                            \
 	public:														                                                            \
-		static constexpr bool value = decltype(_<T>(0))::value;	                                                            \
+		static constexpr bool value = identity_t<decltype(_<T>(0))>::value;	                                                            \
 	};
 
 #define static_method_checker(name, method)					                                                                \
@@ -71,7 +71,7 @@ namespace asd
 		static false_type _(...);						                                                                    \
 																                                                            \
 	public:														                                                            \
-		static constexpr bool value = decltype(_<T>(0))::value;	                                                            \
+		static constexpr bool value = identity_t<decltype(_<T>(0))>::value;	                                                            \
 	};
 
 #define member_checker(name, member)					                                                                    \
@@ -85,9 +85,27 @@ namespace asd
 		static false_type _(...);						                                                                    \
 																                                                            \
 	public:														                                                            \
-		static constexpr bool value = decltype(_<T>(0))::value;	                                                            \
+		static constexpr bool value = identity_t<decltype(_<T>(0))>::value;	                                                            \
 	};
 
+#define operator_checker(name, op)					                                                                    	\
+	template<class T>										                                                    			\
+	struct name						                                                                                        \
+	{						                                                                                                \
+	private:						                                                                                        \
+		template<typename U>						                                                                        \
+		static true_type  _(sfinae_int<decltype(declval<U>() op declval<U>())>);			                        		\
+		template<typename U>						                                                                        \
+		static false_type _(...);						                                                                    \
+																                                                            \
+	public:														                                                            \
+		static constexpr bool value = identity_t<decltype(_<T>(0))>::value;	                                                            \
+	};
+	
+	
+	operator_checker(is_less_comparable, <)
+	operator_checker(is_equal_comparable, ==)
+	
 //---------------------------------------------------------------------------
 
 	template<class T, class ... A>
@@ -100,7 +118,7 @@ namespace asd
 		static false_type _(...);
 
 	public:
-		static constexpr bool value = decltype(_<T>(0))::value;
+		static constexpr bool value = identity_t<decltype(_<T>(0))>::value;
 	};
 
 	template<class T>
@@ -113,7 +131,7 @@ namespace asd
 		static false_type _(...);
 
 	public:
-		static constexpr bool value = decltype(_<T>(0))::value;
+		static constexpr bool value = identity_t<decltype(_<T>(0))>::value;
 	};
 
 	template<class R, class F, class ... A>
@@ -130,14 +148,12 @@ namespace asd
 	{													                                                                    \
 	private:											                                                                    \
 		template<class U>								                                                                    \
-		static auto _(int) -> identity<typename U::tgt>;                                                                    \
+		static auto _(int) -> typename U::tgt;                                                                    			\
 		template<class U>								                                                                    \
-		static auto _(...) -> identity<def>;			                                                                    \
+		static auto _(...) -> def;			                                                                    			\
 														                                                                    \
-		using identitype = decltype(_<T>(0));			                                                                    \
-														                                                                    \
-	public:												                                                                    \
-		using type = typename identitype::type;			                                                                    \
+	public:																													\
+		using type = identity_t<decltype(_<T>(0))>;	                                                						\
 	}
 }
 

@@ -4,7 +4,7 @@
 
 #include <direct3d/Direct3D11.h>
 #include <ui/Widget.h>
-#include <application/Application.h>
+#include <application/application.h>
 
 #include <iostream>
 #include <chrono>

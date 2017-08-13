@@ -31,19 +31,19 @@ namespace asd
 	}
 
 	template<class F, class S, typename = decltype(declval<S>() | declval<F>())>
-	constexpr auto set_flag(F flag, S & set)
+	constexpr auto set_flag(F flag, S & set) -> S &
 	{
 		return set = static_cast<S>(set | flag);
 	}
 
 	template<class F, class S, typename = decltype(declval<S>() & ~declval<F>())>
-	constexpr auto clear_flag(F flag, S & set)
+	constexpr auto clear_flag(F flag, S & set) -> S &
 	{
 		return set = static_cast<S>(set & ~flag);
 	}
 
 	template<class F, class S, typename = decltype(declval<S>() | declval<F>()), typename = decltype(declval<S>() & ~declval<F>())>
-	constexpr auto select_flag(F flag, S & set, bool state)
+	constexpr auto select_flag(F flag, S & set, bool state) -> S &
 	{
 		return set = (state ? static_cast<S>(set | flag) : static_cast<S>(set & ~flag));
 	}

@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
 #include <ui/Cursor.h>
-#include <ui/UISpace.h>
+#include <ui/ui_space.h>
 
 //---------------------------------------------------------------------------
 
@@ -64,7 +64,7 @@ namespace asd
 		w->components->remove<CursorComponent>();
 	}
 
-	void Cursor::add(const string & name, const Handle<Cursor> & cursor)
+	void Cursor::add(const string & name, const handle<Cursor> & cursor)
 	{
 		CursorPool::instance().cursors[name] = cursor;
 	}
@@ -118,7 +118,7 @@ namespace asd
 			ui->setCursor(_external);
 	}
 
-	void CursorComponent::onMouseEnter(Handle<MouseEnterMessage> &, Widget & w)
+	void CursorComponent::onMouseEnter(handle<MouseEnterMessage> &, Widget & w)
 	{
 		auto * ui = _widget->space();
 		_external = ui->cursor();
@@ -126,7 +126,7 @@ namespace asd
 		bind();
 	}
 
-	void CursorComponent::onMouseLeave(Handle<MouseLeaveMessage> &, Widget & w)
+	void CursorComponent::onMouseLeave(handle<MouseLeaveMessage> &, Widget & w)
 	{
 		unbind();
 	}
@@ -148,7 +148,7 @@ namespace asd
 		}
 	}
 
-	void PressedCursorComponent::onWidgetPress(Handle<WidgetPressMessage> & msg, Widget & w)
+	void PressedCursorComponent::onWidgetPress(handle<WidgetPressMessage> & msg, Widget & w)
 	{
 		auto & c = _cursors[msg->button];
 
@@ -161,7 +161,7 @@ namespace asd
 		}
 	}
 
-	void PressedCursorComponent::onWidgetRelease(Handle<WidgetReleaseMessage> & msg, Widget & w)
+	void PressedCursorComponent::onWidgetRelease(handle<WidgetReleaseMessage> & msg, Widget & w)
 	{
 		_cursorComponent->bind();
 	}

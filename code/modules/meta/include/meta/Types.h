@@ -98,16 +98,17 @@ namespace asd
 	{
 		using type = T;
 	};
+	
+	template<class T>
+	using identity_t = typename identity<T>::type;
 
 //---------------------------------------------------------------------------
 
 	/**
 	 *  @brief
-	 *  Can be used as clear function argument (Empty instead of void *)
+	 *  Can be used as clear function argument (empty instead of void)
 	 */
-	class Empty {};
-
-	static Empty default_init;
+	struct empty {} static _;
 
 //---------------------------------------------------------------------------
 

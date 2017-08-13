@@ -22,8 +22,7 @@ struct VS_OUTPUT
 	float4 position : SV_POSITION;
 };
 
-VS_OUTPUT main(float3 position : POSITION)
-{
+VS_OUTPUT main(float3 position : POSITION) {
 	VS_OUTPUT output;
 	output.position = mul(mul(mul(float4(position, 1.0), model), view), projection);
 	

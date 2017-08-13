@@ -14,7 +14,7 @@ namespace asd
 		using std::endl;
 		
 		template<>
-		class GLMesh<GLMeshType::Plain> : public Mesh
+		class GLMesh<GLMeshType::Plain> : public mesh
 		{
 			deny_copy(GLMesh);
 
@@ -64,7 +64,7 @@ namespace asd
 			uint attrCount = 0;
 			
 			uint topology;
-			ArrayList<VertexBuffer> buffers;
+			ArrayList<vertex_buffer> buffers;
 			uint offset;
 			uint verticesCount;
 		};
@@ -77,7 +77,7 @@ namespace asd
 			deny_copy(GLMesh);
 
 		public:
-			GLMesh(GLMeshBuilder * builder) : GLPlainMesh(builder), ibuffer(move(builder->_ibuffer)), indicesCount(builder->_indicesCount - builder->_offset)
+			GLMesh(GLMeshBuilder * builder) : GLPlainMesh(builder), ibuffer(std::move(builder->_ibuffer)), indicesCount(builder->_indicesCount - builder->_offset)
 			{
 				glBindVertexArray(id);
 				ibuffer->apply();
@@ -93,7 +93,7 @@ namespace asd
 				glBindVertexArray(0);
 			}
 			
-			Handle<GLIndexBuffer> ibuffer;
+			handle<GLIndexBuffer> ibuffer;
 			uint indicesCount = 0;
 		};
 
@@ -105,7 +105,7 @@ namespace asd
 			deny_copy(GLMesh);
 
 		public:
-			GLMesh(GLMeshBuilder * builder) : GLPlainMesh(builder), data(move(builder->_instancedData))
+			GLMesh(GLMeshBuilder * builder) : GLPlainMesh(builder), data(std::move(builder->_instancedData))
 			{
 				glBindVertexArray(id);
 				glGenBuffers(1, &buffer);
@@ -148,12 +148,12 @@ namespace asd
 				glBufferData(GL_ARRAY_BUFFER, data->contents.size, data->contents.ptr, GL_STATIC_DRAW);
 			}
 
-			virtual InstancedMeshDataChunk * instance() override
+			virtual instanced_mesh_data_chunk * instance() override
 			{
 				return data->makeInstance();
 			}
 
-			virtual void remove(InstancedMeshDataChunk * chunk) override
+			virtual void remove(instanced_mesh_data_chunk * chunk) override
 			{
 				data->releaseInstance(chunk);
 			}
@@ -163,7 +163,7 @@ namespace asd
 				data->clear();
 			}
 
-			Unique<InstancedMeshData> data = nullptr;
+			unique<instanced_mesh_data> data = nullptr;
 			uint buffer;
 		};
 
@@ -191,12 +191,12 @@ namespace asd
 				glBufferData(GL_ARRAY_BUFFER, data->contents.size, data->contents.ptr, GL_STATIC_DRAW);
 			}
 
-			virtual InstancedMeshDataChunk * instance() override final
+			virtual instanced_mesh_data_chunk * instance() override final
 			{
 				return data->makeInstance();
 			}
 
-			virtual void remove(InstancedMeshDataChunk * chunk) override final
+			virtual void remove(instanced_mesh_data_chunk * chunk) override final
 			{
 				data->releaseInstance(chunk);
 			}
@@ -211,7 +211,7 @@ namespace asd
 
 //---------------------------------------------------------------------------
 
-		GLVertexBuffer::GLVertexBuffer(GLGraphics * graphics, VertexLayout * layout, const VertexData & vd) : VertexBuffer(layout, vd)
+		GLVertexBuffer::GLVertexBuffer(GLGraphics * graphics, vertex_layout * layout, const vertex_data & vd) : vertex_buffer(layout, vd)
 		{
 			if(vd.size() % layout->units != 0)
 				throw Exception("Size of vertex buffer doesn't matches its vertex input layout");
@@ -232,7 +232,7 @@ namespace asd
 			glBindBuffer(GL_ARRAY_BUFFER, handle);
 		}
 
-		GLIndexBuffer::GLIndexBuffer(GLGraphics * graphics, const VertexIndices & indices)
+		GLIndexBuffer::GLIndexBuffer(GLGraphics * graphics, const vertex_indices & indices)
 		{
 			glGenBuffers(1, &handle);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
@@ -253,7 +253,7 @@ namespace asd
 		GLMeshBuilder::GLMeshBuilder(GLGraphics * graphics) : _graphics(graphics) {}
 		GLMeshBuilder::~GLMeshBuilder() {}
 
-		MeshBuilder * GLMeshBuilder::buffer(const Handle<VertexBuffer> & buffer)
+		mesh_builder * GLMeshBuilder::buffer(const handle<vertex_buffer> & buffer)
 		{
 			if(_verticesCount == 0)
 				_verticesCount = buffer->verticesCount;
@@ -264,9 +264,9 @@ namespace asd
 			return this;
 		}
 
-		MeshBuilder * GLMeshBuilder::indices(const VertexIndices & indices)
+		mesh_builder * GLMeshBuilder::indices(const vertex_indices & indices)
 		{
-			set_flag(MeshState::Indexed, _state);
+			set_flag(mesh_state::indexed, _state);
 
 			_ibuffer.init(_graphics, indices);
 			_indicesCount = static_cast<uint>(indices.size());
@@ -274,29 +274,29 @@ namespace asd
 			return this;
 		}
 
-		MeshBuilder * GLMeshBuilder::offset(uint offset)
+		mesh_builder * GLMeshBuilder::offset(uint offset)
 		{
 			_offset = offset;
 			return this;
 		}
 
-		MeshBuilder * GLMeshBuilder::topology(VertexTopology topology)
+		mesh_builder * GLMeshBuilder::topology(vertex_topology topology)
 		{
 			switch(topology)
 			{
-				case VertexTopology::Triangles:
+				case vertex_topology::triangles:
 					_topology = GL_TRIANGLES;
 					break;
 
-				case VertexTopology::TriangleStrip:
+				case vertex_topology::triangle_strip:
 					_topology = GL_TRIANGLE_STRIP;
 					break;
 
-				case VertexTopology::Lines:
+				case vertex_topology::lines:
 					_topology = GL_LINES;
 					break;
 
-				case VertexTopology::LineStrip:
+				case vertex_topology::line_strip:
 					_topology = GL_LINE_STRIP;
 					break;
 
@@ -307,9 +307,9 @@ namespace asd
 			return this;
 		}
 
-		Handle<Mesh> GLMeshBuilder::ready()
+		handle<mesh> GLMeshBuilder::ready()
 		{
-			set_flag(MeshState::Ready, _state);
+			set_flag(mesh_state::ready, _state);
 
 			switch(_state)
 			{
@@ -322,9 +322,9 @@ namespace asd
 			}
 		}
 
-		MeshBuilder * GLMeshBuilder::makeInstanced(VertexLayout * layout)
+		mesh_builder * GLMeshBuilder::makeInstanced(vertex_layout * layout)
 		{
-			set_flag(MeshState::Instanced, _state);
+			set_flag(mesh_state::instanced, _state);
 
 			_instancedLayout = layout;
 			_instancedData.init(layout->stride);

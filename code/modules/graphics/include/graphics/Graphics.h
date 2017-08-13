@@ -9,60 +9,62 @@
 
 #include <thread>
 
-#include <core/Handle.h>
+#include <core/handle.h>
 #include <core/Exception.h>
-#include <core/addition/State.h>
+#include <core/addition/state.h>
 #include <container/Data.h>
 #include <container/Stack.h>
 
-#include <math/Rect.h>
-#include <math/Transform.h>
+#include <math/rect.h>
+#include <math/transform.h>
 
 #include <graphics/ScreenCoord.h>
-#include <graphics/image/Image.h>
+#include <graphics/image/image.h>
 #include <graphics/font/Font.h>
 
 #include "Color.h"
-#include "Surface.h"
+#include "surface.h"
 
 #if BOOST_OS_WINDOWS
-	#include <windows.h>
+#include <windows.h>
 #elif BOOST_OS_LINUX
-	#include <unix/Display.h>
+
+#include <unix/Display.h>
+
 #endif
 
 //---------------------------------------------------------------------------
 
 namespace asd
 {
-	class UISpace;
+	class ui_space;
 	
 	enum class FillMode
 	{
 		Solid, Wireframe
 	};
 	
-	class FigureData : public Shared
+	class figure_data : public shareable
 	{
 	public:
-		FigureData(const array_list<FloatPoint> & points) : points(points) {
+		figure_data(const array_list<float_point> & points) : points(points) {
 			if(points.size() < 3) {
 				throw Exception("A number of points should be greater than 3 to construct a figure");
 			}
 		}
 		
-		array_list<FloatPoint> points;
+		array_list<float_point> points;
 	};
 	
-	class Figure : public Shared
+	class Figure : public shareable
 	{
 	public:
-		Figure(Graphics * graphics, const FigureData & data) {}
+		Figure(graphics * graphics, const figure_data & data) {}
 		
 		virtual void draw() const = 0;
 	};
 	
-	class GraphicsDebug : public Shared
+	class GraphicsDebug : public shareable
 	{
 	public:
 		GraphicsDebug() {}
@@ -70,30 +72,28 @@ namespace asd
 		virtual ~GraphicsDebug() {}
 	};
 	
-	link_class(graphics, Graphics, Class<Object>);
-	
-	class Graphics : public Object
+	class graphics : public object
 	{
-		deny_copy(Graphics);
+		deny_copy(graphics);
 		
-		friend class UISpace;
+		friend class ui_space;
 	
 	public:
-		Graphics() { setclass(Graphics); }
+		graphics() {}
 		
-		virtual ~Graphics() {}
+		virtual ~graphics() {}
 		
 		virtual void checkForErrors() {}
 		
-		virtual Handle<GraphicsDebug> getDebug() const = 0;
+		virtual handle<GraphicsDebug> getDebug() const = 0;
 		
 		api(graphics)
-		Surface * surface();
+		asd::surface * surface();
 		api(graphics)
-		const Viewport & viewport() const;
+		const asd::viewport & viewport() const;
 		
 		api(graphics)
-		const IntRect & clipRect() const;
+		const int_rect & clipRect() const;
 		api(graphics)
 		const colorf & clearColor() const;
 		api(graphics)
@@ -107,23 +107,23 @@ namespace asd
 		FillMode fillMode() const;
 		
 		api(graphics)
-		IntSize getTextSize(const string & text);
+		int_size getTextSize(const string & text);
 		api(graphics)
-		IntSize getTextSize(const wstring & text);
+		int_size getTextSize(const wstring & text);
 		
 		api(graphics)
-		State<Color> * colorState();
+		state<Color> * colorState();
 		api(graphics)
-		State<Color> * clearColorState();
+		state<Color> * clearColorState();
 		api(graphics)
-		State<int> * fontSizeState();
+		state<int> * fontSizeState();
 		api(graphics)
-		State<int> * lineWidthState();
+		state<int> * lineWidthState();
 		api(graphics)
-		State<FillMode> * fillModeState();
+		state<FillMode> * fillModeState();
 		
 		api(graphics)
-		Handle<ImageData> requestSurfaceData() const;
+		handle<image_data> requestSurfaceData() const;
 		
 		template<class ... A, useif<can_construct<Color, A...>::value>>
 		void setClearColor(A && ... a) {
@@ -153,69 +153,69 @@ namespace asd
 		void setFillMode(FillMode mode);
 		
 		api(graphics)
-		void bind(Surface * surface);
+		void bind(asd::surface * surface);
 		api(graphics)
-		void bind(const Handle<Font> & font);
+		void bind(const handle<Font> & font);
 		
-		virtual Handle<Image> createImage(const ImageData & data) = 0;
-		virtual Handle<Surface> createSurface(UISpace * space) = 0;
-		virtual Handle<ImageSurface> createSurface(const IntSize & size) = 0;
+		virtual handle<asd::image> createImage(const image_data & data) = 0;
+		virtual handle<asd::surface> createSurface(ui_space * space) = 0;
+		virtual handle<ImageSurface> createSurface(const int_size & size) = 0;
 		
-		virtual void clip(const IntRect & rect) = 0;
-		virtual void rectangle(const IntRect & rect) = 0;
-		virtual void ellipse(const IntRect & rect) = 0;
-		virtual void rectangle(const SqRect & r) = 0;
-		virtual void ellipse(const SqRect & r) = 0;
+		virtual void clip(const int_rect & rect) = 0;
+		virtual void rectangle(const int_rect & rect) = 0;
+		virtual void ellipse(const int_rect & rect) = 0;
+		virtual void rectangle(const sq_rect & r) = 0;
+		virtual void ellipse(const sq_rect & r) = 0;
 		
-		virtual void draw(const Figure * figure, const IntRect & bounds) = 0;
-		virtual void draw(const Figure * figure, const FloatTransform & transform) = 0;
+		virtual void draw(const Figure * figure, const int_rect & bounds) = 0;
+		virtual void draw(const Figure * figure, const math::float_transform & transform) = 0;
 		
-		virtual void draw(const Image * image, const IntRect & rect) = 0;
-		virtual void draw(const Image * image, const SqRect & r) = 0;
+		virtual void draw(const image * image, const int_rect & rect) = 0;
+		virtual void draw(const image * image, const sq_rect & r) = 0;
 		
 		virtual void draw(const Symbol * symbol, int x, int y) = 0;
 		
 		api(graphics)
-		void draw(const Image * image, int x, int y);
+		void draw(const image * image, int x, int y);
 		api(graphics)
-		void draw(const Image * image, int x, int y, int width, int height);
+		void draw(const image * image, int x, int y, int width, int height);
 		
 		api(graphics)
-		void draw(const Image * image, const IntPoint & pt);
+		void draw(const image * image, const int_point & pt);
 		api(graphics)
-		void draw(const Image * image, const IntPoint & pt, const IntSize & sz);
+		void draw(const image * image, const int_point & pt, const int_size & sz);
 		
 		api(graphics)
-		void draw(const Symbol * symbol, const IntPoint & pt);
+		void draw(const Symbol * symbol, const int_point & pt);
 		
 		api(graphics)
 		void draw(const string & text, int x, int y);
 		api(graphics)
 		void draw(const wstring & text, int x, int y);
 		api(graphics)
-		void draw(const string & text, const IntPoint & pt);
+		void draw(const string & text, const int_point & pt);
 		api(graphics)
-		void draw(const wstring & text, const IntPoint & pt);
+		void draw(const wstring & text, const int_point & pt);
 		
 		api(graphics)
 		void draw(const string & text, int x, int y, int & newx);
 		api(graphics)
 		void draw(const wstring & text, int x, int y, int & newx);
 		api(graphics)
-		void draw(const string & text, const IntPoint & pt, int & newx);
+		void draw(const string & text, const int_point & pt, int & newx);
 		api(graphics)
-		void draw(const wstring & text, const IntPoint & pt, int & newx);
+		void draw(const wstring & text, const int_point & pt, int & newx);
 		
 		virtual void present() const = 0;
 		
 		template<class T>
-		class BrushState : public State<T>
+		class BrushState : public state<T>
 		{
-			typedef State<T> Base;
+			typedef state<T> Base;
 		
 		public:
 			template<class ... A>
-			BrushState(Graphics * graphics, A && ... args) : Base(forward<A>(args)...), graphics(graphics) {}
+			BrushState(asd::graphics * graphics, A && ... args) : Base(forward<A>(args)...), graphics(graphics) {}
 			
 			using Base::operator =;
 		
@@ -224,11 +224,12 @@ namespace asd
 				graphics->updateBrushState();
 			}
 			
-			Graphics * graphics;
+			asd::graphics * graphics;
 		};
 		
 		
-	#if BOOST_OS_LINUX
+		#if BOOST_OS_LINUX
+		
 		::Display * display() const {
 			return _display;
 		}
@@ -236,7 +237,8 @@ namespace asd
 		XVisualInfo * visualInfo() const {
 			return _visualInfo;
 		}
-	#endif
+		
+		#endif
 	
 	protected:
 		virtual void initFacilities() {}
@@ -246,14 +248,14 @@ namespace asd
 		virtual api(graphics) void updateSurface();
 		
 		template<class string_t>
-		static api(graphics) void draw(Graphics * graphics, const string_t & text, int x, int y, int & outx);
+		static api(graphics) void draw(asd::graphics * graphics, const string_t & text, int x, int y, int & outx);
 		
-		Surface * _surface;
-		Handle<Font> _font;
+		asd::surface * _surface;
+		handle<Font> _font;
 		
-		IntRect _clipRect{0.0f, 0.0f, 10000.0f, 10000.0f};
+		int_rect _clipRect{0.0f, 0.0f, 10000.0f, 10000.0f};
 		
-		template<class T> using BrushStateHandle = Handle<BrushState<T>>;
+		template<class T> using BrushStateHandle = handle<BrushState<T>>;
 		
 		BrushStateHandle<Color> _color{this, 0.0f, 0.0f, 0.0f, 1.0f};
 		BrushStateHandle<int> _lineWidth{this, 1};
@@ -262,59 +264,63 @@ namespace asd
 		StateHandle<int> _fontSize{14};
 		StateHandle<FillMode> _fillMode{FillMode::Solid};
 		
-		#if BOOST_OS_LINUX
+#if BOOST_OS_LINUX
 		::Display * _display;
 		XVisualInfo * _visualInfo;
-		#endif
+#endif
 	};
 	
 	template<class G>
 	struct CommonGraphicsProvider
 	{
-		static inline Handle<G> provide() {
-			Handle<G, CommonGraphicsProvider<G>> graphics(default_init);
+		static inline handle<G> provide() {
+			handle<G> graphics(_);
 			graphics->initFacilities();
 			return graphics;
 		}
 	};
 
-#define friend_graphics_provider(G)                                                                                            \
-    friend_owned_handle(G, CommonGraphicsProvider<G>);                                                                        \
-    friend struct CommonGraphicsProvider<G>
+#define friend_graphics_provider(G)                                                                                   		\
+	friend_owned_handle(G)                                                                                   				\
+    friend struct CommonGraphicsProvider<G>                                                                                 \
 //----- friend_graphics_provider
 	
-	class RectangleData : public FigureData
+	class rectangle_data : public figure_data
 	{
 	public:
-		RectangleData() : FigureData({{-1.0f, -1.0f},
-									  {-1.0f, 1.0f},
-									  {1.0f,  1.0f},
-									  {1.0f,  -1.0f},
+		rectangle_data() : figure_data({
+			{-1.0f, -1.0f},
+			{-1.0f, 1.0f},
+			{1.0f,  1.0f},
+			{1.0f,  -1.0f},
 		}) {}
 		
-		RectangleData(const FloatRect & r) : FigureData({{r.left,  r.top},
-														 {r.left,  r.bottom},
-														 {r.right, r.bottom},
-														 {r.right, r.top},
+		rectangle_data(const float_rect & r) : figure_data({
+			{r.left,  r.top},
+			{r.left,  r.bottom},
+			{r.right, r.bottom},
+			{r.right, r.top},
 		}) {}
 		
-		RectangleData(const FloatSize & sz) : FigureData({{-sz.x, -sz.y},
-														  {-sz.x, sz.y},
-														  {sz.x,  sz.y},
-														  {sz.x,  -sz.y},
+		rectangle_data(const float_size & sz) : figure_data({
+			{-sz.x, -sz.y},
+			{-sz.x, sz.y},
+			{sz.x,  sz.y},
+			{sz.x,  -sz.y},
 		}) {}
 		
-		RectangleData(float w, float h) : FigureData({{-w, -h},
-													  {-w, h},
-													  {w,  h},
-													  {w,  -h},
+		rectangle_data(float w, float h) : figure_data({
+			{-w, -h},
+			{-w, h},
+			{w,  h},
+			{w,  -h},
 		}) {}
 	};
 	
-	inline IntRect scaleToSquare(const IntRect & region) {
+	inline int_rect scaleToSquare(const int_rect & region) {
 		int w = region.width();
 		int h = region.height();
-		IntRect r = region;
+		int_rect r = region;
 		
 		if(w > h) {
 			r.top -= (w - h) / 2;

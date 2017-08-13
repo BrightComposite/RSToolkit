@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
 #include <opengl/GLObjects.h>
-#include <ui/UISpace.h>
+#include <ui/ui_space.h>
 
 //---------------------------------------------------------------------------
 
@@ -9,7 +9,7 @@ namespace asd
 {
 	namespace OpenGL
 	{
-		GLSurface::GLSurface(GLGraphics * graphics, const IntSize & size) : Surface(size), _graphics(graphics) {}
+		GLSurface::GLSurface(GLGraphics * graphics, const int_size & size) : surface(size), _graphics(graphics) {}
 		GLSurface::~GLSurface() {}
 
 		void GLSurface::clear() const
@@ -27,7 +27,7 @@ namespace asd
 			
 		}
 
-		DepthSurface::DepthSurface(GLGraphics * graphics, const IntSize & size) : GLSurface(graphics, size)
+		DepthSurface::DepthSurface(GLGraphics * graphics, const int_size & size) : GLSurface(graphics, size)
 		{
 			createDepthStencil();
 		}
@@ -45,7 +45,7 @@ namespace asd
 			glClear(GL_DEPTH_BUFFER_BIT);
 		}
 
-		UISurface::UISurface(GLGraphics * graphics, UISpace * space) : GLSurface(graphics, space->size()), _space(space)
+		UISurface::UISurface(GLGraphics * graphics, ui_space * space) : GLSurface(graphics, space->size()), _space(space)
 		{
 			connect(this, &UISurface::onUIResize, *_space);
 			connect(this, &UISurface::onUIFullscreen, *_space);
@@ -111,7 +111,7 @@ namespace asd
 #endif
 		}
 
-		void UISurface::requestData(ImageData * output) const
+		void UISurface::requestData(image_data * output) const
 		{
 			throw Exception("'requestData' method for OpenGL UISurface is not implemented yet!");
 
@@ -127,7 +127,7 @@ namespace asd
 			// ---------------------
 
 			output->area = {width, height};
-			output->format = ImageFormat::bgra;
+			output->format = image_format::bgra;
 			const uint pitch = output->width() * 4;
 
 			output->alloc();
@@ -143,10 +143,10 @@ namespace asd
 		void UISurface::resize()
 		{
 			glViewport(0, 0, width(), height());
-			_graphics->updateUniform<Uniforms::Viewport>(FloatSize {size()});
+			_graphics->updateUniform<Uniforms::Viewport>(float_size {size()});
 		}
 
-		void UISurface::onUIResize(Handle<UIResizeMessage> & msg, UISpace & space)
+		void UISurface::onUIResize(handle<UIResizeMessage> & msg, ui_space & space)
 		{
 			if(msg->width == 0 || msg->height == 0)
 				return;
@@ -155,18 +155,18 @@ namespace asd
 			space.invalidate();
 		}
 
-		void UISurface::onUIFullscreen(Handle<UIFullscreenMessage> & msg, UISpace & space)
+		void UISurface::onUIFullscreen(handle<UIFullscreenMessage> & msg, ui_space & space)
 		{
 			
 		}
 
-		void UISurface::onUIDestroy(Handle<UIDestroyMessage> & msg, UISpace & space)
+		void UISurface::onUIDestroy(handle<UIDestroyMessage> & msg, ui_space & space)
 		{
 			if(_graphics->surface() == this)
-				_graphics->bind(null<Surface>());
+				_graphics->bind(null<surface>());
 		}
 
-		GLTextureSurface::GLTextureSurface(GLGraphics * graphics, const IntSize & size) : TextureSurface(size), _graphics(graphics)
+		GLTextureSurface::GLTextureSurface(GLGraphics * graphics, const int_size & size) : TextureSurface(size), _graphics(graphics)
 		{
 			glGenFramebuffers(1, &id);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, id);
@@ -188,7 +188,7 @@ namespace asd
 			glDeleteFramebuffers(1, &id);
 		}
 
-		void GLTextureSurface::addBuffer(Handle<Texture> & texture, ImageFormat format)
+		void GLTextureSurface::addBuffer(handle<Texture> & texture, image_format format)
 		{
 			if(_textures.size() == 16)
 				throw Exception("Number of buffers shouldn't be > 16");
@@ -258,7 +258,7 @@ namespace asd
 
 		}
 
-		void GLTextureSurface::requestData(ImageData * data) const
+		void GLTextureSurface::requestData(image_data * data) const
 		{
 			_textures[0]->requestData(data);
 		}

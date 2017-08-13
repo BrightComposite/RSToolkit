@@ -290,6 +290,10 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		add_subdirectory("${DIR}" "${OUTPUT_DIR}")
 	endfunction()
 
+	function(add_test PATH)
+		add_module(${PATH} tests ${ARGV1})
+	endfunction()
+	
 	function(add_command command)
 		set(DIR "${command}")
 		set(ROOT "${ARGV1}")
@@ -405,6 +409,14 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 	function(module type)
 		get_filename_component(PROJECT_ID ${PROJECT_SOURCE_DIR} NAME)
+		get_filename_component(PROJECT_DIR ${PROJECT_SOURCE_DIR} DIRECTORY)
+		get_filename_component(PROJECT_DIR "${PROJECT_DIR}" NAME)
+		
+		if(NOT "${PROJECT_DIR}" STREQUAL "modules")
+			set(PROJECT_ID ${PROJECT_ID}_${PROJECT_DIR})
+			message("${PROJECT_ID}")
+		endif()
+		
 		set(PROJECT_NAME_OF_${PROJECT_ID} ${PROJECT_NAME} CACHE STRING "project name of ${PROJECT_ID} module")
 		set(PROJECT_VERSION_OF_${PROJECT_ID} ${PROJECT_VERSION} CACHE STRING "project version of ${PROJECT_ID} module")
 
@@ -413,6 +425,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		endif()
 
 		message("")
+		
 		if("${type}" STREQUAL "APPLICATION")
 			if("${ARGN}" STREQUAL "CONSOLE")
 				color_message(GREEN "${MESSAGES_INDENTATION}+ Add console app \"${PROJECT_NAME}\"")

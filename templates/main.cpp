@@ -1,13 +1,12 @@
 //---------------------------------------------------------------------------
 
-#include <application/Starter.h>
+#include <application/starter.h>
 
 //---------------------------------------------------------------------------
 
 namespace asd
 {
-	static Entrance open([]()
-	{
+	static entrance open([]() {
 		// Let's start from here!
 		
 		return 0;

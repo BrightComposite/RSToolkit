@@ -7,11 +7,11 @@
 
 //---------------------------------------------------------------------------
 
-#include <math/Transform.h>
+#include <math/transform.h>
 
 #include "Shaders.h"
 #include "Uniform.h"
-#include "Mesh.h"
+#include "mesh.h"
 
 //---------------------------------------------------------------------------
 
@@ -22,17 +22,17 @@ namespace asd
 	class GraphicModelView
 	{
 	public:
-		GraphicModelView(const Handle<const Mesh> & mesh, const Handle<FxTechnique> & technique) :
+		GraphicModelView(const handle<const mesh> & mesh, const handle<FxTechnique> & technique) :
 			mesh(mesh), technique(technique) {}
 
-		Handle<const Mesh> mesh;
-		Handle<FxTechnique> technique;
+		handle<const asd::mesh> mesh;
+		handle<FxTechnique> technique;
 	};
 
-	class GraphicModel : public Shared
+	class GraphicModel : public shareable
 	{
 	public:
-		GraphicModel(Graphics3D * graphics, const Handle<const Mesh> & mesh, const Handle<FxTechnique> & technique) :
+		GraphicModel(Graphics3D * graphics, const handle<const mesh> & mesh, const handle<FxTechnique> & technique) :
 			graphics(graphics), view(mesh, technique) {}
 
 		Graphics3D * graphics;
@@ -42,7 +42,7 @@ namespace asd
 	class Figure3D : public Figure
 	{
 	public:
-		api(graphics) Figure3D(Graphics3D * graphics, const FigureData & data);
+		api(graphics) Figure3D(Graphics3D * graphics, const figure_data & data);
 
 		virtual void draw() const override
 		{

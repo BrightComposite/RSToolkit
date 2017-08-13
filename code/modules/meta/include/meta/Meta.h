@@ -14,7 +14,7 @@
 
 namespace asd
 {
-	namespace Internals
+	namespace internals
 	{
 		template<int I, typename ... T>
 		struct cut_t {};
@@ -32,8 +32,8 @@ namespace asd
 		template<int I>
 		struct cut_t<I>
 		{
-			typedef Empty head;
-			typedef Empty type;
+			typedef empty head;
+			typedef empty type;
 		};
 
 		template<int I, typename ... T>
@@ -49,10 +49,10 @@ namespace asd
 	 *  get type of generation I of some variadic-templated class
 	 */
 	template <int I, typename ... T>
-	using cut_t = typename Internals::cut_t<I, T...>::type;
+	using cut_t = typename internals::cut_t<I, T...>::type;
 
 	template <int I, typename ... T>
-	using extract_t = typename Internals::cut_t<I, T...>::head;
+	using extract_t = typename internals::cut_t<I, T...>::head;
 
 	template<typename ... T>
 	using first_t = extract_t<0, T...>;
@@ -60,7 +60,7 @@ namespace asd
 	template<typename ... T>
 	using last_t = extract_t<sizeof...(T) - 1, T...>;
 
-	namespace Internals
+	namespace internals
 	{
 		template<int N, typename T, typename ... S>
 		struct expand_t : expand_t<N - 1, T, decay_t<T>, S...> {};
@@ -77,9 +77,9 @@ namespace asd
 	 *  Returns tuple<S ...> with N elements of type T
 	 */
 	template<int I, typename H, typename ... S>
-	using expand_t = typename Internals::expand_t<I, H, S...>::type;
+	using expand_t = typename internals::expand_t<I, H, S...>::type;
 
-	namespace Internals
+	namespace internals
 	{
 		template<int R, typename T, typename H, typename ... S>
 		struct find_t : find_t<R + 1, T, S...> {};
@@ -97,7 +97,7 @@ namespace asd
 	 *  Returns pos of type in set if it was found, and -1 otherwise.
 	 */
 	template<typename T, typename H, typename ... S>
-	struct find_t : Internals::find_t<0, T, H, S...> {};
+	struct find_t : internals::find_t<0, T, H, S...> {};
 
 	/**
 	 *  @brief
@@ -105,7 +105,7 @@ namespace asd
 	 *  Returns pos of type in set if it was found, and -1 otherwise.
 	 */
 	template<template<typename...> class Tpl, typename T, typename H, typename ... S>
-	struct find_t<T, Tpl<H, S...>> : Internals::find_t<0, T, H, S...> {};
+	struct find_t<T, Tpl<H, S...>> : internals::find_t<0, T, H, S...> {};
 
 	/**
 	 *	@brief

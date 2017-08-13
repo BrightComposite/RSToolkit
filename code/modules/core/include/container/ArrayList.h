@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/Handle.h>
+#include <core/handle.h>
 
 #include <array>
 #include <vector>
@@ -28,11 +28,11 @@ namespace asd
 {
 	using std::array_list;
 
-	template<typename T, class ... Owner>
-	class ArrayList : public array_list<Handle<T, Owner...>>
+	template<typename T>
+	class ArrayList : public array_list<handle<T>>
 	{
 	public:
-		using array_list<Handle<T, Owner...>>::array_list;
+		using array_list<handle<T>>::array_list;
 	};
 
 	template<typename T>

@@ -12,7 +12,7 @@
 //---------------------------------------------------------------------------
 
 #include <ui/WindowEnum.h>
-#include <ui/UISpace.h>
+#include <ui/ui_space.h>
 
 //---------------------------------------------------------------------------
 
@@ -20,15 +20,13 @@ namespace asd
 {
 	class Window;
 	
-	link_class(ui, Window, Class<UISpace>);
-	
-	class Window : public UISpace
+	class Window : public ui_space
 	{
 	public:
-		Window(Graphics * graphics, long left, long top, long width, long height, const String & caption = L"") : Window(graphics, IntRect {left, top, left + width, top + height}, caption) {}
-		Window(Graphics * graphics, long width, long height, const String & caption = L"") : Window(graphics, IntSize {width, height}, caption) {}
-		Window(Graphics * graphics, const IntSize & size, const String & caption = L"") : Window(graphics, IntRect {0, 0, size.x, size.y}, caption) {}
-		api(ui) Window(Graphics * graphics, const IntRect & rect, const String & caption = L"");
+		Window(asd::graphics * graphics, long left, long top, long width, long height, const String & caption = L"") : Window(graphics, int_rect {left, top, left + width, top + height}, caption) {}
+		Window(asd::graphics * graphics, long width, long height, const String & caption = L"") : Window(graphics, int_size {width, height}, caption) {}
+		Window(asd::graphics * graphics, const int_size & size, const String & caption = L"") : Window(graphics, int_rect {0, 0, size.x, size.y}, caption) {}
+		api(ui) Window(asd::graphics * graphics, const int_rect & rect, const String & caption = L"");
 		
 		virtual ~Window() {}
 		
@@ -42,12 +40,12 @@ namespace asd
 			return _outerRegion.height();
 		}
 		
-		LongSize outerSize() const
+		int_size outerSize() const
 		{
 			return _outerRegion.size();
 		}
 		
-		LongRect outerRegion() const
+		int_rect outerRegion() const
 		{
 			return _outerRegion;
 		}
@@ -102,7 +100,7 @@ namespace asd
 		
 		bool _shown = false;
 		
-		LongRect _outerRegion;
+		int_rect _outerRegion;
 		
 		WindowState _state = WindowState::Hidden;
 		BorderStyle _borderStyle = BorderStyle::Normal;

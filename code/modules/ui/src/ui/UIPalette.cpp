@@ -7,17 +7,17 @@
 
 namespace asd
 {
-	StandartUIPalette::StandartUIPalette(UISpace * space) : UIPalette(space)
+	StandartUIPalette::StandartUIPalette(ui_space * space) : UIPalette(space)
 	{
-		Handle<Widget> button(_space, IntRect {0, 0, 120, 80});
-		Handle<Widget> label(_space, IntRect {0, 0, 120, 80});
+		handle<widget> button(_space, int_rect {0, 0, 120, 80});
+		handle<widget> label(_space, int_rect {0, 0, 120, 80});
 		Text::setDynamic(label, "", Font::obtain("Arial", "arial.ttf"));
 
 		_classes["button"].init("button", button);
 		_classes["label"].init("label", label);
 	}
 
-	Widget * StandartUIPalette::create(const string & classid, Widget * parent)
+	widget * StandartUIPalette::create(const string & classid, widget * parent)
 	{
 		auto & cl = _classes[classid];
 
@@ -29,7 +29,7 @@ namespace asd
 		return obj;
 	}
 
-	void StandartUIPalette::add(const string & classid, const Handle<Widget> & prototype)
+	void StandartUIPalette::add(const string & classid, const handle<widget> & prototype)
 	{
 		auto & cl = _classes[classid];
 

@@ -6,9 +6,7 @@
 
 namespace asd
 {
-	implement_link(Graphics3D);
-
-	const VertexData VertexData::quad2d({
+	const vertex_data vertex_data::quad2d({
 		-1.0f,  1.0f,
 		 1.0f,  1.0f,
 		 1.0f, -1.0f,
@@ -17,7 +15,7 @@ namespace asd
 		-1.0f, -1.0f
 	});
 
-	const VertexData VertexData::texquad2d({
+	const vertex_data vertex_data::texquad2d({
 		-1.0f,  1.0f,	0.0f, 0.0f,
 		 1.0f,  1.0f,	1.0f, 0.0f,
 		 1.0f, -1.0f,	1.0f, 1.0f,
@@ -26,7 +24,7 @@ namespace asd
 		-1.0f, -1.0f,	0.0f, 1.0f
 	});
 
-	const VertexData VertexData::linequad2d({
+	const vertex_data vertex_data::linequad2d({
 		-1.0f,  1.0f,
 		 1.0f,  1.0f,
 		 1.0f,  1.0f,
@@ -37,7 +35,7 @@ namespace asd
 		-1.0f,  1.0f
 	});
 
-	const VertexData VertexData::quad3d({
+	const vertex_data vertex_data::quad3d({
 		-1.0f,  1.0f, 0.0f,
 		 1.0f,  1.0f, 0.0f,
 		 1.0f, -1.0f, 0.0f,
@@ -46,7 +44,7 @@ namespace asd
 		-1.0f, -1.0f, 0.0f
 	});
 
-	const VertexData VertexData::texquad3d({
+	const vertex_data vertex_data::texquad3d({
 		-1.0f,  1.0f, 0.0f,		0.0f, 0.0f,
 		 1.0f,  1.0f, 0.0f,		1.0f, 0.0f,
 		 1.0f, -1.0f, 0.0f,		1.0f, 1.0f,
@@ -55,7 +53,7 @@ namespace asd
 		-1.0f, -1.0f, 0.0f,		0.0f, 1.0f
 	});
 
-	const VertexData VertexData::linequad3d({
+	const vertex_data vertex_data::linequad3d({
 		-1.0f,  1.0f, 0.0f,
 		 1.0f,  1.0f, 0.0f,
 		 1.0f,  1.0f, 0.0f,
@@ -66,7 +64,7 @@ namespace asd
 		-1.0f,  1.0f, 0.0f
 	});
 
-	const VertexData VertexData::cube({
+	const vertex_data vertex_data::cube({
 		/* Front  */ -1.0f, -1.0f,  1.0f, /**/  1.0f, -1.0f,  1.0f, /**/  1.0f,  1.0f,  1.0f, /**/ -1.0f,  1.0f,  1.0f,
 		/*  Back  */ -1.0f, -1.0f, -1.0f, /**/ -1.0f,  1.0f, -1.0f, /**/  1.0f,  1.0f, -1.0f, /**/  1.0f, -1.0f, -1.0f,
 
@@ -77,7 +75,7 @@ namespace asd
 		/*  Left  */ -1.0f, -1.0f, -1.0f, /**/ -1.0f, -1.0f,  1.0f, /**/ -1.0f,  1.0f,  1.0f, /**/ -1.0f,  1.0f, -1.0f
 	});
 
-	const VertexData VertexData::texcube({
+	const vertex_data vertex_data::texcube({
 		/* Front  */ -1.0f, -1.0f,  1.0f,   1.0f,  1.0f, /**/  1.0f, -1.0f,  1.0f,   0.0f,  1.0f, /**/  1.0f,  1.0f,  1.0f,   0.0f,  0.0f, /**/ -1.0f,  1.0f,  1.0f,   1.0f,  0.0f,
 		/*  Back  */ -1.0f, -1.0f, -1.0f,   0.0f,  1.0f, /**/ -1.0f,  1.0f, -1.0f,   0.0f,  0.0f, /**/  1.0f,  1.0f, -1.0f,   1.0f,  0.0f, /**/  1.0f, -1.0f, -1.0f,   1.0f,  1.0f,
 
@@ -88,7 +86,7 @@ namespace asd
 		/*  Left  */ -1.0f, -1.0f, -1.0f,   1.0f,  1.0f, /**/ -1.0f, -1.0f,  1.0f,   0.0f,  1.0f, /**/ -1.0f,  1.0f,  1.0f,   0.0f,  0.0f, /**/ -1.0f,  1.0f, -1.0f,   1.0f,  0.0f
 	});
 
-	const VertexData VertexData::colorcube({
+	const vertex_data vertex_data::colorcube({
 		/* Front  */ -1.0f, -1.0f,  1.0f,   0.0f,  0.0f,  1.0f,  1.0f, /**/  1.0f, -1.0f,  1.0f,   0.0f,  0.0f,  1.0f,  1.0f, /**/  1.0f,  1.0f,  1.0f,   0.0f,  0.0f,  1.0f,  1.0f, /**/ -1.0f,  1.0f,  1.0f,   0.0f,  0.0f,  1.0f,  1.0f,
 		/*  Back  */ -1.0f, -1.0f, -1.0f,   1.0f,  1.0f,  0.0f,  1.0f, /**/ -1.0f,  1.0f, -1.0f,   1.0f,  1.0f,  0.0f,  1.0f, /**/  1.0f,  1.0f, -1.0f,   1.0f,  1.0f,  0.0f,  1.0f, /**/  1.0f, -1.0f, -1.0f,   1.0f,  1.0f,  0.0f,  1.0f,
 
@@ -99,7 +97,7 @@ namespace asd
 		/*  Left  */ -1.0f, -1.0f, -1.0f,   0.0f,  1.0f,  1.0f,  1.0f, /**/ -1.0f, -1.0f,  1.0f,   0.0f,  1.0f,  1.0f,  1.0f, /**/ -1.0f,  1.0f,  1.0f,   0.0f,  1.0f,  1.0f,  1.0f, /**/ -1.0f,  1.0f, -1.0f,   0.0f,  1.0f,  1.0f,  1.0f
 	});
 
-	const VertexData VertexData::normalcube({
+	const vertex_data vertex_data::normalcube({
 		/* Front  */ -1.0f, -1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	/**/  1.0f, -1.0f,  1.0f, 	0.0f,  0.0f,  1.0f,	/**/  1.0f,  1.0f,  1.0f, 	0.0f,  0.0f,  1.0f,	/**/ -1.0f,  1.0f,  1.0f,	0.0f,  0.0f,  1.0f, 
 		/*  Back  */ -1.0f, -1.0f, -1.0f,	0.0f,  0.0f, -1.0f,	/**/ -1.0f,  1.0f, -1.0f,	0.0f,  0.0f, -1.0f,	/**/  1.0f,  1.0f, -1.0f,	0.0f,  0.0f, -1.0f,	/**/  1.0f, -1.0f, -1.0f,	0.0f,  0.0f, -1.0f,	
 
@@ -110,7 +108,7 @@ namespace asd
 		/*  Left  */ -1.0f, -1.0f, -1.0f,  -1.0f,  0.0f,  0.0f,	/**/ -1.0f, -1.0f,  1.0f,  -1.0f,  0.0f,  0.0f,	/**/ -1.0f,  1.0f,  1.0f,  -1.0f,  0.0f,  0.0f,	/**/ -1.0f,  1.0f, -1.0f,  -1.0f,  0.0f,  0.0f
 	});
 
-	const VertexData VertexData::normaltexcube({
+	const vertex_data vertex_data::normaltexcube({
 		/* Front  */ -1.0f, -1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	   1.0f,  1.0f, /**/  1.0f, -1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	   0.0f,  1.0f, /**/  1.0f,  1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	   0.0f,  0.0f, /**/ -1.0f,  1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	   1.0f,  0.0f,
 		/*  Back  */ -1.0f, -1.0f, -1.0f,	0.0f,  0.0f, -1.0f,    0.0f,  1.0f, /**/ -1.0f,  1.0f, -1.0f,	0.0f,  0.0f, -1.0f,    0.0f,  0.0f, /**/  1.0f,  1.0f, -1.0f,	0.0f,  0.0f, -1.0f,    1.0f,  0.0f, /**/  1.0f, -1.0f, -1.0f,	0.0f,  0.0f, -1.0f,    1.0f,  1.0f,
 
@@ -121,7 +119,7 @@ namespace asd
 		/*  Left  */ -1.0f, -1.0f, -1.0f,  -1.0f,  0.0f,  0.0f,	   1.0f,  1.0f, /**/ -1.0f, -1.0f,  1.0f,  -1.0f,  0.0f,  0.0f,	   0.0f,  1.0f, /**/ -1.0f,  1.0f,  1.0f,  -1.0f,  0.0f,  0.0f,	   0.0f,  0.0f, /**/ -1.0f,  1.0f, -1.0f,  -1.0f,  0.0f,  0.0f,	   1.0f,  0.0f
 	});
 
-	const VertexData VertexData::normalcolorcube({
+	const vertex_data vertex_data::normalcolorcube({
 		/* Front  */ -1.0f, -1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	   0.0f,  0.0f,  1.0f,  1.0f,	/**/  1.0f, -1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	   0.0f,  0.0f,  1.0f,  1.0f,	/**/  1.0f,  1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	   0.0f,  0.0f,  1.0f,  1.0f,	/**/ -1.0f,  1.0f,  1.0f,	0.0f,  0.0f,  1.0f,	   0.0f,  0.0f,  1.0f,  1.0f,
 		/*  Back  */ -1.0f, -1.0f, -1.0f,	0.0f,  0.0f, -1.0f,    1.0f,  1.0f,  0.0f,  1.0f,	/**/ -1.0f,  1.0f, -1.0f,	0.0f,  0.0f, -1.0f,    1.0f,  1.0f,  0.0f,  1.0f,	/**/  1.0f,  1.0f, -1.0f,	0.0f,  0.0f, -1.0f,    1.0f,  1.0f,  0.0f,  1.0f,	/**/  1.0f, -1.0f, -1.0f,	0.0f,  0.0f, -1.0f,    1.0f,  1.0f,  0.0f,  1.0f,
 
@@ -134,7 +132,7 @@ namespace asd
 
 #define indices(o, x0, x1, x2, x3, x4, x5) x0 + o, x1 + o, x2 + o, x3 + o, x4 + o, x5 + o
 
-	VertexIndices VertexIndices::cube = {
+	vertex_indices vertex_indices::cube = {
 		indices(0,  0, 1, 2, 0, 2, 3),
 		indices(4,  0, 1, 2, 0, 2, 3),
 		indices(8,  0, 1, 2, 0, 2, 3),
@@ -147,7 +145,7 @@ namespace asd
 
 #define indices(o, x0, x1, x2, x3, x4, x5, x6, x7) x0 + o, x1 + o, x2 + o, x3 + o, x4 + o, x5 + o, x6 + o, x7 + o
 
-	VertexIndices VertexIndices::linecube = {
+	vertex_indices vertex_indices::linecube = {
 		indices(0,  0, 1, 1, 2, 2, 3, 3, 0),
 		indices(4,  0, 1, 1, 2, 2, 3, 3, 0),
 		indices(8,  0, 1, 1, 2, 2, 3, 3, 0),
@@ -163,7 +161,7 @@ namespace asd
 		adapter->bind(*this);
 	}
 
-	VertexLayout::VertexLayout(Graphics3D * graphics, const string & fingerprint) : fingerprint(fingerprint), units(0)
+	vertex_layout::vertex_layout(Graphics3D * graphics, const string & fingerprint) : fingerprint(fingerprint), units(0)
 	{
 		for(const auto & key : split(fingerprint))
 		{
@@ -175,9 +173,9 @@ namespace asd
 		stride = units * sizeof(float);
 	}
 
-	static Handle<const Mesh> createMesh(Graphics3D * graphics, const FigureData & data)
+	static handle<const mesh> createMesh(Graphics3D * graphics, const figure_data & data)
 	{
-		VertexData points;
+		vertex_data points;
 		auto & p = data.points;
 
 		for(size_t i = 0; i < p.size() - 3; i += 2)
@@ -200,12 +198,10 @@ namespace asd
 		return graphics->createMesh(graphics->getVertexLayout("p2"), points);
 	}
 
-	Figure3D::Figure3D(Graphics3D * graphics, const FigureData & data) : Figure(graphics, data), view(createMesh(graphics, data), graphics->techniques2d.figure) {}
+	Figure3D::Figure3D(Graphics3D * graphics, const figure_data & data) : Figure(graphics, data), view(createMesh(graphics, data), graphics->techniques2d.figure) {}
 
-	Graphics3D::Graphics3D() : Graphics()
-	{ 
-		setclass(Graphics3D); 
-
+	Graphics3D::Graphics3D() : graphics()
+	{
 		registerVertexElement("p2",   "position", 2);
 		registerVertexElement("p3",   "position", 3);
 		registerVertexElement("c3",   "color",	  3);
@@ -222,7 +218,7 @@ namespace asd
 		registerVertexElement("c4-3", "color3",   4);
 	}
 
-	void Graphics3D::bind(const Handle<Texture> & texture, uint index)
+	void Graphics3D::bind(const handle<Texture> & texture, uint index)
 	{
 		if(_textures.size() > index && _textures[index] == texture)
 			return;
@@ -231,7 +227,7 @@ namespace asd
 		texture->apply();
 	}
 
-	void Graphics3D::rectangle(const IntRect & rect)
+	void Graphics3D::rectangle(const math::int_rect & rect)
 	{
 		auto fm = hold(_fillMode, FillMode::Solid);
 
@@ -249,7 +245,7 @@ namespace asd
 		}
 	}
 
-	void Graphics3D::ellipse(const IntRect & rect)
+	void Graphics3D::ellipse(const math::int_rect & rect)
 	{
 		auto fm = hold(_fillMode, FillMode::Solid);
 
@@ -263,7 +259,7 @@ namespace asd
 		meshes2d.texquad->draw();
 	}
 
-	void Graphics3D::rectangle(const SqRect & rect)
+	void Graphics3D::rectangle(const sq_rect & rect)
 	{
 		auto fm = hold(_fillMode, FillMode::Solid);
 
@@ -277,7 +273,7 @@ namespace asd
 		meshes2d.quad->draw();
 	}
 
-	void Graphics3D::ellipse(const SqRect & rect)
+	void Graphics3D::ellipse(const sq_rect & rect)
 	{
 		auto fm = hold(_fillMode, FillMode::Solid);
 
@@ -292,20 +288,20 @@ namespace asd
 		meshes2d.texquad->draw();
 	}
 
-	void Graphics3D::draw(const Figure * figure, const IntRect & bounds)
+	void Graphics3D::draw(const Figure * figure, const math::int_rect & bounds)
 	{
-		FloatPoint t;
-		FloatSize s;
+		math::float_point t;
+		math::float_size s;
 
 		ScreenCoord::toRel(bounds, viewport(), t, s);
 
-		updateUniform<Uniforms::Model>(FloatTransform(move(t), move(s), _depth).output());
+		updateUniform<Uniforms::Model>(math::float_transform(move(t), move(s), _depth).output());
 		techniques2d.figure->apply();
 
 		figure->draw();
 	}
 
-	void Graphics3D::draw(const Figure * figure, const FloatTransform & transform)
+	void Graphics3D::draw(const Figure * figure, const math::float_transform & transform)
 	{
 		updateUniform<Uniforms::Model>(transform.output());
 		techniques2d.figure->apply();
@@ -313,7 +309,7 @@ namespace asd
 		figure->draw();
 	}
 
-	void Graphics3D::draw(const Image * image, const IntRect & rect)
+	void Graphics3D::draw(const image * image, const math::int_rect & rect)
 	{
 		if(image->graphics() != this)
 			return;
@@ -325,7 +321,7 @@ namespace asd
 		meshes2d.texquad->draw();
 	}
 
-	void Graphics3D::draw(const Image * image, const SqRect & rect)
+	void Graphics3D::draw(const image * image, const sq_rect & rect)
 	{
 		if(image->graphics() != this)
 			return;
@@ -345,13 +341,13 @@ namespace asd
 			return;
 
 		image->apply();
-		setArea(IntRect({x + symbol->left(), y + symbol->top()}, {image->width(), image->height()}));
+		setArea(math::int_rect({x + symbol->left(), y + symbol->top()}, {image->width(), image->height()}));
 
 		techniques2d.text->apply();
 		meshes2d.texquad->draw();
 	}
 
-	VertexLayout * Graphics3D::getVertexLayout(const string & fingerprint)
+	vertex_layout * Graphics3D::getVertexLayout(const string & fingerprint)
 	{
 		auto & layout = _vertexLayouts[fingerprint];
 
@@ -383,7 +379,7 @@ namespace asd
 		}
 	}
 
-	const Handle<ShaderProgram> & Graphics3D::getShaderProgram(const string & id)
+	const handle<ShaderProgram> & Graphics3D::getShaderProgram(const string & id)
 	{
 		auto & program = _shaderPrograms[id];
 
@@ -409,21 +405,21 @@ namespace asd
 		auto p3nt  = getVertexLayout("p3 n t");
 		auto p3nc4 = getVertexLayout("p3 n c4");
 
-		meshes2d.quad      = createMesh(p2,   VertexData::quad2d);
-		meshes2d.texquad   = createMesh(p2t,  VertexData::texquad2d);
-		meshes2d.linequad  = createMesh(p2,   VertexData::linequad2d, VertexTopology::Lines);
-		meshes3d.quad      = createMesh(p3,   VertexData::quad3d);
-		meshes3d.texquad   = createMesh(p3t,  VertexData::texquad3d);
-		meshes3d.linequad  = createMesh(p2,   VertexData::linequad3d, VertexTopology::Lines);
+		meshes2d.quad      = createMesh(p2,   vertex_data::quad2d);
+		meshes2d.texquad   = createMesh(p2t,  vertex_data::texquad2d);
+		meshes2d.linequad  = createMesh(p2,   vertex_data::linequad2d, vertex_topology::lines);
+		meshes3d.quad      = createMesh(p3,   vertex_data::quad3d);
+		meshes3d.texquad   = createMesh(p3t,  vertex_data::texquad3d);
+		meshes3d.linequad  = createMesh(p2,   vertex_data::linequad3d, vertex_topology::lines);
 
-		meshes3d.cube			 = createMesh(p3,    VertexData::cube,             VertexIndices::cube);
-		meshes3d.texcube		 = createMesh(p3t,   VertexData::texcube,          VertexIndices::cube);
-		meshes3d.colorcube		 = createMesh(p3c4,  VertexData::colorcube,        VertexIndices::cube);
-		meshes3d.normalcube      = createMesh(p3n,   VertexData::normalcube,       VertexIndices::cube);
-		meshes3d.normaltexcube   = createMesh(p3nt,  VertexData::normaltexcube,    VertexIndices::cube);
-		meshes3d.normalcolorcube = createMesh(p3nc4, VertexData::normalcolorcube,  VertexIndices::cube);
+		meshes3d.cube			 = createMesh(p3,    vertex_data::cube,             vertex_indices::cube);
+		meshes3d.texcube		 = createMesh(p3t,   vertex_data::texcube,          vertex_indices::cube);
+		meshes3d.colorcube		 = createMesh(p3c4,  vertex_data::colorcube,        vertex_indices::cube);
+		meshes3d.normalcube      = createMesh(p3n,   vertex_data::normalcube,       vertex_indices::cube);
+		meshes3d.normaltexcube   = createMesh(p3nt,  vertex_data::normaltexcube,    vertex_indices::cube);
+		meshes3d.normalcolorcube = createMesh(p3nc4, vertex_data::normalcolorcube,  vertex_indices::cube);
 
-		meshes3d.linecube = createMesh(p3, VertexData::cube, VertexIndices::linecube, VertexTopology::Lines);
+		meshes3d.linecube = createMesh(p3, vertex_data::cube, vertex_indices::linecube, vertex_topology::lines);
 
 
 		checkForErrors();
@@ -464,23 +460,23 @@ namespace asd
 	void Graphics3D::updateSurface()
 	{
 		clip(_surface->size());
-		updateUniform<Uniforms::Viewport>(FloatSize {_surface->size()});
+		updateUniform<Uniforms::Viewport>(math::float_size {_surface->size()});
 	}
 
-	void Graphics3D::setArea(const IntRect & rect)
+	void Graphics3D::setArea(const math::int_rect & rect)
 	{
-		FloatPoint t;
-		FloatSize s;
+		math::float_point t;
+		math::float_size s;
 
 		ScreenCoord::toRel(rect, viewport(), t, s);
 		updateUniform<Uniforms::Area>(move(t), move(s), _depth);
 	}
 
-	void Graphics3D::setArea(const SqRect & rect)
+	void Graphics3D::setArea(const sq_rect & rect)
 	{
-		FloatPoint t;
-		FloatSize s;
-
+		math::float_point t;
+		math::float_size s;
+		
 		ScreenCoord::toRel(rect, viewport(), t, s);
 		updateUniform<Uniforms::Area>(move(t), move(s), _depth);
 	}

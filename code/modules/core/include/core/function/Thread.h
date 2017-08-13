@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------
 
 #include <thread>
-#include <core/Handle.h>
+#include <core/handle.h>
 
 //---------------------------------------------------------------------------
 
@@ -17,7 +17,7 @@ namespace asd
 	using std::thread;
 	namespace this_thread = std::this_thread;
 
-	struct Thread : public Shared
+	struct Thread : public shareable
 	{
 		template<class ... A, useif<can_construct<thread, A...>::value>>
 		Thread(A &&... args) : instance(forward<A>(args)...) {}

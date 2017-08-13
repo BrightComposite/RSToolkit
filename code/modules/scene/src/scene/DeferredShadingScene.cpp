@@ -23,13 +23,13 @@ namespace asd
 		_lightTech.point.init(graphics().getShaderProgram("3d/deferred/light/point"));
 	}
 
-	void DeferredShadingScene::onWidgetResize(Handle<WidgetResizeMessage> & msg, Widget & w)
+	void DeferredShadingScene::onWidgetResize(handle<WidgetResizeMessage> & msg, Widget & w)
 	{
 		Scene::onWidgetResize(msg, w);
 		_surface->setSize(widget().size());
 	}
 
-	Handle<Light> DeferredShadingScene::addLight()
+	handle<Light> DeferredShadingScene::addLight()
 	{
 		return *_lights.emplace(_lights.end(), default_init);
 	}

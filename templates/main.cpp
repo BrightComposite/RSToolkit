@@ -1,17 +1,16 @@
 //---------------------------------------------------------------------------
 
-#include <application/Starter.h>
+#include <application/starter.h>
 
 //---------------------------------------------------------------------------
 
 namespace asd
 {
-	static Entrance open([]()
-    {
-        // PLACE YOUR CODE HERE! GOOD LUCK :)
-
-        return 0;
-    });
+	static entrance open([]() {
+		// Let's start from here!
+		
+		return 0;
+	});
 }
 
 //---------------------------------------------------------------------------

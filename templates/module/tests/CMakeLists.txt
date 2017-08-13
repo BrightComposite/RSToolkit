@@ -2,7 +2,7 @@
 #	@module_path@ test facility
 #--------------------------------------------------------
 
-project(@module_path@ VERSION 0.1)
+project(@module_path@test VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -23,6 +23,8 @@ module(APPLICATION)
 	endsources()
 endmodule()
 
-load_third_party(vld)
+if(${WIN32})
+	vendor(vld)
+endif()
 
 #--------------------------------------------------------

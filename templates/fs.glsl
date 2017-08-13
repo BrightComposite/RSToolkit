@@ -10,7 +10,6 @@ layout(std140) uniform Color
 
 out vec4 fscolor;
 
-void main(void)
-{
+void main(void) {
 	fscolor = color;
 }

@@ -9,11 +9,17 @@ project(asd VERSION 0.1)
 #--------------------------------------------------------
 
 include(tools/workspace.cmake)
+include(tools/module.cmake)
 
-add_module(ui-themes modules)
+add_module(ui-themes)
 
-add_module(core tests)
-add_module(math tests)
-add_module(ui   tests)
+add_test(core)
+add_test(math)
+add_test(ui)
+add_test(message)
+add_test(handle)
+add_test(aligned)
+add_test(space)
+add_test(glx)
 
-#--------------------------------------------------------
+#add_command(check)

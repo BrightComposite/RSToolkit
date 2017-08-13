@@ -45,7 +45,7 @@ namespace asd
 
 	private:
 		template<class ... A>
-		friend class Handle;
+		friend class handle;
 
 		template<class T>
 		friend inline T & getsingleton();

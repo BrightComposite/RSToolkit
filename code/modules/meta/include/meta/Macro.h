@@ -32,7 +32,7 @@
 #ifdef _MSC_VER
 #define forceinline __forceinline
 #else
-#define forceinline inline
+#define forceinline __attribute__((always_inline))
 #define __vectorcall
 #define __thiscall
 #endif
@@ -196,6 +196,14 @@ namespace asd
 #define deny_copy(... /* Class */) \
     __VA_ARGS__(const __VA_ARGS__ &) = delete; \
     __VA_ARGS__ & operator = (const __VA_ARGS__ &) = delete
+
+#define deny_move(... /* Class */) \
+    __VA_ARGS__(__VA_ARGS__ &&) = delete; \
+    __VA_ARGS__ & operator = (__VA_ARGS__ &&) = delete
+
+#define deny_assign(... /* Class */) \
+    deny_copy(__VA_ARGS__); \
+    deny_move(__VA_ARGS__)
 
 #define member_cast(member, ... /* type */)        \
     operator __VA_ARGS__ & () &                    \

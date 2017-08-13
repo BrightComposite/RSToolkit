@@ -50,6 +50,18 @@ namespace asd
 		{
 			Cast<Y, T>::cast(out, forward<Y>(x));
 		}
+		
+		template<class T, class Y, useif<std::is_convertible<Y &&, T &>::value>, useif<(based_on<T, Y>::value || based_on<Y, T>::value)>>
+		inline void to(T & out, const Y & x)
+		{
+			out = static_cast<T>(x);
+		}
+		
+		template<class T, class Y, useif<can_cast<Y, T>::value>>
+		inline void to(T & out, const Y & x)
+		{
+			Cast<Y, T>::cast(out, x);
+		}
 
 		template<class T, class Y, useif<
 			std::is_pointer<T>::value || std::is_integral<T>::value,

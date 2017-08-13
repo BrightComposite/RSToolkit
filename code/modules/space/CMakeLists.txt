@@ -1,5 +1,5 @@
 #--------------------------------------------------------
-#	asd Space
+#	asd space
 #--------------------------------------------------------
 
 project(space VERSION 0.1)
@@ -20,7 +20,7 @@ module(INLINE)
 
 		group(include Headers)
 		files(
-			Spatial.h
+			spatial.h
 		)
 	endsources()
 endmodule()

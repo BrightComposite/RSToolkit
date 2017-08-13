@@ -4,7 +4,7 @@
 #include <chrono>
 #include <random>
 
-#include <application/Starter.h>
+#include <application/starter.h>
 
 #include <core/function/Function.h>
 #include <core/function/Thread.h>
@@ -38,7 +38,7 @@
 
 namespace asd
 {
-	static Entrance open([]() {
+	static entrance open([]() {
 		FreeTypeDecoder::initialize(); //! GLOBAL STATE
 		FreeImageConverter::initialize(); //! GLOBAL STATE
 
@@ -47,7 +47,7 @@ namespace asd
 		auto graphics = GraphicsProvider::provide(); /// Create graphics from Display
 		graphics->setClearColor(backgroundColor);
 
-		Handle<Window> window(graphics, 0, 0, 800, 600, "asd::ui test"); /// MAKE FACTORY?
+		handle<Window> window(graphics, 0, 0, 800, 600, "asd::ui test"); /// MAKE FACTORY?
 		window->setBackgroundColor(backgroundColor);
 
 		StandartUIPalette palette(window);
@@ -74,30 +74,30 @@ namespace asd
 //			};
 
 			onmessage(WindowCloseMessage) {
-				ThreadLoop::stop();
+				thread_loop::stop();
 			};
 		}
 
 #ifdef WIN32
-		ThreadLoop::add(processWindowMessage);
+		thread_loop::add(processWindowMessage);
 #endif
 		
-		ThreadLoop::add(make_method(window, mouseUpdate));
+		thread_loop::add(make_method(window, mouseUpdate));
 
 /*
 		thread th([&window]() {
 			subscription(WindowCloseMessage, *window) {
-				ThreadLoop::stop();
+				thread_loop::stop();
 			};
 */
-		ThreadLoop::add(make_method(window, update));
+		thread_loop::add(make_method(window, update));
 /*
-			ThreadLoop::run();
+			thread_loop::run();
 		});
 */
 		std::cout << "Run thread loop..." << std::endl;
 		
-		ThreadLoop::run();
+		thread_loop::run();
 
 		return 0;
 	});

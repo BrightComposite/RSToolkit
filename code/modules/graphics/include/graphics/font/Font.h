@@ -7,14 +7,14 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/addition/Named.h>
+#include <core/addition/named.h>
 #include <container/Map.h>
 
 #include <io/FileSystem.h>
 
-#include <math/Rect.h>
+#include <math/rect.h>
 
-#include <graphics/image/Image.h>
+#include <graphics/image/image.h>
 
 //---------------------------------------------------------------------------
 
@@ -22,30 +22,30 @@ namespace asd
 {
 	class Font;
 	class Font;
-	class Graphics;
+	class graphics;
 
 	using asd::Font; // specially for Windows Font
 
-	class SymbolData : public ImageData
+	class SymbolData : public image_data
 	{
 	public:
-		SymbolData() : ImageData() {}
-		SymbolData(const SymbolData & data) : ImageData(data), left(data.left), top(data.top), advance(data.advance), character(data.character) {}
+		SymbolData() : image_data() {}
+		SymbolData(const SymbolData & data) : image_data(data), left(data.left), top(data.top), advance(data.advance), character(data.character) {}
 		virtual ~SymbolData() {}
 
 		int left = 0, top = 0;
-		IntSize advance;
+		math::int_size advance;
 		wchar_t character;
 	};
 
-	class Symbol : public Object
+	class Symbol : public object
 	{
 		friend class Font;
-		friend class Graphics;
+		friend class graphics;
 
 	public:
 		api(graphics) Symbol(const SymbolData & data);
-		api(graphics) Symbol(Graphics * graphics, const SymbolData & data);
+		api(graphics) Symbol(asd::graphics * graphics, const SymbolData & data);
 		virtual ~Symbol() {}
 
 		int left() const
@@ -58,7 +58,7 @@ namespace asd
 			return _top;
 		}
 
-		const IntSize & advance() const
+		const math::int_size & advance() const
 		{
 			return _advance;
 		}
@@ -68,20 +68,20 @@ namespace asd
 			return _character;
 		}
 
-		const Image * image() const
+		const asd::image * image() const
 		{
 			return _image;
 		}
 
-		Graphics * graphics() const
+		asd::graphics * graphics() const
 		{
 			return _image != nullptr ? _image->graphics() : nullptr;
 		}
 
 	protected:
-		Handle<Image> _image;
+		handle<asd::image> _image;
 		int _left, _top;
-		IntSize _advance;
+		math::int_size _advance;
 		wchar_t _character;
 	};
 
@@ -98,29 +98,29 @@ namespace asd
 	template<>
 	use_enum_hash(FontStyle);
 
-	class Font : public Object
+	class Font : public object
 	{
 	public:
 		Font() {}
 		virtual ~Font() {}
 
-		api(graphics) void getSymbol(Handle<Symbol> & output, Graphics * graphics, int size, wchar_t character) const;
+		api(graphics) void getSymbol(handle<Symbol> & output, graphics * graphics, int size, wchar_t character) const;
 
-		static Handle<Font> api(graphics) load(const path & filepath);
+		static handle<Font> api(graphics) load(const path & filepath);
 
-		api(graphics) IntSize getTextSize(Graphics * graphics, const string & text, int fontSize);
-		api(graphics) IntSize getTextSize(Graphics * graphics, const wstring & text, int fontSize);
+		api(graphics) math::int_size getTextSize(graphics * graphics, const string & text, int fontSize);
+		api(graphics) math::int_size getTextSize(graphics * graphics, const wstring & text, int fontSize);
 
-		static api(graphics) void set(const string & name, const Handle<Font> & font, FontStyle style = FontStyle::Regular);
-		static api(graphics) void set(const string & name, const Handle<FontFamily> & family);
-		static api(graphics) void set(const string & name, const initializer_list<pair<FontStyle, Handle<Font>>> & list);
-		static api(graphics) Handle<Font> get(const string & name, FontStyle style = FontStyle::Regular);
-		static api(graphics) Handle<Font> obtain(const string & name, const string & path, FontStyle style = FontStyle::Regular);
+		static api(graphics) void set(const string & name, const handle<Font> & font, FontStyle style = FontStyle::Regular);
+		static api(graphics) void set(const string & name, const handle<FontFamily> & family);
+		static api(graphics) void set(const string & name, const initializer_list<pair<FontStyle, handle<Font>>> & list);
+		static api(graphics) handle<Font> get(const string & name, FontStyle style = FontStyle::Regular);
+		static api(graphics) handle<Font> obtain(const string & name, const string & path, FontStyle style = FontStyle::Regular);
 		static api(graphics) void clear();
 
 	protected:
-		virtual Handle<Symbol> & findSymbol(Graphics * graphics, int size, wchar_t character) const = 0;
-		virtual void loadSymbol(Handle<Symbol> & symbol, Graphics * graphics, int size, wchar_t character) const = 0;
+		virtual handle<Symbol> & findSymbol(graphics * graphics, int size, wchar_t character) const = 0;
+		virtual void loadSymbol(handle<Symbol> & symbol, graphics * graphics, int size, wchar_t character) const = 0;
 
 		static Dictionary<string, FontFamily> & cache()
 		{
@@ -129,13 +129,13 @@ namespace asd
 		}
 
 		template<class string_t>
-		api(graphics) IntSize textSize(Graphics * graphics, const string_t & text, int fontSize);
+		api(graphics) math::int_size textSize(graphics * graphics, const string_t & text, int fontSize);
 	};
 
-	struct FontFamily : public Shared
+	struct FontFamily : public shareable
 	{
 		FontFamily() {}
-		FontFamily(const initializer_list<pair<FontStyle, Handle<Font>>> & list) : styles(list.begin(), list.end()) {}
+		FontFamily(const initializer_list<pair<FontStyle, handle<Font>>> & list) : styles(list.begin(), list.end()) {}
 
 		Dictionary<FontStyle, Font> styles;
 	};

@@ -23,7 +23,7 @@ namespace asd
 		list.push_back(this);
 	}
 
-	Handle<Scene> Scene::construct(const Handle<Scene> & scene)
+	handle<Scene> Scene::construct(const handle<Scene> & scene)
 	{
 		if(scene->_widget->graphics() notkindof (Graphics3D))
 			throw Exception("Widget for the scene must support 3D graphics!");
@@ -87,7 +87,7 @@ namespace asd
 		_camera = camera;
 	}
 
-	void Scene::attach(Handle<SceneObject> obj)
+	void Scene::attach(handle<SceneObject> obj)
 	{
 		auto & scene = obj->_scene;
 
@@ -137,7 +137,7 @@ namespace asd
 		}
 	}
 
-	void Scene::onWidgetResize(Handle<WidgetResizeMessage> & msg, Widget & w)
+	void Scene::onWidgetResize(handle<WidgetResizeMessage> & msg, Widget & w)
 	{
 		if(_camera)
 			_camera->updateProjection();

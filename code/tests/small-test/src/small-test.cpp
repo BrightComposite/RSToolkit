@@ -8,7 +8,7 @@ using namespace asd;
 
 int main()
 {
-	Handle<Object> obj;
+	handle<Object> obj;
 	return 0;
 }
 

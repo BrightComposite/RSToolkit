@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/Handle.h>
+#include <core/handle.h>
 #include <container/Container.h>
 
 #include <stack>
@@ -18,11 +18,11 @@ namespace asd
 {
 	using std::stack;
 
-	template<typename T, class ... Owner>
-	class Stack : public stack<Handle<T, Owner...>>
+	template<typename T>
+	class Stack : public stack<handle<T>>
 	{
 	public:
-		using stack<Handle<T, Owner...>>::stack;
+		using stack<handle<T>>::stack;
 	};
 }
 

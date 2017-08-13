@@ -9,13 +9,13 @@
 
 namespace asd
 {
-	Symbol::Symbol(Graphics * graphics, const SymbolData & data) :
+	Symbol::Symbol(asd::graphics * graphics, const SymbolData & data) :
 		_image(graphics->createImage(data)), _left(data.left), _top(data.top), _advance(data.advance), _character(data.character) {}
 
 	Symbol::Symbol(const SymbolData & data) :
 		_image(nullptr), _left(data.left), _top(data.top), _advance(data.advance), _character(data.character) {}
 
-	void Font::getSymbol(Handle<Symbol> & output, Graphics * graphics, int size, wchar_t character) const
+	void Font::getSymbol(handle<Symbol> & output, graphics * graphics, int size, wchar_t character) const
 	{
 		auto & s = findSymbol(graphics, size, character);
 
@@ -25,29 +25,29 @@ namespace asd
 		output = s;
 	}
 
-	Handle<Font> Font::load(const path & filepath)
+	handle<Font> Font::load(const path & filepath)
 	{
-		Handle<Font> font;
+		handle<Font> font;
 		FontIO::load(font, filepath);
 
 		return font;
 	}
 
-	IntSize Font::getTextSize(Graphics * graphics, const string & text, int fontSize)
+	math::int_size Font::getTextSize(asd::graphics * graphics, const string & text, int fontSize)
 	{
 		return textSize<string>(graphics, text, fontSize);
 	}
-
-	IntSize Font::getTextSize(Graphics * graphics, const wstring & text, int fontSize)
+	
+	math::int_size Font::getTextSize(asd::graphics * graphics, const wstring & text, int fontSize)
 	{
 		return textSize<wstring>(graphics, text, fontSize);
 	}
 
 	template<class string_t>
-	IntSize Font::textSize(Graphics * graphics, const string_t & text, int fontSize)
+	math::int_size Font::textSize(asd::graphics * graphics, const string_t & text, int fontSize)
 	{
-		Handle<Symbol> symbol;
-		IntSize size;
+		handle<Symbol> symbol;
+		math::int_size size;
 
 		getSymbol(symbol, graphics, fontSize, ' ');
 		int space = symbol->_advance.x;
@@ -90,10 +90,10 @@ namespace asd
 		return size;
 	}
 
-	template IntSize Font::textSize<string>(Graphics * graphics, const string & text, int fontSize);
-	template IntSize Font::textSize<wstring>(Graphics * graphics, const wstring & text, int fontSize);
+	template math::int_size Font::textSize<string>(graphics * graphics, const string & text, int fontSize);
+	template math::int_size Font::textSize<wstring>(graphics * graphics, const wstring & text, int fontSize);
 
-	void Font::set(const string & name, const Handle<Font> & font, FontStyle style)
+	void Font::set(const string & name, const handle<Font> & font, FontStyle style)
 	{
 		auto & family = cache()[name];
 
@@ -103,17 +103,17 @@ namespace asd
 		family->styles[style] = font;
 	}
 
-	void Font::set(const string & name, const Handle<FontFamily> & family)
+	void Font::set(const string & name, const handle<FontFamily> & family)
 	{
 		cache()[name] = family;
 	}
 
-	void Font::set(const string & name, const initializer_list<pair<FontStyle, Handle<Font>>> & list)
+	void Font::set(const string & name, const initializer_list<pair<FontStyle, handle<Font>>> & list)
 	{
 		cache()[name].init(list);
 	}
 
-	Handle<Font> Font::get(const string & name, FontStyle style)
+	handle<Font> Font::get(const string & name, FontStyle style)
 	{
 		auto & family = cache()[name];
 
@@ -123,7 +123,7 @@ namespace asd
 		return family->styles[style];
 	}
 
-	Handle<Font> Font::obtain(const string & name, const string & path, FontStyle style)
+	handle<Font> Font::obtain(const string & name, const string & path, FontStyle style)
 	{
 		auto & family = cache()[name];
 

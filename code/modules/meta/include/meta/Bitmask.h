@@ -73,7 +73,7 @@ namespace asd
 		static const bool value = static_cast<bool>((Mask >> offset) & 1);
 	};
 
-	namespace Internals
+	namespace internals
 	{
 		template<size_t Mask, class S>
 		struct unfold_mask {};
@@ -86,7 +86,7 @@ namespace asd
 	}
 
 	template<size_t Mask, int size>
-	using unfold_mask = typename Internals::unfold_mask<Mask, std::make_integer_sequence<int, size>>::type;
+	using unfold_mask = typename internals::unfold_mask<Mask, std::make_integer_sequence<int, size>>::type;
 }
 
 //---------------------------------------------------------------------------

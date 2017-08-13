@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------
 
-#include <application/Application.h>
+#include <application/application.h>
 #include <iostream>
 #include <chrono>
 #include <conio.h>

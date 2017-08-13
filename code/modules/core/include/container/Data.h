@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/Handle.h>
+#include <core/handle.h>
 #include <container/ArrayList.h>
 
 //---------------------------------------------------------------------------
@@ -17,7 +17,7 @@ namespace asd
 	using std::array_list;
 
 	template<class T>
-	class data : public Shared
+	class data : public shareable
 	{
 	public:
 		using iterator = T *;
@@ -115,7 +115,7 @@ namespace asd
 	};
 
 	template<class T>
-	class data<const T> : public Shared
+	class data<const T> : public shareable
 	{
 	public:
 		using const_iterator = const T *;
@@ -175,25 +175,25 @@ namespace asd
 
 	public:
 		owned_data() : Base() {}
-		owned_data(const Base & rd) : Base(Memory<T>::copy(rd.ptr, rd.size), rd.size) {}
-		owned_data(const owned_data & rd) : Base(Memory<T>::copy(rd.ptr, rd.size), rd.size) {}
-		owned_data(size_t size) : Base(Memory<T>::allocate(size), size) {}
-		owned_data(const T * ptr, size_t size) : Base(Memory<T>::copy(ptr, size), size) {}
-		owned_data(const array_list<T> & v) : Base(Memory<T>::copy(v.data(), v.size()), v.size()) {}
+		owned_data(const Base & rd) : Base(memory<T>::copy(rd.ptr, rd.size), rd.size) {}
+		owned_data(const owned_data & rd) : Base(memory<T>::copy(rd.ptr, rd.size), rd.size) {}
+		owned_data(size_t size) : Base(memory<T>::allocate(size), size) {}
+		owned_data(const T * ptr, size_t size) : Base(memory<T>::copy(ptr, size), size) {}
+		owned_data(const array_list<T> & v) : Base(memory<T>::copy(v.data(), v.size()), v.size()) {}
 		template<size_t N>
-		owned_data(const T(&ptr)[N]) : Base(Memory<T>::copy(ptr, N), N) {}
+		owned_data(const T(&ptr)[N]) : Base(memory<T>::copy(ptr, N), N) {}
 
 		owned_data(owned_data && rd) : Base(move(rd.ptr), rd.size)
 		{
 			rd.size = 0;
 		}
 
-		virtual ~owned_data() { Memory<void>::free(this->ptr); }
+		virtual ~owned_data() { memory<void>::free(this->ptr); }
 
 		owned_data & operator = (const owned_data & od)
 		{
-			Memory<void>::free(this->ptr);
-			this->ptr = Memory<T>::copy(od.ptr, od.size);
+			memory<void>::free(this->ptr);
+			this->ptr = memory<T>::copy(od.ptr, od.size);
 			this->size = od.size;
 
 			return *this;
@@ -209,8 +209,8 @@ namespace asd
 
 		auto alloc(size_t size)
 		{
-			Memory<void>::free(this->ptr);
-			this->ptr = Memory<T>::allocate(size);
+			memory<void>::free(this->ptr);
+			this->ptr = memory<T>::allocate(size);
 			this->size = size;
 
 			return this->ptr;
@@ -218,7 +218,7 @@ namespace asd
 
 		auto realloc(size_t size)
 		{
-			this->ptr = Memory<T>::reallocate(this->ptr, size);
+			this->ptr = memory<T>::reallocate(this->ptr, size);
 			this->size = size;
 
 			return this->ptr;
@@ -226,8 +226,8 @@ namespace asd
 
 		void set(const owned_data<T> & od)
 		{
-			Memory<void>::free(this->ptr);
-			this->ptr = Memory<T>::copy(od.ptr, od.size);
+			memory<void>::free(this->ptr);
+			this->ptr = memory<T>::copy(od.ptr, od.size);
 			this->size = od.size;
 		}
 
@@ -239,22 +239,22 @@ namespace asd
 
 		void set(const T * ptr, size_t size)
 		{
-			Memory<void>::free(this->ptr);
-			this->ptr = Memory<T>::copy(ptr, size);
+			memory<void>::free(this->ptr);
+			this->ptr = memory<T>::copy(ptr, size);
 			this->size = size;
 		}
 
 		template<size_t N>
 		void set(const T(& ptr)[N])
 		{
-			Memory<void>::free(this->ptr);
-			this->ptr = Memory<T>::copy(ptr, N);
+			memory<void>::free(this->ptr);
+			this->ptr = memory<T>::copy(ptr, N);
 			this->size = N;
 		}
 
 		void apply(const T * ptr)
 		{
-			Memory<T>::move(this->ptr, ptr, this->size);
+			memory<T>::move(this->ptr, ptr, this->size);
 		}
 
 		T * send()
@@ -271,7 +271,7 @@ namespace asd
 	class owned_data<const T> {};
 
 	template<>
-	class data<void> : public Shared
+	class data<void> : public shareable
 	{
 	public:
 		data() : ptr(nullptr), size(0) {}
@@ -307,7 +307,7 @@ namespace asd
 	};
 
 	template<>
-	class data<const void> : public Shared
+	class data<const void> : public shareable
 	{
 	public:
 		data() : ptr(nullptr), size(0) {}
@@ -350,17 +350,17 @@ namespace asd
 	public:
 		owned_data() : Base() {}
 		template<class T>
-		owned_data(const data<T> & rd) : Base(Memory<T>::copy(rd.ptr, rd.size), rd.size) {}
+		owned_data(const data<T> & rd) : Base(memory<T>::copy(rd.ptr, rd.size), rd.size) {}
 		template<class T>
-		owned_data(const owned_data<T> & rd) : Base(Memory<T>::copy(rd.ptr, rd.size), rd.size) {}
-		owned_data(size_t size) : Base(Memory<void>::allocate(size), size) {}
+		owned_data(const owned_data<T> & rd) : Base(memory<T>::copy(rd.ptr, rd.size), rd.size) {}
+		owned_data(size_t size) : Base(memory<void>::allocate(size), size) {}
 		template<class T, useif<not_same_type<T, void>::value>>
-		owned_data(const T * const ptr, size_t size) : Base(Memory<T>::copy(ptr, size), size) {}
-		owned_data(const void * const ptr, size_t size) : Base(Memory<void>::copy(ptr, size), size) {}
+		owned_data(const T * const ptr, size_t size) : Base(memory<T>::copy(ptr, size), size) {}
+		owned_data(const void * const ptr, size_t size) : Base(memory<void>::copy(ptr, size), size) {}
 		template<class T>
-		owned_data(const array_list<T> & v) : Base(Memory<T>::copy(v.data(), v.size()), v.size()) {}
+		owned_data(const array_list<T> & v) : Base(memory<T>::copy(v.data(), v.size()), v.size()) {}
 		template<class T, size_t N>
-		owned_data(const T(&ptr)[N]) : Base(Memory<T>::copy(ptr, N), N) {}
+		owned_data(const T(&ptr)[N]) : Base(memory<T>::copy(ptr, N), N) {}
 
 		owned_data(owned_data && rd) : Base(rd.ptr, rd.size)
 		{
@@ -368,11 +368,11 @@ namespace asd
 			rd.size = 0;
 		}
 
-		virtual ~owned_data() { Memory<void>::free(ptr); }
+		virtual ~owned_data() { memory<void>::free(ptr); }
 
 		owned_data & operator = (const owned_data & rd)
 		{
-			ptr = Memory<void>::copy(rd.ptr, rd.size);
+			ptr = memory<void>::copy(rd.ptr, rd.size);
 			size = rd.size;
 
 			return *this;
@@ -388,8 +388,8 @@ namespace asd
 
 		auto alloc(size_t size)
 		{
-			Memory<void>::free(this->ptr);
-			this->ptr = Memory<void>::allocate(size);
+			memory<void>::free(this->ptr);
+			this->ptr = memory<void>::allocate(size);
 			this->size = size;
 
 			return this->ptr;
@@ -397,7 +397,7 @@ namespace asd
 
 		auto realloc(size_t size)
 		{
-			this->ptr = Memory<void>::reallocate(this->ptr, size);
+			this->ptr = memory<void>::reallocate(this->ptr, size);
 			this->size = size;
 
 			return this->ptr;
@@ -405,8 +405,8 @@ namespace asd
 
 		void set(const owned_data<void> & od)
 		{
-			Memory<void>::free(ptr);
-			ptr = Memory<void>::copy(od.ptr, od.size);
+			memory<void>::free(ptr);
+			ptr = memory<void>::copy(od.ptr, od.size);
 			size = od.size;
 		}
 
@@ -418,22 +418,22 @@ namespace asd
 
 		void set(const void * ptr, size_t size)
 		{
-			Memory<void>::free(this->ptr);
-			this->ptr = Memory<void>::copy(ptr, size);
+			memory<void>::free(this->ptr);
+			this->ptr = memory<void>::copy(ptr, size);
 			this->size = size;
 		}
 
 		template<class T, size_t N>
 		void set(const T(&ptr)[N])
 		{
-			Memory<void>::free(this->ptr);
-			this->ptr = Memory<T>::copy(ptr, N);
+			memory<void>::free(this->ptr);
+			this->ptr = memory<T>::copy(ptr, N);
 			this->size = N * sizeof(T);
 		}
 
 		void apply(const void * ptr)
 		{
-			Memory<void>::move(this->ptr, ptr, size);
+			memory<void>::move(this->ptr, ptr, size);
 		}
 
 		void * send()

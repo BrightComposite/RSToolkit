@@ -7,9 +7,9 @@
 
 //---------------------------------------------------------------------------
 
-#include <graphics/image/ImageData.h>
+#include <graphics/image/image_data.h>
 #include <container/Map.h>
-#include <core/addition/Singleton.h>
+#include <core/addition/singleton.h>
 #include <core/String.h>
 #include <core/Exception.h>
 
@@ -18,7 +18,7 @@
 namespace asd
 {
 	class ImageIO;
-	apistruct(graphics) Singleton<ImageIO>;
+	apistruct(graphics) singleton<ImageIO>;
 
 	class ImageDecoder
 	{
@@ -28,7 +28,7 @@ namespace asd
 		virtual ~ImageDecoder() {}
 
 	protected:
-		virtual void decode(ImageData * output, const string & type, const ByteData * raw) = 0;
+		virtual void decode(image_data * output, const string & type, const ByteData * raw) = 0;
 	};
 
 	class ImageEncoder
@@ -39,7 +39,7 @@ namespace asd
 		virtual ~ImageEncoder() {}
 
 	protected:
-		virtual void encode(OwnedByteData * output, const string & type, const ImageData * image) = 0;
+		virtual void encode(OwnedByteData * output, const string & type, const image_data * image) = 0;
 	};
 
 	class ImageConverter : public ImageDecoder, public ImageEncoder
@@ -69,10 +69,10 @@ namespace asd
 		virtual ~ImageWriteException() {}
 	};
 
-	class ImageIO : public Singleton<ImageIO>
+	class ImageIO : public singleton<ImageIO>
 	{
 	public:
-		static void read(ImageData * output, const string & type, const ByteData * raw)
+		static void read(image_data * output, const string & type, const ByteData * raw)
 		{
 			auto & decoder = instance().decoders[type];
 
@@ -82,7 +82,7 @@ namespace asd
 			decoder->decode(output, type, raw);
 		}
 
-		static void write(OwnedByteData * output, const string & type, const ImageData * image)
+		static void write(OwnedByteData * output, const string & type, const image_data * image)
 		{
 			auto & encoder = instance().encoders[type];
 
@@ -92,8 +92,8 @@ namespace asd
 			encoder->encode(output, type, image);
 		}
 
-		static api(graphics) void load(ImageData * output, const path & filepath);
-		static api(graphics) void save(const path & filepath, const ImageData * image);
+		static api(graphics) void load(image_data * output, const path & filepath);
+		static api(graphics) void save(const path & filepath, const image_data * image);
 
 		static ImageDecoder * getDecoder(const string & type)
 		{
@@ -106,7 +106,7 @@ namespace asd
 		}
 
 		template<class Decoder, useif<
-			based_on<Decoder, Singleton<Decoder>>::value,
+			based_on<Decoder, singleton<Decoder>>::value,
 			based_on<Decoder, ImageDecoder>::value
 			>
 		>
@@ -116,7 +116,7 @@ namespace asd
 		}
 
 		template<class Encoder, useif<
-			based_on<Encoder, Singleton<Encoder>>::value,
+			based_on<Encoder, singleton<Encoder>>::value,
 			based_on<Encoder, ImageEncoder>::value
 			>
 		>
@@ -126,7 +126,7 @@ namespace asd
 		}
 
 		template<class Converter, useif<
-			based_on<Converter, Singleton<Converter>>::value,
+			based_on<Converter, singleton<Converter>>::value,
 			based_on<Converter, ImageDecoder>::value,
 			based_on<Converter, ImageEncoder>::value
 			>

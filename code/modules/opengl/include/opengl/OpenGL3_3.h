@@ -5,8 +5,8 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/addition/Cached.h>
-#include <core/addition/Singleton.h>
+#include <core/addition/cached.h>
+#include <core/addition/singleton.h>
 #include <container/ArrayList.h>
 
 #include <message/Subject.h>
@@ -52,8 +52,6 @@ namespace asd
 		class GLShaderProgram;
 	}
 
-	link_class(opengl3_3, OpenGL3_3::GLGraphics, Class<Graphics3D>);
-	
 	namespace OpenGL3_3
 	{
 	#if BOOST_OS_WINDOWS
@@ -99,25 +97,25 @@ namespace asd
 
 			api(opengl3_3) void bind(const GLShaderProgram * program);
 
-			virtual api(opengl3_3) void bind(const Handle<Texture> & texture, uint index) override;
+			virtual api(opengl3_3) void bind(const handle<Texture> & texture, uint index) override;
 
-			virtual api(opengl3_3) void clip(const IntRect & rect) override;
+			virtual api(opengl3_3) void clip(const int_rect & rect) override;
 			virtual api(opengl3_3) void present() const override;
 
 			virtual api(opengl3_3) void printInfo();
 			virtual api(opengl3_3) void printDebug();
 			virtual api(opengl3_3) void checkForErrors() override;
 
-			virtual api(opengl3_3) Handle<Image> createImage(const ImageData & data) override;
-			virtual api(opengl3_3) Handle<Surface> createSurface(UISpace * space) override;
-			virtual api(opengl3_3) Handle<TextureSurface> createSurface(const IntSize & size) override;
+			virtual api(opengl3_3) handle<asd::image> createImage(const image_data & data) override;
+			virtual api(opengl3_3) handle<asd::surface> createSurface(ui_space * space) override;
+			virtual api(opengl3_3) handle<TextureSurface> createSurface(const int_size & size) override;
 
-			virtual api(opengl3_3) Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) override;
-			virtual api(opengl3_3) Handle<MeshBuilder> createMesh() override;
+			virtual api(opengl3_3) handle<vertex_buffer> createVertexBuffer(vertex_layout * layout, const vertex_data & data) override;
+			virtual api(opengl3_3) handle<mesh_builder> createMesh() override;
 
-			virtual api(opengl3_3) void addShaderProgram(const string & id, VertexLayout * layout, ShaderCodeSet & codeSet) override;
+			virtual api(opengl3_3) void addShaderProgram(const string & id, vertex_layout * layout, ShaderCodeSet & codeSet) override;
 
-			virtual Handle<GraphicsDebug> getDebug() const override
+			virtual handle<GraphicsDebug> getDebug() const override
 			{
 				return nullptr;
 			}
@@ -135,7 +133,7 @@ namespace asd
 			api(opengl3_3) GLGraphics();
 			virtual api(opengl3_3) ~GLGraphics();
 
-			virtual api(opengl3_3) Handle<UniformAdapter> & init(Handle<UniformAdapter> & adapter, const char * name, ShaderType shader, int index, size_t size) override;
+			virtual api(opengl3_3) handle<UniformAdapter> & init(handle<UniformAdapter> & adapter, const char * name, ShaderType shader, int index, size_t size) override;
 
 			virtual api(opengl3_3) void initFacilities() override;
 

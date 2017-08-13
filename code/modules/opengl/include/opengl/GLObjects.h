@@ -22,20 +22,20 @@ namespace asd
 
 	namespace OpenGL
 	{
-		class GLImage : public Image
+		class GLImage : public image
 		{
 			friend class GLTextureSurface;
 
 		public:
-			api(opengl3_3) GLImage(GLGraphics * graphics, uint width, uint height, ImageFormat format);
-			api(opengl3_3) GLImage(GLGraphics * ctx, const ImageData & data);
+			api(opengl3_3) GLImage(GLGraphics * graphics, uint width, uint height, image_format format);
+			api(opengl3_3) GLImage(GLGraphics * ctx, const image_data & data);
 
 			virtual api(opengl3_3) ~GLImage();
 
-			api(opengl3_3) void setSize(const IntSize & size);
+			api(opengl3_3) void setSize(const int_size & size);
 
 			virtual api(opengl3_3) void apply() const override;
-			virtual api(opengl3_3) void requestData(ImageData * output) const override;
+			virtual api(opengl3_3) void requestData(image_data * output) const override;
 
 		protected:
 			float2 _scale;
@@ -46,27 +46,25 @@ namespace asd
 
 		//---------------------------------------------------------------------------
 
-		class GLVertexBuffer : public VertexBuffer
+		class GLVertexBuffer : public vertex_buffer
 		{
-			friend_owned_handle(GLVertexBuffer, GLGraphics);
-
+			friend_owned_handle(GLVertexBuffer)
+			
 		public:
 			virtual api(opengl3_3) ~GLVertexBuffer();
 
 			virtual api(opengl3_3) void apply() const override;
 
 		protected:
-			api(opengl3_3) GLVertexBuffer(GLGraphics * graphics, VertexLayout * layout, const VertexData & vd);
+			api(opengl3_3) GLVertexBuffer(GLGraphics * graphics, vertex_layout * layout, const vertex_data & vd);
 
 			uint handle;
 		};
 
-		class GLIndexBuffer : public MeshBuffer
+		class GLIndexBuffer : public mesh_buffer
 		{
-			friend_owned_handle(GLIndexBuffer, GLGraphics);
-
 		public:
-			api(opengl3_3) GLIndexBuffer(GLGraphics * graphics, const VertexIndices & indices);
+			api(opengl3_3) GLIndexBuffer(GLGraphics * graphics, const vertex_indices & indices);
 			virtual api(opengl3_3) ~GLIndexBuffer();
 
 			virtual api(opengl3_3) void apply() const override;
@@ -88,7 +86,7 @@ namespace asd
 		template<GLMeshType type>
 		class GLMesh {};
 
-		class GLMeshBuilder : public MeshBuilder
+		class GLMeshBuilder : public mesh_builder
 		{
 			template<GLMeshType type>
 			friend class GLMesh;
@@ -97,13 +95,13 @@ namespace asd
 			api(opengl3_3) GLMeshBuilder(GLGraphics * graphics);
 			virtual api(opengl3_3) ~GLMeshBuilder();
 
-			virtual api(opengl3_3) MeshBuilder * buffer(const Handle<VertexBuffer> & buffer) override final;
-			virtual api(opengl3_3) MeshBuilder * indices(const VertexIndices & indices) override final;
-			virtual api(opengl3_3) MeshBuilder * offset(uint offset) override final;
-			virtual api(opengl3_3) MeshBuilder * topology(VertexTopology t) override final;
-			virtual api(opengl3_3) MeshBuilder * makeInstanced(VertexLayout *) override final;
+			virtual api(opengl3_3) mesh_builder * buffer(const handle<vertex_buffer> & buffer) override final;
+			virtual api(opengl3_3) mesh_builder * indices(const vertex_indices & indices) override final;
+			virtual api(opengl3_3) mesh_builder * offset(uint offset) override final;
+			virtual api(opengl3_3) mesh_builder * topology(vertex_topology t) override final;
+			virtual api(opengl3_3) mesh_builder * makeInstanced(vertex_layout *) override final;
 
-			virtual api(opengl3_3) Handle<Mesh> ready() override final;
+			virtual api(opengl3_3) handle<mesh> ready() override final;
 
 		protected:
 			GLGraphics * _graphics;
@@ -111,10 +109,10 @@ namespace asd
 			uint _offset = 0;
 			uint _verticesCount = 0;
 			uint _indicesCount = 0;
-			ArrayList<VertexBuffer> _buffers;
-			Handle<GLIndexBuffer> _ibuffer = nullptr;
-			VertexLayout * _instancedLayout = nullptr;
-			Unique<InstancedMeshData> _instancedData = nullptr;
+			ArrayList<vertex_buffer> _buffers;
+			handle<GLIndexBuffer> _ibuffer = nullptr;
+			vertex_layout * _instancedLayout = nullptr;
+			unique<instanced_mesh_data> _instancedData = nullptr;
 		};
 
 		//---------------------------------------------------------------------------
@@ -127,8 +125,8 @@ namespace asd
 
 		class GLUniformAdapter : public UniformAdapter
 		{
-			friend_owned_handle(GLUniformAdapter, GLGraphics);
-
+			friend_owned_handle(GLUniformAdapter)
+		
 		public:
 			virtual api(opengl3_3) ~GLUniformAdapter();
 
@@ -165,18 +163,18 @@ namespace asd
 		class GLShaderProgram : public ShaderProgram
 		{
 		public:
-			api(opengl3_3) GLShaderProgram(GLGraphics * graphics, const string & filename, VertexLayout * layout, ShaderCodeState state = ShaderCodeState::Raw);
-			api(opengl3_3) GLShaderProgram(GLGraphics * graphics, const string & key, VertexLayout * layout, const ShaderCodeSet & codeSet, ShaderCodeState state = ShaderCodeState::Raw);
+			api(opengl3_3) GLShaderProgram(GLGraphics * graphics, const string & filename, vertex_layout * layout, ShaderCodeState state = ShaderCodeState::Raw);
+			api(opengl3_3) GLShaderProgram(GLGraphics * graphics, const string & key, vertex_layout * layout, const ShaderCodeSet & codeSet, ShaderCodeState state = ShaderCodeState::Raw);
 			api(opengl3_3) ~GLShaderProgram();
 
 			virtual void apply() const override;
 
 			GLGraphics * graphics;
 			GLuint id = 0;
-			VertexLayout * layout;
+			vertex_layout * layout;
 
 		protected:
-			api(opengl3_3) GLShaderProgram(GLGraphics * graphics, VertexLayout * layout);
+			api(opengl3_3) GLShaderProgram(GLGraphics * graphics, vertex_layout * layout);
 
 			Dictionary<ShaderType, GLShader> _shaders;
 		};
@@ -187,14 +185,14 @@ namespace asd
 
 		public:
 			api(opengl3_3) GLShader(GLShaderProgram * program, const String & path, ShaderCodeState state, GLenum type);
-			api(opengl3_3) GLShader(GLShaderProgram * program, const Handle<ShaderCode> & code, ShaderCodeState state, GLenum type);
+			api(opengl3_3) GLShader(GLShaderProgram * program, const handle<ShaderCode> & code, ShaderCodeState state, GLenum type);
 			virtual api(opengl3_3) ~GLShader();
 
 		protected:
 			api(opengl3_3) void read(const String & filename, GLenum type);
 			api(opengl3_3) void compile(const String & filename, GLenum type);
-			api(opengl3_3) void initRaw(const Handle<ShaderCode> & code, GLenum type);
-			api(opengl3_3) void initCompiled(const Handle<ShaderCode> & code, GLenum type);
+			api(opengl3_3) void initRaw(const handle<ShaderCode> & code, GLenum type);
+			api(opengl3_3) void initCompiled(const handle<ShaderCode> & code, GLenum type);
 
 			GLShaderProgram * program;
 			GLuint id;
@@ -202,12 +200,12 @@ namespace asd
 
 		//---------------------------------------------------------------------------
 
-		class GLSurface : public Surface
+		class GLSurface : public surface
 		{
 			friend class GLGraphics;
 
 		public:
-			api(opengl3_3) GLSurface(GLGraphics * graphics, const IntSize & size);
+			api(opengl3_3) GLSurface(GLGraphics * graphics, const int_size & size);
 			virtual api(opengl3_3) ~GLSurface();
 
 			virtual api(opengl3_3) void clear() const override;
@@ -227,7 +225,7 @@ namespace asd
 			deny_copy(DepthSurface);
 
 		public:
-			api(opengl3_3) DepthSurface(GLGraphics * graphics, const IntSize & size);
+			api(opengl3_3) DepthSurface(GLGraphics * graphics, const int_size & size);
 			virtual ~DepthSurface() {}
 
 			virtual api(opengl3_3) void apply() const override;
@@ -239,13 +237,13 @@ namespace asd
 			deny_copy(UISurface);
 
 		public:
-			api(opengl3_3) UISurface(GLGraphics * graphics, UISpace * space);
+			api(opengl3_3) UISurface(GLGraphics * graphics, ui_space * space);
 			virtual ~UISurface() {}
 
 			virtual api(opengl3_3) void apply() const override;
 
 			virtual api(opengl3_3) void present() const override;
-			virtual api(opengl3_3) void requestData(ImageData * data) const override;
+			virtual api(opengl3_3) void requestData(image_data * data) const override;
 
 			virtual api(opengl3_3) void resize() override;
 
@@ -253,11 +251,11 @@ namespace asd
 			void createRenderTarget();
 			void releaseRenderTarget();
 
-			void onUIResize(Handle<UIResizeMessage> & msg, UISpace & space);
-			void onUIFullscreen(Handle<UIFullscreenMessage> & msg, UISpace & space);
-			void onUIDestroy(Handle<UIDestroyMessage> & msg, UISpace & space);
+			void onUIResize(handle<UIResizeMessage> & msg, ui_space & space);
+			void onUIFullscreen(handle<UIFullscreenMessage> & msg, ui_space & space);
+			void onUIDestroy(handle<UIDestroyMessage> & msg, ui_space & space);
 
-			UISpace * _space;
+			ui_space * _space;
 		};
 
 		class GLTextureSurface : public TextureSurface
@@ -265,7 +263,7 @@ namespace asd
 			friend class GLGraphics;
 
 		public:
-			api(opengl3_3) GLTextureSurface(GLGraphics * graphics, const IntSize & size);
+			api(opengl3_3) GLTextureSurface(GLGraphics * graphics, const int_size & size);
 			virtual api(opengl3_3) ~GLTextureSurface();
 
 			virtual api(opengl3_3) void apply() const override;
@@ -274,9 +272,9 @@ namespace asd
 
 			virtual api(opengl3_3) void present() const override;
 
-			virtual api(opengl3_3) void requestData(ImageData * data) const override;
+			virtual api(opengl3_3) void requestData(image_data * data) const override;
 
-			virtual api(opengl3_3) void addBuffer(Handle<Texture> & texture, ImageFormat format = ImageFormat::rgb) override;
+			virtual api(opengl3_3) void addBuffer(handle<Texture> & texture, image_format format = image_format::rgb) override;
 
 		protected:
 			virtual api(opengl3_3) void resize() override;

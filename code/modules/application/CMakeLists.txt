@@ -1,5 +1,5 @@
 #--------------------------------------------------------
-#	asd Application
+#	asd application
 #--------------------------------------------------------
 
 project(application VERSION 0.1)
@@ -21,15 +21,15 @@ module(STATIC)
 
 		group(include Headers)
 		files(
-			Application.h
-			Starter.h
-			ThreadLoop.h
+			application.h
+			starter.h
+			thread_loop.h
 			)
 
 		group(src Sources)
 		files(
-			Application.cpp
-			ThreadLoop.cpp
+			application.cpp
+			thread_loop.cpp
 			)
 	endsources()
 endmodule()

@@ -19,7 +19,7 @@
 
 namespace asd
 {
-	class Component : public Object
+	class Component : public object
 	{
 		template<class, class>
 		friend class ComponentSet;
@@ -39,7 +39,7 @@ namespace asd
 				if(i != _links.begin())
 					s << ", ";
 
-				s << valueof(i)->className();
+				s << valueof(i)->class_name();
 			}
 
 			return s;
@@ -65,7 +65,7 @@ namespace asd
 	{
 	public:
 		LinkedComponentException(Component * c) :
-			Exception("Can't remove component of the ", c->className(), " class! Linked components: ", c->printLinks()) {}
+			Exception("Can't remove component of the ", c->class_name(), " class! Linked components: ", c->printLinks()) {}
 
 		virtual ~LinkedComponentException() {}
 	};
@@ -97,7 +97,7 @@ namespace asd
 		}
 
 		template<class T, class C, useif<based_on<T, Origin>::value, can_construct<T, Context *>::value>>
-		Handle<T> link(C * component)
+		handle<T> link(C * component)
 		{
 			auto c = this->template require<T>();
 			c->link(component);
@@ -133,13 +133,13 @@ namespace asd
 	namespace cast
 	{
 		template<class T, class Y, selectif(0)<!is_pointer<Y>::value>, useif<has_components<Y>::value>>
-		inline Handle<T> as(Y && x)
+		inline handle<T> as(Y && x)
 		{
 			return forward<Y>(x).components->template require<T>();
 		}
 
 		template<class T, class Y, selectif(1)<is_pointer<Y>::value>, useif<has_components<std::remove_pointer_t<Y>>::value>>
-		inline Handle<T> as(Y x)
+		inline handle<T> as(Y x)
 		{
 			return x->components->template require<T>();
 		}

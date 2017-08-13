@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/addition/Contents.h>
+#include <core/addition/contents.h>
 
 //---------------------------------------------------------------------------
 
@@ -41,7 +41,7 @@ namespace asd
 		using Internals::Message<Msg>::Message;											\
 	};																					\
 																						\
-	type_getter(macrowrap(DestGetter<T, Msg>), T, pp_cat(DestOf, Msg), Empty);
+	type_getter(macrowrap(DestGetter<T, Msg>), T, pp_cat(DestOf, Msg), empty);
 
 	template<class Dst, typename Msg>
 	using message_dst_t = typename DestGetter<Dst, Msg>::type;

@@ -26,7 +26,7 @@ namespace asd
 #define _mm_reverse_ps(a) _mm_shuffle_ps(a, a, reverse_shuffle_4)
 #define _mm_reverse_pd(a) _mm_shuffle_ps(a, a, reverse_shuffle_2)
 
-	namespace Internals
+	namespace internals
 	{
 		template<class T, template<class T> class Constant, class S>
 		struct intrinsic_mask {};
@@ -38,7 +38,7 @@ namespace asd
 		template<useif<Intrinsic<T, N>::implemented>>
 		static inline const auto & get()
 		{
-			return Internals::intrinsic_mask<T, Constant, unfold_mask<Mask, N>>::get();
+			return internals::intrinsic_mask<T, Constant, unfold_mask<Mask, N>>::get();
 		}
 	};
 
@@ -1863,7 +1863,7 @@ namespace asd
 	};
 
 
-	namespace Internals
+	namespace internals
 	{
 		template<class T, template<class T> class Constant, bool ... Values>
 		struct intrinsic_mask<T, Constant, std::integer_sequence<bool, Values...>>

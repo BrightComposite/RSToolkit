@@ -15,14 +15,14 @@
 
 namespace asd
 {
-	class FreeImageConverter : public ImageConverter, public Singleton<FreeImageConverter>
+	class FreeImageConverter : public ImageConverter, public singleton<FreeImageConverter>
 	{
 	public:
 		api(freeimage) FreeImageConverter();
 		virtual api(freeimage) ~FreeImageConverter();
 
-		virtual api(freeimage) void decode(ImageData * output, const string & type, const ByteData * raw) override;
-		virtual api(freeimage) void encode(OwnedByteData * output, const string & type, const ImageData * image) override;
+		virtual api(freeimage) void decode(image_data * output, const string & type, const ByteData * raw) override;
+		virtual api(freeimage) void encode(OwnedByteData * output, const string & type, const image_data * image) override;
 
 		static void initialize()
 		{

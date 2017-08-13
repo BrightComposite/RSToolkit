@@ -7,17 +7,17 @@
 
 namespace asd
 {
-	ColoredBackgroundDrawer::ColoredBackgroundDrawer(const array_list<Unique<Color>> & colors) : BackgroundDrawer()
+	ColoredBackgroundDrawer::ColoredBackgroundDrawer(const array_list<unique<Color>> & colors) : BackgroundDrawer()
 	{
 		repeat(i, 3) if(colors[i] != nullptr) _colors.emplace_back(*colors[i]); else _colors.emplace_back(nullptr);
 	}
 
-	Handle<WidgetLayer> ColoredBackgroundDrawer::clone(Widget * widget) const
+	handle<WidgetLayer> ColoredBackgroundDrawer::clone(widget * w) const
 	{
-		return Handle<ColoredBackgroundDrawer>(_colors);
+		return handle<ColoredBackgroundDrawer>(_colors);
 	}
 
-	void ColoredBackgroundDrawer::draw(Widget * w)
+	void ColoredBackgroundDrawer::draw(widget * w)
 	{
 		Color * color = _colors[0];
 		int state = 0;
@@ -40,12 +40,12 @@ namespace asd
 
 	ColoredBoundaryDrawer::ColoredBoundaryDrawer(const Color & color, uint width) : BoundaryDrawer(), _color(color), _width(width) {}
 
-	Handle<WidgetLayer> ColoredBoundaryDrawer::clone(Widget * widget) const
+	handle<WidgetLayer> ColoredBoundaryDrawer::clone(widget * w) const
 	{
-		return Handle<ColoredBoundaryDrawer>(_color, _width);
+		return handle<ColoredBoundaryDrawer>(_color, _width);
 	}
 
-	void ColoredBoundaryDrawer::draw(Widget * w)
+	void ColoredBoundaryDrawer::draw(widget * w)
 	{
 		auto lw = hold(w->graphics()->lineWidthState(), int(_width));
 		auto fm = hold(w->graphics()->fillModeState(), FillMode::Wireframe);
@@ -157,12 +157,12 @@ namespace asd
 		_boundary.width = 1;
 	}
 
-	void ColoredButtonDecorator::apply(Widget * w)
+	void ColoredButtonDecorator::apply(widget * w)
 	{
-		w->components->require<BackgroundDrawerComponent>()->set(Unique<ColoredBackgroundDrawer>(_colors));
+		w->components->require<BackgroundDrawerComponent>()->set(unique<ColoredBackgroundDrawer>(_colors));
 
 		if(_boundary.color != nullptr)
-			w->components->require<BoundaryDrawerComponent>()->set(Unique<ColoredBoundaryDrawer>(*_boundary.color, _boundary.width));
+			w->components->require<BoundaryDrawerComponent>()->set(unique<ColoredBoundaryDrawer>(*_boundary.color, _boundary.width));
 	}
 }
 

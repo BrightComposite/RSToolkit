@@ -52,7 +52,7 @@ namespace asd
 		return f->second;
 	}
 
-	void FreeImageConverter::decode(ImageData * output, const string & type, const ByteData * raw)
+	void FreeImageConverter::decode(image_data * output, const string & type, const ByteData * raw)
 	{
 		Anyway anyway;
 		FREE_IMAGE_FORMAT internal_format = getFIFFormat(type);
@@ -78,13 +78,13 @@ namespace asd
 
 		const byte bpp = static_cast<byte>(FreeImage_GetBPP(bmp) / 8);
 
-		output->format = preferredFormat(bpp);
+		output->format = preferred_format(bpp);
 		output->alloc();
 
 		FreeImage_ConvertToRawBits(output->ptr, bmp, output->width() * bpp, bpp * 8, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK, TRUE);
 	}
 
-	void FreeImageConverter::encode(OwnedByteData * output, const string & type, const ImageData * input)
+	void FreeImageConverter::encode(OwnedByteData * output, const string & type, const image_data * input)
 	{
 		Anyway anyway;
 		FREE_IMAGE_FORMAT internal_format = getFIFFormat(type);
@@ -104,16 +104,16 @@ namespace asd
 		byte * data;
 
 		{
-			Handle<ImageData> buffer(default_init);
-			bpp = preferredBpp(input->format);
+			handle<image_data> buffer(_);
+			bpp = preferred_bpp(input->format);
 
 			if(internal_format == FIF_JPEG || bpp < 4)
 			{
-				input->convert(buffer, ImageFormat::rgb);
+				input->convert(buffer, image_format::rgb);
 				bpp = 3;
 			}
 			else
-				input->convert(buffer, ImageFormat::rgba);
+				input->convert(buffer, image_format::rgba);
 
 			pitch = w * bpp;
 			data = buffer->send();

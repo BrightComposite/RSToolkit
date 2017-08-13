@@ -11,11 +11,11 @@ namespace asd
 	using std::ifstream;
 	using std::ios_base;
 
-	void FontIO::load(Handle<Font> & output, const path & filepath)
+	void FontIO::load(handle<Font> & output, const path & filepath)
 	{
 		using namespace boost::filesystem;
 
-		auto raw = handle<OwnedByteData>();
+		auto raw = make::handle<OwnedByteData>();
 		path pth = filepath;
 		
 	#if BOOST_OS_WINDOWS

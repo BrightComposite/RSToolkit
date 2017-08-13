@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/Object.h>
+#include <core/object.h>
 #include <container/Data.h>
 #include <container/List.h>
 
@@ -19,7 +19,7 @@
 #include <bitset>
 
 #include <core/algorithm/lookup3.h>
-#include <core/memory/Aligned.h>
+#include <core/memory/aligned.h>
 
 //---------------------------------------------------------------------------
 
@@ -52,9 +52,9 @@ namespace asd
 	wstring from_utf8(const string & narrow);
 	
 	api(core)
-	void print(String & target, const Object & obj);
+	void print(String & target, const object & obj);
 	api(core)
-	void print(WideString & target, const Object & obj);
+	void print(WideString & target, const object & obj);
 	
 	template<class T>
 	struct can_str_print;
@@ -73,10 +73,10 @@ namespace asd
 	template<class ... T>
 	struct can_wstring_assemble;
 	
-	link_class(core, String, Class<Object>);
-	link_class(core, WideString, Class<Object>);
+	link_class(core) (String, meta_class<object>);
+	link_class(core) (WideString, meta_class<object>);
 	
-	class String : public string, public Object
+	class String : public string, public object
 	{
 	public:
 		String() : string() {
@@ -346,7 +346,7 @@ namespace asd
 			return add(forward<A>(others)...);
 		}
 		
-		template<typename = Empty>
+		template<typename = asd::empty>
 		String & add() {
 			return *this;
 		}
@@ -476,7 +476,7 @@ namespace asd
 		}
 	};
 	
-	class WideString : public wstring, public Object
+	class WideString : public wstring, public object
 	{
 	public:
 		WideString() : wstring() {
@@ -879,7 +879,7 @@ namespace asd
 			return *end == '\0';
 		}
 		
-		static Class<Object> meta;
+		static meta_class<object> meta;
 	};
 	
 	inline String & String::operator +=(const WideString & value) {
@@ -888,33 +888,33 @@ namespace asd
 	}
 	
 	template<class T, useif<can_str_print<T>::value>>
-	inline void print(String & target, const Handle<T> & object) {
+	inline void print(String & target, const handle<T> & object) {
 		target << *object;
 	}
 	
 	template<class T, selectif(0)<can_wstr_print<T>::value>>
-	inline void print(WideString & target, const Handle<T> & object) {
+	inline void print(WideString & target, const handle<T> & object) {
 		target << *object;
 	}
 	
 	template<class T, selectif(1)<can_str_print<T>::value, !can_wstr_print<T>::value>>
-	inline void print(WideString & target, const Handle<T> & object) {
+	inline void print(WideString & target, const handle<T> & object) {
 		target << *object;
 	}
 	
 	
 	template<class T, useif<can_str_print<T>::value>>
-	inline void print(String & target, const Aligned<T> & object) {
+	inline void print(String & target, const aligned<T> & object) {
 		target << *object;
 	}
 	
 	template<class T, selectif(0)<can_wstr_print<T>::value>>
-	inline void print(WideString & target, const Aligned<T> & object) {
+	inline void print(WideString & target, const aligned<T> & object) {
 		target << *object;
 	}
 	
 	template<class T, selectif(1)<can_str_print<T>::value, !can_wstr_print<T>::value>>
-	inline void print(WideString & target, const Aligned<T> & object) {
+	inline void print(WideString & target, const aligned<T> & object) {
 		target << *object;
 	}
 	

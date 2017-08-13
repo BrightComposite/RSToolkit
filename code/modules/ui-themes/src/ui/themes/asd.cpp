@@ -2,7 +2,7 @@
 
 #include <ui/themes/asd.h>
 #include <ui/WidgetLayers.h>
-#include <ui/UISpace.h>
+#include <ui/ui_space.h>
 
 //---------------------------------------------------------------------------
 

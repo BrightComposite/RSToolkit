@@ -16,7 +16,7 @@ namespace asd
 #define xpack(... /*props*/) [](){ struct XPack{__VA_ARGS__;} props; return props; }()
 
 #define xinit1(...) xpack(__VA_ARGS__)}
-#define xinit(...) Handle<__VA_ARGS__>{xinit1 
+#define xinit(...) handle<__VA_ARGS__>{xinit1
 }
 
 //---------------------------------------------------------------------------

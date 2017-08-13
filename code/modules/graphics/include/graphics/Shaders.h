@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------
 
 #include "Graphics.h"
-#include "VertexLayout.h"
+#include "vertex_layout.h"
 #include "ShaderCode.h"
 
 //---------------------------------------------------------------------------
@@ -41,7 +41,7 @@ namespace asd
 
 //---------------------------------------------------------------------------
 
-	class ShaderProgram : public Shared
+	class ShaderProgram : public shareable
 	{
 		friend class FxTechnique;
 
@@ -53,12 +53,12 @@ namespace asd
 		virtual void apply() const {}
 	};
 
-	class FxTechnique : public Shared
+	class FxTechnique : public shareable
 	{
-		friend_owned_handle(FxTechnique, Graphics3D);
+		friend_owned_handle(FxTechnique);
 
 	public:
-		FxTechnique(const Handle<ShaderProgram> & program) : program(program) {}
+		FxTechnique(const handle<ShaderProgram> & program) : program(program) {}
 		virtual ~FxTechnique() {}
 
 		virtual void apply(uint pass = 0) const
@@ -67,13 +67,13 @@ namespace asd
 		}
 
 	protected:
-		Handle<ShaderProgram> program;
+		handle<ShaderProgram> program;
 		uint passes = 0;
 	};
 
 //---------------------------------------------------------------------------
 
-	class Shader : public Shared
+	class Shader : public shareable
 	{
 	public:
 		virtual ~Shader() {}

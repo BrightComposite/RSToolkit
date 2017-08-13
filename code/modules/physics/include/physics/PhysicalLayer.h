@@ -10,7 +10,7 @@
 #include <core/Object.h>
 #include <container/ArrayList.h>
 
-#include <space/Spatial.h>
+#include <space/spatial.h>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>

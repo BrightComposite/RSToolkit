@@ -67,7 +67,7 @@ namespace asd
 		{
 			friend_graphics_provider(D3DGraphics);
 
-			Handle<Debug> debug = nullptr;
+			handle<Debug> debug = nullptr;
 
 		public:
 			using Graphics3D::init;
@@ -85,14 +85,14 @@ namespace asd
 			virtual api(direct3d11) void printDebug();
 			virtual api(direct3d11) void checkForErrors();
 
-			virtual api(direct3d11) Handle<Image> createImage(const ImageData & data) override;
-			virtual api(direct3d11) Handle<Surface> createSurface(UISpace * space) override;
-			virtual api(direct3d11) Handle<Surface> createSurface(const IntSize & size, Handle<Image> & image) override;
+			virtual api(direct3d11) handle<Image> createImage(const ImageData & data) override;
+			virtual api(direct3d11) handle<Surface> createSurface(UISpace * space) override;
+			virtual api(direct3d11) handle<Surface> createSurface(const IntSize & size, handle<Image> & image) override;
 
-			virtual api(direct3d11) Handle<Mesh> createMesh(const Handle<VertexBuffer> & buffer, VertexTopology topology, uint verticesLocation) override;
-			virtual api(direct3d11) Handle<IndexedMesh> createMesh(const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology, uint verticesLocation, uint indicesLocation) override;
+			virtual api(direct3d11) handle<Mesh> createMesh(const handle<VertexBuffer> & buffer, VertexTopology topology, uint verticesLocation) override;
+			virtual api(direct3d11) handle<IndexedMesh> createMesh(const handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology, uint verticesLocation, uint indicesLocation) override;
 
-			virtual Handle<GraphicsDebug> getDebug() const override
+			virtual handle<GraphicsDebug> getDebug() const override
 			{
 				return debug;
 			}
@@ -113,9 +113,9 @@ namespace asd
 			api(direct3d11) D3DGraphics();
 			virtual api(direct3d11) ~D3DGraphics();
 
-			virtual api(direct3d11) Handle<VertexLayout> createVertexLayout(const string & fingerprint) override;
-			virtual api(direct3d11) Handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) override;
-			virtual api(direct3d11) Handle<IndexBuffer> createIndexBuffer(const VertexIndices & indices) override;
+			virtual api(direct3d11) handle<VertexLayout> createVertexLayout(const string & fingerprint) override;
+			virtual api(direct3d11) handle<VertexBuffer> createVertexBuffer(VertexLayout * layout, const VertexData & data) override;
+			virtual api(direct3d11) handle<IndexBuffer> createIndexBuffer(const VertexIndices & indices) override;
 
 			virtual api(direct3d11) UniqueHandle<UniformAdapter> createUniformAdapter(const char * name, ShaderType shader, int index, size_t size) override;
 
@@ -123,7 +123,7 @@ namespace asd
 
 			api(direct3d11) void initDevice();
 			api(direct3d11) void initShaders();
-			api(direct3d11) void setShaderProgram(const string & id, const Handle<ShaderCodeSet> & codeSet);
+			api(direct3d11) void setShaderProgram(const string & id, const handle<ShaderCodeSet> & codeSet);
 
 			map<ShaderType, const D3DShader *> _shaders;
 
@@ -224,7 +224,7 @@ namespace asd
 		class D3DMesh : public Mesh, public D3DMeshTrait
 		{
 		public:
-			D3DMesh(D3DGraphics * graphics, const Handle<VertexBuffer> & vbuffer, VertexTopology topology, uint verticesLocation) : Mesh(vbuffer, topology, verticesLocation), D3DMeshTrait(graphics, topology) {}
+			D3DMesh(D3DGraphics * graphics, const handle<VertexBuffer> & vbuffer, VertexTopology topology, uint verticesLocation) : Mesh(vbuffer, topology, verticesLocation), D3DMeshTrait(graphics, topology) {}
 
 			virtual api(direct3d11) void draw() const override;
 		};
@@ -232,7 +232,7 @@ namespace asd
 		class D3DIndexedMesh : public IndexedMesh, public D3DMeshTrait
 		{
 		public:
-			D3DIndexedMesh(D3DGraphics * graphics, const Handle<VertexBuffer> & vbuffer, const Handle<IndexBuffer> & ibuffer, VertexTopology topology, uint verticesLocation, uint indicesLocation) : IndexedMesh(vbuffer, ibuffer, topology, verticesLocation, indicesLocation), D3DMeshTrait(graphics, topology) {}
+			D3DIndexedMesh(D3DGraphics * graphics, const handle<VertexBuffer> & vbuffer, const handle<IndexBuffer> & ibuffer, VertexTopology topology, uint verticesLocation, uint indicesLocation) : IndexedMesh(vbuffer, ibuffer, topology, verticesLocation, indicesLocation), D3DMeshTrait(graphics, topology) {}
 
 			virtual api(direct3d11) void draw() const override;
 		};
@@ -261,7 +261,7 @@ namespace asd
 		class D3DShaderProgram : public ShaderProgram
 		{
 		public:
-			api(direct3d11) D3DShaderProgram(D3DGraphics * graphics, const Handle<ShaderCodeSet> & codeSet);
+			api(direct3d11) D3DShaderProgram(D3DGraphics * graphics, const handle<ShaderCodeSet> & codeSet);
 			api(direct3d11) ~D3DShaderProgram();
 
 			virtual api(direct3d11) void apply() const override;
@@ -281,8 +281,8 @@ namespace asd
 			virtual void apply() const = 0;
 
 		protected:
-			api(direct3d11) void read(const String & filename, Handle<ShaderCode> & out);
-			api(direct3d11) void compile(const String & filename, const String & entrance, const String & shaderModel, Handle<ShaderCode> & out);
+			api(direct3d11) void read(const String & filename, handle<ShaderCode> & out);
+			api(direct3d11) void compile(const String & filename, const String & entrance, const String & shaderModel, handle<ShaderCode> & out);
 
 			D3DShaderProgram * program;
 		};
@@ -291,11 +291,11 @@ namespace asd
 		{
 			friend class D3DGraphics;
 
-			api(direct3d11) void init(const Handle<ShaderCode> & code);
+			api(direct3d11) void init(const handle<ShaderCode> & code);
 
 		public:
 			api(direct3d11) D3DVertexShader(D3DShaderProgram * program, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
-			api(direct3d11) D3DVertexShader(D3DShaderProgram * program, const Handle<ShaderCode> & code);
+			api(direct3d11) D3DVertexShader(D3DShaderProgram * program, const handle<ShaderCode> & code);
 			virtual ~D3DVertexShader() {}
 
 			virtual api(direct3d11) void apply() const;
@@ -308,11 +308,11 @@ namespace asd
 		{
 			friend class D3DGraphics;
 
-			api(direct3d11) void init(const Handle<ShaderCode> & code);
+			api(direct3d11) void init(const handle<ShaderCode> & code);
 
 		public:
 			api(direct3d11) D3DPixelShader(D3DShaderProgram * program, const String & path, ShaderCodeState state = ShaderCodeState::Compiled);
-			api(direct3d11) D3DPixelShader(D3DShaderProgram * program, const Handle<ShaderCode> & code);
+			api(direct3d11) D3DPixelShader(D3DShaderProgram * program, const handle<ShaderCode> & code);
 			virtual ~D3DPixelShader() {}
 
 			virtual api(direct3d11) void apply() const;
@@ -387,9 +387,9 @@ namespace asd
 
 			static api(direct3d11) void findPreferredMode(const ComHandle<IDXGIOutput> & output, DXGI_MODE_DESC & mode);
 
-			api(direct3d11) void onUIResize(Handle<UIResizeMessage> & msg, UISpace & space);
-			api(direct3d11) void onUIFullscreen(Handle<UIFullscreenMessage> & msg, UISpace & space);
-			api(direct3d11) void onUIDestroy(Handle<UIDestroyMessage> & msg, UISpace & space);
+			api(direct3d11) void onUIResize(handle<UIResizeMessage> & msg, UISpace & space);
+			api(direct3d11) void onUIFullscreen(handle<UIFullscreenMessage> & msg, UISpace & space);
+			api(direct3d11) void onUIDestroy(handle<UIDestroyMessage> & msg, UISpace & space);
 
 			ComHandle<IDXGISwapChain1> _swapChain;
 
@@ -402,14 +402,14 @@ namespace asd
 			friend class D3DGraphics;
 
 		public:
-			api(direct3d11) TextureSurface(D3DGraphics * graphics, const IntSize & size, Handle<Image> & image);
+			api(direct3d11) TextureSurface(D3DGraphics * graphics, const IntSize & size, handle<Image> & image);
 			virtual ~TextureSurface() {}
 
 			virtual api(direct3d11) void clear() const override;
 			virtual api(direct3d11) void requestData(ImageData * data) const override;
 
 		protected:
-			Handle<D3DImage> _texture;
+			handle<D3DImage> _texture;
 		};
 	}
 

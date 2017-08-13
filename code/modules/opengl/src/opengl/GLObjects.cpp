@@ -25,13 +25,13 @@ namespace asd
 {
 	namespace OpenGL
 	{
-		GLShaderProgram::GLShaderProgram(GLGraphics * graphics, const string & filename, VertexLayout * layout, ShaderCodeState state) : GLShaderProgram(graphics, layout)
+		GLShaderProgram::GLShaderProgram(GLGraphics * graphics, const string & filename, vertex_layout * layout, ShaderCodeState state) : GLShaderProgram(graphics, layout)
 		{
 			if(id == 0)
 				throw Exception("Can't create new GLSL program!");
 		}
 
-		GLShaderProgram::GLShaderProgram(GLGraphics * graphics, const string & key, VertexLayout * layout, const ShaderCodeSet & codeSet, ShaderCodeState state) : GLShaderProgram(graphics, layout)
+		GLShaderProgram::GLShaderProgram(GLGraphics * graphics, const string & key, vertex_layout * layout, const ShaderCodeSet & codeSet, ShaderCodeState state) : GLShaderProgram(graphics, layout)
 		{
 			if(id == 0)
 				throw Exception("Can't create new GLSL program (", key, ")");
@@ -105,7 +105,7 @@ namespace asd
 			graphics->checkForErrors();
 		}
 
-		GLShaderProgram::GLShaderProgram(GLGraphics * graphics, VertexLayout * layout) : graphics(graphics), id(glCreateProgram()), layout(layout) {}
+		GLShaderProgram::GLShaderProgram(GLGraphics * graphics, vertex_layout * layout) : graphics(graphics), id(glCreateProgram()), layout(layout) {}
 
 		GLShaderProgram::~GLShaderProgram()
 		{
@@ -135,7 +135,7 @@ namespace asd
 			}
 		}
 
-		GLShader::GLShader(GLShaderProgram * program, const Handle<ShaderCode> & code, ShaderCodeState state, GLenum type) : program(program), id(glCreateShader(type))
+		GLShader::GLShader(GLShaderProgram * program, const handle<ShaderCode> & code, ShaderCodeState state, GLenum type) : program(program), id(glCreateShader(type))
 		{
 			if(id == 0)
 				throw Exception("in Shader Operator: Can't create new shader!");
@@ -179,7 +179,7 @@ namespace asd
 			if(!exists(filepath))
 				throw Exception("File ", filepath.c_str(), " doesn't exist!");
 
-			Handle<ShaderCode> source(static_cast<size_t>(file_size(filepath)));
+			handle<ShaderCode> source(static_cast<size_t>(file_size(filepath)));
 			ifstream input(filepath.c_str(), ios_base::binary);
 
 			input.read(reinterpret_cast<char *>(source->ptr), source->size);
@@ -209,7 +209,7 @@ namespace asd
 			if(!exists(filepath))
 				throw Exception("File ", filepath.c_str(), " doesn't exist!");
 
-			Handle<ShaderCode> source(static_cast<size_t>(file_size(filepath)));
+			handle<ShaderCode> source(static_cast<size_t>(file_size(filepath)));
 			ifstream input(filepath.c_str(), ios_base::binary);
 
 			input.read(reinterpret_cast<char *>(source->ptr), source->size);
@@ -218,7 +218,7 @@ namespace asd
 			initCompiled(source, type);
 		}
 
-		void GLShader::initRaw(const Handle<ShaderCode> & source, GLenum type)
+		void GLShader::initRaw(const handle<ShaderCode> & source, GLenum type)
 		{
 			using namespace std;
 
@@ -269,93 +269,93 @@ namespace asd
 			}
 		}
 
-		void GLShader::initCompiled(const Handle<ShaderCode> & code, GLenum type)
+		void GLShader::initCompiled(const handle<ShaderCode> & code, GLenum type)
 		{
 		}
 
-		void glImageFormat(ImageFormat f, GLint * internalformat, GLenum * format, GLenum * type)
+		void glImageFormat(image_format f, GLint * internalformat, GLenum * format, GLenum * type)
 		{
 			switch(f)
 			{
-				case ImageFormat::grayscale:
+				case image_format::grayscale:
 					*internalformat = GL_R8;
 					*format = GL_RED;
 					*type = GL_UNSIGNED_BYTE;
 					break;
 
-				case ImageFormat::grayscale_alpha:
+				case image_format::grayscale_alpha:
 					*internalformat = GL_RG8;
 					*format = GL_RG;
 					*type = GL_UNSIGNED_BYTE;
 					break;
 
-				case ImageFormat::rgb:
+				case image_format::rgb:
 					*internalformat = GL_RGB8;
 					*format = GL_RGB;
 					*type = GL_UNSIGNED_BYTE;
 					break;
 
-				case ImageFormat::bgr:
+				case image_format::bgr:
 					*internalformat = GL_RGB8;
 					*format = GL_BGR;
 					*type = GL_UNSIGNED_BYTE;
 					break;
 
-				case ImageFormat::rgba:
+				case image_format::rgba:
 					*internalformat = GL_RGBA8;
 					*format = GL_RGBA;
 					*type = GL_UNSIGNED_BYTE;
 					break;
 
-				case ImageFormat::bgra:
+				case image_format::bgra:
 					*internalformat = GL_RGBA8;
 					*format = GL_BGRA;
 					*type = GL_UNSIGNED_BYTE;
 					break;
 
-				case ImageFormat::rgb16f:
+				case image_format::rgb16f:
 					*internalformat = GL_RGB16F;
 					*format = GL_RGBA;
 					*type = GL_FLOAT;
 					break;
 
-				case ImageFormat::bgr16f:
+				case image_format::bgr16f:
 					*internalformat = GL_RGB16F;
 					*format = GL_BGR;
 					*type = GL_FLOAT;
 					break;
 
-				case ImageFormat::rgba16f:
+				case image_format::rgba16f:
 					*internalformat = GL_RGBA16F;
 					*format = GL_RGBA;
 					*type = GL_FLOAT;
 					break;
 
-				case ImageFormat::bgra16f:
+				case image_format::bgra16f:
 					*internalformat = GL_RGBA16F;
 					*format = GL_BGRA;
 					*type = GL_FLOAT;
 					break;
 
-				case ImageFormat::rgb32f:
+				case image_format::rgb32f:
 					*internalformat = GL_RGB32F;
 					*format = GL_RGBA;
 					*type = GL_FLOAT;
 					break;
 
-				case ImageFormat::bgr32f:
+				case image_format::bgr32f:
 					*internalformat = GL_RGB32F;
 					*format = GL_BGR;
 					*type = GL_FLOAT;
 					break;
 
-				case ImageFormat::rgba32f:
+				case image_format::rgba32f:
 					*internalformat = GL_RGBA32F;
 					*format = GL_RGBA;
 					*type = GL_FLOAT;
 					break;
 
-				case ImageFormat::bgra32f:
+				case image_format::bgra32f:
 					*internalformat = GL_RGBA32F;
 					*format = GL_BGRA;
 					*type = GL_FLOAT;
@@ -366,7 +366,7 @@ namespace asd
 			}
 		}
 
-		GLImage::GLImage(GLGraphics * graphics, uint width, uint height, ImageFormat f) : Image(graphics, width, height, f), _graphics(graphics)
+		GLImage::GLImage(GLGraphics * graphics, uint width, uint height, image_format f) : image(graphics, width, height, f), _graphics(graphics)
 		{
 			_target = GL_TEXTURE_RECTANGLE;
 
@@ -389,12 +389,12 @@ namespace asd
 			graphics->checkForErrors();
 		}
 
-		GLImage::GLImage(GLGraphics * graphics, const ImageData & data) : Image(graphics, data), _graphics(graphics)
+		GLImage::GLImage(GLGraphics * graphics, const image_data & data) : image(graphics, data), _graphics(graphics)
 		{
 			_target = GL_TEXTURE_2D;
 
-			uint w = umath::round2pow(_size.x);
-			uint h = umath::round2pow(_size.y);
+			uint w = math::round2pow(_size.x);
+			uint h = math::round2pow(_size.y);
 
 			_scale[0] = float(_size.x) / float(w);
 			_scale[1] = float(_size.y) / float(h);
@@ -416,7 +416,7 @@ namespace asd
 
 			if(_size.x != w || _size.y != h)
 			{
-				ImageData img;
+				image_data img;
 				data.copy({w, h}, img);
 
 				glTexImage2D(_target, 0, internalformat, w, h, 0, format, type, img.ptr);
@@ -428,7 +428,7 @@ namespace asd
 			graphics->checkForErrors();
 		}
 
-		void GLImage::setSize(const IntSize & size)
+		void GLImage::setSize(const int_size & size)
 		{
 			_size = size;
 			uint w, h;
@@ -443,8 +443,8 @@ namespace asd
 			}
 			else
 			{
-				w = umath::round2pow(_size.x);
-				h = umath::round2pow(_size.y);
+				w = math::round2pow(_size.x);
+				h = math::round2pow(_size.y);
 
 				_scale[0] = float(_size.x) / float(w);
 				_scale[1] = float(_size.y) / float(h);
@@ -472,7 +472,7 @@ namespace asd
 			_graphics->checkForErrors();
 		}
 
-		void GLImage::requestData(ImageData * output) const
+		void GLImage::requestData(image_data * output) const
 		{
 			if(output == nullptr)
 				throw Exception("Output image buffer should be not-null!");
@@ -484,9 +484,9 @@ namespace asd
 			glGetTexLevelParameteriv(_target, 0, GL_TEXTURE_WIDTH, &width);
 			glGetTexLevelParameteriv(_target, 0, GL_TEXTURE_HEIGHT, &height);
 
-			ImageData img;
+			image_data img;
 			img.area = {width, height};
-			img.format = ImageFormat::bgra;
+			img.format = image_format::bgra;
 			img.alloc();
 
 			glGetTexImage(_target, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.ptr);

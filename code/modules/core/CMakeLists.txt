@@ -18,20 +18,21 @@ module(STATIC)
 
 		group(include Headers)
 		files(
-			Class.h
+			meta_class.h
 			Exception.h
-			Handle.h
+			handle.h
 			Hash.h
-			Object.h
+			object.h
+			shareable.h
 			String.h
 
 			addition/
-				Cached.h
-				Contents.h
-				Named.h
-				Singleton.h
-				State.h
-				Wrapper.h
+				cached.h
+				contents.h
+				named.h
+				singleton.h
+				state.h
+				wrapper.h
 				..
 			algorithm/
 				crc32.h
@@ -47,19 +48,18 @@ module(STATIC)
 				IntrinsicData.h
 				..
 			memory/
-				Memory.h
+				memory.h
 				Pool.h
-				Aligned.h
+				aligned.h
 
 				allocator/
-					AlignedAllocator.h
-					DefaultAllocator.h
-					PoolAllocator.h
+					aligned_alloc.h
+					default_alloc.h
+					pool_alloc.h
 			)
 
 		group(src Sources)
 		files(
-			Core.cpp
 			Exception.cpp
 			String.cpp
 

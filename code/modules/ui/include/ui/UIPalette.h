@@ -7,37 +7,37 @@
 
 //---------------------------------------------------------------------------
 
-#include <ui/UISpace.h>
+#include <ui/ui_space.h>
 
 //---------------------------------------------------------------------------
 
 namespace asd
 {
-	class UIClass : public WidgetProperty
+	class UIClass : public widget_property
 	{
 	public:
-		UIClass(const string & id, const Handle<Widget> & prototype) : id(id), prototype(prototype) {}
+		UIClass(const string & id, const handle<widget> & prototype) : id(id), prototype(prototype) {}
 
 		string id;
-		Handle<Widget> prototype;
+		handle<widget> prototype;
 	};
 
 	create_property(ui, UIClass);
 
-	class UIPalette : public Shared
+	class UIPalette : public shareable
 	{
 	public:
-		UIPalette(UISpace * space) : _space(space) {}
+		UIPalette(ui_space * space) : _space(space) {}
 		virtual ~UIPalette() {}
 
-		UISpace * space() const
+		ui_space * space() const
 		{
 			return _space;
 		}
 
-		virtual Widget * create(const string & classid, Widget * parent = nullptr) = 0;
+		virtual widget * create(const string & classid, widget * parent = nullptr) = 0;
 
-		template<class F, useif<is_callable<F, Widget *>::value>>
+		template<class F, useif<is_callable<F, widget *>::value>>
 		void foreach(F functor)
 		{
 			for(auto w : _space->root()->tree())
@@ -45,19 +45,19 @@ namespace asd
 		}
 
 	protected:
-		UISpace * _space;
+		ui_space * _space;
 		Dictionary<string, UIClass> _classes;
 	};
 
 	class StandartUIPalette : public UIPalette
 	{
 	public:
-		api(ui) StandartUIPalette(UISpace * space);
+		api(ui) StandartUIPalette(ui_space * space);
 		virtual ~StandartUIPalette() {}
 
-		virtual api(ui) Widget * create(const string & classid, Widget * parent = nullptr) override;
+		virtual api(ui) widget * create(const string & classid, widget * parent = nullptr) override;
 
-		api(ui) void add(const string & classid, const Handle<Widget> & prototype);
+		api(ui) void add(const string & classid, const handle<widget> & prototype);
 	};
 }
 

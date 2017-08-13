@@ -57,19 +57,19 @@ namespace asd
 	template<typename T, typename M>
 	struct method_wrapper
 	{
-		typedef Empty MethodType;
+		typedef empty MethodType;
 	};
 	
 	template<typename T, typename R, typename C, typename ... A>
 	struct method_wrapper<const T, R(C::*)(A...)>
 	{
-		typedef Empty MethodType;
+		typedef empty MethodType;
 	};
 	
 	template<typename T, typename R, typename C, typename ... A>
 	struct method_wrapper<const T *, R(C::*)(A...)>
 	{
-		typedef Empty MethodType;
+		typedef empty MethodType;
 	};
 	
 	template<typename T, typename R, typename C, typename ... A>
@@ -79,6 +79,19 @@ namespace asd
 		
 		R operator ()(A ... args) {
 			return (object.*method)(args...);
+		}
+		
+		T object;
+		MethodType method;
+	};
+	
+	template<typename T, typename R, typename C, typename ... A>
+	struct method_wrapper<T, R(C::*)(A...) const>
+	{
+		typedef R(__thiscall C::*MethodType)(A...) const;
+		
+		R operator ()(A ... args) const {
+			return (object.*method)(forward<A>(args)...);
 		}
 		
 		T object;
@@ -99,32 +112,6 @@ namespace asd
 	};
 	
 	template<typename T, typename R, typename C, typename ... A>
-	struct method_wrapper<T *, R(C::*)(A...)>
-	{
-		typedef R(__thiscall C::*MethodType)(A...);
-		
-		R operator ()(A ... args) {
-			return (object->*method)(args...);
-		}
-		
-		T * object;
-		MethodType method;
-	};
-	
-	template<typename T, typename R, typename C, typename ... A>
-	struct method_wrapper<T, R(C::*)(A...) const>
-	{
-		typedef R(__thiscall C::*MethodType)(A...) const;
-		
-		R operator ()(A ... args) const {
-			return (object.*method)(forward<A>(args)...);
-		}
-		
-		T object;
-		MethodType method;
-	};
-	
-	template<typename T, typename R, typename C, typename ... A>
 	struct method_wrapper<T &, R(C::*)(A...) const>
 	{
 		typedef R(__thiscall C::*MethodType)(A...) const;
@@ -134,6 +121,19 @@ namespace asd
 		}
 		
 		T & object;
+		MethodType method;
+	};
+	
+	template<typename T, typename R, typename C, typename ... A>
+	struct method_wrapper<T *, R(C::*)(A...)>
+	{
+		typedef R(__thiscall C::*MethodType)(A...);
+		
+		R operator ()(A ... args) {
+			return (object->*method)(args...);
+		}
+		
+		T * object;
 		MethodType method;
 	};
 	
@@ -151,7 +151,7 @@ namespace asd
 	};
 	
 	template<class T, class M>
-	struct is_method : not_same_type<typename method_wrapper<T, M>::MethodType, Empty> {};
+	struct is_method : not_same_type<typename method_wrapper<T, M>::MethodType, empty> {};
 	
 	template<class T, class M, useif<!std::is_pointer<T>::value, is_method<T, M>::value>>
 	forceinline method_wrapper<T &, M> wrap_method(T & object, M method) {
@@ -168,7 +168,7 @@ namespace asd
 		return {object, method};
 	}
 	
-	namespace Internals
+	namespace internals
 	{
 		template<typename R, typename ... A>
 		forceinline function<R(A...)> make_function(R(* f)(A...)) {
@@ -179,7 +179,7 @@ namespace asd
 	template<typename F, selectif(0)<is_function<F>::value>>
 	
 	forceinline auto make_function(F f) {
-		return Internals::make_function(f);
+		return internals::make_function(f);
 	}
 	
 	template<typename F, typename C, typename R, typename ... A, skipif<is_pointer<F>::value>>

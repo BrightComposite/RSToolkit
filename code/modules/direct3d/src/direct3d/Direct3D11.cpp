@@ -307,34 +307,34 @@ namespace asd
 		void D3DGraphics::printDebug() {}
 		void D3DGraphics::checkForErrors() {}
 
-		Handle<Image> D3DGraphics::createImage(const ImageData & data)
+		handle<Image> D3DGraphics::createImage(const ImageData & data)
 		{
-			return Handle<D3DImage>(this, data);
+			return handle<D3DImage>(this, data);
 		}
 
-		Handle<VertexLayout> D3DGraphics::createVertexLayout(const string & fingerprint)
+		handle<VertexLayout> D3DGraphics::createVertexLayout(const string & fingerprint)
 		{
-			return Handle<D3DVertexLayout, D3DGraphics>(this, fingerprint);
+			return handle<D3DVertexLayout, D3DGraphics>(this, fingerprint);
 		}
 
-		Handle<VertexBuffer> D3DGraphics::createVertexBuffer(VertexLayout * layout, const VertexData & data)
+		handle<VertexBuffer> D3DGraphics::createVertexBuffer(VertexLayout * layout, const VertexData & data)
 		{
-			return Handle<D3DVertexBuffer, D3DGraphics>(this, layout, data);
+			return handle<D3DVertexBuffer, D3DGraphics>(this, layout, data);
 		}
 
-		Handle<IndexBuffer> D3DGraphics::createIndexBuffer(const VertexIndices & indices)
+		handle<IndexBuffer> D3DGraphics::createIndexBuffer(const VertexIndices & indices)
 		{
-			return Handle<D3DIndexBuffer, D3DGraphics>(this, indices);
+			return handle<D3DIndexBuffer, D3DGraphics>(this, indices);
 		}
 
-		Handle<Mesh> D3DGraphics::createMesh(const Handle<VertexBuffer> & buffer, VertexTopology topology, uint verticesLocation)
+		handle<Mesh> D3DGraphics::createMesh(const handle<VertexBuffer> & buffer, VertexTopology topology, uint verticesLocation)
 		{
-			return Handle<D3DMesh>(this, buffer, topology, verticesLocation);
+			return handle<D3DMesh>(this, buffer, topology, verticesLocation);
 		}
 
-		Handle<IndexedMesh> D3DGraphics::createMesh(const Handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology, uint verticesLocation, uint indicesLocation)
+		handle<IndexedMesh> D3DGraphics::createMesh(const handle<VertexBuffer> & buffer, const VertexIndices & indices, VertexTopology topology, uint verticesLocation, uint indicesLocation)
 		{
-			return Handle<D3DIndexedMesh>(this, buffer, createIndexBuffer(indices), topology, verticesLocation, indicesLocation);
+			return handle<D3DIndexedMesh>(this, buffer, createIndexBuffer(indices), topology, verticesLocation, indicesLocation);
 		}
 
 		UniqueHandle<UniformAdapter> D3DGraphics::createUniformAdapter(const char * name, ShaderType shader, int index, size_t size)
@@ -342,14 +342,14 @@ namespace asd
 			return UniqueHandle<D3DUniformAdapter, D3DGraphics>(this, shader, index, size);
 		}
 
-		Handle<Surface> D3DGraphics::createSurface(UISpace * space)
+		handle<Surface> D3DGraphics::createSurface(UISpace * space)
 		{
-			return Handle<UISurface>(this, space);
+			return handle<UISurface>(this, space);
 		}
 
-		Handle<Surface> D3DGraphics::createSurface(const IntSize & size, Handle<Image> & image)
+		handle<Surface> D3DGraphics::createSurface(const IntSize & size, handle<Image> & image)
 		{
-			return Handle<TextureSurface>(this, size, image);
+			return handle<TextureSurface>(this, size, image);
 		}
 
 		void D3DGraphics::present() const

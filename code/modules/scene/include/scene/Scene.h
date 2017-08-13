@@ -7,9 +7,9 @@
 
 //---------------------------------------------------------------------------
 
-#include <ui/UISpace.h>
+#include <ui/ui_space.h>
 #include <graphics/Graphics3D.h>
-#include <space/Spatial.h>
+#include <space/spatial.h>
 
 #include <chrono>
 
@@ -113,9 +113,9 @@ namespace asd
 	public:
 		virtual api(scene) ~Scene();
 
-		virtual Handle<Scene> clone(Widget * w) const
+		virtual handle<Scene> clone(Widget * w) const
 		{
-			return Handle<Scene, Scene>(w);
+			return handle<Scene, Scene>(w);
 		}
 
 		api(scene) Graphics3D & graphics() const;
@@ -129,12 +129,12 @@ namespace asd
 		api(scene) void render() const;
 
 		template<class Obj, class ... A, useif<based_on<Obj, SceneObject>::value, can_construct<Obj, Scene *, A...>::value>>
-		Handle<Obj> append(A &&... args)
+		handle<Obj> append(A &&... args)
 		{
-			return Handle<Obj>(this, forward<A>(args)...);
+			return handle<Obj>(this, forward<A>(args)...);
 		}
 
-		api(scene) void attach(Handle<SceneObject> obj);
+		api(scene) void attach(handle<SceneObject> obj);
 		api(scene) void detach(SceneObject * obj);
 
 		api(scene) void setTickLength(milliseconds length);
@@ -142,9 +142,9 @@ namespace asd
 
 		api(scene) matrix normalMatrix(const matrix & model) const;
 
-		static Handle<Scene> create(Widget * widget)
+		static handle<Scene> create(Widget * widget)
 		{
-			Handle<Scene, Scene> h(widget);
+			handle<Scene, Scene> h(widget);
 			Scene::construct(h);
 
 			return h;
@@ -152,13 +152,13 @@ namespace asd
 
 	protected:
 		friend_owned_handle(Scene, Scene);
-		static api(scene) Handle<Scene> construct(const Handle<Scene> & scene);
+		static api(scene) handle<Scene> construct(const handle<Scene> & scene);
 
 		api(scene) Scene(Widget * widget);
 		Scene() { setclass(Scene); }
 
 		virtual api(scene) void draw(Graphics3D & graphics, const IntRect & viewport) const;
-		virtual api(scene) void onWidgetResize(Handle<WidgetResizeMessage> & msg, Widget & w);
+		virtual api(scene) void onWidgetResize(handle<WidgetResizeMessage> & msg, Widget & w);
 
 		Camera * _camera = nullptr;
 		Widget * _widget = nullptr;
@@ -176,14 +176,14 @@ namespace asd
 	class SceneLayer : public WidgetLayer
 	{
 	public:
-		SceneLayer(const Handle<Scene> & scene) : WidgetLayer(limits<int>::max()), _scene(scene) {}
+		SceneLayer(const handle<Scene> & scene) : WidgetLayer(limits<int>::max()), _scene(scene) {}
 
-		virtual Handle<WidgetLayer> clone(Widget * widget) const
+		virtual handle<WidgetLayer> clone(Widget * widget) const
 		{
-			return Handle<SceneLayer>(_scene->clone(widget));
+			return handle<SceneLayer>(_scene->clone(widget));
 		}
 
-		const Handle<Scene> & scene() const
+		const handle<Scene> & scene() const
 		{
 			return _scene;
 		}
@@ -194,7 +194,7 @@ namespace asd
 			_scene->draw(_scene->graphics(), scaleToSquare(w->absRegion()));
 		}
 
-		Handle<Scene> _scene;
+		handle<Scene> _scene;
 	};
 
 	create_layer_component(scene, SceneLayer);

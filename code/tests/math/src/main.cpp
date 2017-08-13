@@ -1,11 +1,10 @@
 //---------------------------------------------------------------------------
 
-#include <application/Starter.h>
+#include <application/starter.h>
 
-#include <math/Vector.h>
-#include <math/Matrix.h>
-#include <math/Quaternion.h>
-#include <math/Transform.h>
+#include <math/vector.h>
+#include <math/matrix.h>
+#include <math/quaternion.h>
 
 #include <iostream>
 
@@ -13,39 +12,39 @@
 
 namespace asd
 {
-	struct Obj : Shared
+	struct Obj : shareable
 	{
 		Obj() : i(0), b(0), matrix() {}
-		Obj(int i, char b, const fmat & matrix) : i(i), b(b), matrix(matrix) {}
+		Obj(int i, char b, const math::fmat & matrix) : i(i), b(b), matrix(matrix) {}
 
 		int i;
 		char b;
-		fmat matrix;
+		math::fmat matrix;
 	};
 
-	struct Direction : Shared
+	struct Direction : shareable
 	{
-		Direction(int i, const fquat & rotation) : i(i), rotation(rotation) {}
+		Direction(int i, const math::fquat & rotation) : i(i), rotation(rotation) {}
 
 		int i;
-		fquat rotation;
+		math::fquat rotation;
 	};
 
-	struct Position : Shared
+	struct Position : shareable
 	{
-		Position(int i, char b, const fvec & position) : i(i), b(b), position(position) {}
+		Position(int i, char b, const math::fvec & position) : i(i), b(b), position(position) {}
 
 		int i;
 		char b;
-		fvec position;
+		math::fvec position;
 	};
 
-	static Entrance open([]() {
+	static entrance open([]() {
 		using namespace std;
 
-		Handle<Obj>			obj(default_init);
-		Handle<Direction>	dir(0, fquat(4.0f, 5.0f, 3.0f));
-		Handle<Position>	pos(0, 0, floatv::right);
+		handle<Obj>			obj(_);
+		handle<direction>	dir(0, math::fquat(4.0f, 5.0f, 3.0f));
+		handle<position>	pos(0, 0, math::floatv::right);
 
 		for(int i = 0; i < 20; ++i) {
 			cout << pos->position << endl;

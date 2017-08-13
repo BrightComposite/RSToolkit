@@ -63,7 +63,7 @@ namespace asd
 	template<typename From, typename To>
 	struct are_convertible : is_convertible<From, To> {};
 
-	namespace Internals
+	namespace internals
 	{
 		template<typename T, typename U, bool>
 		struct are_convertible : false_type {};
@@ -73,7 +73,7 @@ namespace asd
 	}
 
 	template<template<class...> class Tpl, typename ... T, typename ... U>
-	struct are_convertible<Tpl<T...>, Tpl<U...>> : Internals::are_convertible<Tpl<T...>, Tpl<U...>, sizeof...(T) == sizeof...(U)> {};
+	struct are_convertible<Tpl<T...>, Tpl<U...>> : internals::are_convertible<Tpl<T...>, Tpl<U...>, sizeof...(T) == sizeof...(U)> {};
 
 	//---------------------------------------------------------------------------
 

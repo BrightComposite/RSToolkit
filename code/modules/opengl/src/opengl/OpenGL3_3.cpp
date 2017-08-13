@@ -3,7 +3,7 @@
 #include <opengl/OpenGL3_3.h>
 #include <opengl/GLObjects.h>
 
-#include <ui/UISpace.h>
+#include <ui/ui_space.h>
 
 #include <iostream>
 
@@ -20,14 +20,12 @@
 
 namespace asd
 {
-	implement_link(OpenGL3_3::GLGraphics);
-	
 	namespace OpenGL3_3
 	{
-		class FillModeState : public State<FillMode>
+		class FillModeState : public state<FillMode>
 		{
 		public:
-			FillModeState(GLGraphics * graphics) : State<FillMode>(FillMode::Solid) {}
+			FillModeState(GLGraphics * graphics) : state<FillMode>(FillMode::Solid) {}
 		
 		protected:
 			virtual void change() override {
@@ -39,9 +37,9 @@ namespace asd
 			}
 		};
 		
-		class LineWidthState : public Graphics::BrushState<int>
+		class LineWidthState : public graphics::BrushState<int>
 		{
-			using Base = typename Graphics::BrushState<int>;
+			using Base = typename graphics::BrushState<int>;
 		
 		public:
 			LineWidthState(GLGraphics * graphics) : Base(graphics, 1) {}
@@ -53,10 +51,10 @@ namespace asd
 			}
 		};
 		
-		class DepthTestState : public State<bool>
+		class DepthTestState : public state<bool>
 		{
 		public:
-			DepthTestState(GLGraphics * graphics) : State<bool>(false), graphics(graphics) {}
+			DepthTestState(GLGraphics * graphics) : state<bool>(false), graphics(graphics) {}
 		
 		protected:
 			virtual void change() override {
@@ -72,10 +70,10 @@ namespace asd
 			GLGraphics * graphics;
 		};
 		
-		class BlendState : public State<bool>
+		class BlendState : public state<bool>
 		{
 		public:
-			BlendState(GLGraphics * graphics) : State<bool>(true) {}
+			BlendState(GLGraphics * graphics) : state<bool>(true) {}
 		
 		protected:
 			virtual void change() override {
@@ -87,10 +85,10 @@ namespace asd
 			}
 		};
 		
-		class AccumulationState : public State<bool>
+		class AccumulationState : public state<bool>
 		{
 		public:
-			AccumulationState(GLGraphics * graphics) : State<bool>(false) {}
+			AccumulationState(GLGraphics * graphics) : state<bool>(false) {}
 		
 		protected:
 			virtual void change() override {
@@ -104,10 +102,10 @@ namespace asd
 			}
 		};
 		
-		class ClearColorState : public State<Color>
+		class ClearColorState : public state<Color>
 		{
 		public:
-			ClearColorState(GLGraphics * graphics) : State<Color>(0.0f, 0.0f, 0.0f, 1.0f) {}
+			ClearColorState(GLGraphics * graphics) : state<Color>(0.0f, 0.0f, 0.0f, 1.0f) {}
 		
 		protected:
 			virtual void change() override {
@@ -116,16 +114,14 @@ namespace asd
 		};
 		
 		GLGraphics::GLGraphics() : Graphics3D() {
-			setclass(GLGraphics);
-			
 			initDevice();
 			
-			_fillMode = Handle<FillModeState>(this);
-			_lineWidth = Handle<LineWidthState>(this);
-			_depthTestMode = Handle<DepthTestState>(this);
-			_blendMode = Handle<BlendState>(this);
-			_clearColor = Handle<ClearColorState>(this);
-			_accumulationMode = Handle<AccumulationState>(this);
+			_fillMode = handle<FillModeState>(this);
+			_lineWidth = handle<LineWidthState>(this);
+			_depthTestMode = handle<DepthTestState>(this);
+			_blendMode = handle<BlendState>(this);
+			_clearColor = handle<ClearColorState>(this);
+			_accumulationMode = handle<AccumulationState>(this);
 		}
 		
 		GLGraphics::~GLGraphics() {
@@ -578,7 +574,7 @@ namespace asd
 			}
 		}
 		
-		void GLGraphics::bind(const Handle<Texture> & texture, uint index) {
+		void GLGraphics::bind(const handle<Texture> & texture, uint index) {
 			glActiveTexture(GL_TEXTURE0 + index);
 			texture->apply();
 		}
@@ -595,19 +591,19 @@ namespace asd
 			}
 		}
 		
-		Handle<Image> GLGraphics::createImage(const ImageData & data) {
-			return Handle<GLImage>(this, data);
+		handle<image> GLGraphics::createImage(const image_data & data) {
+			return handle<GLImage>(this, data);
 		}
 		
-		Handle<VertexBuffer> GLGraphics::createVertexBuffer(VertexLayout * layout, const VertexData & data) {
-			return Handle<GLVertexBuffer, GLGraphics>(this, layout, data);
+		handle<vertex_buffer> GLGraphics::createVertexBuffer(vertex_layout * layout, const vertex_data & data) {
+			return handle<GLVertexBuffer>(this, layout, data);
 		}
 		
-		Handle<MeshBuilder> GLGraphics::createMesh() {
-			return Handle<GLMeshBuilder>(this);
+		handle<mesh_builder> GLGraphics::createMesh() {
+			return handle<GLMeshBuilder>(this);
 		}
 		
-		Handle<UniformAdapter> & GLGraphics::init(Handle<UniformAdapter> & adapter, const char * name, ShaderType shader, int index, size_t size) {
+		handle<UniformAdapter> & GLGraphics::init(handle<UniformAdapter> & adapter, const char * name, ShaderType shader, int index, size_t size) {
 			_uniformBindings.emplace_back(name, index);
 			
 			for(auto & p : _shaderPrograms) {
@@ -620,19 +616,19 @@ namespace asd
 			
 			checkForErrors();
 			
-			adapter = Handle<GLUniformAdapter, GLGraphics>(this, shader, index, static_cast<uint>(size));
+			adapter = handle<GLUniformAdapter>(this, shader, index, static_cast<uint>(size));
 			return adapter;
 		}
 		
-		Handle<Surface> GLGraphics::createSurface(UISpace * space) {
-			return Handle<UISurface>(this, space);
+		handle<asd::surface> GLGraphics::createSurface(ui_space * space) {
+			return handle<UISurface>(this, space);
 		}
 		
-		Handle<TextureSurface> GLGraphics::createSurface(const IntSize & size) {
-			return Handle<GLTextureSurface>(this, size);
+		handle<TextureSurface> GLGraphics::createSurface(const int_size & size) {
+			return handle<GLTextureSurface>(this, size);
 		}
 		
-		void GLGraphics::addShaderProgram(const string & id, VertexLayout * layout, ShaderCodeSet & codeSet) {
+		void GLGraphics::addShaderProgram(const string & id, vertex_layout * layout, ShaderCodeSet & codeSet) {
 			_shaderPrograms[id] = handle<GLShaderProgram>(this, id, layout, codeSet);
 		}
 		
@@ -640,7 +636,7 @@ namespace asd
 			_surface->present();
 		}
 		
-		void GLGraphics::clip(const IntRect & rect) {
+		void GLGraphics::clip(const int_rect & rect) {
 			if(_clipRect == rect) {
 				return;
 			}

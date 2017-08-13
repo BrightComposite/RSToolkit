@@ -12,7 +12,7 @@ namespace asd
 	using std::ofstream;
 	using std::ios_base;
 
-	void ImageIO::load(ImageData * output, const path & filepath)
+	void ImageIO::load(image_data * output, const path & filepath)
 	{
 		using namespace boost::filesystem;
 
@@ -28,7 +28,7 @@ namespace asd
 		read(output, get_extension(filepath), &raw);
 	}
 
-	void ImageIO::save(const path & filepath, const ImageData * image)
+	void ImageIO::save(const path & filepath, const image_data * image)
 	{
 		OwnedByteData raw;
 		write(&raw, get_extension(filepath), image);

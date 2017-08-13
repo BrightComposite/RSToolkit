@@ -419,19 +419,19 @@ namespace asd
 		return *this;
 	}
 	
-	void print(String & target, const Object & obj) {
+	void print(String & target, const object & obj) {
 		target.add(addr(&obj), ' ');
 		
-		obj.getClass()->forEachClass(
-			[&target, &obj](const Class<> * cl) {
-				cl->addInfo(target, obj);
+		obj.get_class()->foreach(
+			[&target, &obj](const meta_class<> * cl) {
+				cl->add_info(target, obj);
 			}
 		);
 		
-		target.add('(', obj.className(), ')');
+		target.add('(', obj.class_name(), ')');
 	}
 	
-	void print(WideString & target, const Object & obj) {
+	void print(WideString & target, const object & obj) {
 		String s;
 		print(s, obj);
 		target = widen(s);
@@ -444,7 +444,7 @@ namespace asd
 			return list;
 		}
 		
-		char * temp = Memory<char>::copy(text.c_str(), text.length() + 1);
+		char * temp = memory<char>::copy(text.c_str(), text.length() + 1);
 		char * next = nullptr;
 		char * token = strtok_s(temp, sep, &next);
 		
@@ -453,7 +453,7 @@ namespace asd
 			token = strtok_s(nullptr, sep, &next);
 		}
 		
-		Memory<char>::free(temp);
+		memory<char>::free(temp);
 		
 		return list;
 	}
@@ -465,7 +465,7 @@ namespace asd
 			return list;
 		}
 		
-		wchar_t * temp = Memory<wchar_t>::copy(text.c_str(), text.length() + 1);
+		wchar_t * temp = memory<wchar_t>::copy(text.c_str(), text.length() + 1);
 		wchar_t * next = nullptr;
 		wchar_t * token = wcstok_s(temp, sep, &next);
 		
@@ -474,7 +474,7 @@ namespace asd
 			token = wcstok_s(nullptr, sep, &next);
 		}
 		
-		Memory<wchar_t>::free(temp);
+		memory<wchar_t>::free(temp);
 		
 		return list;
 	}

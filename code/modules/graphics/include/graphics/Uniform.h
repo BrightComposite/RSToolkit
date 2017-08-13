@@ -8,9 +8,9 @@
 //---------------------------------------------------------------------------
 
 #include <meta/Meta.h>
-#include <math/Transform.h>
+#include <math/transform.h>
 
-#include <core/addition/Contents.h>
+#include <core/addition/contents.h>
 #include <morph/Morph.h>
 
 #include "Shaders.h"
@@ -33,7 +33,7 @@ namespace asd
 	template<class T>
 	using is_uniform = is_base_of<Uniform, T>;
 
-	struct UniformData : Shared
+	struct UniformData : shareable
 	{
 		api(graphics) void apply() const;
 
@@ -46,7 +46,7 @@ namespace asd
 	template<class U>
 	struct UniformChunk;
 
-	class UniformAdapter : public Shared
+	class UniformAdapter : public shareable
 	{
 	public:
 		UniformAdapter(int index, uint size) : _index(index), _size(size) {}
@@ -54,11 +54,11 @@ namespace asd
 
 		template<class U, class ... A, useif<can_construct_contents<U, A...>::value>>
 		void update(A &&... args) {
-			update(Contents<U>(forward<A>(args)...).pointer());
+			update(contents<U>(forward<A>(args)...).pointer());
 		}
 
 		template<class U>
-		void update(const Contents<U> & contents) {
+		void update(const contents<U> & contents) {
 			update(contents.pointer());
 		}
 
@@ -118,21 +118,21 @@ namespace asd
 	(
 		graphics,
 		Model, 1, Vertex,
-		(floatm, transform)
+		(math::floatm, transform)
 	);
 
 	uniform_class
 	(
 		graphics,
 		View, 2, Vertex,
-		(floatm, transform)
+		(math::floatm, transform)
 	);
 
 	uniform_class
 	(
 		graphics,
 		Projection, 3, Vertex,
-		(floatm, transform)
+		(math::floatm, transform)
 	);
 
 	uniform_class
@@ -148,7 +148,7 @@ namespace asd
 	(
 		graphics,
 		Normal, 4, Vertex,
-		(floatm, transform)
+		(math::floatm, transform)
 	);
 
 	uniform_class

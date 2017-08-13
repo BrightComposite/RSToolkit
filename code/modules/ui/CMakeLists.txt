@@ -24,9 +24,9 @@ module(STATIC)
 		files(
 			Text.h
 			UIPalette.h
-			UISpace.h
+			ui_space.h
 			UITheme.h
-			Widget.h
+			widget.h
 			WidgetLayers.h
 			WidgetEnum.h
 			WidgetMessages.h
@@ -38,8 +38,8 @@ module(STATIC)
 		files(
 			Text.cpp
 			UIPalette.cpp
-			UISpace.cpp
-			Widget.cpp
+			ui_space.cpp
+			widget.cpp
 			WidgetLayers.cpp
 		)
 

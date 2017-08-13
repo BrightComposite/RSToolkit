@@ -12,12 +12,14 @@
 
 #include <graphics/font/Font.h>
 
+#include <core/addition/singleton.h>
+
 //---------------------------------------------------------------------------
 
 namespace asd
 {
 	class FontIO;
-	apistruct(graphics) Singleton<FontIO>;
+	apistruct(graphics) singleton<FontIO>;
 
 	class FontDecoder
 	{
@@ -27,7 +29,7 @@ namespace asd
 		virtual ~FontDecoder() {}
 
 	protected:
-		virtual void decode(Handle<Font> & output, const string & type, const Handle<ByteData> & raw) = 0;
+		virtual void decode(handle<Font> & output, const string & type, const handle<ByteData> & raw) = 0;
 	};
 
 	class FontDecodingException : public Exception
@@ -37,10 +39,10 @@ namespace asd
 		virtual ~FontDecodingException() {}
 	};
 
-	class FontIO : public Singleton<FontIO>
+	class FontIO : public singleton<FontIO>
 	{
 	public:
-		static void read(Handle<Font> & output, const string & type, const Handle<ByteData> & raw)
+		static void read(handle<Font> & output, const string & type, const handle<ByteData> & raw)
 		{
 			auto & decoder = instance().decoders[type];
 
@@ -50,7 +52,7 @@ namespace asd
 			decoder->decode(output, type, raw);
 		}
 
-		static void load(Handle<Font> & output, const path & filepath);
+		static void load(handle<Font> & output, const path & filepath);
 
 		static FontDecoder * getDecoder(const string & type)
 		{
@@ -58,7 +60,7 @@ namespace asd
 		}
 
 		template<class Decoder, useif<
-			based_on<Decoder, Singleton<Decoder>>::value,
+			based_on<Decoder, singleton<Decoder>>::value,
 			based_on<Decoder, FontDecoder>::value
 			>
 		>

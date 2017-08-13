@@ -21,9 +21,9 @@ namespace asd
 
 		api(interaction) FloatPoint fetchData();
 
-		virtual Handle<WidgetComponent> clone(Widget * widget) const override
+		virtual handle<WidgetComponent> clone(Widget * widget) const override
 		{
-			return Handle<MouseManipulator>(widget);
+			return handle<MouseManipulator>(widget);
 		}
 
 		api(interaction) void enable();
@@ -31,7 +31,7 @@ namespace asd
 		virtual api(interaction) void toggle();
 
 	protected:
-		api(interaction) void callback(Handle<MouseMoveMessage> &, UISpace &);
+		api(interaction) void callback(handle<MouseMoveMessage> &, UISpace &);
 
 		bool _enabled = false;
 		bool _wait = false;
@@ -47,13 +47,13 @@ namespace asd
 		api(interaction) MouseDragger(Widget * w);
 		virtual ~MouseDragger() {}
 
-		virtual Handle<WidgetComponent> clone(Widget * widget) const override
+		virtual handle<WidgetComponent> clone(Widget * widget) const override
 		{
-			return Handle<MouseDragger>(widget);
+			return handle<MouseDragger>(widget);
 		}
 
 	protected:
-		api(interaction) void onMouseDown(Handle<MouseDownMessage> &, Widget &);
+		api(interaction) void onMouseDown(handle<MouseDownMessage> &, Widget &);
 	};
 }
 

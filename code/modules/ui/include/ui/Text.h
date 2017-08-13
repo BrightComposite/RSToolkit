@@ -7,10 +7,10 @@
 
 //---------------------------------------------------------------------------
 
-#include <ui/Widget.h>
+#include <ui/widget.h>
 
 #include <graphics/Color.h>
-#include <graphics/Surface.h>
+#include <graphics/surface.h>
 #include <graphics/font/Font.h>
 
 //---------------------------------------------------------------------------
@@ -24,20 +24,20 @@ namespace asd
 
 	using TextComponent = WidgetLayerComponent<TextLayer>;
 
-	class Text : public Shared
+	class Text : public shareable
 	{
 	public:
-		api(ui) Text(Graphics * graphics, const WideString & s, const Handle<Font> & font, const Color & color = Color::black, int fontSize = 14);
+		api(ui) Text(asd::graphics * graphics, const WideString & s, const handle<Font> & font, const Color & color = Color::black, int fontSize = 14);
 		virtual ~Text() {}
 		
-		Handle<Text> clone() const
+		handle<Text> clone() const
 		{
-			return Handle<Text>(_graphics, _contents, _font, _color, _fontSize);
+			return make::handle<Text>(_graphics, _contents, _font, _color, _fontSize);
 		}
 
-		Handle<Text> clone(Graphics * graphics) const
+		handle<Text> clone(graphics * graphics) const
 		{
-			return Handle<Text>(graphics, _contents, _font, _color, _fontSize);
+			return make::handle<Text>(graphics, _contents, _font, _color, _fontSize);
 		}
 
 		const WideString & contents() const
@@ -45,7 +45,7 @@ namespace asd
 			return _contents;
 		}
 
-		const IntSize & size() const
+		const int_size & size() const
 		{
 			return _size;
 		}
@@ -56,25 +56,25 @@ namespace asd
 			_size = _font->getTextSize(_graphics, _contents, _fontSize);
 		}
 
-		virtual api(ui) void draw(const IntPoint & pos);
+		virtual api(ui) void draw(const int_point & pos);
 
 		template<class TextLayerClass = StaticTextLayer, useif<based_on<TextLayerClass, TextLayer>::value>>
-		static void set(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color::black, int fontSize = 14);
+		static void set(widget * w, const WideString & s, const handle<Font> & font, const Color & color = Color::black, int fontSize = 14);
 
-		static api(ui) void setDynamic(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color::black, int fontSize = 14);
-		static api(ui) void setSmart(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color::black, int fontSize = 14);
-		static api(ui) void setContents(Widget * w, const WideString & s);
-		static api(ui) TextLayer * get(Widget * w);
-		static api(ui) void clear(Widget * w);
+		static api(ui) void setDynamic(widget * w, const WideString & s, const handle<Font> & font, const Color & color = Color::black, int fontSize = 14);
+		static api(ui) void setSmart(widget * w, const WideString & s, const handle<Font> & font, const Color & color = Color::black, int fontSize = 14);
+		static api(ui) void setContents(widget * w, const WideString & s);
+		static api(ui) TextLayer * get(widget * w);
+		static api(ui) void clear(widget * w);
 
 	protected:
-		Graphics * _graphics;
+		graphics * _graphics;
 		WideString _contents;
 
-		Handle<Font> _font;
+		handle<Font> _font;
 		Color _color;
 		int _fontSize = 14;
-		IntSize _size;
+		int_size _size;
 	};
 
 	class TextLayer : public WidgetLayer
@@ -82,16 +82,16 @@ namespace asd
 		friend_handle;
 
 	public:
-		api(ui) TextLayer(Widget * w, Unique<Text> && text);
+		api(ui) TextLayer(widget * w, unique<Text> && text);
 
-		TextLayer(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color::black, int fontSize = 14) :
-			TextLayer(w, Unique<Text>(w->graphics(), s, font, color, fontSize)) {}
+		TextLayer(widget * w, const WideString & s, const handle<Font> & font, const Color & color = Color::black, int fontSize = 14) :
+			TextLayer(w, make::unique<Text>(w->graphics(), s, font, color, fontSize)) {}
 
 		virtual ~TextLayer() {}
 
-		virtual Handle<WidgetLayer> clone(Widget * widget) const override
+		virtual handle<WidgetLayer> clone(widget * widget) const override
 		{
-			return Handle<TextLayer>(widget, _text->clone());
+			return handle<TextLayer>(widget, _text->clone());
 		}
 
 		const WideString & contents() const
@@ -110,18 +110,18 @@ namespace asd
 			update();
 		}
 
-		void setText(Unique<Text> && contents)
+		void setText(unique<Text> && contents)
 		{
 			_text = move(contents);
 			update();
 		}
 
 	protected:
-		virtual api(ui) void draw(Widget * w) override;
+		virtual api(ui) void draw(widget * w) override;
 		virtual void update() {}
 
-		Graphics * _graphics;
-		Unique<Text> _text;
+		graphics * _graphics;
+		unique<Text> _text;
 	};
 
 	create_layer_component(ui, TextLayer);
@@ -129,53 +129,53 @@ namespace asd
 	class StaticTextLayer : public TextLayer
 	{
 	public:
-		api(ui) StaticTextLayer(Widget * w, Unique<Text> && text);
+		api(ui) StaticTextLayer(widget * w, unique<Text> && text);
 
-		StaticTextLayer(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color::black, int fontSize = 14) :
-			StaticTextLayer(w, Unique<Text>(w->graphics(), s, font, color, fontSize)) {}
+		StaticTextLayer(widget * w, const WideString & s, const handle<Font> & font, const Color & color = Color::black, int fontSize = 14) :
+			StaticTextLayer(w, unique<Text>(w->graphics(), s, font, color, fontSize)) {}
 
 		virtual ~StaticTextLayer() {}
 
-		virtual Handle<WidgetLayer> clone(Widget * widget) const override
+		virtual handle<WidgetLayer> clone(widget * widget) const override
 		{
-			return Handle<StaticTextLayer>(widget, _text->clone());
+			return handle<StaticTextLayer>(widget, _text->clone());
 		}
 
-		void requestData(ImageData * data)
+		void requestData(image_data * data)
 		{
 			_image->requestData(data);
 		}
 
 	protected:
-		virtual api(ui) void draw(Widget * w) override;
+		virtual api(ui) void draw(widget * w) override;
 		virtual api(ui) void update() override;
 
-		Handle<Image> _image = nullptr;
-		Handle<ImageSurface> _surface = nullptr;
+		handle<image> _image = nullptr;
+		handle<ImageSurface> _surface = nullptr;
 	};
 
 	class SmartTextLayer : public StaticTextLayer
 	{
 	public:
-		SmartTextLayer(Widget * w, Unique<Text> && text) : StaticTextLayer(w, move(text)), drawer(dynamicDraw) {}
+		SmartTextLayer(widget * w, unique<Text> && text) : StaticTextLayer(w, move(text)), drawer(dynamicDraw) {}
 
-		SmartTextLayer(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color = Color::black, int fontSize = 14) :
-			SmartTextLayer(w, Unique<Text>(w->graphics(), s, font, color, fontSize)) {}
+		SmartTextLayer(widget * w, const WideString & s, const handle<Font> & font, const Color & color = Color::black, int fontSize = 14) :
+			SmartTextLayer(w, unique<Text>(w->graphics(), s, font, color, fontSize)) {}
 
 		virtual ~SmartTextLayer() {}
 
-		virtual Handle<WidgetLayer> clone(Widget * widget) const override
+		virtual handle<WidgetLayer> clone(widget * widget) const override
 		{
-			return Handle<SmartTextLayer>(widget, _text->clone());
+			return handle<SmartTextLayer>(widget, _text->clone());
 		}
 
 	protected:
-		using drawer_t = void(*)(SmartTextLayer * layer, Widget * w);
+		using drawer_t = void(*)(SmartTextLayer * layer, widget * w);
 
-		static api(ui) void dynamicDraw(SmartTextLayer * layer, Widget * w);
-		static api(ui) void staticDraw(SmartTextLayer * layer, Widget * w);
+		static api(ui) void dynamicDraw(SmartTextLayer * layer, widget * w);
+		static api(ui) void staticDraw(SmartTextLayer * layer, widget * w);
 
-		virtual api(ui) void draw(Widget * w) override;
+		virtual api(ui) void draw(widget * w) override;
 		virtual api(ui) void update() override;
 
 		drawer_t drawer;
@@ -183,9 +183,9 @@ namespace asd
 	};
 	
 	template<class TextLayerClass, used_t>
-	void Text::set(Widget * w, const WideString & s, const Handle<Font> & font, const Color & color, int fontSize)
+	void Text::set(widget * w, const WideString & s, const handle<Font> & font, const Color & color, int fontSize)
 	{
-		w->components->require<TextComponent>()->set(Unique<TextLayerClass>(w, Handle<Text>(w->graphics(), s, font, color, fontSize)));
+		w->components->require<TextComponent>()->set(unique<TextLayerClass>(w, handle<Text>(w->graphics(), s, font, color, fontSize)));
 	}
 }
 

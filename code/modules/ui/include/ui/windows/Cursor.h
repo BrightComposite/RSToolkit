@@ -32,7 +32,7 @@ namespace asd
 		api(ui) void attach(Widget * w);
 		api(ui) void attachPressed(Widget * w, MouseButton button = MouseButton::Left);
 
-		static api(ui) void add(const string & name, const Handle<Cursor> & cursor);
+		static api(ui) void add(const string & name, const handle<Cursor> & cursor);
 		static api(ui) Cursor * find(const string & name);
 		static api(ui) Cursor * default();
 
@@ -71,9 +71,9 @@ namespace asd
 
 		virtual ~CursorComponent() {}
 
-		virtual Handle<WidgetComponent> clone(Widget * widget) const override
+		virtual handle<WidgetComponent> clone(Widget * widget) const override
 		{
-			return Handle<CursorComponent>(widget, *this);
+			return handle<CursorComponent>(widget, *this);
 		}
 
 		api(ui) Cursor * cursor();
@@ -83,8 +83,8 @@ namespace asd
 		api(ui) void unbind();
 
 	protected:
-		api(ui) void onMouseEnter(Handle<MouseEnterMessage> & msg, Widget & w);
-		api(ui) void onMouseLeave(Handle<MouseLeaveMessage> & msg, Widget & w);
+		api(ui) void onMouseEnter(handle<MouseEnterMessage> & msg, Widget & w);
+		api(ui) void onMouseLeave(handle<MouseLeaveMessage> & msg, Widget & w);
 
 		Cursor * _cursor = nullptr;
 		Cursor * _external = nullptr;
@@ -113,19 +113,19 @@ namespace asd
 
 		virtual ~PressedCursorComponent() {}
 
-		virtual Handle<WidgetComponent> clone(Widget * widget) const override
+		virtual handle<WidgetComponent> clone(Widget * widget) const override
 		{
-			return Handle<PressedCursorComponent>(widget, *this);
+			return handle<PressedCursorComponent>(widget, *this);
 		}
 
 		api(ui) Cursor * cursor(MouseButton button);
 		api(ui) void setCursor(Cursor * cursor, MouseButton button);
 
 	protected:
-		api(ui) void onWidgetPress(Handle<WidgetPressMessage> & msg, Widget & w);
-		api(ui) void onWidgetRelease(Handle<WidgetReleaseMessage> & msg, Widget & w);
+		api(ui) void onWidgetPress(handle<WidgetPressMessage> & msg, Widget & w);
+		api(ui) void onWidgetRelease(handle<WidgetReleaseMessage> & msg, Widget & w);
 
-		Handle<CursorComponent> _cursorComponent;
+		handle<CursorComponent> _cursorComponent;
 		MouseButton _button = MouseButton::Left;
 		dictionary<MouseButton, Cursor *> _cursors;
 		bool _bound = false;

@@ -69,13 +69,13 @@ _useif_class(sfinae_select);
 
 //---------------------------------------------------------------------------
 
-#define useif			_useif(sfinae_use)
-#define skipif			_useif(sfinae_skip)
-#define selectif(I)		_useif(sfinae_select<I>)
+#define useif			_useif(::sfinae_use)
+#define skipif			_useif(::sfinae_skip)
+#define selectif(I)		_useif(::sfinae_select<I>)
 
-#define used_t			_useif_t(sfinae_use)
-#define skipped_t		_useif_t(sfinae_skip)
-#define selected_t(I)	_useif_t(sfinae_select<I>)
+#define used_t			_useif_t(::sfinae_use)
+#define skipped_t		_useif_t(::sfinae_skip)
+#define selected_t(I)	_useif_t(::sfinae_select<I>)
 
 //---------------------------------------------------------------------------
 

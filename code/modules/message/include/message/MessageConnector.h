@@ -10,7 +10,7 @@
 #include <container/ArrayList.h>
 #include <forward_list>
 
-#include "Display.h"
+#include "Message.h"
 
 //---------------------------------------------------------------------------
 
@@ -26,44 +26,44 @@ namespace asd
 
 //---------------------------------------------------------------------------
 	
-	namespace Internals
+	namespace internals
 	{
-		template<typename T, class RealDst = Empty>
+		template<typename T, class RealDst = empty>
 		struct can_connect_method : false_type {};
 		
 		template<class C, class Dst, class Msg>
-		struct can_connect_method<void (C::*)(Handle<Msg> &, Dst &)> : is_message<Msg> {};
+		struct can_connect_method<void (C::*)(handle<Msg> &, Dst &)> : is_message<Msg> {};
 		
 		template<class C, class Dst, class Msg, class RealDst>
-		struct can_connect_method<void (C::*)(Handle<Msg> &, Dst &), RealDst> : is_true<is_message<Msg>::value, is_dest<RealDst, Msg>::value, based_on<RealDst, Dst>::value> {};
+		struct can_connect_method<void (C::*)(handle<Msg> &, Dst &), RealDst> : is_true<is_message<Msg>::value, is_dest<RealDst, Msg>::value, based_on<RealDst, Dst>::value> {};
 		
 		template<class C, class Dst, class Msg>
-		struct can_connect_method<void (C::*)(Handle<Msg> &, Dst &) const> : is_message<Msg> {};
+		struct can_connect_method<void (C::*)(handle<Msg> &, Dst &) const> : is_message<Msg> {};
 		
 		template<class C, class Dst, class Msg, class RealDst>
-		struct can_connect_method<void (C::*)(Handle<Msg> &, Dst &) const, RealDst> : is_true<is_message<Msg>::value, is_dest<RealDst, Msg>::value, based_on<RealDst, Dst>::value> {};
+		struct can_connect_method<void (C::*)(handle<Msg> &, Dst &) const, RealDst> : is_true<is_message<Msg>::value, is_dest<RealDst, Msg>::value, based_on<RealDst, Dst>::value> {};
 		
-		template<typename T, class RealDst = Empty>
+		template<typename T, class RealDst = empty>
 		struct can_connect_function : false_type {};
 		
 		template<class Dst, class Msg>
-		struct can_connect_function<void (Handle<Msg> &, Dst &)> : is_message<Msg> {};
+		struct can_connect_function<void (handle<Msg> &, Dst &)> : is_message<Msg> {};
 		
 		template<class Dst, class Msg, class RealDst>
-		struct can_connect_function<void (Handle<Msg> &, Dst &), RealDst> : is_true<is_message<Msg>::value, is_dest<RealDst, Msg>::value, based_on<RealDst, Dst>::value> {};
+		struct can_connect_function<void (handle<Msg> &, Dst &), RealDst> : is_true<is_message<Msg>::value, is_dest<RealDst, Msg>::value, based_on<RealDst, Dst>::value> {};
 	}
 	
-	template<typename Method, class RealDst = Empty>
-	struct can_connect_method : Internals::can_connect_method<Method, RealDst> {};
+	template<typename Method, class RealDst = empty>
+	struct can_connect_method : internals::can_connect_method<Method, RealDst> {};
 	
-	template<typename Function, class RealDst = Empty, bool = is_function<Function>::value>
-	struct can_connect_function : Internals::can_connect_function<Function, RealDst> {};
+	template<typename Function, class RealDst = empty, bool = is_function<Function>::value>
+	struct can_connect_function : internals::can_connect_function<Function, RealDst> {};
 	
 	template<typename Function, class RealDst>
 	struct can_connect_function<Function, RealDst, false> : false_type {};
 	
-	template<typename Functor, class RealDst = Empty, bool = has_caller<Functor>::value, bool = is_std_function<Functor>::value>
-	struct can_connect_functor : Internals::can_connect_method<decltype(&Functor::operator()), RealDst> {};
+	template<typename Functor, class RealDst = empty, bool = has_caller<Functor>::value, bool = is_std_function<Functor>::value>
+	struct can_connect_functor : internals::can_connect_method<decltype(&Functor::operator()), RealDst> {};
 	
 	template<typename Functor, class RealDst>
 	struct can_connect_functor<Functor, RealDst, true, true> : false_type {};
@@ -90,49 +90,49 @@ namespace asd
 
 	private:
 		template<class F, class C>
-		void connect(F & f, void (C::*mf) (Handle<Msg> &, Dst &)) {
+		void connect(F & f, void (C::*mf) (handle<Msg> &, Dst &)) {
 			receivers.emplace_back(f);
 		}
 
 		template<class F, class C>
-		void connect(F && f, void (C::*mf) (Handle<Msg> &, Dst &)) {
+		void connect(F && f, void (C::*mf) (handle<Msg> &, Dst &)) {
 			receivers.emplace_back(forward<F>(f));
 		}
 
 		template<class F, class C, class D, skipif<is_same<Dst, D>::value>, useif<is_base_of<Dst, D>::value>>
-		void connect(F & f, void (C::*mf) (Handle<Msg> &, D &)) {
-			receivers.emplace_back([&f](Handle<Msg> & message, Dst & dest) {
+		void connect(F & f, void (C::*mf) (handle<Msg> &, D &)) {
+			receivers.emplace_back([&f](handle<Msg> & message, Dst & dest) {
 				f(message, static_cast<D &>(dest));
 			});
 		}
 
 		template<class F, class C, class D, skipif<is_same<Dst, D>::value>, useif<is_base_of<Dst, D>::value>>
-		void connect(F && f, void (C::*mf) (Handle<Msg> &, D &)) {
-			receivers.emplace_back([f](Handle<Msg> & message, Dst & dest) {
+		void connect(F && f, void (C::*mf) (handle<Msg> &, D &)) {
+			receivers.emplace_back([f](handle<Msg> & message, Dst & dest) {
 				f(message, static_cast<D &>(dest));
 			});
 		}
 
 		template<class F, class C>
-		void connect(F & f, void (C::*mf) (Handle<Msg> &, Dst &) const) {
+		void connect(F & f, void (C::*mf) (handle<Msg> &, Dst &) const) {
 			receivers.emplace_back(f);
 		}
 
 		template<class F, class C>
-		void connect(F && f, void (C::*mf) (Handle<Msg> &, Dst &) const) {
+		void connect(F && f, void (C::*mf) (handle<Msg> &, Dst &) const) {
 			receivers.emplace_back(forward<F>(f));
 		}
 
 		template<class F, class C, class D, skipif<is_same<Dst, D>::value>, useif<is_base_of<Dst, D>::value>>
-		void connect(F & f, void (C::*mf) (Handle<Msg> &, D &) const) {
-			receivers.emplace_back([&f](Handle<Msg> & message, Dst & dest) {
+		void connect(F & f, void (C::*mf) (handle<Msg> &, D &) const) {
+			receivers.emplace_back([&f](handle<Msg> & message, Dst & dest) {
 				f(message, static_cast<D &>(dest));
 			});
 		}
 
 		template<class F, class C, class D, skipif<is_same<Dst, D>::value>, useif<is_base_of<Dst, D>::value>>
-		void connect(F && f, void (C::*mf) (Handle<Msg> &, D &) const) {
-			receivers.emplace_back([f](Handle<Msg> & message, Dst & dest) {
+		void connect(F && f, void (C::*mf) (handle<Msg> &, D &) const) {
+			receivers.emplace_back([f](handle<Msg> & message, Dst & dest) {
 				f(message, static_cast<D &>(dest));
 			});
 		}

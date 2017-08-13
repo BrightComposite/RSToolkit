@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/Handle.h>
+#include <core/handle.h>
 #include <container/Container.h>
 
 #include <map>
@@ -49,32 +49,32 @@ namespace asd
 	template<class K, class T, class Pred = asd::less<K>, class Alloc = std::allocator<pair<const K, T>>>
 	using multidict = multidictionary<K, T, Pred, Alloc>;
 
-	template<class K, class V, class ... Owner>
-	class Map : public map<K, Handle<V, Owner...>>
+	template<class K, class V>
+	class Map : public map<K, handle<V>>
 	{
 	public:
-		using map<K, Handle<V, Owner...>>::map;
+		using map<K, handle<V>>::map;
 	};
 
-	template<class K, class V, class Hasher, class ... Owner>
-	class CustomMap : public map<K, Handle<V, Owner...>, Hasher>
+	template<class K, class V, class Hasher>
+	class CustomMap : public map<K, handle<V>, Hasher>
 	{
 	public:
-		using map<K, Handle<V, Owner...>, Hasher>::map;
+		using map<K, handle<V>, Hasher>::map;
 	};
 
-	template<class K, class V, class ... Owner>
-	class Dictionary : public dictionary<K, Handle<V, Owner...>>
+	template<class K, class V>
+	class Dictionary : public dictionary<K, handle<V>>
 	{
 	public:
-		using dictionary<K, Handle<V, Owner...>>::dictionary;
+		using dictionary<K, handle<V>>::dictionary;
 	};
 
-	template<class K, class V, class Pred, class ... Owner>
-	class CustomDictionary : public dictionary<K, Handle<V, Owner...>, Pred>
+	template<class K, class V, class Pred>
+	class CustomDictionary : public dictionary<K, handle<V>, Pred>
 	{
 	public:
-		using dictionary<K, Handle<V, Owner...>, Pred>::dictionary;
+		using dictionary<K, handle<V>, Pred>::dictionary;
 	};
 
 	template<class I, class R = remove_reference_t<decltype(*declval<I>())>, skipif<is_const<R>::value>>

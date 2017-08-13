@@ -144,7 +144,7 @@ namespace asd
 
 		D3DShader::D3DShader(D3DShaderProgram * program) : program(program) {}
 
-		void D3DShader::read(const String & filename, Handle<ShaderCode> & out)
+		void D3DShader::read(const String & filename, handle<ShaderCode> & out)
 		{
 			ComHandle<ID3DBlob> code;
 
@@ -156,7 +156,7 @@ namespace asd
 			out.init(code->GetBufferPointer(), code->GetBufferSize());
 		}
 
-		void D3DShader::compile(const String & filename, const String & entrance, const String & shaderModel, Handle<ShaderCode> & out)
+		void D3DShader::compile(const String & filename, const String & entrance, const String & shaderModel, handle<ShaderCode> & out)
 		{
 			ComHandle<ID3DBlob> code;
 			DWORD flags = D3DCOMPILE_ENABLE_STRICTNESS;
@@ -175,7 +175,7 @@ namespace asd
 
 		D3DVertexShader::D3DVertexShader(D3DShaderProgram * program, const String & path, ShaderCodeState state) : D3DShader(program)
 		{
-			Handle<ShaderCode> code;
+			handle<ShaderCode> code;
 
 			switch(state)
 			{
@@ -191,12 +191,12 @@ namespace asd
 			init(code);
 		}
 
-		D3DVertexShader::D3DVertexShader(D3DShaderProgram * program, const Handle<ShaderCode> & code) : D3DShader(program)
+		D3DVertexShader::D3DVertexShader(D3DShaderProgram * program, const handle<ShaderCode> & code) : D3DShader(program)
 		{
 			init(code);
 		}
 
-		void D3DVertexShader::init(const Handle<ShaderCode> & code)
+		void D3DVertexShader::init(const handle<ShaderCode> & code)
 		{
 			HRESULT hr = S_OK;
 
@@ -215,7 +215,7 @@ namespace asd
 
 		D3DPixelShader::D3DPixelShader(D3DShaderProgram * program, const String & path, ShaderCodeState state) : D3DShader(program)
 		{
-			Handle<ShaderCode> code;
+			handle<ShaderCode> code;
 
 			switch(state)
 			{
@@ -231,12 +231,12 @@ namespace asd
 			init(code);
 		}
 
-		D3DPixelShader::D3DPixelShader(D3DShaderProgram * program, const Handle<ShaderCode> & code) : D3DShader(program)
+		D3DPixelShader::D3DPixelShader(D3DShaderProgram * program, const handle<ShaderCode> & code) : D3DShader(program)
 		{
 			init(code);
 		}
 
-		void D3DPixelShader::init(const Handle<ShaderCode> & code)
+		void D3DPixelShader::init(const handle<ShaderCode> & code)
 		{
 			com_assert(
 				program->graphics->device->CreatePixelShader(code->ptr, code->size, nullptr, &id),
@@ -326,7 +326,7 @@ namespace asd
 					_format = ImageFormat::rgba;
 			}
 
-			auto newData = handle<ImageData>();
+			auto newData = make::handle<ImageData>();
 			data.convert(newData, _format);
 
 			D3D11_SUBRESOURCE_DATA texInitData;
@@ -440,7 +440,7 @@ namespace asd
 			graphics->context->UpdateSubresource(buffer, 0, NULL, data, 0, 0);
 		}
 
-		D3DShaderProgram::D3DShaderProgram(D3DGraphics * graphics, const Handle<ShaderCodeSet> & set) : graphics(graphics), layout(layout)
+		D3DShaderProgram::D3DShaderProgram(D3DGraphics * graphics, const handle<ShaderCodeSet> & set) : graphics(graphics), layout(layout)
 		{
 			auto i = set->code.find(ShaderType::Vertex);
 

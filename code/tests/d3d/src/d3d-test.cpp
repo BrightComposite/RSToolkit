@@ -5,8 +5,8 @@
 #include <random>
 #include <mutex>
 
-#include <application/Application.h>
-#include <application/ThreadLoop.h>
+#include <application/application.h>
+#include <application/thread_loop.h>
 
 #include <core/function/Function.h>
 #include <core/function/Thread.h>
@@ -19,8 +19,8 @@
 
 #include <io/FileSystem.h>
 
-#include <math/Vector.h>
-#include <math/Matrix.h>
+#include <math/vector.h>
+#include <math/matrix.h>
 
 #include <ui/windows/Window.h>
 #include <ui/Panel.h>
@@ -33,7 +33,7 @@
 #include <vld.h>
 
 #include "matrix-test.h"
-#include <application/Starter.h>
+#include <application/starter.h>
 
 //---------------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ namespace asd
 
 	typedef high_resolution_clock hrc;
 
-	static int render(Handle<Window> & window);
+	static int render(handle<Window> & window);
 
 	time_point<hrc> lastFrame, lastSecond;
 
@@ -82,9 +82,9 @@ namespace asd
 		auto graphics = GraphicsProvider::provide();
 
 		{
-			Handle<Window> window(graphics, 0, 0, 1280, 480);
+			handle<Window> window(graphics, 0, 0, 1280, 480);
 
-			Handle<BackgroundWidget> back(window);
+			handle<BackgroundWidget> back(window);
 			back->setName("Background");
 
 			graphics->setClearColor(1.0f, 1.0f, 1.0f);
@@ -93,7 +93,7 @@ namespace asd
 
 			window->registerHotkey(HOTKEY_FULLSCREEN, VK_RETURN, MOD_ALT);
 
-			connect([](Handle<HotkeyMessage> & msg, UISpace & dest)
+			connect([](handle<HotkeyMessage> & msg, UISpace & dest)
 			{
 				auto window = static_cast<Window *>(&dest);
 
@@ -105,7 +105,7 @@ namespace asd
 				}
 			}, *window);
 
-			connect([](Handle<MouseDownMessage> & msg, Widget & dest)
+			connect([](handle<MouseDownMessage> & msg, Widget & dest)
 			{
 				switch(msg->button)
 				{
@@ -248,9 +248,9 @@ namespace asd
 			auto arial_italic = FontCache::get("Arial", FontStyle::Italic);
 			auto pristina_font = FontCache::get("Pristina", FontStyle::Regular);
 
-			Handle<Panel> label(back);
-			Handle<Panel> english_label(back);
-			Handle<Panel> open_file(back);
+			handle<Panel> label(back);
+			handle<Panel> english_label(back);
+			handle<Panel> open_file(back);
 
 			WideString engine_text(L"ASD Engine");
 			WideString english_text(L"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz,-:;\" \'.?!\\/~`");
@@ -274,7 +274,7 @@ namespace asd
 			open_file->setPlacement({10, 50}, graphics->getTextSize(open_file_text));
 			Text::set(open_file, open_file_text, arial_italic, Color(0.0f, 0.0f, 0.0f), 16);
 
-			connect([](Handle<WidgetReleaseMessage> & msg, Widget & dest)
+			connect([](handle<WidgetReleaseMessage> & msg, Widget & dest)
 			{
 
 			}, *open_file);
@@ -297,13 +297,13 @@ namespace asd
 	static int load()
 	{
 		matrixTest();
-		Handle<Thread> th(loadWindow);
+		handle<Thread> th(loadWindow);
 		return 0;
 	}
 
 	static Entrance open(load);
 
-	static int render(Handle<Window> & window)
+	static int render(handle<Window> & window)
 	{
 		//std::this_thread::sleep_for(1ms);
 

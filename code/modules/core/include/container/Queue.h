@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/Handle.h>
+#include <core/handle.h>
 #include <container/Container.h>
 
 #include <queue>
@@ -20,17 +20,17 @@ namespace asd
 	using std::queue;
 
 	template<class T, class ... Owner>
-	class Deque : public deque<Handle<T, Owner...>>
+	class Deque : public deque<handle<T, Owner...>>
 	{
 	public:
-		using deque<Handle<T, Owner...>>::deque;
+		using deque<handle<T, Owner...>>::deque;
 	};
 
 	template<class T, class ... Owner>
-	class Queue : public queue<Handle<T, Owner...>>
+	class Queue : public queue<handle<T, Owner...>>
 	{
 	public:
-		using queue<Handle<T, Owner...>>::queue;
+		using queue<handle<T, Owner...>>::queue;
 	};
 }
 

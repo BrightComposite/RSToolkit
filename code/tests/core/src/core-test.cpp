@@ -7,7 +7,7 @@
 
 #include <message/Subject.h>
 
-#include <application/Application.h>
+#include <application/application.h>
 #include <iostream>
 #include <chrono>
 
@@ -17,7 +17,7 @@
 #include <vld.h>
 #endif
 
-#include <application/Starter.h>
+#include <application/starter.h>
 
 //---------------------------------------------------------------------------
 
@@ -60,7 +60,7 @@ namespace asd
 
 //---------------------------------------------------------------------------
 
-	static Entrance first([]()
+	static entrance first([]()
 	{
 		testSubjects();
 		testHandles();
@@ -85,13 +85,13 @@ namespace asd
 	class DummyReceiver : public MessageReceiver
 	{
 	public:
-		void receive(Handle<DummyMessage> & msg, DummySubject & dest) const
+		void receive(handle<DummyMessage> & msg, DummySubject & dest) const
 		{
 
 		}
 	};
 
-	static void receiver(Handle<DummyMessage> & msg, DummySubject & dst)
+	static void receiver(handle<DummyMessage> & msg, DummySubject & dst)
 	{
 
 	}
@@ -100,15 +100,15 @@ namespace asd
 	{
 		static const int times = 64;
 
-		auto h = handle<Object>();
+		auto h = make::handle<Object>();
 
 		start = hrc::now();
 
 		for(register int i = 0; i < times; ++i)
-			Handle<Object> hh = h;
+			handle<Object> hh = h;
 
 		elapsed = hrc::now() - start;
-		cout << "Handle assignment time (" << times << " times): " << elapsed.count() << " ns" << endl;
+		cout << "handle assignment time (" << times << " times): " << elapsed.count() << " ns" << endl;
 
 		start = hrc::now();
 
@@ -123,7 +123,7 @@ namespace asd
 	{
 		Subject subj;
 		DummySubject dummy;
-		auto rcvr = handle<DummyReceiver>();
+		auto rcvr = make::handle<DummyReceiver>();
 
 		auto message = send<DummyMessage>(dummy, 0);
 
@@ -147,7 +147,7 @@ namespace asd
 
 		start = hrc::now();
 
-		connect([](Handle<DummyMessage> & msg, DummySubject & dst)
+		connect([](handle<DummyMessage> & msg, DummySubject & dst)
 		{
 
 		});
@@ -159,7 +159,7 @@ namespace asd
 
 		start = hrc::now();
 
-		connect(c, [](Handle<DummyMessage> & msg, DummySubject & dst)
+		connect(c, [](handle<DummyMessage> & msg, DummySubject & dst)
 		{
 
 		});
@@ -169,7 +169,7 @@ namespace asd
 		/*
 		start = hrc::now();
 
-		connect([](Handle<DummyMessage> & msg, DummySubject & dst)
+		connect([](handle<DummyMessage> & msg, DummySubject & dst)
 		{
 
 		}, dummy);
@@ -179,7 +179,7 @@ namespace asd
 		*/
 		start = hrc::now();
 
-		connect(c, [](Handle<DummyMessage> & msg, DummySubject & dst)
+		connect(c, [](handle<DummyMessage> & msg, DummySubject & dst)
 		{
 
 		}, dummy);
@@ -219,7 +219,7 @@ namespace asd
 
 	static void testHandlesSafety()
 	{
-		Handle<Object> h = handle<Object>();
+		handle<Object> h = make::handle<Object>();
 
 		for(register int i = 0; i < 20; ++i)
 		{

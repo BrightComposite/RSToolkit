@@ -17,7 +17,6 @@ namespace asd
 {
 	using std::exception;
 	using std::runtime_error;
-	using std::function;
 
 	class Interruption
 	{

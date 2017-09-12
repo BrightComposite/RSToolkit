@@ -2,7 +2,7 @@
 #	aligned test facility
 #--------------------------------------------------------
 
-project(alignedtest VERSION 0.1)
+project(aligned_test VERSION 0.1)
 
 #--------------------------------------------------------
 

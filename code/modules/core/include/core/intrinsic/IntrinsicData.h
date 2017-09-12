@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <meta/Preprocessor.h>
+#include <meta/preprocessor.h>
 
 //---------------------------------------------------------------------------
 
@@ -56,7 +56,7 @@
 
 #include <memory.h>
 
-#include <meta/Meta.h>
+#include <meta/meta.h>
 
 #undef min
 #undef max

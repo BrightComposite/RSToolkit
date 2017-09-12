@@ -21,8 +21,8 @@ namespace asd {
     {
 	public:
 		named() : _name("unnamed") {}
-		named(const String & name) : _name(name) {}
-		named(String && name) : _name(forward<String>(name)) {}
+		named(const string & name) : _name(name) {}
+		named(string && name) : _name(forward<string>(name)) {}
 		named(const named & obj) : _name(obj._name) {}
 		named(named && obj) : _name(move(obj._name)) {}
 
@@ -33,18 +33,18 @@ namespace asd {
             return *this;
         }
 
-		const String & name() const
+		const string & name() const
 		{
 			return _name;
 		}
 
-		virtual void setName(const String & name)
+		virtual void setName(const string & name)
 		{
 			_name = name;
 		}
 
 	private:
-		String _name;
+		string _name;
     };
 }
 

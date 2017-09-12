@@ -1,9 +1,10 @@
 //---------------------------------------------------------------------------
 
 #include <freeimage/FreeImageConverter.h>
-#include <core/function/Function.h>
+#include <core/function/method.h>
 
 #include <FreeImage.h>
+#include <core/function/anyway.h>
 
 //---------------------------------------------------------------------------
 
@@ -54,7 +55,7 @@ namespace asd
 
 	void FreeImageConverter::decode(image_data * output, const string & type, const ByteData * raw)
 	{
-		Anyway anyway;
+		anyway a;
 		FREE_IMAGE_FORMAT internal_format = getFIFFormat(type);
 
 		if(internal_format == FIF_UNKNOWN)
@@ -65,14 +66,14 @@ namespace asd
 		if(!mem)
 			throw ImageConversionException("Can't open memory for image");
 
-		anyway.add(FreeImage_CloseMemory, mem);
+		a.add(FreeImage_CloseMemory, mem);
 
 		FIBITMAP * bmp = FreeImage_LoadFromMemory(internal_format, mem);
 
 		if(!bmp)
 			throw ImageConversionException("Can't read image of format \"", type, "\"");
 
-		anyway.add(FreeImage_Unload, bmp);
+		a.add(FreeImage_Unload, bmp);
 
 		output->area = {FreeImage_GetWidth(bmp), FreeImage_GetHeight(bmp)};
 
@@ -86,7 +87,7 @@ namespace asd
 
 	void FreeImageConverter::encode(OwnedByteData * output, const string & type, const image_data * input)
 	{
-		Anyway anyway;
+		anyway a;
 		FREE_IMAGE_FORMAT internal_format = getFIFFormat(type);
 
 		if(internal_format == FIF_UNKNOWN)
@@ -97,7 +98,7 @@ namespace asd
 		if(!mem)
 			throw ImageConversionException("Can't allocate memory for image");
 		
-		anyway.add(FreeImage_CloseMemory, mem);
+		a.add(FreeImage_CloseMemory, mem);
 
 		uint w = input->width(), h = input->height();
 		int bpp, pitch;
@@ -128,7 +129,7 @@ namespace asd
 		if(!bmp)
 			throw ImageConversionException("Can't convert raw data to format \"", type, "\"");
 
-		anyway.add(FreeImage_Unload, bmp);
+		a.add(FreeImage_Unload, bmp);
 
 		if(!FreeImage_SaveToMemory(internal_format, bmp, mem))
 			throw ImageConversionException("Can't save bitmap of format \"", type, "\" to memory");

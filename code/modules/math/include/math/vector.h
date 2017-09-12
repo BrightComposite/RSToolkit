@@ -224,7 +224,7 @@ namespace asd
 			
 			template<class U, useif<can_cast<U, vector>::value>>
 			vector(const U & v) {
-				Cast<U, vector>::cast(*this, v);
+				cast::to(*this, v);
 			}
 			
 			vector(const T * v) {
@@ -247,7 +247,7 @@ namespace asd
 			
 			template<class U, useif<can_cast<U, vector>::value>>
 			vector & operator =(const U & v) {
-				Cast<U, vector>::cast(*this, v);
+				cast::to(*this, v);
 				return *this;
 			}
 			

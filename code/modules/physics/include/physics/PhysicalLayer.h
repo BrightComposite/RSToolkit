@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------
 
 #include <core/Object.h>
-#include <container/ArrayList.h>
+#include <container/array_list.h>
 
 #include <space/spatial.h>
 

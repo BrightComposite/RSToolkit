@@ -2,7 +2,7 @@
 #	handle test facility
 #--------------------------------------------------------
 
-project(handletest VERSION 0.1)
+project(handle_test VERSION 0.1)
 
 #--------------------------------------------------------
 

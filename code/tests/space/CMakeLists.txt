@@ -2,7 +2,7 @@
 #	space test facility
 #--------------------------------------------------------
 
-project(spacetest VERSION 0.1)
+project(space_test VERSION 0.1)
 
 #--------------------------------------------------------
 

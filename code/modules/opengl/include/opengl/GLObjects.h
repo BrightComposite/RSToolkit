@@ -109,7 +109,7 @@ namespace asd
 			uint _offset = 0;
 			uint _verticesCount = 0;
 			uint _indicesCount = 0;
-			ArrayList<vertex_buffer> _buffers;
+			array_list<vertex_buffer> _buffers;
 			handle<GLIndexBuffer> _ibuffer = nullptr;
 			vertex_layout * _instancedLayout = nullptr;
 			unique<instanced_mesh_data> _instancedData = nullptr;
@@ -280,7 +280,7 @@ namespace asd
 			virtual api(opengl3_3) void resize() override;
 
 			GLGraphics * _graphics;
-			ArrayList<GLImage> _textures;
+			array_list<GLImage> _textures;
 			GLuint id;
 			GLuint depthBuffer;
 			array_list<GLenum> buffers;

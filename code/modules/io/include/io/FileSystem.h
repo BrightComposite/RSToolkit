@@ -10,7 +10,7 @@
 #define BOOST_NO_AUTO_PTR
 
 #include <boost/filesystem/operations.hpp>
-#include <meta/Macro.h>
+#include <meta/macro.h>
 #include <string>
 
 //---------------------------------------------------------------------------

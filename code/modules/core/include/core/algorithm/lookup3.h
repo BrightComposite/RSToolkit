@@ -21,7 +21,7 @@
   * Read lookup3.cpp for more information about the functions.
   */
 
-#include <meta/Types.h>
+#include <meta/types.h>
 
 //---------------------------------------------------------------------------
 

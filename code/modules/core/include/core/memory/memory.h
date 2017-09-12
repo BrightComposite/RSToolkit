@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <meta/Types.h>
+#include <meta/types.h>
 
 #include <string.h>
 #include <stdlib.h>

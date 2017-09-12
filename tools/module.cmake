@@ -414,7 +414,6 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		
 		if(NOT "${PROJECT_DIR}" STREQUAL "modules")
 			set(PROJECT_ID ${PROJECT_ID}_${PROJECT_DIR})
-			message("${PROJECT_ID}")
 		endif()
 		
 		set(PROJECT_NAME_OF_${PROJECT_ID} ${PROJECT_NAME} CACHE STRING "project name of ${PROJECT_ID} module")
@@ -559,7 +558,6 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		api_export(${PROJECT_NAME})
 
 		collect_dependencies(DEPENDENCIES ${PROJECT_NAME})
-		message("${DEPENDENCIES}")
 
 		if("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "INLINE")
 			foreach(DEPENDENCY ${DEPENDENCIES})

@@ -104,7 +104,7 @@ namespace asd
 	FreeTypeDecoder::FreeTypeDecoder()
 	{
 		if(FT_Init_FreeType(&ft))
-			throw Exception("Can't intialize freetype library!");
+			throw Exception("Can't initialize freetype library!");
 	}
 
 	FreeTypeDecoder::~FreeTypeDecoder()

@@ -53,16 +53,16 @@ namespace asd
 	
 	struct ContactSensorCallback : public btCollisionWorld::ContactResultCallback
 	{
-		using Base = btCollisionWorld::ContactResultCallback;
+		using base_type = btCollisionWorld::ContactResultCallback;
 		
 		ContactSensorCallback(btRigidBody * body, array_list<btVector3> & points)
-			: Base(), body(body), points(points) {}
+			: base_type(), body(body), points(points) {}
 		
 		btRigidBody * body;
 		array_list<btVector3> & points;
 		
 		virtual bool needsCollision(btBroadphaseProxy * proxy) const {
-			if(!Base::needsCollision(proxy)) {
+			if(!base_type::needsCollision(proxy)) {
 				return false;
 			}
 			

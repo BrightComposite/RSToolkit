@@ -8,8 +8,8 @@
 //---------------------------------------------------------------------------
 
 #include <core/object.h>
-#include <container/Data.h>
-#include <container/List.h>
+#include <container/data.h>
+#include <container/list.h>
 
 #include <stdarg.h>
 #include <array>

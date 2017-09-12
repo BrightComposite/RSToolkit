@@ -10,7 +10,7 @@
 #include "IntrinsicData.h"
 #include "IntrinsicCvt.h"
 
-#include <meta/Bitmask.h>
+#include <meta/bitmask.h>
 #include <cmath>
 
 //---------------------------------------------------------------------------

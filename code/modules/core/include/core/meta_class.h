@@ -10,7 +10,7 @@
 #include <functional>
 #include <array>
 
-#include <meta/Meta.h>
+#include <meta/meta.h>
 
 //---------------------------------------------------------------------------
 

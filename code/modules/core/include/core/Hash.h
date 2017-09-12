@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <meta/Types.h>
+#include <meta/types.h>
 #include <cstddef>
 #include <string>
 
@@ -47,18 +47,18 @@ namespace asd
 	size_t ptr_hash(const T * value);
 
 	template<class T, bool isPod = std::is_pod<T>::value>
-	class Hashed : public T
+	class hashed : public T
 	{
 		size_t _hashValue;
 
 	public:
 		template<typename ... A, useif<can_construct<T, A...>::value>>
-		Hashed(A &&... args) : T(forward<A>(args)...), _hashValue(asd::hash<Hashed>()(static_cast<const T &>(*this))) {}
+		hashed(A &&... args) : T(forward<A>(args)...), _hashValue(asd::hash<hashed>()(static_cast<const T &>(*this))) {}
 
-		Hashed(const Hashed & val) : T(val), _hashValue(val._hashValue) {}
-		Hashed(Hashed && val) : T(forward<Hashed>(val)), _hashValue(val._hashValue) {}
+		hashed(const hashed & val) : T(val), _hashValue(val._hashValue) {}
+		hashed(hashed && val) : T(forward<hashed>(val)), _hashValue(val._hashValue) {}
 
-		Hashed & operator = (const Hashed & val)
+		hashed & operator = (const hashed & val)
 		{
 			T::operator = (val);
 			_hashValue = val._hashValue;
@@ -66,16 +66,16 @@ namespace asd
 			return *this;
 		}
 
-		Hashed & operator = (Hashed && val)
+		hashed & operator = (hashed && val)
 		{
-			T::operator = (forward<Hashed>(val));
+			T::operator = (forward<hashed>(val));
 			_hashValue = val._hashValue;
 
 			return *this;
 		}
 
-		template<class A, skipif<based_on<A, Hashed>::value>>
-		Hashed & operator = (A && val)
+		template<class A, skipif<based_on<A, hashed>::value>>
+		hashed & operator = (A && val)
 		{
 			T::operator = (forward<A>(val));
 			_hashValue = gethash(static_cast<T &>(*this));
@@ -83,7 +83,7 @@ namespace asd
 			return *this;
 		}
 
-		bool operator == (const Hashed & val) const
+		bool operator == (const hashed & val) const
 		{
 			return _hashValue == val._hashValue && static_cast<const T &>(*this) == static_cast<const T &>(val);
 		}
@@ -95,17 +95,17 @@ namespace asd
 	};
 
 	template<class T>
-	class Hashed<T, true>
+	class hashed<T, true>
 	{
 		size_t _hashValue;
 		T _inner;
 
 	public:
-		Hashed() : _inner(), _hashValue(gethash(_inner)) {}
-		Hashed(T inner) : _inner(inner), _hashValue(gethash(_inner)) {}
-		Hashed(const Hashed & val) : _inner(val._inner), _hashValue(val._hashValue) {}
+		hashed() : _inner(), _hashValue(gethash(_inner)) {}
+		hashed(T inner) : _inner(inner), _hashValue(gethash(_inner)) {}
+		hashed(const hashed & val) : _inner(val._inner), _hashValue(val._hashValue) {}
 
-		Hashed & operator = (const Hashed & val)
+		hashed & operator = (const hashed & val)
 		{
 			_inner = val._inner;
 			_hashValue = val._hashValue;
@@ -113,7 +113,7 @@ namespace asd
 			return *this;
 		}
 
-		Hashed & operator = (const T & val)
+		hashed & operator = (const T & val)
 		{
 			_inner = val;
 			_hashValue = gethash(_inner);
@@ -121,7 +121,7 @@ namespace asd
 			return *this;
 		}
 
-		bool operator == (const Hashed & val) const
+		bool operator == (const hashed & val) const
 		{
 			return _hashValue == val._hashValue && _inner == val._inner;
 		}
@@ -143,23 +143,23 @@ namespace asd
 	};
 
 	template<class T>
-	class Hashed<Hashed<T>, false> : public Hashed<T>
+	class hashed<hashed<T>, false> : public hashed<T>
 	{
 	public:
-		using Hashed<T>::Hashed;
+		using hashed<T>::hashed;
 		
 		template<class A>
-		Hashed & operator = (A && val)
+		hashed & operator = (A && val)
 		{
-			Hashed<T>::operator = (forward<A>(val));
+			hashed<T>::operator = (forward<A>(val));
 			return *this;
 		}
 	};
 
 	template<class T, bool isPod>
-	struct hash<Hashed<T, isPod>>;
+	struct hash<hashed<T, isPod>>;
 
-	typedef Hashed<void *> PointerId;
+	typedef hashed<void *> PointerId;
 
 	template<class X, class Y>
 	inline size_t mixhash(const X & first, const Y & second)
@@ -173,19 +173,19 @@ namespace asd
 		result = gethash(first) ^ gethash(first);
 	}
 
-	struct AutoIdentifier
+	struct auto_id
 	{
-		bool operator == (const AutoIdentifier & val) const
+		bool operator == (const auto_id & val) const
 		{
 			return this == &val;
 		}
 
-		bool operator < (const AutoIdentifier & val) const
+		bool operator < (const auto_id & val) const
 		{
 			return this < &val;
 		}
 
-		bool operator > (const AutoIdentifier & val) const
+		bool operator > (const auto_id & val) const
 		{
 			return this > &val;
 		}
@@ -254,10 +254,10 @@ namespace asd
 	}
 
 	template<class T>
-	use_class_hash(Hashed<T>);
+	use_class_hash(hashed<T>);
 
 	template<>
-	use_class_hash(AutoIdentifier);
+	use_class_hash(auto_id);
 }
 
 //---------------------------------------------------------------------------

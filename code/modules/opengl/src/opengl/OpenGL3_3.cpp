@@ -39,14 +39,14 @@ namespace asd
 		
 		class LineWidthState : public graphics::BrushState<int>
 		{
-			using Base = typename graphics::BrushState<int>;
+			using base_type = typename graphics::BrushState<int>;
 		
 		public:
-			LineWidthState(GLGraphics * graphics) : Base(graphics, 1) {}
+			LineWidthState(GLGraphics * graphics) : base_type(graphics, 1) {}
 		
 		protected:
 			virtual void change() override {
-				Base::change();
+				base_type::change();
 				glLineWidth(float(_state));
 			}
 		};

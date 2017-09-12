@@ -12,8 +12,8 @@
 #endif
 
 #include <core/addition/singleton.h>
-#include <container/ArrayList.h>
-#include <core/function/Function.h>
+#include <container/array_list.h>
+#include <function/method.h>
 #include <core/String.h>
 
 #include "thread_loop.h"

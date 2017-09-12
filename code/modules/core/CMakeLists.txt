@@ -38,10 +38,6 @@ module(STATIC)
 				crc32.h
 				lookup3.h
 				..
-			function/
-				Function.h
-				Thread.h
-				..
 			intrinsic/
 				Intrinsic.h
 				IntrinsicCvt.h
@@ -74,30 +70,43 @@ module(STATIC)
 
 		group(include Headers)
 		files(
-			ArrayList.h
-			Container.h
-			Data.h
-			List.h
-			Map.h
-			Queue.h
-			Set.h
-			Stack.h
-			StaticMap.h
+			array_list.h
+			any_list.h
+			container.h
+			data.h
+			list.h
+			map.h
+			queue.h
+			set.h
+			stack.h
+			static_map.h
 			)
+		
+		domain(function)
+		
+		group(include Headers)
+		files(
+			anyway.h
+			function.h
+			method.h
+			methods_table.h
+		)
 
 		domain(morph)
 
 		group(include Headers)
 		files(
-			Component.h
-			Component.hpp
-			Morph.h
-			Morph.hpp
-			Property.h
-			Property.hpp
+			component.h
+			component.hpp
+			morph.h
+			morph.hpp
+			property.h
+			property.hpp
 			)
 	endsources()
 endmodule()
+
+vendor(hopscotch-map)
 
 #[[if(${UNIX})
 	find_package(Threads REQUIRED)

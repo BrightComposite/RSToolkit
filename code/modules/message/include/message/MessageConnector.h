@@ -7,10 +7,11 @@
 
 //---------------------------------------------------------------------------
 
-#include <container/ArrayList.h>
+#include <container/array_list.h>
 #include <forward_list>
 
-#include "Message.h"
+#include "message.h"
+#include "Channel.hpp"
 
 //---------------------------------------------------------------------------
 
@@ -47,10 +48,10 @@ namespace asd
 		struct can_connect_function : false_type {};
 		
 		template<class Dst, class Msg>
-		struct can_connect_function<void (handle<Msg> &, Dst &)> : is_message<Msg> {};
+		struct can_connect_function<void (::asd::handle<Msg> &, Dst &)> : is_message<Msg> {};
 		
 		template<class Dst, class Msg, class RealDst>
-		struct can_connect_function<void (handle<Msg> &, Dst &), RealDst> : is_true<is_message<Msg>::value, is_dest<RealDst, Msg>::value, based_on<RealDst, Dst>::value> {};
+		struct can_connect_function<void (::asd::handle<Msg> &, Dst &), RealDst> : is_true<is_message<Msg>::value, is_dest<RealDst, Msg>::value, based_on<RealDst, Dst>::value> {};
 	}
 	
 	template<typename Method, class RealDst = empty>
@@ -62,7 +63,7 @@ namespace asd
 	template<typename Function, class RealDst>
 	struct can_connect_function<Function, RealDst, false> : false_type {};
 	
-	template<typename Functor, class RealDst = empty, bool = has_caller<Functor>::value, bool = is_std_function<Functor>::value>
+	template<typename Functor, class RealDst = empty, bool = has_caller<Functor>::value, bool = is_function_class<Functor>::value>
 	struct can_connect_functor : internals::can_connect_method<decltype(&Functor::operator()), RealDst> {};
 	
 	template<typename Functor, class RealDst>
@@ -179,13 +180,13 @@ namespace asd
 	template<class Dst, typename Msg>
 	struct MessageConnector<Dst, Msg, true> : MessageConnector<Dst, Msg, false>
 	{
-		using Base = MessageConnector<Dst, Msg, false>;
+		using base_type = MessageConnector<Dst, Msg, false>;
 		using Rcvr = Receiver<Dst, Msg>;
 		using Rcvrs = Receivers<Dst, Msg>;
 
-		using Base::connect;
-		using Base::disconnect;
-		using Base::receivers;
+		using base_type::connect;
+		using base_type::disconnect;
+		using base_type::receivers;
 
 		static size_t connect(Dst & dest, Rcvr && receiver) {
 			return Rcvrs::addTo(dest, forward<Rcvr>(receiver));

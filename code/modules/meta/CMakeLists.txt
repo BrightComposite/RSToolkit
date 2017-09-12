@@ -16,18 +16,18 @@ module(INLINE)
 
 		group(include Headers)
 		files(
-			Adapt.h
-			Bitmask.h
-			BoolTypes.h
-			Cast.h
-			Flag.h
-			Inheritance.h
-			Macro.h
-			Meta.h
-			Preprocessor.h
-			Sfinae.h
-			Types.h
-			UseIf.h
+			adapt.h
+			bitmask.h
+			bool_types.h
+			cast.h
+			flag.h
+			inheritance.h
+			macro.h
+			meta.h
+			preprocessor.h
+			sfinae.h
+			types.h
+			useif.h
 		)
 	endsources()
 endmodule()

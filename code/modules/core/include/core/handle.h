@@ -9,7 +9,7 @@
 
 #include <core/addition/wrapper.h>
 #include <core/shareable.h>
-#include <container/Container.h>
+#include <container/container.h>
 
 #include <boost/intrusive_ptr.hpp>
 #include <boost/move/unique_ptr.hpp>
@@ -182,16 +182,16 @@ namespace asd
 	public:
 		unique() : base() {}
 		
-		unique(const unique & h) = delete;
+		unique(const unique & u) = delete;
 		
-		unique(unique && h) : base(std::forward<unique<T>>(h)) {}
+		unique(unique && u) : base(u.release()) {}
 		
 		unique(T * shared) : base(shared) {}
 		
 		unique(nullptr_t) : base(nullptr) {}
 		
 		template<class U, useif<based_on<U, T>::value, !is_const<U>::value>>
-		unique(unique<U> && h) : base(std::forward<unique<U>>(h)) {}
+		unique(unique<U> && u) : base(u.release()) {}
 		
 		template<class U = T, useif<can_construct<U>::value>>
 		unique(empty) : base(new T()) {}
@@ -210,17 +210,17 @@ namespace asd
 		unique & operator =(const unique &) = delete;
 		
 		unique & operator =(unique && u) {
-			base::operator =(std::forward<unique>(u));
+			this->reset(u.release());
 			return *this;
 		}
 		
-		template<class U, useif<based_on<U, T>::value, !is_const<U>::value>>
+		template<class U, useif<is_base_of<T, U>::value, !is_const<U>::value>>
 		unique & operator =(unique<U> && u) {
-			base::operator =(std::forward<unique<U>>(u));
+			this->reset(u.release());
 			return *this;
 		}
 		
-		template<class U, useif<based_on<U, T>::value, !is_const<U>::value>>
+		template<class U, useif<is_base_of<T, U>::value, !is_const<U>::value>>
 		unique & operator =(handle<U> && h) {
 			this->reset(h.detach());
 			return *this;

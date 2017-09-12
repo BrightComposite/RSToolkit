@@ -6,10 +6,10 @@
 
 #include <application/starter.h>
 
-#include <core/function/Function.h>
+#include <core/function/method.h>
 #include <core/function/Thread.h>
 
-#include <meta/XPack.h>
+#include <meta/xpack.h>
 
 #include <graphics/Provider.h>
 

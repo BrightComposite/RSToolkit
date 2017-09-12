@@ -26,11 +26,11 @@ module(STATIC)
 			MessageClass.hpp
 			MessageConnector.h
 			MessageBroadcaster.h
-			Subject.h
+			subject.h
 		)
 
 		group(src Sources)
-		files(Subject.cpp)
+		files(subject.cpp)
 	endsources()
 endmodule()
 

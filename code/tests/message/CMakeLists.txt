@@ -2,7 +2,7 @@
 #	message test facility
 #--------------------------------------------------------
 
-project(messagetest VERSION 0.1)
+project(message_test VERSION 0.1)
 
 #--------------------------------------------------------
 

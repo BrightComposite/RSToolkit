@@ -8,7 +8,7 @@
 #include <application/application.h>
 #include <application/thread_loop.h>
 
-#include <core/function/Function.h>
+#include <core/function/method.h>
 #include <core/function/Thread.h>
 
 #include <direct3d/Direct3D11.h>

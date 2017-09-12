@@ -67,7 +67,7 @@ namespace asd
 			
 			template<class U, useif<can_cast<U, quaternion>::value>>
 			quaternion(const U & v) {
-				Cast<U, quaternion>::cast(*this, v);
+				cast::to(*this, v);
 			}
 			
 			quaternion(const VectorType & axis, T angle) : quaternion(trigon(angle * 0.5f).template shuffle<0, 0, 0, 1>() * axis.template blend<0, 0, 0, 1>(VectorType::positiveW)) {}
@@ -80,7 +80,7 @@ namespace asd
 			
 			template<class U, useif<can_cast<U, quaternion>::value>>
 			quaternion & operator =(const U & q) {
-				Cast<U, quaternion>::cast(*this, q);
+				cast::to(*this, q);
 				return *this;
 			}
 			

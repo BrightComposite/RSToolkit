@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <meta/Macro.h>
+#include <meta/macro.h>
 
 //---------------------------------------------------------------------------
 
@@ -166,38 +166,38 @@ namespace asd
 	template<class T>
 	class ComHandle<T> : public ComHandle<T, Empty>
 	{
-		typedef ComHandle<T, Empty> Base;
+		typedef ComHandle<T, Empty> base_type;
 
 	public:
-		using Base::ComHandle;
+		using base_type::ComHandle;
 
-		inline ComHandle() : Base() {}
-		inline ComHandle(const ComHandle & com) : Base(com) {}
-		inline ComHandle(ComHandle && com) : Base(forward<ComHandle>(com)) {}
+		inline ComHandle() : base_type() {}
+		inline ComHandle(const ComHandle & com) : base_type(com) {}
+		inline ComHandle(ComHandle && com) : base_type(forward<ComHandle>(com)) {}
 
 		virtual ~ComHandle() {}
 
 		inline ComHandle & operator = (const ComHandle & com)
 		{
-			Base::operator = (com);
+			base_type::operator = (com);
 			return *this;
 		}
 
 		inline ComHandle & operator = (ComHandle && com)
 		{
-			Base::operator = (forward<ComHandle>(com));
+			base_type::operator = (forward<ComHandle>(com));
 			return *this;
 		}
 
 		inline ComHandle & operator = (const T * obj)
 		{
-			Base::operator = (obj);
+			base_type::operator = (obj);
 			return *this;
 		}
 
 		inline ComHandle & operator = (nullptr_t)
 		{
-			Base::operator = (nullptr);
+			base_type::operator = (nullptr);
 			return *this;
 		}
 	};

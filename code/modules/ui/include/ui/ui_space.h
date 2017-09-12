@@ -13,7 +13,7 @@
 #include "Cursor.h"
 #endif
 
-#include <meta/Bitmask.h>
+#include <meta/bitmask.h>
 #include <graphics/surface.h>
 #include <graphics/Color.h>
 #include <graphics/Graphics.h>
@@ -26,7 +26,7 @@ namespace asd
 	
 	class surface;
 	
-	class ui_space : public Subject
+	class ui_space : public subject
 	{
 		deny_copy(ui_space);
 		

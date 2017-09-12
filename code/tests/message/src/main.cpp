@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
 #include <application/starter.h>
-#include <message/Subject.h>
+#include <message/subject.h>
 
 #include <iostream>
 #include <chrono>
@@ -33,7 +33,7 @@ namespace asd
 		(int, value)
 	)
 
-	class DummySubject : public Subject
+	class DummySubject : public subject
 	{
 	public:
 		bind_messages(DummySubject, DummyMessage1, DummyMessage2, DummyMessage3);

@@ -2,7 +2,7 @@
 #	Special small test
 #--------------------------------------------------------
 
-project(smalltest VERSION 0.1)
+project(small_test VERSION 0.1)
 
 #--------------------------------------------------------
 

@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <meta/Inheritance.h>
+#include <meta/inheritance.h>
 
 #include "vector.h"
 #include "quaternion.h"

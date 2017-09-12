@@ -7,11 +7,11 @@
 
 //---------------------------------------------------------------------------
 
-#include <container/ArrayList.h>
-#include <morph/Component.h>
-#include <morph/Property.h>
+#include <container/array_list.h>
+#include <morph/component.h>
+#include <morph/property.h>
 
-#include <message/Subject.h>
+#include <message/subject.h>
 
 #include <graphics/ScreenCoord.h>
 
@@ -74,7 +74,7 @@ namespace asd
 		MouseButton _buttons = MouseButton::None;
 	};
 
-	class widget_component : public Component, public Connector
+	class widget_component : public component, public Connector
 	{
 		components_origin(widget_component);
 
@@ -97,7 +97,7 @@ namespace asd
 
 	create_properties_from(ui, widget_property);
 
-	class widget : public Subject
+	class widget : public subject
 	{
 		deny_copy(widget);
 
@@ -290,8 +290,8 @@ namespace asd
 		int _focusOrder = 0;
 		int _displayOrder = 0;
 
-		using DisplaySort = MemberSort<widget, int, &widget::_displayOrder>;
-		using FocusSort = MemberSort<widget, int, &widget::_focusOrder>;
+		using DisplaySort = member_sort<widget, int, &widget::_displayOrder>;
+		using FocusSort = member_sort<widget, int, &widget::_focusOrder>;
 
 		class Tree : public asd::tree<Tree, Set<widget>>
 		{
@@ -318,7 +318,7 @@ namespace asd
 	channels_api(ui, widget, WidgetMessages)
 
 		template<>
-	struct hash<widget> : hash<Subject> {};
+	struct hash<widget> : hash<subject> {};
 
 	class WidgetLayer : public shareable
 	{
@@ -341,7 +341,7 @@ namespace asd
 
 		int _order;
 
-		using Sorter = MemberSort<WidgetLayer, int, &WidgetLayer::_order>;
+		using Sorter = member_sort<WidgetLayer, int, &WidgetLayer::_order>;
 	};
 
 	template<class T>
@@ -439,7 +439,7 @@ namespace asd
 		}
 
 	protected:
-		ArrayList<WidgetLayer> _layers;
+		array_list<WidgetLayer> _layers;
 	};
 
 	create_component(ui, CustomLayerComponent);

@@ -7,9 +7,8 @@
 
 //---------------------------------------------------------------------------
 
-#include <morph/Morph.h>
+#include <morph/morph.h>
 
-#include "Channel.hpp"
 #include "MessageConnector.h"
 
 //---------------------------------------------------------------------------
@@ -33,7 +32,7 @@ namespace asd
 
 	create_morph_pool(message, BasicReceivers);
 
-	using ReceiversSet = Morph<BasicReceivers>;
+	using ReceiversSet = morph<BasicReceivers>;
 
 	member_checker(has_receivers, _rcvrs);
 

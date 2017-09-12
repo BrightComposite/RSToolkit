@@ -36,9 +36,9 @@ namespace asd
 																						\
 	declare_contents(Msg, __VA_ARGS__);													\
 																						\
-	struct Msg : Internals::Message<Msg>												\
+	struct Msg : internals::message<Msg>												\
 	{																					\
-		using Internals::Message<Msg>::Message;											\
+		using internals::message<Msg>::message;											\
 	};																					\
 																						\
 	type_getter(macrowrap(DestGetter<T, Msg>), T, pp_cat(DestOf, Msg), empty);

@@ -64,7 +64,7 @@ namespace asd
 			uint attrCount = 0;
 			
 			uint topology;
-			ArrayList<vertex_buffer> buffers;
+			array_list<vertex_buffer> buffers;
 			uint offset;
 			uint verticesCount;
 		};

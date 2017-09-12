@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <meta/Inheritance.h>
+#include <meta/inheritance.h>
 
 #include "point.h"
 #include "range.h"

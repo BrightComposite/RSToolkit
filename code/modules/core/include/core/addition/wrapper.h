@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/function/Function.h>
+#include <function/method.h>
 #include <core/meta_class.h>
 #include <core/Hash.h>
 
@@ -144,16 +144,16 @@ namespace asd
 		template<class, class>
 		friend class wrapper;
 
-		typedef wrapper<T, wrapper<T, empty>> Base;
+		typedef wrapper<T, wrapper<T, empty>> base_type;
 
 	public:
-		wrapper() : Base(), _inner() {}
-		wrapper(const T & inner) : Base(), _inner(inner) {}
-		wrapper(T && inner) : Base(), _inner(forward<T>(inner)) {}
+		wrapper() : base_type(), _inner() {}
+		wrapper(const T & inner) : base_type(), _inner(inner) {}
+		wrapper(T && inner) : base_type(), _inner(forward<T>(inner)) {}
 		template<class U, class V>
-		wrapper(const wrapper<U, V> & im) : Base(), _inner(im._inner) {}
+		wrapper(const wrapper<U, V> & im) : base_type(), _inner(im._inner) {}
 		template<class U, class V>
-		wrapper(wrapper<U, V> && im) : Base(), _inner(move(im._inner)) {}
+		wrapper(wrapper<U, V> && im) : base_type(), _inner(move(im._inner)) {}
 
 		template<class U, class V>
 		inline wrapper & operator = (const wrapper<U, V> & im)
@@ -343,16 +343,16 @@ namespace asd
 		template<class, class>
 		friend class wrapper;
 
-		typedef wrapper<const T, wrapper<const T, empty>> Base;
+		typedef wrapper<const T, wrapper<const T, empty>> base_type;
 
 	public:
-		wrapper() : Base(), _inner() {}
-		wrapper(const T & inner) : Base(), _inner(inner) {}
-		wrapper(T && inner) : Base(), _inner(forward<T>(inner)) {}
+		wrapper() : base_type(), _inner() {}
+		wrapper(const T & inner) : base_type(), _inner(inner) {}
+		wrapper(T && inner) : base_type(), _inner(forward<T>(inner)) {}
 		template<class U, class V>
-		wrapper(const wrapper<U, V> & im) : Base(), _inner(im._inner) {}
+		wrapper(const wrapper<U, V> & im) : base_type(), _inner(im._inner) {}
 		template<class U, class V>
-		wrapper(wrapper<U, V> && im) : Base(), _inner(move(im._inner)) {}
+		wrapper(wrapper<U, V> && im) : base_type(), _inner(move(im._inner)) {}
 
 		template<class U, class V>
 		inline wrapper & operator = (const wrapper<U, V> & im)

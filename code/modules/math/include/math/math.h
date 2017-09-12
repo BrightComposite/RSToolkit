@@ -9,7 +9,7 @@
 
 #define _USE_MATH_DEFINES
 
-#include <meta/Meta.h>
+#include <meta/meta.h>
 
 #include <math.h>
 #include <algorithm>

@@ -39,7 +39,7 @@ namespace asd
 		
 		forceinline aligned(aligned && s) : _ptr(create(forward<aligned>(s))) {}
 		
-		template<class ... A, useif<(sizeof...(A) > 0), asd::not_same_types<aligned, asd::Types<A...>>::value, can_construct<T, A...>::value>>
+		template<class ... A, useif<(sizeof...(A) > 0), asd::not_same_types<aligned, asd::types<A...>>::value, can_construct<T, A...>::value>>
 		forceinline aligned(A && ... args) : _ptr(create(forward<A>(args)...)) {}
 		
 		forceinline ~aligned() {

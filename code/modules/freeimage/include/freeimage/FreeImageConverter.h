@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------
 
 #include <graphics/image/io/ImageIO.h>
-#include <container/Map.h>
+#include <container/map.h>
 #include <core/String.h>
 
 //---------------------------------------------------------------------------

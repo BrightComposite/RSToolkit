@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <meta/Meta.h>
+#include <meta/meta.h>
 
 //---------------------------------------------------------------------------
 
@@ -26,7 +26,7 @@ namespace asd
 		struct alignment contents<Class> 								                                                    \
 		{																                                                    \
 			static const int count = pp_seq_fields_count(__VA_ARGS__);	                                                    \
-			using types	= asd::Types<pp_seq_fields_types(__VA_ARGS__)>;		                                                    \
+			using types	= asd::types<pp_seq_fields_types(__VA_ARGS__)>;		                                                    \
 																		                                                    \
 			pp_seq_fields(__VA_ARGS__)									                                                    \
 		};																                                                    \
@@ -39,7 +39,7 @@ namespace asd
 
 	template<class T, class ... A>
 	struct can_construct_contents : bool_type<
-		are_convertible<asd::Types<A...>, contents_types<T>>::value ||
+		are_convertible<asd::types<A...>, contents_types<T>>::value ||
 		(sizeof...(A) == 0 && can_construct<internals::contents<T>>::value)
 	> {};
 
@@ -76,7 +76,7 @@ namespace asd
 
 	private:
 		template<class ... AT, class ... A>
-		contents(Types<AT...>, A &&... args) :
+		contents(types<AT...>, A &&... args) :
 			base({adapt<AT, A>(forward<A>(args))...}) {}
 	};
 }

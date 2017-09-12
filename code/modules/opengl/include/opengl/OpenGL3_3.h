@@ -7,9 +7,9 @@
 
 #include <core/addition/cached.h>
 #include <core/addition/singleton.h>
-#include <container/ArrayList.h>
+#include <container/array_list.h>
 
-#include <message/Subject.h>
+#include <message/subject.h>
 
 #include <graphics/Graphics3D.h>
 

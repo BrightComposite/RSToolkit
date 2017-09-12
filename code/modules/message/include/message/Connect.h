@@ -72,7 +72,7 @@ namespace asd
 			_connections.push_back(handle<Connection<Dst, Msg, RealDst>>(id, dest));
 		}
 
-		ArrayList<BasicConnection> _connections;
+		array_list<BasicConnection> _connections;
 	};
 
 //---------------------------------------------------------------------------

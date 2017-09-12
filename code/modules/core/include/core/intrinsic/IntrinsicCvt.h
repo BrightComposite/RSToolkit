@@ -13,7 +13,7 @@
 #include <tmmintrin.h>
 #endif
 
-#include <meta/Types.h>
+#include <meta/types.h>
 
 //---------------------------------------------------------------------------
 

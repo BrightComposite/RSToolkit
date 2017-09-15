@@ -7,6 +7,7 @@
 
 //---------------------------------------------------------------------------
 
+#ifndef _MSC_VER
 static char * strtok_s(char * s, const char * delim, char ** save) {
 	return strtok_r(s, delim, save);
 }
@@ -14,6 +15,7 @@ static char * strtok_s(char * s, const char * delim, char ** save) {
 static wchar_t * wcstok_s(wchar_t * s, const wchar_t * delim, wchar_t ** save) {
 	return wcstok(s, delim, save);
 }
+#endif
 
 namespace asd
 {

@@ -39,7 +39,7 @@ namespace asd
 		bind_messages(DummySubject, DummyMessage1, DummyMessage2, DummyMessage3);
 	};
 
-	channels_api(messagetest, DummySubject, DummyMessage1, DummyMessage2, DummyMessage3)
+	channels_api(message_test, DummySubject, DummyMessage1, DummyMessage2, DummyMessage3)
 
 	static entrance open([]() {
 		DummySubject subject;
@@ -49,9 +49,11 @@ namespace asd
 				onmessage(DummyMessage1) {
 					++msg->value;
 				};
+
 				onmessage(DummyMessage2) {
 					++msg->value;
 				};
+
 				onmessage(DummyMessage3) {
 					++msg->value;
 				};

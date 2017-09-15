@@ -69,8 +69,8 @@ if(WIN32)
 	endfunction()
 
 	function(shaders_output out)
-		set(TEMPLATE_FILE "${ASD_ROOT}/templates/private/fx_include.h")
-		set(HEADER_FILE   "${ASD_ROOT}/templates/private/fx_header.h")
+		set(TEMPLATE_FILE "${ASD_ROOT}/templates/internal/fx_include.h")
+		set(HEADER_FILE   "${ASD_ROOT}/templates/internal/fx_header.h")
 		set(INCLUDES)
 
 		foreach(ShaderGroup ${CURRENT_SHADERS_LIST})

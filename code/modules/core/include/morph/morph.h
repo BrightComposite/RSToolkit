@@ -68,7 +68,7 @@ namespace asd
 		}
 
 	protected:
-		map<int, handle<Origin>> _map;
+		map<morph_id_t, handle<Origin>> _map;
 	};
 
 	template<class Origin, class Context>
@@ -127,7 +127,7 @@ namespace asd
 
 	protected:
 		Context * _ctx;
-		map<int, handle<Origin>> _map;
+		map<morph_id_t, handle<Origin>> _map;
 	};
 };
 

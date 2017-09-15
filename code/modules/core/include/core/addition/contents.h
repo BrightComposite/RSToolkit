@@ -76,7 +76,7 @@ namespace asd
 
 	private:
 		template<class ... AT, class ... A>
-		contents(types<AT...>, A &&... args) :
+		contents(::asd::types<AT...>, A &&... args) :
 			base({adapt<AT, A>(forward<A>(args))...}) {}
 	};
 }

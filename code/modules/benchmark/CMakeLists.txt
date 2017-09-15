@@ -10,7 +10,7 @@ include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-module(STATIC)
+module(INLINE)
 	dependencies(
 		core	0.*
 	)

@@ -2,7 +2,7 @@
 #	asd OpenGL 3.3
 #--------------------------------------------------------
 
-project(opengl3_3 VERSION 0.1)
+project(opengl VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -13,7 +13,7 @@ include(${ASD_TOOLS}/shaders.cmake)
 
 module(STATIC)
 	dependencies(ui	0.*)
-	api(opengl3_3)
+	api(opengl)
 
 	sources(modules)
 		domain(opengl)
@@ -21,7 +21,7 @@ module(STATIC)
 		group(include Headers)
 		files(
 			GLObjects.h
-			OpenGL3_3.h
+			OpenGL.h
 		)
 
 		group(src Sources)
@@ -29,7 +29,7 @@ module(STATIC)
 			GLMesh.cpp
 			GLObjects.cpp
 			GLSurfaces.cpp
-			OpenGL3_3.cpp
+			OpenGL.cpp
 
 			shaders/
 				Shaders.cpp
@@ -77,7 +77,7 @@ module(STATIC)
 endmodule()
 
 if(WIN32)
-	vendor(opengl3_3)
+	vendor(opengl)
 else()
 	find_package(OpenGL REQUIRED)
 	find_package(GLEW REQUIRED)

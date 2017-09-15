@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------
 
-#include <opengl/OpenGL3_3.h>
+#include <opengl/OpenGL.h>
 #include <opengl/GLObjects.h>
 
 #include <ui/ui_space.h>
@@ -20,7 +20,7 @@
 
 namespace asd
 {
-	namespace OpenGL3_3
+	namespace OpenGL
 	{
 		class FillModeState : public state<FillMode>
 		{

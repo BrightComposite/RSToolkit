@@ -10,7 +10,7 @@ include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-module(APPLICATION)
+module(APPLICATION CONSOLE)
 	dependencies(
 		application	0.*
 		freeimage	0.*

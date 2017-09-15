@@ -346,7 +346,7 @@ namespace asd
 			return add(forward<A>(others)...);
 		}
 		
-		template<typename = asd::empty>
+		template<typename = ::asd::empty>
 		String & add() {
 			return *this;
 		}
@@ -634,12 +634,12 @@ namespace asd
 		}
 		
 		wchar_t & operator >>(wchar_t & value) {
-			value = asChar();
+			value = asWideChar();
 			return value;
 		}
 		
 		char & operator >>(char & value) {
-			value = asWideChar();
+			value = asChar();
 			return value;
 		}
 		

@@ -197,8 +197,6 @@ namespace asd
 		gfx_context & e = *ctx;
 		virtual_context & v = *r;
 		
-		std::cout << morph_id<Increment> << " " << morph_id<Decrement> << std::endl;
-		
 		benchmark("extensible gfx", TRIES_COUNT) << [&]() {
 			for(int i = 0; i < DRAW_CALLS; ++i) {
 				e << Increment {29};
@@ -216,8 +214,6 @@ namespace asd
 		};
 		
 		std::cout << r->counter << std::endl;
-		
-		return 0;
 	});
 }
 

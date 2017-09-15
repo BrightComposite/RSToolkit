@@ -44,7 +44,7 @@ namespace asd
 {
 	using std::thread;
 
-	namespace OpenGL3_3
+	namespace OpenGL
 	{
 		class GLGraphics;
 		class GLImage;
@@ -52,7 +52,7 @@ namespace asd
 		class GLShaderProgram;
 	}
 
-	namespace OpenGL3_3
+	namespace OpenGL
 	{
 	#if BOOST_OS_WINDOWS
 		using DeviceContext = HDC;
@@ -159,11 +159,8 @@ namespace asd
 		return value;
 	}
 
-#ifndef OpenGL
-#define OpenGL OpenGL3_3
-	using OpenGL3_3::GLGraphics;
+	using OpenGL::GLGraphics;
 	using GraphicsProvider = CommonGraphicsProvider<GLGraphics>;
-#endif
 }
 
 //---------------------------------------------------------------------------

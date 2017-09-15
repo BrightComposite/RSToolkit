@@ -74,7 +74,7 @@ namespace asd
 		}
 		
 		{
-			int acc = 0;
+			size_t acc = 0;
 			
 			benchmark("std::unordered_map get") << [&]() {
 				for(size_t i = 0; i < KEYS_COUNT; ++i) {
@@ -86,7 +86,7 @@ namespace asd
 		}
 		
 		{
-			int acc = 0;
+			size_t acc = 0;
 			
 			benchmark("hopscotch_map get") << [&]() {
 				for(int i = 0; i < KEYS_COUNT; ++i) {
@@ -96,8 +96,6 @@ namespace asd
 			
 			std::cout << acc << std::endl;
 		}
-		
-		return 0;
 	});
 }
 

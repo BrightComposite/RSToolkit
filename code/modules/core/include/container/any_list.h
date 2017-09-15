@@ -22,6 +22,10 @@
 
 //---------------------------------------------------------------------------
 
+#ifdef _MSC_VER
+#define not !
+#endif
+
 namespace asd
 {
 	namespace management

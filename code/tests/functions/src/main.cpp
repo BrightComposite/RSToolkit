@@ -175,7 +175,6 @@ namespace asd
 			
 			delete gc;
 			delete vc;
-			return 0;
 		});
 	}
 }

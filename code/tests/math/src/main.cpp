@@ -43,8 +43,8 @@ namespace asd
 		using namespace std;
 
 		handle<Obj>			obj(_);
-		handle<direction>	dir(0, math::fquat(4.0f, 5.0f, 3.0f));
-		handle<position>	pos(0, 0, math::floatv::right);
+		handle<Direction>	dir(0, math::fquat(4.0f, 5.0f, 3.0f));
+		handle<Position>	pos(0, 0, math::floatv::right);
 
 		for(int i = 0; i < 20; ++i) {
 			cout << pos->position << endl;

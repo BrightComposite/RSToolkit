@@ -602,7 +602,6 @@ namespace asd
 	void swap(function<T> & lhs, function<T> & rhs) {
 		lhs.swap(rhs);
 	}
-	
 }
 
 namespace std

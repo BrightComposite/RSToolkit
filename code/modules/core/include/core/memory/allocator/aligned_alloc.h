@@ -18,13 +18,13 @@ namespace asd
 		using default_alloc::operator new;
 		using default_alloc::operator delete;
 		
-		static inline void * operator new(size_t size, size_t alignment) throw() {
+		static inline void * operator new(size_t size, size_t alignment) {
 			if((alignment & (alignment - 1)) != 0) {
 				throw std::runtime_error("Invalid alignment!");
 			}
 
 #if !defined(_DEBUG) || !defined(_MSC_VER)
-			return ::aligned_alloc(size, alignment);
+			return boost::alignment::aligned_alloc(size, alignment);
 #else
 			return _aligned_malloc_dbg(size, alignment, __FILE__, __LINE__);
 #endif

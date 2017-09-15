@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------
 
 #include "MessageClass.h"
-#include <core/function/method.h>
+#include <function/method.h>
 #include <core/handle.h>
 
 //---------------------------------------------------------------------------

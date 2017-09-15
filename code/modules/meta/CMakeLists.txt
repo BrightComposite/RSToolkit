@@ -32,6 +32,6 @@ module(INLINE)
 	endsources()
 endmodule()
 
-#vendor(boost HEADERS preprocessor)
+vendor(boost HEADERS preprocessor)
 
 #--------------------------------------------------------

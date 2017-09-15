@@ -26,6 +26,9 @@ add_test(glx)
 add_test(functions)
 add_test(maps)
 
-#add_command(check)
+if(WIN32)
+    add_command(check)
+endif()
+
 add_test(batch_gfx)
 add_test(immediate_gfx)

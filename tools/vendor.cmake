@@ -83,6 +83,6 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";VENDOR_TOOL_GUARD;")
 		endif()
 			
         include(${VENDOR_DIR}/setup.cmake)
-		message("${MESSAGES_INDENTATION}	* Use vendor library at ${VENDOR_DIR}")
+		message("${MESSAGES_INDENTATION}    * Use vendor library at ${VENDOR_DIR}")
     endfunction()
 endif()

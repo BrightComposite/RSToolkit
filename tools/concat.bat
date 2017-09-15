@@ -1,0 +1,1 @@
+copy /b %1.tar.gz.* %1.cat.tar.gz

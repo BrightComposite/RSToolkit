@@ -34,20 +34,23 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";VENDOR_TOOL_GUARD;")
 			set(VENDOR_ARCHIVE_SPLIT 1)
 		else()
 			message(FATAL_ERROR "Can't find vendor library '${VENDOR_KEY}'!")
-		endif()
+        endif()
+        
+        file(TO_NATIVE_PATH "${VENDOR_DIR}" VENDOR_DIR)
+        file(TO_NATIVE_PATH "${VENDOR_ARCHIVE_DIR}" VENDOR_ARCHIVE_DIR)
 
 		if(NOT "${VENDOR_ARCHIVE}" STREQUAL "")
 		    if(NOT "${VENDOR_ARCHIVE_SPLIT}" STREQUAL "")
                 message(STATUS "Extract vendor library '${VENDOR_KEY}' from ${VENDOR_KEY}.tar.gz.*")
 
                 if(WIN32)
-                    execute_process(COMMAND copy /b ${VENDOR_KEY}.tar.gz.* ${VENDOR_KEY}.cat.tar.gz WORKING_DIRECTORY "${VENDOR_ARCHIVE_DIR}" RESULT_VARIABLE RESULT)
+                    execute_process(COMMAND "${ASD_TOOLS}\\concat.bat" "${VENDOR_ARCHIVE_DIR}\\${VENDOR_KEY}" RESULT_VARIABLE RESULT OUTPUT_VARIABLE OUTPUT)
                 elseif(UNIX)
-                    execute_process(COMMAND sh -c "cat ${VENDOR_KEY}.tar.gz.* >> ${VENDOR_KEY}.cat.tar.gz" WORKING_DIRECTORY "${VENDOR_ARCHIVE_DIR}" RESULT_VARIABLE RESULT)
+                    execute_process(COMMAND sh -c "cat ${VENDOR_KEY}.tar.gz.* >> ${VENDOR_KEY}.cat.tar.gz" WORKING_DIRECTORY "${VENDOR_ARCHIVE_DIR}" RESULT_VARIABLE RESULT OUTPUT_VARIABLE OUTPUT)
                 endif()
 
                 if(NOT ${RESULT} EQUAL 0)
-                    message(FATAL_ERROR "Can't concat archive!")
+                    message(FATAL_ERROR "Can't concat archive! ${OUTPUT}")
                 endif()
                 
                 execute_process(COMMAND ${CMAKE_COMMAND} -E tar xfz "${VENDOR_KEY}.cat.tar.gz" WORKING_DIRECTORY "${VENDOR_ARCHIVE_DIR}" RESULT_VARIABLE RESULT)

@@ -22,7 +22,7 @@ module(APPLICATION CONSOLE)
 	endsources()
 endmodule()
 
-if(${WIN32})
+if(WIN32)
 	vendor(vld)
 endif()
 

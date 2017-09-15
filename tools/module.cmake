@@ -412,6 +412,8 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		get_filename_component(PROJECT_DIR ${PROJECT_SOURCE_DIR} DIRECTORY)
 		get_filename_component(PROJECT_DIR "${PROJECT_DIR}" NAME)
 		
+		message("")
+		
 		if(NOT "${PROJECT_DIR}" STREQUAL "modules")
 			set(PROJECT_ID ${PROJECT_ID}_${PROJECT_DIR})
 			message("${PROJECT_ID}")
@@ -424,8 +426,6 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 			set(GUARD_BLOCKS ${GUARD_BLOCKS};${PROJECT_ID}_GUARD CACHE INTERNAL "Guard blocks" FORCE)
 		endif()
 
-		message("")
-		
 		if("${type}" STREQUAL "APPLICATION")
 			if("${ARGN}" STREQUAL "CONSOLE")
 				color_message(GREEN "${MESSAGES_INDENTATION}+ Add console app \"${PROJECT_NAME}\"")
@@ -559,7 +559,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		api_export(${PROJECT_NAME})
 
 		collect_dependencies(DEPENDENCIES ${PROJECT_NAME})
-		message("${DEPENDENCIES}")
+		# message("${DEPENDENCIES}")
 
 		if("${${PROJECT_NAME}_MODULE_TYPE}" STREQUAL "INLINE")
 			foreach(DEPENDENCY ${DEPENDENCIES})

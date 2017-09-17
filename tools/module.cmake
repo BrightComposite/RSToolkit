@@ -273,6 +273,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 
 			set(module_path ${PATH})
 			set(module_domain ${DOMAIN})
+			get_filename_component(module_name ${module_path} NAME)
 
 			if(EXISTS "${TEMPLATE_FILE_DOMAIN}")
 				configure_file(${TEMPLATE_FILE_DOMAIN} ${DIR}/CMakeLists.txt @ONLY)

@@ -12,16 +12,18 @@
 #include <morph/morph.h>
 #include <container/map.h>
 #include <container/array_list.h>
+#include <container/any_list.h>
+
+#include <core/Exception.h>
 
 //---------------------------------------------------------------------------
 
 namespace asd
 {
+	class window;
+	
 	namespace gfx
 	{
-		template <class G>
-		void gfx_draw(G & obj, const empty & p);
-		
 		struct primitive
 		{
 			morph_origin(primitive);
@@ -34,16 +36,18 @@ namespace asd
 	{
 		class context
 		{
-			using entry_type = pair<morph_id_t, primitive>;
-		
 		public:
+			using entry_type = pair<morph_id_t, primitive>;
+			
+			virtual ~context() {}
+			
 			template <class T>
 			void operator <<(const T & value) {
-				draw(morph_id<T>, value);
+				_list.push_back(pair<morph_id_t, T>{morph_id<T>, value});
 			}
-			
+		
 		protected:
-			virtual void draw(morph_id_t, const primitive &) = 0;
+			any_list _list;
 		};
 		
 		template <class Gfx>
@@ -52,72 +56,66 @@ namespace asd
 			using entry_type = pair<morph_id_t, primitive>;
 		
 		public:
-			driver_context(Gfx & device) : driver(device) {}
+			driver_context(Gfx & driver) : driver(driver) {}
 		
 		protected:
-			void draw(morph_id_t id, const primitive & p) override {
-				driver.call(*this, id, p);
-			}
-			
 			Gfx & driver;
 		};
 		
 		template <class Gfx>
-		class api(graphics) driver
+		class driver
 		{
 			using context_type = driver_context<Gfx>;
-			
-			template <class Primitive>
-			static void draw(context_type & ctx, const primitive & p) {
-				gfx_draw(ctx, static_cast<const Primitive &>(p));
-			}
-			
-			using method_type = void (*)(context_type & ctx, const primitive & p);
-
-#ifdef GFX_METHODS_USE_MAP
-			using draw_methods = map<morph_id_t, method_type>;
-#else
+			using method_type  = function<void(context_type & ctx, const primitive & p)>;
 			using draw_methods = array_list<method_type>;
-#endif
 		
 		public:
-			unique<context_type> create_context() {
-				return new driver_context<Gfx>(static_cast<Gfx &>(*this));
-			}
-			
 			void call(context_type & context, morph_id_t type_id, const primitive & p) {
-#ifdef GFX_METHODS_USE_MAP
-				auto it = _methods.find(type_id);
-		
-				if(it == _methods.end()) {
-					return;
-				}
-				
-				it->second(context, p);
-#else
 				if(type_id >= _methods.size() || _methods[type_id] == nullptr) {
 					return;
 				}
 				
 				_methods[type_id](context, p);
-#endif
 			}
 			
 			template <class Primitive, useif<is_morph_of<primitive, Primitive>::value>>
-			void extend() {
-#ifndef GFX_METHODS_USE_MAP
+			bool has() const {
+				return morph_id<Primitive> < _methods.size() && _methods[morph_id<Primitive>] != nullptr;
+			}
+			
+			template <class Primitive, useif<is_morph_of<primitive, Primitive>::value>>
+			void extend(void(* method)(context_type &, const Primitive &)) {
 				if(morph_id<Primitive> >= _methods.size()) {
 					_methods.resize(morph_id<Primitive> + 1);
 				}
-#endif
 				
-				_methods[morph_id<Primitive>] = driver::draw<Primitive>;
+				_methods[morph_id<Primitive>] = [=](context_type & ctx, const primitive & p) {
+					method(ctx, static_cast<const Primitive &>(p));
+				};
 			}
 		
 		private:
 			draw_methods _methods;
 		};
+		
+		struct mesh : primitive
+		{
+			uint id;
+		};
+		
+		struct texture : primitive
+		{
+			uint id;
+		};
 	}
+	
+	using graphics = gfx::context;
+	
+	create_morph_type(graphics, gfx::mesh);
+	create_morph_type(graphics, gfx::texture);
+	
+	exception_class(GraphicsException);
+	exception_subclass(ContextCreationException, GraphicsException);
 }
 
 //---------------------------------------------------------------------------

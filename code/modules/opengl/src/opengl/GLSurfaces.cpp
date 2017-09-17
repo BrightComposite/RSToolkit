@@ -7,7 +7,7 @@
 
 namespace asd
 {
-	namespace OpenGL
+	namespace opengl
 	{
 		GLSurface::GLSurface(GLGraphics * graphics, const int_size & size) : surface(size), _graphics(graphics) {}
 		GLSurface::~GLSurface() {}
@@ -113,7 +113,7 @@ namespace asd
 
 		void UISurface::requestData(image_data * output) const
 		{
-			throw Exception("'requestData' method for OpenGL UISurface is not implemented yet!");
+			throw Exception("'requestData' method for opengl UISurface is not implemented yet!");
 
 			if(output == nullptr)
 				throw Exception("Output image buffer should be not-null!");

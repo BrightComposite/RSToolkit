@@ -16,6 +16,8 @@ module(STATIC)
 	)
 
 	sources(@module_domain@)
+		domain(@module_name@)
+		
 		group(include Headers)
 		files(
 			# headers

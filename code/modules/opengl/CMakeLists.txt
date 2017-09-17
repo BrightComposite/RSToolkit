@@ -1,5 +1,5 @@
 #--------------------------------------------------------
-#	asd OpenGL 3.3
+#	asd OpenGL
 #--------------------------------------------------------
 
 project(opengl VERSION 0.1)
@@ -12,7 +12,11 @@ include(${ASD_TOOLS}/shaders.cmake)
 #--------------------------------------------------------
 
 module(STATIC)
-	dependencies(ui	0.*)
+	dependencies(
+		graphics	0.*
+		window		0.*
+	)
+
 	api(opengl)
 
 	sources(modules)
@@ -20,19 +24,14 @@ module(STATIC)
 
 		group(include Headers)
 		files(
-			GLObjects.h
-			OpenGL.h
+			mesh.h
+			opengl.h
 		)
 
 		group(src Sources)
 		files(
-			GLMesh.cpp
-			GLObjects.cpp
-			GLSurfaces.cpp
-			OpenGL.cpp
-
-			shaders/
-				Shaders.cpp
+			mesh.cpp
+			opengl.cpp
 		)
 
 		domain(opengl/shaders)
@@ -70,31 +69,9 @@ module(STATIC)
 		group(include Headers)
 		domain(opengl/shaders)
 		shaders_output(Shaders.h)
-
-		domain(graphics)
-		files(Provider.h)
 	endsources()
 endmodule()
 
-if(WIN32)
-	vendor(opengl)
-else()
-	find_package(OpenGL REQUIRED)
-	find_package(GLEW REQUIRED)
-	
-	if(NOT OPENGL_FOUND)
-		message(FATAL_ERROR "OPENGL not found!")
-	endif()
-		
-	if (NOT GLEW_FOUND)
-		message(FATAL_ERROR "GLEW not found!")
-	endif()
-	
-	include_directories(${OpenGL_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS})
-	link_directories(${OpenGL_LIBRARY_DIRS} ${GLEW_LIBRARY_DIRS})
-	add_definitions(${OpenGL_DEFINITIONS} ${GLEW_DEFINITIONS})
-		
-	target_link_libraries(${PROJECT_NAME} PRIVATE ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
-endif()
+vendor(opengl)
 
 #--------------------------------------------------------

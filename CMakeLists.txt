@@ -12,6 +12,7 @@ include(tools/workspace.cmake)
 include(tools/module.cmake)
 
 add_module(benchmark)
+add_module(window)
 add_module(ui-themes)
 
 add_test(core)

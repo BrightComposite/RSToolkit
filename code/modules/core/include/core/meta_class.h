@@ -11,6 +11,7 @@
 #include <array>
 
 #include <meta/meta.h>
+#include <ostream>
 
 //---------------------------------------------------------------------------
 
@@ -19,8 +20,6 @@ namespace asd
 	using std::array;
 	
 	class object;
-	
-	class String;
 	
 	template<class ... Parents>
 	class meta_class {};
@@ -59,9 +58,10 @@ namespace asd
 		}
 	
 	protected:
-		virtual void add_info(String &, const object &) const {}
+		virtual void add_info(std::ostream &, const object &) const {}
 		
-		friend api(core) void print(String &, const object &);
+		template<class Char>
+		friend api(core) void print(std::basic_ostream<Char> &, const object &);
 	};
 	
 	template<class T>

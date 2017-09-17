@@ -8,7 +8,7 @@
 
 namespace asd
 {
-	namespace OpenGL
+	namespace opengl
 	{
 		void GLGraphics::initShaders()
 		{

@@ -8,18 +8,18 @@
 
 namespace asd
 {
-	namespace OpenGL
+	namespace opengl
 	{
 		using std::cout;
 		using std::endl;
 		
 		template<>
-		class GLMesh<GLMeshType::Plain> : public mesh
+		class mesh<GLMeshType::Plain> : public mesh
 		{
-			deny_copy(GLMesh);
+			deny_copy(mesh);
 
 		public:
-			GLMesh(GLMeshBuilder * builder) : topology(builder->_topology), buffers(move(builder->_buffers)), offset(builder->_offset), verticesCount(builder->_verticesCount - builder->_offset)
+			mesh(GLMeshBuilder * builder) : topology(builder->_topology), buffers(move(builder->_buffers)), offset(builder->_offset), verticesCount(builder->_verticesCount - builder->_offset)
 			{
 				glGenVertexArrays(1, &id);
 				glBindVertexArray(id);

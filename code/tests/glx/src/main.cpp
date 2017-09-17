@@ -40,7 +40,7 @@ namespace asd
 		glEnd();
 	}
 	
-	static entrance _([]() {
+	static entrance open([]() {
 		using namespace std;
 		
 		auto d = XOpenDisplay(NULL);

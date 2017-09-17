@@ -23,7 +23,7 @@ static T get_gl_function(const char * name, T func)
 
 namespace asd
 {
-	namespace OpenGL
+	namespace opengl
 	{
 		GLShaderProgram::GLShaderProgram(GLGraphics * graphics, const string & filename, vertex_layout * layout, ShaderCodeState state) : GLShaderProgram(graphics, layout)
 		{

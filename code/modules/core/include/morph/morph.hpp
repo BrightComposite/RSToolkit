@@ -46,7 +46,7 @@ namespace asd
  */
 #define create_morph_pool(module, .../*morph origin*/)                                          \
     template<>                                                                                  \
-    struct api(module) morph_pool<__VA_ARGS__>                                                  \
+    struct api(module) morph_pool<__VA_ARGS__>                                           		\
     {                                                                                           \
         static morph_id_t increment()                                                           \
         {                                                                                       \
@@ -60,7 +60,7 @@ namespace asd
  */
 #define create_morph_type(module, .../*morph type*/)                                            \
     template<>                                                                                  \
-    struct api(module) morph_type<__VA_ARGS__>                                                  \
+    struct api(module) morph_type<__VA_ARGS__>                                           		\
     {                                                                                           \
         using origin = typename __VA_ARGS__::origin;                                            \
         using pool = morph_pool<origin>;                                                        \

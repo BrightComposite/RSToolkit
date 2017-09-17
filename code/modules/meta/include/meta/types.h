@@ -201,6 +201,11 @@ namespace asd
 	{
 		static const size_t value = N;
 	};
+	
+	template<class T, size_t N>
+	constexpr size_t sizeof_array(const T (& arr)[N]) {
+		return N;
+	}
 }
 
 //---------------------------------------------------------------------------

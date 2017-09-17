@@ -421,8 +421,9 @@ namespace asd
 		return *this;
 	}
 	
-	void print(String & target, const object & obj) {
-		target.add(addr(&obj), ' ');
+	template<class Char>
+	void print(std::basic_ostream<Char> & target, const object & obj) {
+		target << addr(&obj) << ' ';
 		
 		obj.get_class()->foreach(
 			[&target, &obj](const meta_class<> * cl) {
@@ -430,13 +431,7 @@ namespace asd
 			}
 		);
 		
-		target.add('(', obj.class_name(), ')');
-	}
-	
-	void print(WideString & target, const object & obj) {
-		String s;
-		print(s, obj);
-		target = widen(s);
+		target << '(' << obj.class_name() << ')';
 	}
 	
 	StringList split(const string & text, const char * sep) {

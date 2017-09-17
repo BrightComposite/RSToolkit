@@ -1,8 +1,8 @@
 #--------------------------------------------------------
-#	glx test facility
+#	module window
 #--------------------------------------------------------
 
-project(glx_test VERSION 0.1)
+project(window VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -10,20 +10,26 @@ include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-module(APPLICATION CONSOLE)
+module(STATIC)
 	dependencies(
-		application	0.*
+		graphics	0.*
 	)
 
-	sources(tests)
+	sources(modules)
+		domain(window)
+		
+		group(include Headers)
+		files(
+			window.h
+		)
+
 		group(src Sources)
 		files(
-			main.cpp
+			window.cpp
 		)
 	endsources()
 endmodule()
 
-vendor(opengl)
 
 if(UNIX)
 	find_package(X11 REQUIRED)
@@ -38,6 +44,5 @@ if(UNIX)
 	
 	target_link_libraries(${PROJECT_NAME} PRIVATE ${X11_LIBRARIES})
 endif()
-
 
 #--------------------------------------------------------

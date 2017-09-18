@@ -21,7 +21,77 @@ namespace asd
 	namespace opengl
 	{
 		static inline void GLAPIENTRY glDebugCallbackFunc(uint source, uint type, uint id, uint severity, int length, const char * message, const void * userParam);
-		
+
+	#if BOOST_OS_WINDOWS
+
+		static void setPixelFormat(HDC dc)
+		{
+			if(dc == nullptr)
+				throw ContextCreationException("Can't set pixel format, device context is null!");
+
+			PIXELFORMATDESCRIPTOR pfd;
+
+			const int attribs[] =
+			{
+				WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+				WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+				WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
+				WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
+				WGL_COLOR_BITS_ARB, 32,
+				WGL_DEPTH_BITS_ARB, 24,
+				WGL_STENCIL_BITS_ARB, 8,
+				0
+			};
+
+			int pixelFormat, numFormats;
+			wglChoosePixelFormatARB(dc, attribs, NULL, 1, &pixelFormat, (UINT*)&numFormats);
+
+			if(SetPixelFormat(dc, pixelFormat, &pfd) == FALSE) {
+				throw ContextCreationException("Can't set pixel format! Call to SetPixelFormat failed");
+			}
+		}
+
+	#elif BOOST_OS_LINUX
+
+		static GLXFBConfig chooseFBConfig(::Display * display, int screen) {
+			static const int v_attribs[] = {
+				GLX_X_RENDERABLE, True,
+				GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
+				GLX_RENDER_TYPE, GLX_RGBA_BIT,
+				GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
+				GLX_RED_SIZE, 8,
+				GLX_GREEN_SIZE, 8,
+				GLX_BLUE_SIZE, 8,
+				GLX_ALPHA_SIZE, 8,
+				GLX_DEPTH_SIZE, 24,
+				GLX_STENCIL_SIZE, 8,
+				GLX_DOUBLEBUFFER, True,
+				GLX_SAMPLE_BUFFERS, 1,
+				GLX_SAMPLES, 4,
+				0
+			};
+
+			int attribs[sizeof_array(v_attribs)];
+			memcpy(attribs, v_attribs, sizeof(v_attribs));
+
+			GLXFBConfig ret = 0;
+
+			int count = 0;
+			auto fbc = glXChooseFBConfig(display, screen, attribs, &count);
+
+			if(fbc) {
+				if(count >= 1) {
+					ret = fbc[0];
+				}
+
+				XFree(fbc);
+			}
+
+			return ret;
+		}
+
+	#endif
+
 		driver::driver(const configuration & config) : config(config) {
 			extend(draw_mesh);
 		}
@@ -37,15 +107,6 @@ namespace asd
 			if(_context != nullptr) {
 				wglDeleteContext(_context);
 			}
-
-			if(_device != nullptr) {
-				::ReleaseDC(_wnd, _device);
-				::DeleteDC(_device);
-			}
-
-			if(_wnd != nullptr) {
-				::DestroyWindow(_wnd);
-			}
 #elif BOOST_OS_LINUX
 			glXMakeCurrent(_window.display(), 0, 0);
 			
@@ -57,6 +118,58 @@ namespace asd
 		}
 		
 		void window_context::prepare() {
+#if BOOST_OS_WINDOWS
+			setPixelFormat(_window.device());
+
+			int flags = _driver.config.flags;
+
+		#ifdef GL_DEBUG
+			flags |= WGL_CONTEXT_DEBUG_BIT_ARB;
+		#endif
+
+			int attribs[] = {
+				WGL_CONTEXT_MAJOR_VERSION_ARB, _driver.config.major,
+				WGL_CONTEXT_MINOR_VERSION_ARB, _driver.config.minor,
+				WGL_CONTEXT_FLAGS_ARB,         flags,
+				WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+				0
+			};
+
+			_context = wglCreateContextAttribsARB(_window.device(), nullptr, attribs);
+
+			if(!_context) {
+				throw ContextCreationException("Can't create OpenGL render context!");
+			}
+
+			if(wglMakeCurrent(_window.device(), _context) == GL_FALSE) {
+				throw ContextCreationException("Can't bind OpenGL render context!");
+			}
+
+#elif BOOST_OS_LINUX
+
+			int flags = _driver.config.flags;
+
+		#ifdef GL_DEBUG
+			flags |= GLX_CONTEXT_DEBUG_BIT_ARB;
+		#endif
+
+			const int attributes[] = {
+				GLX_CONTEXT_MAJOR_VERSION_ARB, _driver.config.major,
+				GLX_CONTEXT_MINOR_VERSION_ARB, _driver.config.minor,
+				GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
+			#ifdef GL_DEBUG
+				GLX_CONTEXT_FLAGS_ARB, flags,
+			#endif
+				0
+			};
+
+			_context = glXCreateContextAttribsARB(_window.display(), fbConfig, 0, True, attributes);
+			XSync(_window.display(), False);
+
+			if(!_context) {
+				throw ContextCreationException("Can't create OpenGL render context!");
+			}
+
 			if(glXMakeCurrent(_window.display(), _window.handle(), _context) == GL_FALSE) {
 				throw ContextCreationException("Can't bind OpenGL render context!");
 			}
@@ -64,6 +177,7 @@ namespace asd
 			if(!glXIsDirect(_window.display(), glXGetCurrentContext())) {
 				std::cout << "Indirect GLX rendering context obtained" << std::endl;
 			}
+#endif
 			
 			checkForErrors();
 			
@@ -93,80 +207,10 @@ namespace asd
 			checkForErrors();
 		}
 
-#if BOOST_OS_WINDOWS
-		
-		static void setPixelFormat(HDC dc)
-		{
-			if(dc == nullptr)
-				throw ContextCreationException("Can't set pixel format, device context is null!");
-
-			PIXELFORMATDESCRIPTOR pfd;
-			
-			const int attribs[] =
-			{
-				WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
-				WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
-				WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
-				WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
-				WGL_COLOR_BITS_ARB, 32,
-				WGL_DEPTH_BITS_ARB, 24,
-				WGL_STENCIL_BITS_ARB, 8,
-				0
-			};
-
-			int pixelFormat, numFormats;
-			wglChoosePixelFormatARB(dc, attribs, NULL, 1, &pixelFormat, (UINT*)&numFormats);
-
-			if(SetPixelFormat(dc, pixelFormat, &pfd) == FALSE) {
-				throw ContextCreationException("Can't set pixel format! Call to SetPixelFormat failed");
-			}
-		}
-
-#elif BOOST_OS_LINUX
-		
-		static GLXFBConfig chooseFBConfig(::Display * display, int screen) {
-			static const int v_attribs[] = {
-				GLX_X_RENDERABLE, True,
-				GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
-				GLX_RENDER_TYPE, GLX_RGBA_BIT,
-				GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
-				GLX_RED_SIZE, 8,
-				GLX_GREEN_SIZE, 8,
-				GLX_BLUE_SIZE, 8,
-				GLX_ALPHA_SIZE, 8,
-				GLX_DEPTH_SIZE, 24,
-				GLX_STENCIL_SIZE, 8,
-				GLX_DOUBLEBUFFER, True,
-				GLX_SAMPLE_BUFFERS, 1,
-				GLX_SAMPLES, 4,
-				0
-			};
-			
-			int attribs[sizeof_array(v_attribs)];
-			memcpy(attribs, v_attribs, sizeof(v_attribs));
-			
-			GLXFBConfig ret = 0;
-			
-			int count = 0;
-			auto fbc = glXChooseFBConfig(display, screen, attribs, &count);
-			
-			if(fbc) {
-				if(count >= 1) {
-					ret = fbc[0];
-				}
-				
-				XFree(fbc);
-			}
-			
-			return ret;
-		}
-
-#endif
-		
 		void window_context::initDevice() {
 #if BOOST_OS_WINDOWS
-			_wnd = createEmptyWindowHandle();
-			_device = ::GetDC(_wnd);
+			auto _wnd = window::create_empty_handle();
+			auto _device = ::GetDC(_wnd);
 
 			PIXELFORMATDESCRIPTOR pfd;
 			memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
@@ -181,54 +225,30 @@ namespace asd
 
 			int pixelFormat = ChoosePixelFormat(_device, &pfd);
 
-			if(pixelFormat == 0)
+			if(pixelFormat == 0) {
 				throw ContextCreationException("Can't choose pixel format!");
+			}
 
-			if(SetPixelFormat(_device, pixelFormat, &pfd) == FALSE)
+			if(SetPixelFormat(_device, pixelFormat, &pfd) == FALSE) {
 				throw ContextCreationException("Can't set pixel format! Call to SetPixelFormat failed");
+			}
 
 			auto _tmpContext = wglCreateContext(_device);
 
-			if(_tmpContext == nullptr || wglMakeCurrent(_device, _tmpContext) == GL_FALSE)
+			if(_tmpContext == nullptr || wglMakeCurrent(_device, _tmpContext) == GL_FALSE) {
 				throw ContextCreationException("Can't create initial OpenGL render context!");
+			}
 
 			glewExperimental = GL_TRUE;
 			GLenum error = glewInit();
 
-			if(error > 0)
+			if(error > 0) {
 				throw ContextCreationException("Can't initialize GLEW! ", (const char *)glewGetErrorString(error));
-			
-			int major = glGetInteger(GL_MAJOR_VERSION);
-			int minor = glGetInteger(GL_MINOR_VERSION);
+			}
 
 			wglMakeCurrent(nullptr, nullptr);
 			wglDeleteContext(_tmpContext);
 			DestroyWindow(_wnd);
-
-			_wnd = createEmptyWindowHandle();
-			_device = ::GetDC(_wnd);
-
-			setPixelFormat(_device);
-
-			int flags = 0;
-
-#ifdef GL_DEBUG
-			flags |= WGL_CONTEXT_DEBUG_BIT_ARB;
-#endif
-
-			int attribs[] = {
-				WGL_CONTEXT_MAJOR_VERSION_ARB, major,
-				WGL_CONTEXT_MINOR_VERSION_ARB, minor,
-				WGL_CONTEXT_FLAGS_ARB,         flags,
-				WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-				0
-			};
-
-			_context = wglCreateContextAttribsARB(_device, nullptr, attribs);
-
-			if(_context == nullptr || wglMakeCurrent(_device, _context) == GL_FALSE) {
-				throw ContextCreationException("Can't create OpenGL render context!");
-			}
 
 #elif BOOST_OS_LINUX
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
@@ -310,29 +330,6 @@ namespace asd
 			}
 			
 			XDestroyWindow(_window.display(), windowHandle);
-			
-			int flags = _driver.config.flags;
-
-#ifdef GL_DEBUG
-			flags |= GLX_CONTEXT_DEBUG_BIT_ARB;
-#endif
-			
-			const int attributes[] = {
-				GLX_CONTEXT_MAJOR_VERSION_ARB, _driver.config.major,
-				GLX_CONTEXT_MINOR_VERSION_ARB, _driver.config.minor,
-				GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
-#ifdef GL_DEBUG
-				GLX_CONTEXT_FLAGS_ARB, flags,
-#endif
-				0
-			};
-			
-			_context = glXCreateContextAttribsARB(_window.display(), fbConfig, 0, True, attributes);
-			XSync(_window.display(), False);
-			
-			if(!_context) {
-				throw ContextCreationException("Can't create OpenGL render context!");
-			}
 #endif
 		}
 	}

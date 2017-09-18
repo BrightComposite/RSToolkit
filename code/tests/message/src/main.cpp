@@ -60,15 +60,6 @@ namespace asd
 			}
 		}
 
-		/**
-		 *	For 4000 connections and 3 messages:
-		 *	  map + array_list time: 13-27x
-		 *	  map + forward_list time: 41-53x
-		 *	  dictionary + array_list time: 24-42x
-		 *
-		 *  (x is 1�s on my PC)
-		 */
-
 		auto start = hrc::now();
 		auto msg = send<DummyMessage1>(subject, 0);
 		auto elapsed = hrc::now() - start;

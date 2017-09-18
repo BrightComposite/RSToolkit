@@ -210,13 +210,15 @@ namespace asd
 				throw Exception("Size of vertex buffer doesn't matches its vertex input layout");
 			}
 			
+			verticesCount = static_cast<uint>(vd.size() / layout.units);
+
 			glGenBuffers(1, &handle);
 			glBindBuffer(GL_ARRAY_BUFFER, handle);
 			glBufferData(GL_ARRAY_BUFFER, vd.size() * sizeof(float), vd.data(), GL_STATIC_DRAW);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 		
-		vertex_buffer::vertex_buffer(vertex_buffer && buffer) : layout(buffer.layout), handle(buffer.handle) {
+		vertex_buffer::vertex_buffer(vertex_buffer && buffer) : layout(buffer.layout), handle(buffer.handle), verticesCount(buffer.verticesCount) {
 			buffer.handle = 0;
 		}
 		
@@ -243,12 +245,33 @@ namespace asd
 			}
 		}
 		
-		mesh_builder::mesh_builder(opengl::context & graphics) : _context(graphics) {}
+		mesh_builder::mesh_builder(opengl::context & graphics, vertex_topology topology) : _context(graphics) {
+			switch(topology) {
+				case vertex_topology::triangles:
+					_topology = GL_TRIANGLES;
+					break;
+
+				case vertex_topology::triangle_strip:
+					_topology = GL_TRIANGLE_STRIP;
+					break;
+
+				case vertex_topology::lines:
+					_topology = GL_LINES;
+					break;
+
+				case vertex_topology::line_strip:
+					_topology = GL_LINE_STRIP;
+					break;
+
+				default:
+					_topology = 0;
+			}
+		}
 		
 		mesh_builder::~mesh_builder() {}
 		
-		mesh_builder * mesh_builder::buffer(const vertex_data & data, vertex_topology topology) {
-			vertex_buffer buffer(data);
+		mesh_builder & mesh_builder::buffer(const vertex_layout & layout, const vertex_data & data) {
+			vertex_buffer buffer(layout, data);
 			
 			if(_verticesCount == 0) {
 				_verticesCount = buffer.verticesCount;
@@ -256,63 +279,22 @@ namespace asd
 				throw Exception("Buffers sizes don't match!");
 			}
 			
-			switch(topology) {
-				case vertex_topology::triangles:
-					_topology = GL_TRIANGLES;
-					break;
-				
-				case vertex_topology::triangle_strip:
-					_topology = GL_TRIANGLE_STRIP;
-					break;
-				
-				case vertex_topology::lines:
-					_topology = GL_LINES;
-					break;
-				
-				case vertex_topology::line_strip:
-					_topology = GL_LINE_STRIP;
-					break;
-				
-				default:
-					_topology = 0;
-			}
-			
-			_buffers.push_back(buffer);
-			return this;
+			_buffers.emplace_back(std::move(buffer));
+			return *this;
 		}
 		
-		mesh_builder * mesh_builder::indices(const vertex_indices & indices) {
-			set_flag(mesh_type::indexed, _state);
-			
-			_ibuffer.init(_context, indices);
+		mesh_builder & mesh_builder::indices(const vertex_indices & indices) {
+			_ibuffer.init(indices);
 			_indicesCount = static_cast<uint>(indices.size());
 			
-			return this;
+			return *this;
 		}
 		
-		mesh_builder * mesh_builder::offset(uint offset) {
+		mesh_builder & mesh_builder::offset(uint offset) {
 			_offset = offset;
-			return this;
+			return *this;
 		}
-		
-		handle<mesh> mesh_builder::build() {
-			set_flag(mesh_type::ready, _state);
-			
-			switch(_state) {
-				case 1:
-					return handle<plain_mesh>(this);
-				case 3:
-					return handle<indexed_mesh>(this);
-				case 5:
-					return handle<instanced_mesh>(this);
-				case 7:
-					return handle<instanced_indexed_mesh>(this);
-				
-				default:
-					return nullptr;
-			}
-		}
-		
+		/*
 		mesh_builder * mesh_builder::make_instanced(const vertex_layout * layout) {
 			set_flag(mesh_type::instanced, _state);
 			
@@ -320,6 +302,22 @@ namespace asd
 			_instancedData.init(layout->stride);
 			
 			return this;
+		}*/
+
+		handle<mesh> mesh_builder::build() {
+			switch(_type) {
+				case mesh_type::plain:
+					return make::handle<plain_mesh>(*this);
+				case mesh_type::indexed:
+					return make::handle<indexed_mesh>(*this);
+					/*case 5:
+					return handle<instanced_mesh>(this);
+					case 7:
+					return handle<instanced_indexed_mesh>(this);*/
+
+				default:
+					return nullptr;
+			}
 		}
 	}
 }

@@ -14,6 +14,10 @@ namespace asd {
 	}
 	
 	void processEvents(window & w) {
+
+#if BOOST_OS_WINDOWS
+
+#elif BOOST_OS_LINIX
 		XWindowAttributes gwa;
 		XEvent xev;
 		
@@ -46,6 +50,7 @@ namespace asd {
 				glXSwapBuffers(w.display(), w.handle());
 			}
 		}
+#endif
 	}
 	
 	static entrance open([]() {

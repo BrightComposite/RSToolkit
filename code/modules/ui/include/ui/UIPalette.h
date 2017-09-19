@@ -24,7 +24,7 @@ namespace asd
 
 	create_property(ui, UIClass);
 
-	class UIPalette : public shareable
+	class UIPalette : public shareable<UIPalette>
 	{
 	public:
 		UIPalette(ui_space * space) : _space(space) {}

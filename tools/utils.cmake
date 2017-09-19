@@ -62,8 +62,8 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";UTILS_GUARD;")
 		name_upper(PROJECT_NAME_UPPER ${PROJECT_NAME})
 		name_lower(PROJECT_NAME_LOWER ${PROJECT_NAME})
 
-		set(TEMPLATE_FILE ${ASD_ROOT}/templates/${filename}${SRC_EXT})
-		set(TEMPLATE_FILE_EXT ${ASD_ROOT}/templates/_${SRC_EXT})
+		set(TEMPLATE_FILE ${ASD_TOOLS}/templates/${filename}${SRC_EXT})
+		set(TEMPLATE_FILE_EXT ${ASD_TOOLS}/templates/_${SRC_EXT})
 
 		message(STATUS "Create new source file ${SRC_FULLPATH}...")
 

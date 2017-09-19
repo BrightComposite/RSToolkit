@@ -96,7 +96,7 @@ set(library_destination ${DESTINATION})
 
 message(STATUS "Generating CmakeLists.txt...")
 
-set(TEMPLATE_FILE ${ASD_ROOT}/templates/module/generate/CMakeLists.txt)
+set(TEMPLATE_FILE ${ASD_TOOLS}/templates/module/generate/CMakeLists.txt)
 
 if(EXISTS "${TEMPLATE_FILE}")
     configure_file(${TEMPLATE_FILE} ${OUTPUT_DIR}/CMakeLists.txt @ONLY)

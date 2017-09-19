@@ -24,7 +24,7 @@ namespace asd
 	 *  @brief
 	 *  Basic class for all messages
 	 */
-	struct message : shareable
+	struct message : shareable<message>
 	{
 		const subject * source;
 		int result = 0;
@@ -59,7 +59,7 @@ namespace asd
 	 *  Wrapper for message callback
 	 */
 	template<class Dst, typename Msg>
-	class Receiver : public auto_id, public shareable
+	class Receiver : public auto_id, public shareable<Receiver<Dst, Msg>>
 	{
 		deny_copy(Receiver);
 		typedef msg_callback<Dst, Msg> Callback;

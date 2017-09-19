@@ -12,7 +12,7 @@
 
 namespace asd
 {
-	struct Obj : shareable
+	struct Obj : shareable<Obj>
 	{
 		Obj() : i(0), b(0), matrix() {}
 		Obj(int i, char b, const math::fmat & matrix) : i(i), b(b), matrix(matrix) {}
@@ -22,7 +22,7 @@ namespace asd
 		math::fmat matrix;
 	};
 
-	struct Direction : shareable
+	struct Direction : shareable<Direction>
 	{
 		Direction(int i, const math::fquat & rotation) : i(i), rotation(rotation) {}
 
@@ -30,7 +30,7 @@ namespace asd
 		math::fquat rotation;
 	};
 
-	struct Position : shareable
+	struct Position : shareable<Position>
 	{
 		Position(int i, char b, const math::fvec & position) : i(i), b(b), position(position) {}
 

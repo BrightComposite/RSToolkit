@@ -1,27 +1,29 @@
 //---------------------------------------------------------------------------
 
-#include <opengl/shaders/2d/rect/vs.shader.inc>
-#include <opengl/shaders/2d/rect/fs.shader.inc>
-#include <opengl/shaders/2d/ellipse/vs.shader.inc>
-#include <opengl/shaders/2d/ellipse/fs.shader.inc>
-#include <opengl/shaders/2d/figure/vs.shader.inc>
-#include <opengl/shaders/2d/figure/fs.shader.inc>
-#include <opengl/shaders/2d/image/vs.shader.inc>
-#include <opengl/shaders/2d/image/fs.shader.inc>
-#include <opengl/shaders/2d/text/vs.shader.inc>
-#include <opengl/shaders/2d/text/fs.shader.inc>
-#include <opengl/shaders/2d/wired/rect/vs.shader.inc>
-#include <opengl/shaders/2d/wired/rect/fs.shader.inc>
-#include <opengl/shaders/2d/wired/ellipse/vs.shader.inc>
-#include <opengl/shaders/2d/wired/ellipse/fs.shader.inc>
-#include <opengl/shaders/3d/basic/vs.shader.inc>
-#include <opengl/shaders/3d/basic/fs.shader.inc>
-#include <opengl/shaders/3d/color/vs.shader.inc>
-#include <opengl/shaders/3d/color/fs.shader.inc>
-#include <opengl/shaders/3d/multicolor/vs.shader.inc>
-#include <opengl/shaders/3d/multicolor/fs.shader.inc>
-#include <opengl/shaders/3d/texture/vs.shader.inc>
-#include <opengl/shaders/3d/texture/fs.shader.inc>
+#include <opengl/shaders/2d/color/vs.shader.h>
+#include <opengl/shaders/2d/color/fs.shader.h>
+#include <opengl/shaders/2d/rect/vs.shader.h>
+#include <opengl/shaders/2d/rect/fs.shader.h>
+#include <opengl/shaders/2d/ellipse/vs.shader.h>
+#include <opengl/shaders/2d/ellipse/fs.shader.h>
+#include <opengl/shaders/2d/figure/vs.shader.h>
+#include <opengl/shaders/2d/figure/fs.shader.h>
+#include <opengl/shaders/2d/image/vs.shader.h>
+#include <opengl/shaders/2d/image/fs.shader.h>
+#include <opengl/shaders/2d/text/vs.shader.h>
+#include <opengl/shaders/2d/text/fs.shader.h>
+#include <opengl/shaders/2d/wired/rect/vs.shader.h>
+#include <opengl/shaders/2d/wired/rect/fs.shader.h>
+#include <opengl/shaders/2d/wired/ellipse/vs.shader.h>
+#include <opengl/shaders/2d/wired/ellipse/fs.shader.h>
+#include <opengl/shaders/3d/basic/vs.shader.h>
+#include <opengl/shaders/3d/basic/fs.shader.h>
+#include <opengl/shaders/3d/color/vs.shader.h>
+#include <opengl/shaders/3d/color/fs.shader.h>
+#include <opengl/shaders/3d/multicolor/vs.shader.h>
+#include <opengl/shaders/3d/multicolor/fs.shader.h>
+#include <opengl/shaders/3d/texture/vs.shader.h>
+#include <opengl/shaders/3d/texture/fs.shader.h>
 
 //---------------------------------------------------------------------------
 
@@ -29,19 +31,21 @@
 
 //---------------------------------------------------------------------------
 
-	static const RawShaderCodeUnit shader_code_2d_rect[]{{shader_code_2d_rect_vs, RFX_VERTEX_SHADER}, {shader_code_2d_rect_fs, RFX_FRAGMENT_SHADER}};
-	static const RawShaderCodeUnit shader_code_2d_ellipse[]{{shader_code_2d_ellipse_vs, RFX_VERTEX_SHADER}, {shader_code_2d_ellipse_fs, RFX_FRAGMENT_SHADER}};
-	static const RawShaderCodeUnit shader_code_2d_figure[]{{shader_code_2d_figure_vs, RFX_VERTEX_SHADER}, {shader_code_2d_figure_fs, RFX_FRAGMENT_SHADER}};
-	static const RawShaderCodeUnit shader_code_2d_image[]{{shader_code_2d_image_vs, RFX_VERTEX_SHADER}, {shader_code_2d_image_fs, RFX_FRAGMENT_SHADER}};
-	static const RawShaderCodeUnit shader_code_2d_text[]{{shader_code_2d_text_vs, RFX_VERTEX_SHADER}, {shader_code_2d_text_fs, RFX_FRAGMENT_SHADER}};
-	static const RawShaderCodeUnit shader_code_2d_wired_rect[]{{shader_code_2d_wired_rect_vs, RFX_VERTEX_SHADER}, {shader_code_2d_wired_rect_fs, RFX_FRAGMENT_SHADER}};
-	static const RawShaderCodeUnit shader_code_2d_wired_ellipse[]{{shader_code_2d_wired_ellipse_vs, RFX_VERTEX_SHADER}, {shader_code_2d_wired_ellipse_fs, RFX_FRAGMENT_SHADER}};
-	static const RawShaderCodeUnit shader_code_3d_basic[]{{shader_code_3d_basic_vs, RFX_VERTEX_SHADER}, {shader_code_3d_basic_fs, RFX_FRAGMENT_SHADER}};
-	static const RawShaderCodeUnit shader_code_3d_color[]{{shader_code_3d_color_vs, RFX_VERTEX_SHADER}, {shader_code_3d_color_fs, RFX_FRAGMENT_SHADER}};
-	static const RawShaderCodeUnit shader_code_3d_multicolor[]{{shader_code_3d_multicolor_vs, RFX_VERTEX_SHADER}, {shader_code_3d_multicolor_fs, RFX_FRAGMENT_SHADER}};
-	static const RawShaderCodeUnit shader_code_3d_texture[]{{shader_code_3d_texture_vs, RFX_VERTEX_SHADER}, {shader_code_3d_texture_fs, RFX_FRAGMENT_SHADER}};
+	static const RawShaderCodeUnit shader_code_2d_color[]{{shader_code_2d_color_vs, RFX_VERTEX_SHADER}, {shader_code_2d_color_fs, RFX_VERTEX_SHADER}};
+	static const RawShaderCodeUnit shader_code_2d_rect[]{{shader_code_2d_rect_vs, RFX_VERTEX_SHADER}, {shader_code_2d_rect_fs, RFX_VERTEX_SHADER}};
+	static const RawShaderCodeUnit shader_code_2d_ellipse[]{{shader_code_2d_ellipse_vs, RFX_VERTEX_SHADER}, {shader_code_2d_ellipse_fs, RFX_VERTEX_SHADER}};
+	static const RawShaderCodeUnit shader_code_2d_figure[]{{shader_code_2d_figure_vs, RFX_VERTEX_SHADER}, {shader_code_2d_figure_fs, RFX_VERTEX_SHADER}};
+	static const RawShaderCodeUnit shader_code_2d_image[]{{shader_code_2d_image_vs, RFX_VERTEX_SHADER}, {shader_code_2d_image_fs, RFX_VERTEX_SHADER}};
+	static const RawShaderCodeUnit shader_code_2d_text[]{{shader_code_2d_text_vs, RFX_VERTEX_SHADER}, {shader_code_2d_text_fs, RFX_VERTEX_SHADER}};
+	static const RawShaderCodeUnit shader_code_2d_wired_rect[]{{shader_code_2d_wired_rect_vs, RFX_VERTEX_SHADER}, {shader_code_2d_wired_rect_fs, RFX_VERTEX_SHADER}};
+	static const RawShaderCodeUnit shader_code_2d_wired_ellipse[]{{shader_code_2d_wired_ellipse_vs, RFX_VERTEX_SHADER}, {shader_code_2d_wired_ellipse_fs, RFX_VERTEX_SHADER}};
+	static const RawShaderCodeUnit shader_code_3d_basic[]{{shader_code_3d_basic_vs, RFX_VERTEX_SHADER}, {shader_code_3d_basic_fs, RFX_VERTEX_SHADER}};
+	static const RawShaderCodeUnit shader_code_3d_color[]{{shader_code_3d_color_vs, RFX_VERTEX_SHADER}, {shader_code_3d_color_fs, RFX_VERTEX_SHADER}};
+	static const RawShaderCodeUnit shader_code_3d_multicolor[]{{shader_code_3d_multicolor_vs, RFX_VERTEX_SHADER}, {shader_code_3d_multicolor_fs, RFX_VERTEX_SHADER}};
+	static const RawShaderCodeUnit shader_code_3d_texture[]{{shader_code_3d_texture_vs, RFX_VERTEX_SHADER}, {shader_code_3d_texture_fs, RFX_VERTEX_SHADER}};
 
 	static const RawShaderCode shaders[] {
+		{"2d/color", shader_code_2d_color_layout, shader_code_2d_color},
 		{"2d/rect", shader_code_2d_rect_layout, shader_code_2d_rect},
 		{"2d/ellipse", shader_code_2d_ellipse_layout, shader_code_2d_ellipse},
 		{"2d/figure", shader_code_2d_figure_layout, shader_code_2d_figure},

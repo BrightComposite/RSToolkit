@@ -8,6 +8,7 @@
 //---------------------------------------------------------------------------
 
 #include <opengl/opengl.h>
+#include <opengl/vertex_layout.h>
 
 //---------------------------------------------------------------------------
 
@@ -18,70 +19,6 @@ namespace asd
 	using vertex_indices = array_list<uint>;
 	
 	class instanced_mesh_data;
-
-	struct vertex_layout_element
-	{
-		uint units;
-	};
-
-	struct vertex_layout
-	{
-		uint stride;
-		uint units;
-		array_list<vertex_layout_element> elements;
-	};
-
-	namespace vertex_layouts
-	{
-		template<class T, T ... E>
-		struct sum {};
-
-		template<class T, T Head, T ... Tail>
-		struct sum<T, Head, Tail...>
-		{
-			static constexpr T value = Head + sum<T, Tail...>::value;
-		};
-
-		template<class T>
-		struct sum<T>
-		{
-			static constexpr T value = 0;
-		};
-
-		template<class ... E>
-		struct generator
-		{
-			static constexpr const char key[sizeof...(E) + 1] = {E::key..., '\0'};
-			static const uint units = sum<uint, E::units...>::value;
-		};
-
-		template<class ... E>
-		constexpr const char generator<E...>::key[sizeof...(E) + 1];
-
-		struct position2
-		{
-			static const char key = 'p';
-			static const uint units = 2;
-		};
-
-		struct position3
-		{
-			static const char key = 'p';
-			static const uint units = 3;
-		};
-
-		struct color3
-		{
-			static const char key = 'c';
-			static const uint units = 3;
-		};
-
-		struct color4
-		{
-			static const char key = 'c';
-			static const uint units = 3;
-		};
-	}
 
 	namespace opengl
 	{
@@ -105,7 +42,7 @@ namespace asd
 			uint handle;
 		};
 
-		enum vertex_topology
+		enum class vertex_topology
 		{
 			triangles,
 			triangle_strip,
@@ -121,21 +58,30 @@ namespace asd
 			instanced_indexed
 		};
 
-		class mesh : public ::asd::gfx::primitive, public shareable
+		class mesh_impl : public shareable<mesh_impl>
 		{
 		public:
-			virtual void draw(::asd::opengl::context &) const = 0;
+			virtual ~mesh_impl() {}
+
+			virtual void draw(context &) const = 0;
 		};
-	}
 
-	create_morph_type(opengl, opengl::mesh);
+		struct mesh : public ::asd::gfx::primitive
+		{
+			morph_type(opengl, mesh);
 
-	namespace opengl 
-	{		
-		inline void draw_mesh(::asd::opengl::context & ctx, const mesh & m) {
-			m.draw(ctx);
-		}
-		
+			mesh(const handle<mesh_impl> & impl) : impl(impl) {}
+
+			friend inline void draw_mesh(context & ctx, const mesh & m) {
+				if(m.impl) {
+					m.impl->draw(ctx);
+				}
+			}
+
+		private:
+			handle<mesh_impl> impl;
+		};
+
 		template <mesh_type type>
 		class generic_mesh {};
 		
@@ -146,7 +92,7 @@ namespace asd
 		
 		public:
 			api(opengl)
-			mesh_builder(context & graphics, vertex_topology topology);
+			mesh_builder(context & graphics, const vertex_layout & layout, const vertex_data & data, vertex_topology topology = vertex_topology::triangles);
 			api(opengl)
 			~mesh_builder();
 			
@@ -160,7 +106,7 @@ namespace asd
 			mesh_builder * make_instanced(const vertex_layout *);*/
 			
 			api(opengl)
-			handle<mesh> build();
+			mesh build();
 		
 		protected:
 			context & _context;
@@ -170,8 +116,8 @@ namespace asd
 			uint _indicesCount = 0;
 			array_list<vertex_buffer> _buffers;
 			unique<index_buffer> _ibuffer;
-			const vertex_layout * _instancedLayout;
-			mesh_type _type;
+			const vertex_layout * _instancedLayout = nullptr;
+			mesh_type _type = mesh_type::plain;
 			// unique<instanced_mesh_data> _instancedData = nullptr;
 		};
 		

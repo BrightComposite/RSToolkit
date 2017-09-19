@@ -9,7 +9,7 @@ namespace asd
 	namespace opengl
 	{
 		template <>
-		class generic_mesh<mesh_type::plain> : public ::asd::opengl::mesh
+		class generic_mesh<mesh_type::plain> : public ::asd::opengl::mesh_impl
 		{
 			deny_copy(generic_mesh);
 		
@@ -29,7 +29,7 @@ namespace asd
 						for(uint j = 0; j < count; ++j, ++attrCount) {
 							auto u = (j == count - 1) ? ((units - 1) % 4) + 1 : 4;
 							glEnableVertexAttribArray(attrCount);
-							glVertexAttribPointer(attrCount, u, GL_FLOAT, GL_FALSE, b.layout.stride, pointer);
+							glVertexAttribPointer(attrCount, u, GL_FLOAT, GL_FALSE, b.layout.units * sizeof(float), pointer);
 							pointer += u;
 						}
 					}
@@ -58,7 +58,7 @@ namespace asd
 		using plain_mesh = generic_mesh<mesh_type::plain>;
 		
 		template <>
-		class generic_mesh<mesh_type::indexed> : public ::asd::opengl::mesh
+		class generic_mesh<mesh_type::indexed> : public ::asd::opengl::mesh_impl
 		{
 			deny_copy(generic_mesh);
 		
@@ -78,7 +78,7 @@ namespace asd
 						for(uint j = 0; j < count; ++j, ++attrCount) {
 							auto u = (j == count - 1) ? ((units - 1) % 4) + 1 : 4;
 							glEnableVertexAttribArray(attrCount);
-							glVertexAttribPointer(attrCount, u, GL_FLOAT, GL_FALSE, b.layout.stride, pointer);
+							glVertexAttribPointer(attrCount, u, GL_FLOAT, GL_FALSE, b.layout.units * sizeof(float), pointer);
 							pointer += u;
 						}
 					}
@@ -245,7 +245,7 @@ namespace asd
 			}
 		}
 		
-		mesh_builder::mesh_builder(opengl::context & graphics, vertex_topology topology) : _context(graphics) {
+		mesh_builder::mesh_builder(context & graphics, const vertex_layout & layout, const vertex_data & data, vertex_topology topology) : _context(graphics) {
 			switch(topology) {
 				case vertex_topology::triangles:
 					_topology = GL_TRIANGLES;
@@ -266,6 +266,8 @@ namespace asd
 				default:
 					_topology = 0;
 			}
+
+			buffer(layout, data);
 		}
 		
 		mesh_builder::~mesh_builder() {}
@@ -304,19 +306,19 @@ namespace asd
 			return this;
 		}*/
 
-		handle<mesh> mesh_builder::build() {
+		mesh mesh_builder::build() {
 			switch(_type) {
 				case mesh_type::plain:
-					return make::handle<plain_mesh>(*this);
+					return {make::handle<plain_mesh>(*this)};
 				case mesh_type::indexed:
-					return make::handle<indexed_mesh>(*this);
+					return {make::handle<indexed_mesh>(*this)};
 					/*case 5:
 					return handle<instanced_mesh>(this);
 					case 7:
 					return handle<instanced_indexed_mesh>(this);*/
 
 				default:
-					return nullptr;
+					throw Exception("Invalid builder state");
 			}
 		}
 	}

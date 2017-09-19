@@ -19,9 +19,7 @@ namespace asd
 		using default_alloc::operator delete;
 		
 		static inline void * operator new(size_t size, size_t alignment) {
-			if((alignment & (alignment - 1)) != 0) {
-				throw std::runtime_error("Invalid alignment!");
-			}
+			BOOST_ASSERT_MSG((alignment & (alignment - 1)) == 0, "Invalid alignment!");
 
 #if !defined(_DEBUG) || !defined(_MSC_VER)
 			return boost::alignment::aligned_alloc(size, alignment);

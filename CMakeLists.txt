@@ -29,6 +29,7 @@ add_test(maps)
 
 if(WIN32)
     add_command(check)
+    add_command(clear_shaders)
 endif()
 
 add_test(batch_gfx)

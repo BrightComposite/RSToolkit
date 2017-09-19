@@ -7,7 +7,8 @@ project(opengl VERSION 0.1)
 #--------------------------------------------------------
 
 include(${ASD_TOOLS}/module.cmake)
-include(${ASD_TOOLS}/shaders.cmake)
+
+include(tools/shaders.cmake)
 
 #--------------------------------------------------------
 
@@ -26,19 +27,23 @@ module(STATIC)
 		files(
 			mesh.h
 			opengl.h
+			vertex_layout.h
 		)
 
 		group(src Sources)
 		files(
 			mesh.cpp
 			opengl.cpp
+			vertex_layout.cpp
 		)
 
 		domain(opengl/shaders)
 
 		group(resources Resources)
-		shaders(GLSL
+		shaders(
 			2d/
+                color/
+                    vs.glsl fs.glsl ..
 				rect/
 					vs.glsl fs.glsl ..
 				ellipse/
@@ -68,7 +73,7 @@ module(STATIC)
 
 		group(include Headers)
 		domain(opengl/shaders)
-		shaders_output(Shaders.h)
+		shaders_output(shaders.h)
 	endsources()
 endmodule()
 

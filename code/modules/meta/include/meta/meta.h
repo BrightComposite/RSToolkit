@@ -187,10 +187,7 @@ namespace asd
 			return foreach_t<T...>::template iterate<Functor, Cond>(forward<A>(args)...);
 		}
 		
-		template<typename Functor, class ... A, useif<
-			!is_empty<decltype(Functor::template iterate<H>(declval<A>()...))>::value
-		>
-		>
+		template<typename Functor, class ... A, typename = decltype(Functor::template iterate<H>(declval<A>()...))>
 		static inline void iterate(A && ... args) {
 			Functor::template iterate<H>(forward<A>(args)...);
 			foreach_t<T...>::template iterate<Functor>(forward<A>(args)...);

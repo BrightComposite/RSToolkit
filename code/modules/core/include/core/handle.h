@@ -295,7 +295,9 @@ namespace asd
 		static_assert(!is_pointer<U>::value, "asd::core error: Can't share the temporary object!");
 	}
 	
-	typedef handle<shareable> empty_handle_t;
+	struct shareable_empty : shareable<shareable_empty> {};
+
+	typedef handle<shareable_empty> empty_handle_t;
 	
 	class shared_id_t : public empty_handle_t
 	{

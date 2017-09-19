@@ -62,16 +62,21 @@ namespace asd
 		class driver_context<opengl::driver> : public context
 		{
 		public:
+			api(opengl)
 			driver_context(opengl::driver & driver);
+
+			api(opengl)
 			virtual ~driver_context();
-			
+
+			api(opengl)
 			void draw();
-		
+
 		protected:
+			api(opengl)
 			void checkForErrors();
-			
+
 			opengl::driver & _driver;
-			
+
 			GLContext _context;
 		};
 	}
@@ -80,14 +85,18 @@ namespace asd
 	{
 		using context = ::asd::gfx::driver_context<driver>;
 		
-		class window_context : public ::asd::gfx::driver_context<driver>, public ::asd::window_context
+		class window_context : public context, public ::asd::window_context
 		{
 			using base = ::asd::gfx::driver_context<driver>;
 		
 		public:
+			api(opengl)
 			window_context(opengl::driver & driver, window & w);
+
+			api(opengl)
 			virtual ~window_context();
-			
+
+			api(opengl)
 			virtual void prepare() override;
 		
 		protected:
@@ -107,7 +116,8 @@ namespace asd
 				int minor = 3;
 				int flags = 0;
 			};
-			
+
+			api(opengl)
 			driver(const configuration & config = {});
 			
 			unique<window_context> create_context(window & w) {

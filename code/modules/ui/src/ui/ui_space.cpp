@@ -66,7 +66,7 @@ namespace asd
 		return hWnd;
 	}
 
-	static LRESULT CALLBACK emptyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+	static LRESULT CALLBACK empty_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		if(message == WM_CREATE)
 			return 0;
@@ -77,7 +77,7 @@ namespace asd
 	HWND createEmptyWindowHandle()
 	{
 		WNDCLASSEXW wcex;
-		getWindowClass(wcex, L"asdEmptyWindowClass", emptyWndProc);
+		getWindowClass(wcex, L"asdEmptyWindowClass", empty_wnd_proc);
 
 		static int windowCounter = 0;
 		WideString caption("empty", windowCounter++);

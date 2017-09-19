@@ -29,7 +29,7 @@ namespace asd
 		(int, type)
 	);
 	
-	class subject : public shareable, public named, public auto_id
+	class subject : public shareable<subject>, public named, public auto_id
 	{
 	public:
 		subject() {}

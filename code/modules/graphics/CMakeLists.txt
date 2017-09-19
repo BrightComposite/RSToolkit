@@ -10,7 +10,7 @@ include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-module(STATIC)
+module(LIBRARY)
 	dependencies(
 		math		0.*
 		platform	0.*

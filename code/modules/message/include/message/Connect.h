@@ -24,7 +24,7 @@ namespace asd
 
 //---------------------------------------------------------------------------
 
-	class BasicConnection : public shareable
+	class BasicConnection : public shareable<BasicConnection>
 	{
 	public:
 		BasicConnection(size_t id) : id(id) {}

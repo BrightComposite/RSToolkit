@@ -11,6 +11,10 @@ for /R %%f in (*.shader.inc) do (
 	( del /Q %%f ) && ( echo -- Successfully removed shader output %%f ) || ( set /a errors="%errors%+1" & echo !! Can't remove shader output %%f )
 )
 
+for /R %%f in (*.shader.h) do (
+	( del /Q %%f ) && ( echo -- Successfully removed shader output %%f ) || ( set /a errors="%errors%+1" & echo !! Can't remove shader output %%f )
+)
+
 cd tools/shaders
 
 if %errors% gtr 0 (

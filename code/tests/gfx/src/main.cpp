@@ -17,7 +17,7 @@ namespace asd {
 
 #if BOOST_OS_WINDOWS
 
-#elif BOOST_OS_LINIX
+#elif BOOST_OS_LINUX
 		XWindowAttributes gwa;
 		XEvent xev;
 		

@@ -147,29 +147,6 @@ namespace asd
 
 #elif BOOST_OS_LINUX
 
-			int flags = _driver.config.flags;
-
-		#ifdef GL_DEBUG
-			flags |= GLX_CONTEXT_DEBUG_BIT_ARB;
-		#endif
-
-			const int attributes[] = {
-				GLX_CONTEXT_MAJOR_VERSION_ARB, _driver.config.major,
-				GLX_CONTEXT_MINOR_VERSION_ARB, _driver.config.minor,
-				GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
-			#ifdef GL_DEBUG
-				GLX_CONTEXT_FLAGS_ARB, flags,
-			#endif
-				0
-			};
-
-			_context = glXCreateContextAttribsARB(_window.display(), fbConfig, 0, True, attributes);
-			XSync(_window.display(), False);
-
-			if(!_context) {
-				throw ContextCreationException("Can't create OpenGL render context!");
-			}
-
 			if(glXMakeCurrent(_window.display(), _window.handle(), _context) == GL_FALSE) {
 				throw ContextCreationException("Can't bind OpenGL render context!");
 			}
@@ -330,6 +307,29 @@ namespace asd
 			}
 			
 			XDestroyWindow(_window.display(), windowHandle);
+			
+			int flags = _driver.config.flags;
+
+#ifdef GL_DEBUG
+			flags |= GLX_CONTEXT_DEBUG_BIT_ARB;
+#endif
+			
+			const int attributes[] = {
+				GLX_CONTEXT_MAJOR_VERSION_ARB, _driver.config.major,
+				GLX_CONTEXT_MINOR_VERSION_ARB, _driver.config.minor,
+				GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
+			#ifdef GL_DEBUG
+				GLX_CONTEXT_FLAGS_ARB, flags,
+			#endif
+				0
+			};
+			
+			_context = glXCreateContextAttribsARB(_window.display(), fbConfig, 0, True, attributes);
+			XSync(_window.display(), False);
+			
+			if(!_context) {
+				throw ContextCreationException("Can't create OpenGL render context!");
+			}
 #endif
 		}
 	}

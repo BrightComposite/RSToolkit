@@ -42,11 +42,12 @@ if("${ShaderType}" STREQUAL "vs")
     else()
         set(LAYOUT "#error \"The vertex layout must be declared in the shader code! Example: /* !vertex: p3 c4 */\"\n")
     endif()
+    
+    configure_file("${CMAKE_CURRENT_LIST_DIR}/templates/shader.vs.h" ${Output})
 else()
-    set(LAYOUT)
+    configure_file("${CMAKE_CURRENT_LIST_DIR}/templates/shader.h" ${Output})
 endif()
 
-configure_file("${CMAKE_CURRENT_LIST_DIR}/templates/glsl.inc" ${Output})
 message("embedded glsl shader save succeeded; see ${Output}")
 
 file(WRITE ${TimestampFile} "${Timestamp}")

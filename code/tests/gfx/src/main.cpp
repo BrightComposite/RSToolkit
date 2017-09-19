@@ -66,7 +66,7 @@ namespace asd
 			}
 		}
 
-	#elif BOOST_OS_LINIX
+	#elif BOOST_OS_LINUX
 
 		XWindowAttributes gwa;
 		XEvent xev;
@@ -95,8 +95,10 @@ namespace asd
 					default: {}
 				}
 			} else {
-				draw_quad();
-
+				context << mesh;
+				
+				context.draw();
+				
 				glXSwapBuffers(w.display(), w.handle());
 			}
 		}

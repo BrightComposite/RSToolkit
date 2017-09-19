@@ -1,27 +1,15 @@
 //---------------------------------------------------------------------------
 
-#include <opengl/vertex_layout.h>
+${INCLUDE}
 
 //---------------------------------------------------------------------------
 
-static const char shader_code_3d_basic_fs = R"SHADER(
-/**
- *
- */
-#version 330 core
-
-layout(std140) uniform Color
-{
-	vec4 color;
-};
-
-out vec4 fscolor;
-
-void main(void)
-{
-	fscolor = color;
-}
-
+static const char ${VARIABLE} = R"SHADER(
+${CONTENTS}
 )SHADER";
+
+//---------------------------------------------------------------------------
+
+${LAYOUT};
 
 //---------------------------------------------------------------------------

@@ -2,7 +2,9 @@
 
 #include <opengl/vertex_layout.h>
 
-static constexpr char const shader_code_2d_wired_rect_fs[] = R"SHADER(
+//---------------------------------------------------------------------------
+
+static const char shader_code_2d_wired_rect_fs = R"SHADER(
 /**
 *
 */
@@ -37,9 +39,5 @@ void main(void)
 }
 
 )SHADER";
-
-//---------------------------------------------------------------------------
-
-
 
 //---------------------------------------------------------------------------

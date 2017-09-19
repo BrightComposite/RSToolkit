@@ -160,7 +160,7 @@ namespace asd
 
 		_context = std::move(tmp);
 
-		auto * visualInfo = _context->visualInfo();
+		auto * visualInfo = ctx->visualInfo();
 
 		{
 			XSetWindowAttributes winAttr;

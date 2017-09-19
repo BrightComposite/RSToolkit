@@ -426,7 +426,7 @@ namespace asd
 
 #elif BOOST_OS_LINUX
 
-	window::window(window_driver & driver, const string & caption, const math::int_rect & rect, const char * displayName) {
+	window::window(const string & caption, const math::int_rect & rect, const char * displayName) {
 		_display = XOpenDisplay(displayName);
 
 		if(_display == nullptr) {

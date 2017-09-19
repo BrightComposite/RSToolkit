@@ -262,9 +262,6 @@ namespace asd
 				case vertex_topology::line_strip:
 					_topology = GL_LINE_STRIP;
 					break;
-
-				default:
-					_topology = 0;
 			}
 
 			buffer(layout, data);

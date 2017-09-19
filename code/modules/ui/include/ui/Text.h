@@ -24,7 +24,7 @@ namespace asd
 
 	using TextComponent = WidgetLayerComponent<TextLayer>;
 
-	class Text : public shareable
+	class Text : public shareable<Text>
 	{
 	public:
 		api(ui) Text(asd::graphics * graphics, const WideString & s, const handle<Font> & font, const Color & color = Color::black, int fontSize = 14);

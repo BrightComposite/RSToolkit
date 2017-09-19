@@ -15,7 +15,7 @@
 namespace asd
 {
 	template<typename T>
-	class state : public shareable
+	class state : public shareable<state<T>>
 	{
 	public:
 		state() : _state() {}

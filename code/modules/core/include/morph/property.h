@@ -17,7 +17,7 @@
 
 namespace asd
 {
-	using Property = shareable;
+	//using Property = shareable;
 
 	template<class Origin>
 	using PropertiesSet = morph<Origin>;

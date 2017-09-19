@@ -23,9 +23,9 @@ namespace asd
 
 //---------------------------------------------------------------------------
 
-	struct MessageReceiver : public shareable {};
+	struct MessageReceiver : public shareable<MessageReceiver> {};
 
-	struct BasicReceivers : shareable
+	struct BasicReceivers : shareable<BasicReceivers>
 	{
 		morph_origin(BasicReceivers);
 	};

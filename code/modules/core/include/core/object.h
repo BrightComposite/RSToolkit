@@ -18,7 +18,7 @@ namespace asd
 	
 	link_class(core) (object, basic_class);
 	
-	class object : public shareable
+	class object : public shareable<object>
 	{
 	public:
 		object() : _class(getclass(object)) {}

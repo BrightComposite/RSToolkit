@@ -320,7 +320,7 @@ namespace asd
 		template<>
 	struct hash<widget> : hash<subject> {};
 
-	class WidgetLayer : public shareable
+	class WidgetLayer : public shareable<WidgetLayer>
 	{
 		friend class widget;
 

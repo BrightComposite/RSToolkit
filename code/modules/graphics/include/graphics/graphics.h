@@ -28,19 +28,16 @@ namespace asd
 		{
 			morph_origin(primitive);
 		};
-	}
-	
-	create_morph_pool(graphics, gfx::primitive);
-	
-	namespace gfx
-	{
+
 		class context
 		{
 		public:
 			using entry_type = pair<morph_id_t, primitive>;
 			
 			virtual ~context() {}
-			
+
+			virtual void draw() = 0;
+
 			template <class T>
 			void operator <<(const T & value) {
 				_list.push_back(pair<morph_id_t, T>{morph_id<T>, value});
@@ -100,19 +97,20 @@ namespace asd
 		
 		struct mesh : primitive
 		{
+			morph_type(graphics, mesh);
+
 			uint id;
 		};
 		
 		struct texture : primitive
 		{
+			morph_type(graphics, texture);
+
 			uint id;
 		};
 	}
 	
 	using graphics = gfx::context;
-	
-	create_morph_type(graphics, gfx::mesh);
-	create_morph_type(graphics, gfx::texture);
 	
 	exception_class(GraphicsException);
 	exception_subclass(ContextCreationException, GraphicsException);

@@ -40,28 +40,25 @@ namespace asd
 	 *  The shareable class is used to store the reference counter which can be
 	 *	accessed by the handle class.
 	 *
-	 *	A shareable object is an object of a class T which inherits the Shared
-	 *	class. Such thing allows to create handles to shareables without
-	 *	wrapping them into SharedWrappers. Create shareable classes when you
-	 *	know that objects of these classes will be handled (you will almost
-	 *	always want that).
+	 *	A shareable object is an object of a class T which inherits the shareable
+	 *	class. Such thing allows to create handles to shareables. 
+	 *	Create shareable classes when you know that objects of these classes will
+	 *	be handled.
+	 *
+	 *	The template parameter T is used to ensure that `delete` will call the 
+	 *	destructor of the class T, which may be virtual
 	 */
+	template<class T>
 	struct shareable : public default_alloc
 	{
 		template<class>
 		friend class handle;
 		
-		template<class>
-		friend class unique;
-		
-		template<class>
-		friend struct pointer_deleter;
-		
-		friend forceinline void intrusive_ptr_add_ref(const shareable * s) {
+		friend forceinline void intrusive_ptr_add_ref(const T * s) {
 			++s->_refs;
 		}
 		
-		friend forceinline void intrusive_ptr_release(const shareable * s) {
+		friend forceinline void intrusive_ptr_release(const T * s) {
 			if(--s->_refs == 0) {
 				delete s;
 			}
@@ -70,9 +67,9 @@ namespace asd
 	protected:
 		mutable ref_counter_t _refs = 1;
 	};
-	
+
 	template<class T>
-	struct is_shareable : is_base_of<shareable, T> {};
+	struct is_shareable : is_base_of<shareable<T>, T> {};
 }
 
 //---------------------------------------------------------------------------

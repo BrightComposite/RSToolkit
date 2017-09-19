@@ -17,7 +17,7 @@ namespace asd
 	using std::array_list;
 
 	template<class T>
-	class data : public shareable
+	class data : public shareable<data<T>>
 	{
 	public:
 		using iterator = T *;
@@ -115,7 +115,7 @@ namespace asd
 	};
 
 	template<class T>
-	class data<const T> : public shareable
+	class data<const T> : public shareable<data<const T>>
 	{
 	public:
 		using const_iterator = const T *;
@@ -271,7 +271,7 @@ namespace asd
 	class owned_data<const T> {};
 
 	template<>
-	class data<void> : public shareable
+	class data<void> : public shareable<data<void>>
 	{
 	public:
 		data() : ptr(nullptr), size(0) {}
@@ -307,7 +307,7 @@ namespace asd
 	};
 
 	template<>
-	class data<const void> : public shareable
+	class data<const void> : public shareable<data<const void>>
 	{
 	public:
 		data() : ptr(nullptr), size(0) {}

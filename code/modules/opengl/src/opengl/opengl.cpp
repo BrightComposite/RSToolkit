@@ -93,7 +93,7 @@ namespace asd
 	#endif
 
 		driver::driver(const configuration & config) : config(config) {
-			extend(draw_mesh);
+			extend(opengl::draw_mesh);
 		}
 		
 		window_context::window_context(opengl::driver & driver, window & w) : base(driver), ::asd::window_context(w) {

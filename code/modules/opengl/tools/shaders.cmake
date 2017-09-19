@@ -56,7 +56,7 @@ function(shaders)
 
         add_custom_command(
             OUTPUT ${OutputFile}
-            COMMAND call ${CMAKE_COMMAND} -D ASD_ROOT=${ASD_ROOT} -D Input=${InputFile} -D Output=${OutputFile} -D ShaderType=${ShaderType} -D OutputVariable=${OutputVariable} -P "${TOOLS_DIR}/compile-shader.cmake"
+            COMMAND ${CMAKE_COMMAND} -D ASD_ROOT=${ASD_ROOT} -D Input=${InputFile} -D Output=${OutputFile} -D ShaderType=${ShaderType} -D OutputVariable=${OutputVariable} -P "${TOOLS_DIR}/compile-shader.cmake"
             MAIN_DEPENDENCY ${InputFile}
             COMMENT ""
             WORKING_DIRECTORY ${TOOLS_DIR}

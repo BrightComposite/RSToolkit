@@ -50,7 +50,7 @@ namespace asd
 			};
 
 			template<char ... Ch>
-			api(opengl) constexpr const char char_sequence<Ch...>::value[sizeof...(Ch) + 1] = {Ch..., '\0'};
+			api(opengl) constexpr const char char_sequence<Ch...>::value[sizeof...(Ch) + 1];
 
 			template<class T, class...> 
 			struct concat 

@@ -2,7 +2,9 @@
 
 #include <opengl/vertex_layout.h>
 
-static constexpr char const shader_code_3d_multicolor_fs[] = R"SHADER(
+//---------------------------------------------------------------------------
+
+static const char shader_code_3d_multicolor_fs = R"SHADER(
 /**
  *
  */
@@ -21,9 +23,5 @@ void main(void)
 }
 
 )SHADER";
-
-//---------------------------------------------------------------------------
-
-
 
 //---------------------------------------------------------------------------

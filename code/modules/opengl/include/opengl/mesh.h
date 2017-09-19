@@ -19,7 +19,7 @@ namespace asd
 	using vertex_indices = array_list<uint>;
 	
 	class instanced_mesh_data;
-
+	
 	namespace opengl
 	{
 		struct vertex_buffer
@@ -27,21 +27,21 @@ namespace asd
 			vertex_buffer(const vertex_layout & layout, const vertex_data & vd);
 			vertex_buffer(vertex_buffer && buffer);
 			~vertex_buffer();
-
+			
+			const vertex_layout & layout;
 			uint handle;
 			uint verticesCount;
-			const vertex_layout & layout;
 		};
-
+		
 		struct index_buffer
 		{
 			index_buffer(const vertex_indices & indices);
 			index_buffer(index_buffer && buffer);
 			~index_buffer();
-
+			
 			uint handle;
 		};
-
+		
 		enum class vertex_topology
 		{
 			triangles,
@@ -49,7 +49,7 @@ namespace asd
 			lines,
 			line_strip
 		};
-
+		
 		enum class mesh_type
 		{
 			plain,
@@ -57,38 +57,41 @@ namespace asd
 			instanced,
 			instanced_indexed
 		};
-
+		
 		class mesh_impl : public shareable<mesh_impl>
 		{
 		public:
 			virtual ~mesh_impl() {}
-
+			
 			virtual void draw(context &) const = 0;
 		};
-
+		
 		struct mesh : public ::asd::gfx::primitive
 		{
-			morph_type(opengl, mesh);
-
+			morph_type(mesh);
+			
 			mesh(const handle<mesh_impl> & impl) : impl(impl) {}
-
-			friend inline void draw_mesh(context & ctx, const mesh & m) {
-				if(m.impl) {
-					m.impl->draw(ctx);
-				}
-			}
-
+			
+			friend inline void draw_mesh(context & ctx, const mesh & m);
+		
 		private:
 			handle<mesh_impl> impl;
 		};
-
+		
+		inline void draw_mesh(context & ctx, const mesh & m) {
+			if(m.impl) {
+				m.impl->draw(ctx);
+			}
+		}
+		
 		template <mesh_type type>
 		class generic_mesh {};
 		
 		class mesh_builder
 		{
 			template <mesh_type type>
-			friend class generic_mesh;
+			friend
+			class generic_mesh;
 		
 		public:
 			api(opengl)
@@ -120,7 +123,6 @@ namespace asd
 			mesh_type _type = mesh_type::plain;
 			// unique<instanced_mesh_data> _instancedData = nullptr;
 		};
-		
 	}
 }
 

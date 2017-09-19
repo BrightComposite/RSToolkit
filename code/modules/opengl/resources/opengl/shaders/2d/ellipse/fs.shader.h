@@ -2,7 +2,9 @@
 
 #include <opengl/vertex_layout.h>
 
-static constexpr char const shader_code_2d_ellipse_fs[] = R"SHADER(
+//---------------------------------------------------------------------------
+
+static const char shader_code_2d_ellipse_fs = R"SHADER(
 /**
  *
  */
@@ -33,9 +35,5 @@ void main(void)
 }
 
 )SHADER";
-
-//---------------------------------------------------------------------------
-
-
 
 //---------------------------------------------------------------------------

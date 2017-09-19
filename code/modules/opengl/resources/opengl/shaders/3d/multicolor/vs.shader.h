@@ -2,7 +2,9 @@
 
 #include <opengl/vertex_layout.h>
 
-static constexpr char const shader_code_3d_multicolor_vs[] = R"SHADER(
+//---------------------------------------------------------------------------
+
+static const char shader_code_3d_multicolor_vs = R"SHADER(
 /**
  *	!vertex: p3 c4
  */
@@ -42,6 +44,6 @@ void main(void)
 //---------------------------------------------------------------------------
 
 static const ::asd::opengl::vertex_layout & shader_code_3d_multicolor_layout = ::asd::opengl::vertex_layouts::p3c4::get();
-
+;
 
 //---------------------------------------------------------------------------

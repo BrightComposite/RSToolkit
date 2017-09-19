@@ -29,21 +29,21 @@ namespace asd
 		}
 
 		template<class T>
-		constexpr morph_id_t get_id() {
+		constexpr morph_id_t get_morph_id() {
 			return T::morph_id();
 		}
 
 		template<class T>
-		constexpr const char * get_name() {
+		constexpr const char * get_morph_name() {
 			return T::morph_name();
 		}
 	}
 
 	template <class T>
-	const morph_id_t morph_id = morph_types::get_id<T>();
+	const morph_id_t morph_id = morph_types::get_morph_id<T>();
 
 	template <class T>
-	constexpr const char * morph_name = morph_types::get_name<T>();
+	constexpr const char * morph_name = morph_types::get_morph_name<T>();
 }
 
 /**
@@ -59,7 +59,7 @@ namespace asd
     }															\
 																\
 	template<class>												\
-	friend morph_id_t asd::morph_types::increment();			\
+	friend constexpr morph_id_t asd::morph_types::increment();	\
 																\
 	template<class> 											\
 	friend struct asd::is_morph_type;							\
@@ -69,23 +69,23 @@ namespace asd
   /**
    *	Creates morpher for the Type.
    */
-#define morph_type(.../*morph type*/)							\
-    static morph_id_t morph_id()								\
-    {															\
-        static morph_id_t i = morph_increment();				\
-        return i;												\
-    }															\
-																\
-	template<class>												\
-	friend morph_id_t asd::morph_types::get_id();				\
-																\
-	template<class>												\
-	friend constexpr const char * asd::morph_types::get_name();	\
-																\
-    static constexpr const char * morph_name()					\
-    {															\
-        return #__VA_ARGS__;									\
-    }															\
+#define morph_type(.../*morph type*/)									\
+    static morph_id_t morph_id()										\
+    {																	\
+        static morph_id_t i = morph_increment();						\
+        return i;														\
+    }																	\
+																		\
+	template<class>														\
+	friend constexpr morph_id_t asd::morph_types::get_morph_id();		\
+																		\
+	template<class>														\
+	friend constexpr const char * asd::morph_types::get_morph_name();	\
+																		\
+    static constexpr const char * morph_name()							\
+    {																	\
+        return #__VA_ARGS__;											\
+    }																	\
 
 //---------------------------------------------------------------------------
 #endif

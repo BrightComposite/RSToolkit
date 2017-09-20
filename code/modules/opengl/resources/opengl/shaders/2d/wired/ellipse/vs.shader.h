@@ -4,7 +4,7 @@
 
 //---------------------------------------------------------------------------
 
-static const char shader_code_2d_wired_ellipse_vs = R"SHADER(
+static const char * const shader_code_2d_wired_ellipse_vs = R"SHADER(
 /**
  *	!vertex: p2 t
  */
@@ -47,6 +47,5 @@ void main(void)
 //---------------------------------------------------------------------------
 
 static const ::asd::opengl::vertex_layout & shader_code_2d_wired_ellipse_layout = ::asd::opengl::vertex_layouts::p2t::get();
-;
 
 //---------------------------------------------------------------------------

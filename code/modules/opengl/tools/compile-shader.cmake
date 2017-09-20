@@ -38,7 +38,7 @@ if("${ShaderType}" STREQUAL "vs")
         string(REGEX REPLACE "!vertex:[ ]*" "" layout ${layout})
         string(REGEX REPLACE " " "" layout ${layout})
 
-        set(LAYOUT "static const ::asd::opengl::vertex_layout & ${OutputVariable}_layout = ::asd::opengl::vertex_layouts::${layout}::get();\n")
+        set(LAYOUT "static const ::asd::opengl::vertex_layout & ${OutputVariable}_layout = ::asd::opengl::vertex_layouts::${layout}::get();")
     else()
         set(LAYOUT "#error \"The vertex layout must be declared in the shader code! Example: /* !vertex: p3 c4 */\"\n")
     endif()

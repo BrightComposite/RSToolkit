@@ -209,6 +209,51 @@ namespace asd
 		template<typename Functor, class ... A>
 		static inline void iterate(A && ...) {}
 	};
+
+	template<template<class> class F, class T, T ... E>
+	struct accum_t {};
+
+	template<template<class> class F, class T, T Head, T ... Tail>
+	struct accum_t<F, T, Head, Tail...>
+	{
+		static constexpr T value = F<T>()(Head, accum_t<F, T, Tail...>::value);
+	};
+
+	template<template<class> class F, class T>
+	struct accum_t<F, T>
+	{
+		static constexpr T value = T(0);
+	};
+
+	template<class T, T ... E>
+	using sum_t = accum_t<std::plus, T, E...>;
+
+	template<class T, T ... E>
+	using mul_t = accum_t<std::multiplies, T, E...>;
+
+	template<char ... Ch>
+	struct char_sequence
+	{
+		static constexpr const char value[sizeof...(Ch) + 1] = {Ch..., '\0'};
+	};
+
+	template<char ... Ch>
+	constexpr const char char_sequence<Ch...>::value[sizeof...(Ch) + 1];
+
+	namespace internals
+	{
+		template<class T, class...>
+		struct concat
+		{
+			using type = T;
+		};
+
+		template<char... Dest, char ... Src, class... Ts>
+		struct concat<char_sequence<Dest...>, char_sequence<Src...>, Ts...> : concat<char_sequence<Dest..., Src...>, Ts...> {};
+	}
+
+	template<class T, class... Ts>
+	using concat_t = typename internals::concat<T, Ts...>::type;
 }
 
 //---------------------------------------------------------------------------

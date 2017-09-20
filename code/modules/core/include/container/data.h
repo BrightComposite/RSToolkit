@@ -50,6 +50,28 @@ namespace asd
 			ptr = nullptr;
 		}
 
+		T & at(int index)
+		{
+			BOOST_ASSERT_MSG(ptr, "Data is not initialized");
+
+			if(index >= size) {
+				throw std::out_of_range("Index is out of bounds");
+			}
+
+			return ptr[index];
+		}
+
+		const T & at(int index) const
+		{
+			BOOST_ASSERT_MSG(ptr, "Data is not initialized");
+
+			if(index >= size) {
+				throw std::out_of_range("Index is out of bounds");
+			}
+
+			return ptr[index];
+		}
+
 		T & operator [] (int index)
 		{
 			return ptr[index];
@@ -139,9 +161,40 @@ namespace asd
 			return *this;
 		}
 
+		const T & at(int index) const
+		{
+			BOOST_ASSERT_MSG(ptr, "Data is not initialized");
+
+			if(index >= size) {
+				throw std::out_of_range("Index is out of bounds");
+			}
+
+			return ptr[index];
+		}
+
 		const T & operator [] (int index) const
 		{
 			return ptr[index];
+		}
+
+		const_iterator begin() const
+		{
+			return ptr;
+		}
+
+		const_iterator end() const
+		{
+			return ptr + size;
+		}
+
+		const_reverse_iterator rbegin() const
+		{
+			return ptr + size;
+		}
+
+		const_reverse_iterator rend() const
+		{
+			return ptr;
 		}
 
 		const_iterator cbegin() const

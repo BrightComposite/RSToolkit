@@ -27,6 +27,7 @@ module(STATIC)
 		files(
 			mesh.h
 			opengl.h
+            shader.h
 			vertex_layout.h
 		)
 
@@ -34,6 +35,7 @@ module(STATIC)
 		files(
 			mesh.cpp
 			opengl.cpp
+            shader.cpp
 			vertex_layout.cpp
 		)
 
@@ -72,8 +74,8 @@ module(STATIC)
 		)
 
 		group(include Headers)
-		domain(opengl/shaders)
-		shaders_output(shaders.h)
+        files(code.h)
+		shaders_output(embedded.h)
 	endsources()
 endmodule()
 

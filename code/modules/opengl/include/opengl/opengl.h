@@ -17,9 +17,12 @@
 #define GLEW_STATIC
 
 #if BOOST_OS_WINDOWS
+
 #include <GL/glew.h>
 #include <GL/wglew.h>
+
 #elif BOOST_OS_LINUX
+
 #define GL_GLEXT_PROTOTYPES
 #define GLX_GLXEXT_PROTOTYPES
 
@@ -32,7 +35,9 @@
 #endif
 
 #if ASD_DEBUG
+
 #define GL_DEBUG
+
 #endif
 
 #undef major
@@ -45,10 +50,14 @@ namespace asd
 	using std::thread;
 
 #if BOOST_OS_WINDOWS
+
 	using DeviceContext = HDC;
 	using GLContext = HGLRC;
+
 #elif BOOST_OS_LINUX
+
 	using GLContext = ::GLXContext;
+
 #endif
 	
 	namespace opengl
@@ -73,7 +82,7 @@ namespace asd
 
 		protected:
 			api(opengl)
-			void checkForErrors();
+			void check_for_errors();
 
 			opengl::driver & _driver;
 
@@ -100,7 +109,7 @@ namespace asd
 			virtual void prepare() override;
 		
 		protected:
-			void initDevice();
+			void init_device();
 		};
 		
 		class driver : public ::asd::gfx::driver<driver>

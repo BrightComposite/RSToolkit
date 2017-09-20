@@ -26,9 +26,13 @@
 namespace asd
 {
 #if BOOST_OS_WINDOWS
+
 	using window_handle_t = HWND;
+
 #elif BOOST_OS_LINUX
+
 	using window_handle_t = ::Window;
+
 #endif
 	
 	class window;
@@ -42,32 +46,40 @@ namespace asd
 		virtual void prepare() = 0;
 
 #if BOOST_OS_LINUX
+
 		XVisualInfo * visualInfo() const
 		{
 			return _visualInfo;
 		}
+
 #endif
 	
 	protected:
 		window & _window;
 
 #if BOOST_OS_LINUX
+
 		XVisualInfo * _visualInfo;
+
 #endif
 	};
 
 	exception_class(WindowCreationException);
 
 #if BOOST_OS_LINUX
+
 	class OpenDisplayException : public WindowCreationException
 	{
 	public:
 		OpenDisplayException(const char * display_name) : WindowCreationException("Can't open X display ", display_name, "!") {}
 	};
+
 #endif
 
 #if BOOST_OS_WINDOWS
+
 	#define WS_SIMPLE (WS_POPUP | WS_CLIPCHILDREN | WS_MINIMIZEBOX)
+
 #endif
 
 	class window
@@ -102,13 +114,17 @@ namespace asd
 		}
 
 #if BOOST_OS_WINDOWS
+
 		HDC device() const {
 			return _device;
 		}
+
 #elif BOOST_OS_LINUX
+
 		::Display * display() const {
 			return _display;
 		}
+
 #endif
 
 		api(window)
@@ -118,11 +134,13 @@ namespace asd
 		void hide();
 
 #if BOOST_OS_WINDOWS
+
 		api(window)
 		static HWND create_handle(const math::int_rect & rect, const wstring & caption, const wstring & windowClass, WNDPROC wndProc);
 
 		api(window)
 		static HWND create_empty_handle();
+
 #endif
 
 	private:
@@ -130,9 +148,13 @@ namespace asd
 		unique<gfx::context> _context;
 		
 #if BOOST_OS_WINDOWS
+
 		HDC _device;
+
 #elif BOOST_OS_LINUX
+
 		::Display * _display;
+
 #endif
 	};
 

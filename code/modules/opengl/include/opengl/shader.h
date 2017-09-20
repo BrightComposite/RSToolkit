@@ -33,6 +33,9 @@ namespace asd
 		private:
 			uint id = 0;
 		};
+		
+		api(opengl)
+		void apply(context & ctx, const shader_program & sh);
 
 		namespace shader_code
 		{

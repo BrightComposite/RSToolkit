@@ -252,8 +252,8 @@ namespace asd
 		struct concat<char_sequence<Dest...>, char_sequence<Src...>, Ts...> : concat<char_sequence<Dest..., Src...>, Ts...> {};
 	}
 
-	template<class T, class... Ts>
-	using concat_t = typename internals::concat<T, Ts...>::type;
+	template<class... Ts>
+	using concat_t = typename internals::concat<Ts...>::type;
 }
 
 //---------------------------------------------------------------------------

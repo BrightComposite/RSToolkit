@@ -4,7 +4,7 @@
 
 //---------------------------------------------------------------------------
 
-static const char shader_code_3d_texture_fs = R"SHADER(
+static const char * const shader_code_3d_texture_fs = R"SHADER(
 /**
  *
  */

@@ -4,21 +4,16 @@
 
 //---------------------------------------------------------------------------
 
-static const char shader_code_2d_color_fs = R"SHADER(
+static const char * const shader_code_2d_color_fs = R"SHADER(
 /**
  *
  */
 #version 330 core
 
-layout(std140) uniform Color
-{
-	vec4 color;
-};
-
 out vec4 fscolor;
 
 void main(void) {
-	fscolor = color;
+	fscolor = vec4(1.0);
 }
 
 )SHADER";

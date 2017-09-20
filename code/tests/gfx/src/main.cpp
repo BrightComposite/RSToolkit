@@ -3,46 +3,62 @@
 #include <application/starter.h>
 #include <opengl/opengl.h>
 #include <opengl/mesh.h>
+#include <opengl/shader.h>
 #include <iostream>
 
 //---------------------------------------------------------------------------
 
 namespace asd 
 {
-	int processEvents(window & w, gfx::context & context, const opengl::mesh & mesh);
-	
+	struct colored_mesh : gfx::primitive
+	{
+		morph_type(colored_mesh);
+
+		colored_mesh(const opengl::mesh & mesh) : mesh(mesh) {}
+		colored_mesh(const colored_mesh & e) : mesh(e.mesh) {}
+
+		opengl::mesh mesh;
+	};
+
+	int processEvents(window & w, gfx::context & context, const colored_mesh & e);
+
 	static entrance open([]() {
 		opengl::driver driver;
-		
+
+		driver << [](opengl::context & ctx, const colored_mesh & e) {
+			// change to ctx.shader_program(...)
+			static opengl::shader_program program(ctx, opengl::shader_code::get("2d/color"));
+
+			opengl::apply(ctx, program);
+			opengl::draw_mesh(ctx, e.mesh);
+		};
+
 		try {
 			window w("gfx:test", {20, 20, 180, 180});
 			auto & context = w.bind(driver);
 			
 			std::cout << "Press ESC to exit" << std::endl;
 
-			auto & layout = opengl::vertex_layouts::get("p2");
+			auto & layout = opengl::vertex_layouts::p2::get();
 			
-			auto vertex_data = {-0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f};
-			opengl::mesh_builder builder(context, layout, vertex_data);
+			opengl::mesh_builder builder(context, layout, {-0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f});
 			auto mesh = builder.build();
 
-			std::cout << layout.units << std::endl;
+			colored_mesh e {mesh};
 
 			w.show();
 
-			processEvents(w, context, mesh);
+			processEvents(w, context, e);
 		} catch(const WindowCreationException & e) {
-			std::cerr << e.what() << std::endl;
-		} catch(const std::out_of_range & e) {
-			std::cerr << e.what() << std::endl;
+			std::cerr << "Window creation error: " << e.what() << std::endl;
 		} catch(const GraphicsException & e) {
-			std::cerr << e.what() << std::endl;
+			std::cerr << "Error: " << e.what() << std::endl;
 		}
 	});
 
-	int processEvents(window & w, gfx::context & context, const opengl::mesh & mesh) {
+	int processEvents(window & w, gfx::context & context, const colored_mesh & e) {
 
-	#if BOOST_OS_WINDOWS
+#if BOOST_OS_WINDOWS
 
 		while(true) {
 			static MSG msg = {0};
@@ -58,15 +74,14 @@ namespace asd
 				glClearColor(0.0, 0.0, 0.0, 1.0);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-				context << mesh;
-
+				context << e;
 				context.draw();
 
 				SwapBuffers(w.device());
 			}
 		}
 
-	#elif BOOST_OS_LINUX
+#elif BOOST_OS_LINUX
 
 		XWindowAttributes gwa;
 		XEvent xev;
@@ -103,7 +118,7 @@ namespace asd
 			}
 		}
 
-	#endif
+#endif
 	}
 
 }

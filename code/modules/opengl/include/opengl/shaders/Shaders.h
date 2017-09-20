@@ -27,36 +27,45 @@
 
 //---------------------------------------------------------------------------
 
-#include <graphics/ShaderCode.h>
+#include <opengl/shader_code.h>
 
 //---------------------------------------------------------------------------
 
-	static const RawShaderCodeUnit shader_code_2d_color[]{{shader_code_2d_color_vs, RFX_VERTEX_SHADER}, {shader_code_2d_color_fs, RFX_VERTEX_SHADER}};
-	static const RawShaderCodeUnit shader_code_2d_rect[]{{shader_code_2d_rect_vs, RFX_VERTEX_SHADER}, {shader_code_2d_rect_fs, RFX_VERTEX_SHADER}};
-	static const RawShaderCodeUnit shader_code_2d_ellipse[]{{shader_code_2d_ellipse_vs, RFX_VERTEX_SHADER}, {shader_code_2d_ellipse_fs, RFX_VERTEX_SHADER}};
-	static const RawShaderCodeUnit shader_code_2d_figure[]{{shader_code_2d_figure_vs, RFX_VERTEX_SHADER}, {shader_code_2d_figure_fs, RFX_VERTEX_SHADER}};
-	static const RawShaderCodeUnit shader_code_2d_image[]{{shader_code_2d_image_vs, RFX_VERTEX_SHADER}, {shader_code_2d_image_fs, RFX_VERTEX_SHADER}};
-	static const RawShaderCodeUnit shader_code_2d_text[]{{shader_code_2d_text_vs, RFX_VERTEX_SHADER}, {shader_code_2d_text_fs, RFX_VERTEX_SHADER}};
-	static const RawShaderCodeUnit shader_code_2d_wired_rect[]{{shader_code_2d_wired_rect_vs, RFX_VERTEX_SHADER}, {shader_code_2d_wired_rect_fs, RFX_VERTEX_SHADER}};
-	static const RawShaderCodeUnit shader_code_2d_wired_ellipse[]{{shader_code_2d_wired_ellipse_vs, RFX_VERTEX_SHADER}, {shader_code_2d_wired_ellipse_fs, RFX_VERTEX_SHADER}};
-	static const RawShaderCodeUnit shader_code_3d_basic[]{{shader_code_3d_basic_vs, RFX_VERTEX_SHADER}, {shader_code_3d_basic_fs, RFX_VERTEX_SHADER}};
-	static const RawShaderCodeUnit shader_code_3d_color[]{{shader_code_3d_color_vs, RFX_VERTEX_SHADER}, {shader_code_3d_color_fs, RFX_VERTEX_SHADER}};
-	static const RawShaderCodeUnit shader_code_3d_multicolor[]{{shader_code_3d_multicolor_vs, RFX_VERTEX_SHADER}, {shader_code_3d_multicolor_fs, RFX_VERTEX_SHADER}};
-	static const RawShaderCodeUnit shader_code_3d_texture[]{{shader_code_3d_texture_vs, RFX_VERTEX_SHADER}, {shader_code_3d_texture_fs, RFX_VERTEX_SHADER}};
+namespace asd 
+{
+    namespace opengl
+    {
+        namespace shader_code
+        {
+			static const unit shader_code_2d_color[]{{shader_code_2d_color_vs, GL_VERTEX_SHADER}, {shader_code_2d_color_fs, GL_FRAGMENT_SHADER}};
+			static const unit shader_code_2d_rect[]{{shader_code_2d_rect_vs, GL_VERTEX_SHADER}, {shader_code_2d_rect_fs, GL_FRAGMENT_SHADER}};
+			static const unit shader_code_2d_ellipse[]{{shader_code_2d_ellipse_vs, GL_VERTEX_SHADER}, {shader_code_2d_ellipse_fs, GL_FRAGMENT_SHADER}};
+			static const unit shader_code_2d_figure[]{{shader_code_2d_figure_vs, GL_VERTEX_SHADER}, {shader_code_2d_figure_fs, GL_FRAGMENT_SHADER}};
+			static const unit shader_code_2d_image[]{{shader_code_2d_image_vs, GL_VERTEX_SHADER}, {shader_code_2d_image_fs, GL_FRAGMENT_SHADER}};
+			static const unit shader_code_2d_text[]{{shader_code_2d_text_vs, GL_VERTEX_SHADER}, {shader_code_2d_text_fs, GL_FRAGMENT_SHADER}};
+			static const unit shader_code_2d_wired_rect[]{{shader_code_2d_wired_rect_vs, GL_VERTEX_SHADER}, {shader_code_2d_wired_rect_fs, GL_FRAGMENT_SHADER}};
+			static const unit shader_code_2d_wired_ellipse[]{{shader_code_2d_wired_ellipse_vs, GL_VERTEX_SHADER}, {shader_code_2d_wired_ellipse_fs, GL_FRAGMENT_SHADER}};
+			static const unit shader_code_3d_basic[]{{shader_code_3d_basic_vs, GL_VERTEX_SHADER}, {shader_code_3d_basic_fs, GL_FRAGMENT_SHADER}};
+			static const unit shader_code_3d_color[]{{shader_code_3d_color_vs, GL_VERTEX_SHADER}, {shader_code_3d_color_fs, GL_FRAGMENT_SHADER}};
+			static const unit shader_code_3d_multicolor[]{{shader_code_3d_multicolor_vs, GL_VERTEX_SHADER}, {shader_code_3d_multicolor_fs, GL_FRAGMENT_SHADER}};
+			static const unit shader_code_3d_texture[]{{shader_code_3d_texture_vs, GL_VERTEX_SHADER}, {shader_code_3d_texture_fs, GL_FRAGMENT_SHADER}};
 
-	static const RawShaderCode shaders[] {
-		{"2d/color", shader_code_2d_color_layout, shader_code_2d_color},
-		{"2d/rect", shader_code_2d_rect_layout, shader_code_2d_rect},
-		{"2d/ellipse", shader_code_2d_ellipse_layout, shader_code_2d_ellipse},
-		{"2d/figure", shader_code_2d_figure_layout, shader_code_2d_figure},
-		{"2d/image", shader_code_2d_image_layout, shader_code_2d_image},
-		{"2d/text", shader_code_2d_text_layout, shader_code_2d_text},
-		{"2d/wired/rect", shader_code_2d_wired_rect_layout, shader_code_2d_wired_rect},
-		{"2d/wired/ellipse", shader_code_2d_wired_ellipse_layout, shader_code_2d_wired_ellipse},
-		{"3d/basic", shader_code_3d_basic_layout, shader_code_3d_basic},
-		{"3d/color", shader_code_3d_color_layout, shader_code_3d_color},
-		{"3d/multicolor", shader_code_3d_multicolor_layout, shader_code_3d_multicolor},
-		{"3d/texture", shader_code_3d_texture_layout, shader_code_3d_texture}
-	};
+			static const store shaders[] {
+				{"2d/color", shader_code_2d_color_layout, shader_code_2d_color},
+				{"2d/rect", shader_code_2d_rect_layout, shader_code_2d_rect},
+				{"2d/ellipse", shader_code_2d_ellipse_layout, shader_code_2d_ellipse},
+				{"2d/figure", shader_code_2d_figure_layout, shader_code_2d_figure},
+				{"2d/image", shader_code_2d_image_layout, shader_code_2d_image},
+				{"2d/text", shader_code_2d_text_layout, shader_code_2d_text},
+				{"2d/wired/rect", shader_code_2d_wired_rect_layout, shader_code_2d_wired_rect},
+				{"2d/wired/ellipse", shader_code_2d_wired_ellipse_layout, shader_code_2d_wired_ellipse},
+				{"3d/basic", shader_code_3d_basic_layout, shader_code_3d_basic},
+				{"3d/color", shader_code_3d_color_layout, shader_code_3d_color},
+				{"3d/multicolor", shader_code_3d_multicolor_layout, shader_code_3d_multicolor},
+				{"3d/texture", shader_code_3d_texture_layout, shader_code_3d_texture}
+			};
+        }
+    }
+}
 
 //---------------------------------------------------------------------------

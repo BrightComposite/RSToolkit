@@ -66,7 +66,7 @@ namespace asd
 			virtual void draw(context &) const = 0;
 		};
 		
-		struct mesh : public ::asd::gfx::primitive
+		struct mesh : public gfx::primitive
 		{
 			morph_type(mesh);
 			

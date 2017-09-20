@@ -2,6 +2,7 @@
 
 #include <opengl/opengl.h>
 #include <opengl/mesh.h>
+#include <opengl/shader.h>
 
 #include <iostream>
 
@@ -22,9 +23,9 @@ namespace asd
 	{
 		static inline void GLAPIENTRY glDebugCallbackFunc(uint source, uint type, uint id, uint severity, int length, const char * message, const void * userParam);
 
-	#if BOOST_OS_WINDOWS
+#if BOOST_OS_WINDOWS
 
-		static void setPixelFormat(HDC dc)
+		static void set_pixel_format(HDC dc)
 		{
 			if(dc == nullptr)
 				throw ContextCreationException("Can't set pixel format, device context is null!");
@@ -51,7 +52,7 @@ namespace asd
 			}
 		}
 
-	#elif BOOST_OS_LINUX
+#elif BOOST_OS_LINUX
 
 		static GLXFBConfig chooseFBConfig(::Display * display, int screen) {
 			static const int v_attribs[] = {
@@ -90,42 +91,49 @@ namespace asd
 			return ret;
 		}
 
-	#endif
+#endif
 
 		driver::driver(const configuration & config) : config(config) {
-			extend(opengl::draw_mesh);
+			*this << opengl::draw_mesh;
 		}
 		
 		window_context::window_context(opengl::driver & driver, window & w) : base(driver), ::asd::window_context(w) {
-			initDevice();
+			init_device();
 		}
 		
 		window_context::~window_context() {
 #if BOOST_OS_WINDOWS
+
 			wglMakeCurrent(nullptr, nullptr);
 
 			if(_context != nullptr) {
 				wglDeleteContext(_context);
 			}
+
 #elif BOOST_OS_LINUX
+
 			glXMakeCurrent(_window.display(), 0, 0);
 			
 			if(_context != nullptr) {
 				glXDestroyContext(_window.display(), _context);
 				_context = nullptr;
 			}
+
 #endif
 		}
 		
 		void window_context::prepare() {
 #if BOOST_OS_WINDOWS
-			setPixelFormat(_window.device());
+
+			set_pixel_format(_window.device());
 
 			int flags = _driver.config.flags;
 
-		#ifdef GL_DEBUG
+#ifdef GL_DEBUG
+
 			flags |= WGL_CONTEXT_DEBUG_BIT_ARB;
-		#endif
+
+#endif
 
 			int attribs[] = {
 				WGL_CONTEXT_MAJOR_VERSION_ARB, _driver.config.major,
@@ -154,9 +162,10 @@ namespace asd
 			if(!glXIsDirect(_window.display(), glXGetCurrentContext())) {
 				std::cout << "Indirect GLX rendering context obtained" << std::endl;
 			}
+
 #endif
 			
-			checkForErrors();
+			check_for_errors();
 			
 			glDisable(GL_DEPTH_TEST);
 			glDepthFunc(GL_LESS);
@@ -164,13 +173,12 @@ namespace asd
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glEnable(GL_CULL_FACE);
 			glEnable(GL_SCISSOR_TEST);
-			
-			glFrontFace(GL_CW);
-			
+						
 			glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 			//glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
 
 #ifdef GL_DEBUG
+
 			glEnable(GL_DEBUG_OUTPUT);
 			glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 			
@@ -179,13 +187,15 @@ namespace asd
 			} else {
 				std::cout << "glDebugMessageCallback is not supported" << std::endl;
 			}
+
 #endif
 			
-			checkForErrors();
+			check_for_errors();
 		}
 
-		void window_context::initDevice() {
+		void window_context::init_device() {
 #if BOOST_OS_WINDOWS
+
 			auto _wnd = window::create_empty_handle();
 			auto _device = ::GetDC(_wnd);
 
@@ -228,6 +238,7 @@ namespace asd
 			DestroyWindow(_wnd);
 
 #elif BOOST_OS_LINUX
+
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
 			
@@ -311,7 +322,9 @@ namespace asd
 			int flags = _driver.config.flags;
 
 #ifdef GL_DEBUG
+
 			flags |= GLX_CONTEXT_DEBUG_BIT_ARB;
+
 #endif
 			
 			const int attributes[] = {
@@ -330,6 +343,7 @@ namespace asd
 			if(!_context) {
 				throw ContextCreationException("Can't create OpenGL render context!");
 			}
+
 #endif
 		}
 	}
@@ -365,7 +379,7 @@ namespace asd
 		}
 		*/
 		
-		void driver_context<opengl::driver>::checkForErrors() {
+		void driver_context<opengl::driver>::check_for_errors() {
 			GLenum error = glGetError();
 			
 			if(error != GL_NO_ERROR) {

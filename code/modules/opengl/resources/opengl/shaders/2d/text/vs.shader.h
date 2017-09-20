@@ -4,7 +4,7 @@
 
 //---------------------------------------------------------------------------
 
-static const char shader_code_2d_text_vs = R"SHADER(
+static const char * const shader_code_2d_text_vs = R"SHADER(
 /**
  *	!vertex: p2 t
  */
@@ -41,6 +41,5 @@ void main(void)
 //---------------------------------------------------------------------------
 
 static const ::asd::opengl::vertex_layout & shader_code_2d_text_layout = ::asd::opengl::vertex_layouts::p2t::get();
-;
 
 //---------------------------------------------------------------------------

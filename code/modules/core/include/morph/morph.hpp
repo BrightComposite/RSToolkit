@@ -24,10 +24,10 @@ namespace asd
 	namespace morph_types
 	{
 		template<class T>
-		constexpr morph_id_t increment() {
-			return T::morph_increment();
+		constexpr morph_id_t next_morph_id() {
+			return T::morph_next_id();
 		}
-
+		
 		template<class T>
 		constexpr morph_id_t get_morph_id() {
 			return T::morph_id();
@@ -37,8 +37,17 @@ namespace asd
 		constexpr const char * get_morph_name() {
 			return T::morph_name();
 		}
+		
+		template <class T>
+		struct origin
+		{
+			using type = typename T::origin;
+		};
 	}
-
+	
+	template <class T>
+	using origin_t = typename morph_types::origin<T>::type;
+	
 	template <class T>
 	const morph_id_t morph_id = morph_types::get_morph_id<T>();
 
@@ -47,37 +56,39 @@ namespace asd
 }
 
 /**
- *	Marks the Origin class as a root of morphs hierarchy. But you'll still
- *	need to create a pool for morphs based on this root with
- *	'create_morph_pool' macro.
+ *	Marks the Origin class as a root of morphs hierarchy
  */
-#define morph_origin(Origin)									\
-    static morph_id_t morph_increment()							\
-    {															\
-        static std::atomic<morph_id_t> counter(0);				\
-        return counter++;										\
-    }															\
-																\
-	template<class>												\
-	friend constexpr morph_id_t asd::morph_types::increment();	\
-																\
-	template<class> 											\
-	friend struct asd::is_morph_type;							\
-																\
-	using origin = Origin;										\
-
-  /**
-   *	Creates morpher for the Type.
-   */
-#define morph_type(.../*morph type*/)									\
-    static morph_id_t morph_id()										\
+#define morph_origin(Origin)											\
+    static asd::morph_id_t morph_next_id()								\
     {																	\
-        static morph_id_t i = morph_increment();						\
+        static std::atomic<morph_id_t> counter(0);						\
+        return counter++;												\
+    }																	\
+																		\
+	template<class>														\
+	friend constexpr asd::morph_id_t asd::morph_types::next_morph_id();	\
+																		\
+	template<class> 													\
+	friend struct asd::morph_types::origin;								\
+																		\
+	template<class> 													\
+	friend struct asd::is_morph_type;									\
+																		\
+	using origin = Origin;												\
+
+/**
+ *	Creates morph id for the type.
+ */
+#define morph_type(.../*morph type*/)									\
+    static asd::morph_id_t morph_id()									\
+    {																	\
+        static asd::morph_id_t i = 										\
+			asd::morph_types::next_morph_id<origin_t<__VA_ARGS__>>();	\
         return i;														\
     }																	\
 																		\
 	template<class>														\
-	friend constexpr morph_id_t asd::morph_types::get_morph_id();		\
+	friend constexpr asd::morph_id_t asd::morph_types::get_morph_id();	\
 																		\
 	template<class>														\
 	friend constexpr const char * asd::morph_types::get_morph_name();	\

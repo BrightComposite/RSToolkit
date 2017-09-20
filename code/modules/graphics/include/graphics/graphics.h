@@ -24,15 +24,37 @@ namespace asd
 	
 	namespace gfx
 	{
-		struct primitive
+		struct basic_primitive
 		{
-			morph_origin(primitive);
+			morph_origin(basic_primitive);
+		};
+		
+		template<class T>
+		class primitive : public basic_primitive, public wrapper<const T *, primitive<T>>
+		{
+			morph_type(primitive<T>);
+		
+			friend class wrapper<const T *, primitive<T>>;
+			
+			inline const T * pointer() const
+			{
+				return _inner.pointer();
+			}
+			
+			handle<T> _inner;
+		
+		public:
+			primitive(T & inner) : _inner(&inner) {}
+			primitive(const handle<T> & inner) : _inner(inner) {}
+			primitive(const primitive & p) : _inner(p._inner) {}
+			
+			using wrapper<const T *, primitive<T>>::operator->;
 		};
 
 		class context
 		{
 		public:
-			using entry_type = pair<morph_id_t, primitive>;
+			using entry_type = pair<morph_id_t, basic_primitive>;
 			
 			virtual ~context() {}
 
@@ -51,7 +73,7 @@ namespace asd
 		template <class Gfx>
 		class driver_context : public context
 		{
-			using entry_type = pair<morph_id_t, primitive>;
+			using entry_type = pair<morph_id_t, basic_primitive>;
 		
 		public:
 			driver_context(Gfx & driver) : driver(driver) {}
@@ -63,12 +85,12 @@ namespace asd
 		template <class Gfx>
 		class driver
 		{
-			using context_type = driver_context<Gfx>;
-			using method_type  = function<void(context_type & ctx, const primitive & p)>;
-			using draw_methods = array_list<method_type>;
-
 		public:
-			void call(context_type & context, morph_id_t type_id, const primitive & p) {
+			using context_type = driver_context<Gfx>;
+			using method_type  = function<void(context_type & ctx, const basic_primitive & p)>;
+			using draw_methods = array_list<method_type>;
+			
+			void call(context_type & context, morph_id_t type_id, const basic_primitive & p) {
 				if(type_id >= _methods.size() || _methods[type_id] == nullptr) {
 					return;
 				}
@@ -76,7 +98,7 @@ namespace asd
 				_methods[type_id](context, p);
 			}
 			
-			template <class Primitive, useif<is_morph_of<primitive, Primitive>::value>>
+			template <class Primitive, useif<is_morph_of<basic_primitive, Primitive>::value>>
 			bool has() const {
 				return morph_id<Primitive> < _methods.size() && _methods[morph_id<Primitive>] != nullptr;
 			}
@@ -106,13 +128,13 @@ namespace asd
 		template<class Gfx, class F, class Primitive>
 		struct is_extension_method<Gfx, void (F::*)(typename Gfx::context_type &, const Primitive &) const> : true_type {};
 
-		template <class Gfx, class Primitive, useif<is_morph_of<primitive, Primitive>::value>>
+		template <class Gfx, class Primitive, useif<is_morph_of<basic_primitive, Primitive>::value>>
 		inline Gfx & operator << (Gfx & d, void(* method)(typename Gfx::context_type &, const Primitive &)) {
 			if(morph_id<Primitive> >= d._methods.size()) {
 				d._methods.resize(morph_id<Primitive> + 1);
 			}
 
-			d._methods[morph_id<Primitive>] = [=](typename Gfx::context_type & ctx, const primitive & p) {
+			d._methods[morph_id<Primitive>] = [=](typename Gfx::context_type & ctx, const basic_primitive & p) {
 				method(ctx, static_cast<const Primitive &>(p));
 			};
 
@@ -124,26 +146,26 @@ namespace asd
 			return extend(d, &functor, &F::operator());
 		}
 
-		template <class Gfx, class F, class Primitive, useif<is_morph_of<primitive, Primitive>::value>>
+		template <class Gfx, class F, class Primitive, useif<is_morph_of<basic_primitive, Primitive>::value>>
 		inline Gfx & extend(Gfx & d, F * functor, void (F::*method)(typename Gfx::context_type &, const Primitive &)) {
 			if(morph_id<Primitive> >= d._methods.size()) {
 				d._methods.resize(morph_id<Primitive> + 1);
 			}
 
-			d._methods[morph_id<Primitive>] = [=](typename Gfx::context_type & ctx, const primitive & p) {
+			d._methods[morph_id<Primitive>] = [=](typename Gfx::context_type & ctx, const basic_primitive & p) {
 				(functor->*method)(ctx, static_cast<const Primitive &>(p));
 			};
 
 			return d;
 		}
 
-		template <class Gfx, class F, class Primitive, useif<is_morph_of<primitive, Primitive>::value>>
+		template <class Gfx, class F, class Primitive, useif<is_morph_of<basic_primitive, Primitive>::value>>
 		inline Gfx & extend(Gfx & d, F * functor, void (F::*method)(typename Gfx::context_type &, const Primitive &) const) {
 			if(morph_id<Primitive> >= d._methods.size()) {
 				d._methods.resize(morph_id<Primitive> + 1);
 			}
 
-			d._methods[morph_id<Primitive>] = [=](typename Gfx::context_type & ctx, const primitive & p) {
+			d._methods[morph_id<Primitive>] = [=](typename Gfx::context_type & ctx, const basic_primitive & p) {
 				(functor->*method)(ctx, static_cast<const Primitive &>(p));
 			};
 

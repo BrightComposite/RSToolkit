@@ -9,7 +9,7 @@ namespace asd
 	namespace opengl
 	{
 		template <>
-		class generic_mesh<mesh_type::plain> : public ::asd::opengl::mesh_impl
+		class generic_mesh<mesh_type::plain> : public opengl::mesh
 		{
 			deny_copy(generic_mesh);
 		
@@ -58,7 +58,7 @@ namespace asd
 		using plain_mesh = generic_mesh<mesh_type::plain>;
 		
 		template <>
-		class generic_mesh<mesh_type::indexed> : public ::asd::opengl::mesh_impl
+		class generic_mesh<mesh_type::indexed> : public opengl::mesh
 		{
 			deny_copy(generic_mesh);
 		
@@ -302,8 +302,8 @@ namespace asd
 			
 			return this;
 		}*/
-
-		mesh mesh_builder::build() {
+		
+		gfx::primitive<mesh> mesh_builder::build() {
 			switch(_type) {
 				case mesh_type::plain:
 					return {make::handle<plain_mesh>(*this)};

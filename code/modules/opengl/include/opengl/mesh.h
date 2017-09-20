@@ -58,30 +58,16 @@ namespace asd
 			instanced_indexed
 		};
 		
-		class mesh_impl : public shareable<mesh_impl>
+		class mesh : public shareable<mesh>
 		{
 		public:
-			virtual ~mesh_impl() {}
+			virtual ~mesh() {}
 			
 			virtual void draw(context &) const = 0;
 		};
 		
-		struct mesh : public gfx::primitive
-		{
-			morph_type(mesh);
-			
-			mesh(const handle<mesh_impl> & impl) : impl(impl) {}
-			
-			friend inline void draw_mesh(context & ctx, const mesh & m);
-		
-		private:
-			handle<mesh_impl> impl;
-		};
-		
-		inline void draw_mesh(context & ctx, const mesh & m) {
-			if(m.impl) {
-				m.impl->draw(ctx);
-			}
+		inline void draw_mesh(context & ctx, const gfx::primitive<mesh> & m) {
+			m->draw(ctx);
 		}
 		
 		template <mesh_type type>
@@ -109,7 +95,7 @@ namespace asd
 			mesh_builder * make_instanced(const vertex_layout *);*/
 			
 			api(opengl)
-			mesh build();
+			gfx::primitive<mesh> build();
 		
 		protected:
 			context & _context;

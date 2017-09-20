@@ -10,14 +10,15 @@
 
 namespace asd 
 {
-	struct colored_mesh : gfx::primitive
+	struct colored_mesh : gfx::basic_primitive
 	{
 		morph_type(colored_mesh);
 
-		colored_mesh(const opengl::mesh & mesh) : mesh(mesh) {}
-		colored_mesh(const colored_mesh & e) : mesh(e.mesh) {}
-
-		opengl::mesh mesh;
+		colored_mesh(const gfx::primitive<opengl::mesh> & mesh, const opengl::shader_program & program) : mesh(mesh), program(program) {}
+		colored_mesh(const colored_mesh & e) : mesh(e.mesh), program(e.program) {}
+		
+		gfx::primitive<opengl::mesh> mesh;
+		const opengl::shader_program & program;
 	};
 
 	int processEvents(window & w, gfx::context & context, const colored_mesh & e);
@@ -26,10 +27,7 @@ namespace asd
 		opengl::driver driver;
 
 		driver << [](opengl::context & ctx, const colored_mesh & e) {
-			// change to ctx.shader_program(...)
-			static opengl::shader_program program(ctx, opengl::shader_code::get("2d/color"));
-
-			opengl::apply(ctx, program);
+			opengl::apply(ctx, e.program);
 			opengl::draw_mesh(ctx, e.mesh);
 		};
 
@@ -41,10 +39,13 @@ namespace asd
 
 			auto & layout = opengl::vertex_layouts::p2::get();
 			
-			opengl::mesh_builder builder(context, layout, {-0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f});
+			vertex_data data({-0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f});
+			opengl::mesh_builder builder(context, layout, data);
 			auto mesh = builder.build();
+			
+			opengl::shader_program program(context, opengl::shader_code::get("2d/color"));
 
-			colored_mesh e {mesh};
+			colored_mesh e {mesh, program};
 
 			w.show();
 
@@ -110,8 +111,7 @@ namespace asd
 					default: {}
 				}
 			} else {
-				context << mesh;
-				
+				context << e;
 				context.draw();
 				
 				glXSwapBuffers(w.display(), w.handle());

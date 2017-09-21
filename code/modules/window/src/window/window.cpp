@@ -391,8 +391,8 @@ namespace asd
 		return 0;
 	}
 
-	window::window(const string & caption, const math::int_rect & rect, const char * displayName) {
-		_handle = window::create_handle(rect, asd::from_utf8(caption), L"ASDWindowClass", wndProc);
+	window::window(const string & caption, const math::int_rect & area, const char * displayName) {
+		_handle = window::create_handle(area, asd::from_utf8(caption), L"ASDWindowClass", wndProc);
 		_device = ::GetDC(_handle);
 		/*
 		RectAdapter a;
@@ -426,7 +426,7 @@ namespace asd
 
 #elif BOOST_OS_LINUX
 
-	window::window(const string & caption, const math::int_rect & rect, const char * displayName) {
+	window::window(const string & caption, const math::int_rect & area, const char * displayName) : _area(area) {
 		_display = XOpenDisplay(displayName);
 
 		if(_display == nullptr) {

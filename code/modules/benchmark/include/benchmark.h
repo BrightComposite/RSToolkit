@@ -44,9 +44,6 @@ namespace asd
 		template <class F>
 		int operator() (F && func) {
 			using namespace std::chrono;
-			static const int N = 100;
-
-			long long t = 0;
 
 			time_point<high_resolution_clock> last;
 

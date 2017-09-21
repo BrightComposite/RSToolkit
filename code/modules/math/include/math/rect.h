@@ -83,15 +83,15 @@ namespace asd
 				return width() <= 0 || height() <= 0;
 			}
 			
-			T width() const {
-				return right - left;
+			std::make_unsigned_t<T> width() const {
+				return std::abs(right - left);
 			}
 			
-			T height() const {
-				return bottom - top;
+			std::make_unsigned_t<T> height() const {
+				return std::abs(bottom - top);
 			}
 			
-			T area() const {
+			std::make_unsigned_t<T> area() const {
 				return width() * height();
 			}
 			

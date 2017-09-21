@@ -101,7 +101,7 @@ namespace asd
 			}
 		}
 
-		void shader_program::apply(context & ctx) {
+		void shader_program::apply(context & ctx) const {
 			glUseProgram(id);
 		}
 	}

@@ -96,7 +96,7 @@ namespace asd
 		 * @throws WindowCreationException|OpenDisplayException|GraphicsException
 		 */
 		api(window) 
-		window(const string & caption, const math::int_rect & rect, const char * displayName = nullptr);
+		window(const string & caption, const math::int_rect & area, const char * displayName = nullptr);
 		
 		api(window)
 		virtual ~window();
@@ -146,6 +146,7 @@ namespace asd
 	private:
 		window_handle_t _handle;
 		unique<gfx::context> _context;
+		math::int_rect _area;
 		
 #if BOOST_OS_WINDOWS
 
@@ -196,7 +197,7 @@ namespace asd
 
 			unsigned int mask = CWBackPixmap | CWBorderPixel | CWColormap | CWEventMask;
 
-			_handle = XCreateWindow(_display, root, 0, 0, 640, 480, 0, visualInfo->depth, InputOutput, visualInfo->visual, mask, &winAttr);
+			_handle = XCreateWindow(_display, root, _area.left, _area.top, _area.width(), _area.height(), 0, visualInfo->depth, InputOutput, visualInfo->visual, mask, &winAttr);
 		}
 
 		if(!_handle) {

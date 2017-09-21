@@ -24,37 +24,31 @@ namespace asd
 	
 	namespace gfx
 	{
-		struct basic_primitive
-		{
-			morph_origin(basic_primitive);
-		};
+		template<class Gfx>
+		struct modifier;
+
+		struct primitive {};
 		
+		struct basic_primitive_key { morph_origin(basic_primitive_key); };
+
+		struct basic_modifier_key { morph_origin(basic_modifier_key); };
+
 		template<class T>
-		class primitive : public basic_primitive, public wrapper<const T *, primitive<T>>
-		{
-			morph_type(primitive<T>);
-		
-			friend class wrapper<const T *, primitive<T>>;
-			
-			inline const T * pointer() const
-			{
-				return _inner.pointer();
-			}
-			
-			handle<T> _inner;
-		
-		public:
-			primitive(T & inner) : _inner(&inner) {}
-			primitive(const handle<T> & inner) : _inner(inner) {}
-			primitive(const primitive & p) : _inner(p._inner) {}
-			
-			using wrapper<const T *, primitive<T>>::operator->;
-		};
+		struct primitive_key : basic_primitive_key { morph_type(primitive_key<T>); };
+
+		template<class T>
+		struct modifier_key : basic_modifier_key { morph_type(modifier_key<T>); };
+
+		template<class T>
+		morph_id_t primitive_id = morph_id<primitive_key<T>>;
+
+		template<class T>
+		morph_id_t modifier_id = morph_id<modifier_key<T>>;
 
 		class context
 		{
 		public:
-			using entry_type = pair<morph_id_t, basic_primitive>;
+			using entry_type = pair<morph_id_t, const primitive *>;
 			
 			virtual ~context() {}
 
@@ -62,35 +56,37 @@ namespace asd
 
 			template <class T>
 			context & operator <<(const T & value) {
-				_list.push_back(pair<morph_id_t, T>{morph_id<T>, value});
+				_list.push_back(entry_type{primitive_id<T>, &value});
 				return *this;
 			}
-		
+
+			template <class T>
+			context & operator << (T && value) = delete;
+
 		protected:
-			any_list _list;
+			array_list<entry_type> _list;
 		};
 		
 		template <class Gfx>
-		class driver_context : public context
+		class driver_context : public context {};
+
+		template<class Gfx>
+		struct modifier
 		{
-			using entry_type = pair<morph_id_t, basic_primitive>;
-		
-		public:
-			driver_context(Gfx & driver) : driver(driver) {}
-		
-		protected:
-			Gfx & driver;
+			virtual ~modifier() {}
+			virtual void apply(driver_context<Gfx> & ctx) = 0;
 		};
-		
+
 		template <class Gfx>
 		class driver
 		{
 		public:
 			using context_type = driver_context<Gfx>;
-			using method_type  = function<void(context_type & ctx, const basic_primitive & p)>;
+			using method_type  = function<void(context_type & ctx, const primitive * p)>;
+			using modifier_generator = function<void(context_type &)>;
 			using draw_methods = array_list<method_type>;
-			
-			void call(context_type & context, morph_id_t type_id, const basic_primitive & p) {
+
+			void call(context_type & context, morph_id_t type_id, const primitive * p) {
 				if(type_id >= _methods.size() || _methods[type_id] == nullptr) {
 					return;
 				}
@@ -98,79 +94,109 @@ namespace asd
 				_methods[type_id](context, p);
 			}
 			
-			template <class Primitive, useif<is_morph_of<basic_primitive, Primitive>::value>>
+			template <class Primitive, useif<is_morph_of<primitive, Primitive>::value>>
 			bool has() const {
 				return morph_id<Primitive> < _methods.size() && _methods[morph_id<Primitive>] != nullptr;
 			}
-			
-			template <class G, class Primitive, used_t>
-			friend inline G & operator << (G & d, void(*method)(typename G::context_type &, const Primitive &));
 
-			template <class G, class F, used_t>
-			friend inline G & operator << (G & d, F functor);
+			void set_modifiers(context_type & context) {
+				for(auto & mod : _modifiers) {
+					mod(context);
+				}
+			}
 
-			template <class G, class F, class Primitive, used_t>
-			friend inline G & extend(G & d, F * functor, void (F::*method)(typename G::context_type &, const Primitive &));
+			template<class T>
+			struct is_extension_method : false_type {};
 
-			template <class G, class F, class Primitive, used_t>
-			friend inline G & extend(G & d, F * functor, void (F::*method)(typename G::context_type &, const Primitive &) const);
+			template<class F, class Primitive>
+			struct is_extension_method<void (F::*)(context_type &, const Primitive &)> : true_type {};
 
-		private:
+			template<class F, class Primitive>
+			struct is_extension_method<void (F::*)(context_type &, const Primitive &) const> : true_type {};
+
+			template<class T>
+			struct is_modification : false_type {};
+
+			template<class F, class Modifier>
+			struct is_modification<unique<Modifier> (F::*)(context_type &)> : true_type {};
+
+			template<class F, class Modifier>
+			struct is_modification<unique<Modifier> (F::*)(context_type &) const> : true_type {};
+
+			template <class Primitive>
+			driver & method(void(*method)(context_type &, const Primitive &)) {
+				if(primitive_id<Primitive> >= _methods.size()) {
+					_methods.resize(primitive_id<Primitive> + 1);
+				}
+
+				_methods[primitive_id<Primitive>] = [=](context_type & ctx, const primitive * p) {
+					method(ctx, *static_cast<const Primitive *>(p));
+				};
+
+				return *this;
+			}
+
+			template <class F, useif<is_extension_method<decltype(&F::operator())>::value>>
+			driver & method(F functor) {
+				return extend(&functor, &F::operator());
+			}
+
+			template <class F, class Primitive>
+			driver & method(F * functor, void (F::*method)(context_type &, const Primitive &)) {
+				if(primitive_id<Primitive> >= _methods.size()) {
+					_methods.resize(primitive_id<Primitive> + 1);
+				}
+
+				_methods[primitive_id<Primitive>] = [=](context_type & ctx, const primitive * p) {
+					(functor->*method)(ctx, *static_cast<const Primitive *>(p));
+				};
+
+				return *this;
+			}
+
+			template <class G, class F, class Primitive>
+			driver & method(F * functor, void (F::*method)(context_type &, const Primitive &) const) {
+				if(primitive_id<Primitive> >= _methods.size()) {
+					_methods.resize(primitive_id<Primitive> + 1);
+				}
+
+				_methods[primitive_id<Primitive>] = [=](context_type & ctx, const primitive * p) {
+					(functor->*method)(ctx, *static_cast<const Primitive *>(p));
+				};
+
+				return *this;
+			}
+
+			template<class T, class Modifier>
+			void modifier(unique<Modifier> (*generator)(context_type &)) {
+				_modifiers.push_back([=](context_type & ctx) {
+					ctx.extend(modifier_id<T>, generator(ctx));
+				});
+			}
+
+			template<class T, class F, useif<is_modification<decltype(&F::operator())>::value>>
+			void modifier(F generator) {
+				modifier<T>(&generator, &F::operator());
+			}
+
+			template <class T, class F, class Modifier>
+			void modifier(F * f, unique<Modifier> (F::*method)(context_type &)) {
+				_modifiers.push_back([=](context_type & ctx) {
+					ctx.extend(modifier_id<T>, (f->*method)(ctx));
+				});
+			}
+
+			template <class T, class F, class Modifier>
+			void modifier(F * f, unique<Modifier> (F::*method)(context_type &) const) {
+				_modifiers.push_back([=](context_type & ctx) {
+					ctx.extend(modifier_id<T>, (f->*method)(ctx));
+				});
+			}
+
+		protected:
 			draw_methods _methods;
+			array_list<modifier_generator> _modifiers;
 		};
-
-		template<class Gfx, class T>
-		struct is_extension_method : false_type {};
-
-		template<class Gfx, class F, class Primitive>
-		struct is_extension_method<Gfx, void (F::*)(typename Gfx::context_type &, const Primitive &)> : true_type {};
-
-		template<class Gfx, class F, class Primitive>
-		struct is_extension_method<Gfx, void (F::*)(typename Gfx::context_type &, const Primitive &) const> : true_type {};
-
-		template <class Gfx, class Primitive, useif<is_morph_of<basic_primitive, Primitive>::value>>
-		inline Gfx & operator << (Gfx & d, void(* method)(typename Gfx::context_type &, const Primitive &)) {
-			if(morph_id<Primitive> >= d._methods.size()) {
-				d._methods.resize(morph_id<Primitive> + 1);
-			}
-
-			d._methods[morph_id<Primitive>] = [=](typename Gfx::context_type & ctx, const basic_primitive & p) {
-				method(ctx, static_cast<const Primitive &>(p));
-			};
-
-			return d;
-		}
-
-		template <class Gfx, class F, useif<is_extension_method<Gfx, decltype(&F::operator())>::value>>
-		inline Gfx & operator << (Gfx & d, F functor) {
-			return extend(d, &functor, &F::operator());
-		}
-
-		template <class Gfx, class F, class Primitive, useif<is_morph_of<basic_primitive, Primitive>::value>>
-		inline Gfx & extend(Gfx & d, F * functor, void (F::*method)(typename Gfx::context_type &, const Primitive &)) {
-			if(morph_id<Primitive> >= d._methods.size()) {
-				d._methods.resize(morph_id<Primitive> + 1);
-			}
-
-			d._methods[morph_id<Primitive>] = [=](typename Gfx::context_type & ctx, const basic_primitive & p) {
-				(functor->*method)(ctx, static_cast<const Primitive &>(p));
-			};
-
-			return d;
-		}
-
-		template <class Gfx, class F, class Primitive, useif<is_morph_of<basic_primitive, Primitive>::value>>
-		inline Gfx & extend(Gfx & d, F * functor, void (F::*method)(typename Gfx::context_type &, const Primitive &) const) {
-			if(morph_id<Primitive> >= d._methods.size()) {
-				d._methods.resize(morph_id<Primitive> + 1);
-			}
-
-			d._methods[morph_id<Primitive>] = [=](typename Gfx::context_type & ctx, const basic_primitive & p) {
-				(functor->*method)(ctx, static_cast<const Primitive &>(p));
-			};
-
-			return d;
-		}
 	}
 	
 	using graphics = gfx::context;

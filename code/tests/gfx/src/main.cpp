@@ -6,30 +6,43 @@
 #include <opengl/shader.h>
 #include <iostream>
 
+#include <benchmark>
+
 //---------------------------------------------------------------------------
 
 namespace asd 
 {
-	struct colored_mesh : gfx::basic_primitive
+	struct COLOR_SHADER
 	{
-		morph_type(colored_mesh);
-
-		colored_mesh(const gfx::primitive<opengl::mesh> & mesh, const opengl::shader_program & program) : mesh(mesh), program(program) {}
-		colored_mesh(const colored_mesh & e) : mesh(e.mesh), program(e.program) {}
-		
-		gfx::primitive<opengl::mesh> mesh;
-		const opengl::shader_program & program;
+		static auto key() { return "2d/color"; }
 	};
 
-	int processEvents(window & w, gfx::context & context, const colored_mesh & e);
+	struct colored_mesh : gfx::primitive
+	{
+		colored_mesh(const opengl::mesh & mesh) : mesh(mesh) {}
+
+		colored_mesh(const colored_mesh & e) : mesh(e.mesh) {}
+		
+		const opengl::mesh & mesh;
+	};
+
+	void draw_colored_mesh(opengl::context & ctx, const colored_mesh & e) {
+		ctx.apply<COLOR_SHADER>();
+		opengl::draw_mesh(ctx, e.mesh);
+	}
+
+	auto create_color_shader(opengl::context & ctx) {
+		return make::unique<opengl::shader_program>(ctx, opengl::shader_code::get(COLOR_SHADER::key()));
+	}
+
+	int launch(window & w, opengl::context & context, const colored_mesh & e);
 
 	static entrance open([]() {
 		opengl::driver driver;
 
-		driver << [](opengl::context & ctx, const colored_mesh & e) {
-			opengl::apply(ctx, e.program);
-			opengl::draw_mesh(ctx, e.mesh);
-		};
+		driver.method(draw_colored_mesh);
+
+		driver.shader<COLOR_SHADER>();
 
 		try {
 			window w("gfx:test", {20, 20, 180, 180});
@@ -37,19 +50,22 @@ namespace asd
 			
 			std::cout << "Press ESC to exit" << std::endl;
 
-			auto & layout = opengl::vertex_layouts::p2::get();
+			auto & layout = opengl::vertex_layouts::p2c3::get();
 			
-			vertex_data data({-0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f});
+			vertex_data data({
+				-0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+				 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+				 0.0f,  0.5f, 0.0f, 0.0f, 1.0f,
+			});
+
 			opengl::mesh_builder builder(context, layout, data);
 			auto mesh = builder.build();
 			
-			opengl::shader_program program(context, opengl::shader_code::get("2d/color"));
-
-			colored_mesh e {mesh, program};
+			colored_mesh e {*mesh};
 
 			w.show();
 
-			processEvents(w, context, e);
+			launch(w, context, e);
 		} catch(const WindowCreationException & e) {
 			std::cerr << "Window creation error: " << e.what() << std::endl;
 		} catch(const GraphicsException & e) {
@@ -57,16 +73,19 @@ namespace asd
 		}
 	});
 
-	int processEvents(window & w, gfx::context & context, const colored_mesh & e) {
+	int launch(window & w, opengl::context & context, const colored_mesh & e) {
 
 #if BOOST_OS_WINDOWS
 
+		benchmark queued("draw triangle queued");
+		benchmark immediate("draw triangle immediately");
+		
 		while(true) {
 			static MSG msg = {0};
 
-			if(PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
+			if(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
 				TranslateMessage(&msg);
-				DispatchMessageW(&msg);
+				DispatchMessage(&msg);
 
 				if(msg.message == WM_QUIT) {
 					return 0;
@@ -75,10 +94,32 @@ namespace asd
 				glClearColor(0.0, 0.0, 0.0, 1.0);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-				context << e;
-				context.draw();
+				double q = queued([&]() {
+					context << e;
+					context << e;
+					context << e;
+					context << e;
+					context << e;
 
-				SwapBuffers(w.device());
+					context.draw();
+
+					SwapBuffers(w.device());
+				});
+
+				glClearColor(0.0, 0.0, 0.0, 1.0);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+				double i = immediate([&]() {
+					draw_colored_mesh(context, e);
+					draw_colored_mesh(context, e);
+					draw_colored_mesh(context, e);
+					draw_colored_mesh(context, e);
+					draw_colored_mesh(context, e);
+
+					SwapBuffers(w.device());
+				});
+
+				std::cout << i / q << std::endl;
 			}
 		}
 

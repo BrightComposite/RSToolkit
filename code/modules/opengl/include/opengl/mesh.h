@@ -28,7 +28,6 @@ namespace asd
 			vertex_buffer(vertex_buffer && buffer);
 			~vertex_buffer();
 			
-			const vertex_layout & layout;
 			uint handle;
 			uint verticesCount;
 		};
@@ -58,16 +57,24 @@ namespace asd
 			instanced_indexed
 		};
 		
-		class mesh : public shareable<mesh>
+		class mesh : public gfx::primitive, public shareable<mesh>
 		{
 		public:
+			mesh::mesh(const vertex_layout & layout) : _layout(layout) {}
 			virtual ~mesh() {}
 			
+			const vertex_layout & layout() const {
+				return _layout;
+			}
+
 			virtual void draw(context &) const = 0;
+
+		protected:
+			const vertex_layout & _layout;
 		};
 		
-		inline void draw_mesh(context & ctx, const gfx::primitive<mesh> & m) {
-			m->draw(ctx);
+		inline void draw_mesh(context & ctx, const mesh & m) {
+			m.draw(ctx);
 		}
 		
 		template <mesh_type type>
@@ -76,8 +83,7 @@ namespace asd
 		class mesh_builder
 		{
 			template <mesh_type type>
-			friend
-			class generic_mesh;
+			friend class generic_mesh;
 		
 		public:
 			api(opengl)
@@ -86,7 +92,7 @@ namespace asd
 			~mesh_builder();
 			
 			api(opengl)
-			mesh_builder & buffer(const vertex_layout & layout, const vertex_data & data);
+			mesh_builder & buffer(const vertex_data & data);
 			api(opengl)
 			mesh_builder & indices(const vertex_indices &);
 			api(opengl)
@@ -95,10 +101,11 @@ namespace asd
 			mesh_builder * make_instanced(const vertex_layout *);*/
 			
 			api(opengl)
-			gfx::primitive<mesh> build();
+			handle<mesh> build();
 		
 		protected:
 			context & _context;
+			const vertex_layout & _layout;
 			uint _topology = 0;
 			uint _offset = 0;
 			uint _verticesCount = 0;

@@ -33,6 +33,14 @@ namespace asd
 			uint units;
 			array_list<vertex_layout_element> elements;
 
+			bool operator == (const vertex_layout & l) const {
+				return this == &l;
+			}
+
+			bool operator != (const vertex_layout & l) const {
+				return this != &l;
+			}
+
 		private:
 			vertex_layout(uint units, array_list<vertex_layout_element> && elements) : units(units), elements(std::forward<array_list<vertex_layout_element>>(elements)) {}
 

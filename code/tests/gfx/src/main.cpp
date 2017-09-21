@@ -19,20 +19,16 @@ namespace asd
 
 	struct colored_mesh : gfx::primitive
 	{
-		colored_mesh(const opengl::mesh & mesh) : mesh(mesh) {}
-
-		colored_mesh(const colored_mesh & e) : mesh(e.mesh) {}
+		colored_mesh(const opengl::context & ctx, const opengl::mesh & mesh) : mesh(mesh), shader_program(*ctx.get<COLOR_SHADER>()) {}
+		colored_mesh(const colored_mesh & e) : mesh(e.mesh), shader_program(e.shader_program) {}
 		
 		const opengl::mesh & mesh;
+		const opengl::modifier & shader_program;
 	};
 
 	void draw_colored_mesh(opengl::context & ctx, const colored_mesh & e) {
-		ctx.apply<COLOR_SHADER>();
+		e.shader_program.apply(ctx);
 		opengl::draw_mesh(ctx, e.mesh);
-	}
-
-	auto create_color_shader(opengl::context & ctx) {
-		return make::unique<opengl::shader_program>(ctx, opengl::shader_code::get(COLOR_SHADER::key()));
 	}
 
 	int launch(window & w, opengl::context & context, const colored_mesh & e);
@@ -45,7 +41,7 @@ namespace asd
 		driver.shader<COLOR_SHADER>();
 
 		try {
-			window w("gfx:test", {20, 20, 180, 180});
+			window w("gfx:test", {50, 50, 400, 400});
 			auto & context = w.bind(driver);
 			
 			std::cout << "Press ESC to exit" << std::endl;
@@ -61,7 +57,7 @@ namespace asd
 			opengl::mesh_builder builder(context, layout, data);
 			auto mesh = builder.build();
 			
-			colored_mesh e {*mesh};
+			colored_mesh e {context, *mesh};
 
 			w.show();
 
@@ -74,12 +70,12 @@ namespace asd
 	});
 
 	int launch(window & w, opengl::context & context, const colored_mesh & e) {
+		
+		benchmark queued("draw triangle queued");
+		benchmark immediate("draw triangle immediately");
 
 #if BOOST_OS_WINDOWS
 
-		benchmark queued("draw triangle queued");
-		benchmark immediate("draw triangle immediately");
-		
 		while(true) {
 			static MSG msg = {0};
 
@@ -152,10 +148,35 @@ namespace asd
 					default: {}
 				}
 			} else {
-				context << e;
-				context.draw();
+				glClearColor(0.0, 0.0, 0.0, 1.0);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				
-				glXSwapBuffers(w.display(), w.handle());
+				double q = queued([&]() {
+					context << e;
+					context << e;
+					context << e;
+					context << e;
+					context << e;
+					
+					context.draw();
+					
+					glXSwapBuffers(w.display(), w.handle());
+				});
+				
+				glClearColor(0.0, 0.0, 0.0, 1.0);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				
+				double i = immediate([&]() {
+					draw_colored_mesh(context, e);
+					draw_colored_mesh(context, e);
+					draw_colored_mesh(context, e);
+					draw_colored_mesh(context, e);
+					draw_colored_mesh(context, e);
+					
+					glXSwapBuffers(w.display(), w.handle());
+				});
+				
+				std::cout << i / q << " " << static_cast<int>(i) << "/" << static_cast<int>(q) << std::endl;
 			}
 		}
 

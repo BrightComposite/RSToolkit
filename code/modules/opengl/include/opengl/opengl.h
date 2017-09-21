@@ -63,6 +63,13 @@ namespace asd
 	namespace opengl
 	{
 		class driver;
+		class shader_program;
+		
+		namespace shader_code {
+			struct store;
+			
+			store & get(const std::string & name);
+		}
 	}
 	
 	namespace gfx
@@ -86,7 +93,7 @@ namespace asd
 			void draw();
 
 			template<class Modifier>
-			void apply() {
+			modifier_type * get() const {
 				auto i = _modifiers.find(gfx::modifier_id<Modifier>);
 
 				if(i == _modifiers.end()) {
@@ -97,16 +104,16 @@ namespace asd
 #endif
 				}
 
-				i->second->apply(*this);
+				return i->second.get();
+			}
+			
+			void extend(morph_id_t id, unique<modifier_type> && m) {
+				_modifiers.emplace(std::make_pair(id, forward<unique<modifier_type>>(m)));
 			}
 
 		protected:
 			api(opengl)
 			void check_for_errors();
-
-			void extend(morph_id_t id, unique<modifier_type> && m) {
-				_modifiers.emplace(std::make_pair(id, forward<unique<modifier_type>>(m)));
-			}
 
 			opengl::driver & _driver;
 			GLContext _context;

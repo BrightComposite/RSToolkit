@@ -60,7 +60,7 @@ namespace asd
 		class mesh : public gfx::primitive, public shareable<mesh>
 		{
 		public:
-			mesh::mesh(const vertex_layout & layout) : _layout(layout) {}
+			mesh(const vertex_layout & layout) : _layout(layout) {}
 			virtual ~mesh() {}
 			
 			const vertex_layout & layout() const {

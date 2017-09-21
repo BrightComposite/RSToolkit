@@ -74,7 +74,7 @@ namespace asd
 		struct modifier
 		{
 			virtual ~modifier() {}
-			virtual void apply(driver_context<Gfx> & ctx) = 0;
+			virtual void apply(driver_context<Gfx> & ctx) const = 0;
 		};
 
 		template <class Gfx>
@@ -138,7 +138,7 @@ namespace asd
 
 			template <class F, useif<is_extension_method<decltype(&F::operator())>::value>>
 			driver & method(F functor) {
-				return extend(&functor, &F::operator());
+				return method(&functor, &F::operator());
 			}
 
 			template <class F, class Primitive>

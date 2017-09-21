@@ -35,11 +35,11 @@ namespace asd
 			}
 
 			api(opengl)
-			virtual void apply(context & ctx) override;
+			virtual void apply(context & ctx) const override;
 
 		private:
-			uint id = 0;
 			const vertex_layout & _layout;
+			uint id = 0;
 		};
 		
 		namespace shader_code

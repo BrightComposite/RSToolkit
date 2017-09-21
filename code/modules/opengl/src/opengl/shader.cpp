@@ -18,7 +18,7 @@ namespace asd
 			}
 		}
 
-		shader_program::shader_program(context & ctx, const shader_code::store & code) {
+		shader_program::shader_program(context & ctx, const shader_code::store & code) : _layout(code.layout) {
 			id = glCreateProgram();
 
 			GLint status = GL_FALSE;
@@ -91,14 +91,18 @@ namespace asd
 			glUseProgram(0);
 		}
 
+		shader_program::shader_program(shader_program && program) throw() : _layout(program._layout), id(program.id) {
+			program.id = 0;
+		}
+
 		shader_program::~shader_program() {
 			if(id != 0) {
 				glDeleteProgram(id);
 			}
 		}
 
-		void apply(context &, const shader_program & sh) {
-			glUseProgram(sh.id);
+		void shader_program::apply(context & ctx) {
+			glUseProgram(id);
 		}
 	}
 }

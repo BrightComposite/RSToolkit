@@ -14,7 +14,7 @@ namespace asd
 			deny_copy(generic_mesh);
 		
 		public:
-			generic_mesh(mesh_builder & builder) : topology(builder._topology), offset(builder._offset), verticesCount(builder._verticesCount - builder._offset) {
+			generic_mesh(mesh_builder & builder) : mesh(builder._layout), topology(builder._topology), offset(builder._offset), verticesCount(builder._verticesCount - builder._offset) {
 				glGenVertexArrays(1, &id);
 				glBindVertexArray(id);
 				
@@ -22,14 +22,14 @@ namespace asd
 					glBindBuffer(GL_ARRAY_BUFFER, b.handle);
 					float * pointer = 0;
 					
-					for(size_t i = 0; i < b.layout.elements.size(); ++i) {
-						auto units = b.layout.elements[i].units;
+					for(size_t i = 0; i < builder._layout.elements.size(); ++i) {
+						auto units = builder._layout.elements[i].units;
 						auto count = (units - 1) / 4 + 1;
 						
 						for(uint j = 0; j < count; ++j, ++attrCount) {
 							auto u = (j == count - 1) ? ((units - 1) % 4) + 1 : 4;
 							glEnableVertexAttribArray(attrCount);
-							glVertexAttribPointer(attrCount, u, GL_FLOAT, GL_FALSE, b.layout.units * sizeof(float), pointer);
+							glVertexAttribPointer(attrCount, u, GL_FLOAT, GL_FALSE, builder._layout.units * sizeof(float), pointer);
 							pointer += u;
 						}
 					}
@@ -63,7 +63,7 @@ namespace asd
 			deny_copy(generic_mesh);
 		
 		public:
-			generic_mesh(mesh_builder & builder) : topology(builder._topology), offset(builder._offset), verticesCount(builder._verticesCount - builder._offset), indicesCount(builder._indicesCount - builder._offset) {
+			generic_mesh(mesh_builder & builder) : mesh(builder._layout), topology(builder._topology), offset(builder._offset), verticesCount(builder._verticesCount - builder._offset), indicesCount(builder._indicesCount - builder._offset) {
 				glGenVertexArrays(1, &id);
 				glBindVertexArray(id);
 				
@@ -71,14 +71,14 @@ namespace asd
 					glBindBuffer(GL_ARRAY_BUFFER, b.handle);
 					float * pointer = 0;
 					
-					for(size_t i = 0; i < b.layout.elements.size(); ++i) {
-						auto units = b.layout.elements[i].units;
+					for(size_t i = 0; i < builder._layout.elements.size(); ++i) {
+						auto units = builder._layout.elements[i].units;
 						auto count = (units - 1) / 4 + 1;
 						
 						for(uint j = 0; j < count; ++j, ++attrCount) {
 							auto u = (j == count - 1) ? ((units - 1) % 4) + 1 : 4;
 							glEnableVertexAttribArray(attrCount);
-							glVertexAttribPointer(attrCount, u, GL_FLOAT, GL_FALSE, b.layout.units * sizeof(float), pointer);
+							glVertexAttribPointer(attrCount, u, GL_FLOAT, GL_FALSE, builder._layout.units * sizeof(float), pointer);
 							pointer += u;
 						}
 					}
@@ -205,7 +205,7 @@ namespace asd
 */
 //---------------------------------------------------------------------------
 		
-		vertex_buffer::vertex_buffer(const vertex_layout & layout, const vertex_data & vd) : layout(layout) {
+		vertex_buffer::vertex_buffer(const vertex_layout & layout, const vertex_data & vd) {
 			if(vd.size() % layout.units != 0) {
 				throw Exception("Size of vertex buffer doesn't matches its vertex input layout");
 			}
@@ -218,7 +218,7 @@ namespace asd
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 		
-		vertex_buffer::vertex_buffer(vertex_buffer && buffer) : layout(buffer.layout), handle(buffer.handle), verticesCount(buffer.verticesCount) {
+		vertex_buffer::vertex_buffer(vertex_buffer && buffer) : handle(buffer.handle), verticesCount(buffer.verticesCount) {
 			buffer.handle = 0;
 		}
 		
@@ -245,7 +245,7 @@ namespace asd
 			}
 		}
 		
-		mesh_builder::mesh_builder(context & graphics, const vertex_layout & layout, const vertex_data & data, vertex_topology topology) : _context(graphics) {
+		mesh_builder::mesh_builder(context & graphics, const vertex_layout & layout, const vertex_data & data, vertex_topology topology) : _context(graphics), _layout(layout) {
 			switch(topology) {
 				case vertex_topology::triangles:
 					_topology = GL_TRIANGLES;
@@ -264,18 +264,18 @@ namespace asd
 					break;
 			}
 
-			buffer(layout, data);
+			buffer(data);
 		}
 		
 		mesh_builder::~mesh_builder() {}
 		
-		mesh_builder & mesh_builder::buffer(const vertex_layout & layout, const vertex_data & data) {
-			vertex_buffer buffer(layout, data);
+		mesh_builder & mesh_builder::buffer(const vertex_data & data) {
+			vertex_buffer buffer(_layout, data);
 			
 			if(_verticesCount == 0) {
 				_verticesCount = buffer.verticesCount;
 			} else if(_verticesCount != buffer.verticesCount) {
-				throw Exception("Buffers sizes don't match!");
+				throw std::runtime_error("Buffers sizes don't match!");
 			}
 			
 			_buffers.emplace_back(std::move(buffer));
@@ -303,7 +303,7 @@ namespace asd
 			return this;
 		}*/
 		
-		gfx::primitive<mesh> mesh_builder::build() {
+		handle<mesh> mesh_builder::build() {
 			switch(_type) {
 				case mesh_type::plain:
 					return {make::handle<plain_mesh>(*this)};

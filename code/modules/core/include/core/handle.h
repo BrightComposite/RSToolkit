@@ -180,18 +180,18 @@ namespace asd
 		using base = boost::movelib::unique_ptr<T>;
 	
 	public:
-		unique() : base() {}
+		unique() throw() : base() {}
 		
-		unique(const unique & u) = delete;
+		unique(const unique & u) throw() = delete;
 		
-		unique(unique && u) : base(u.release()) {}
+		unique(unique && u) throw() : base(u.release()) {}
 		
-		unique(T * shared) : base(shared) {}
+		unique(T * shared) throw() : base(shared) {}
 		
-		unique(nullptr_t) : base(nullptr) {}
+		unique(nullptr_t) throw() : base(nullptr) {}
 		
 		template<class U, useif<based_on<U, T>::value, !is_const<U>::value>>
-		unique(unique<U> && u) : base(u.release()) {}
+		unique(unique<U> && u) throw() : base(u.release()) {}
 		
 		template<class U = T, useif<can_construct<U>::value>>
 		unique(empty) : base(new T()) {}
@@ -203,30 +203,30 @@ namespace asd
 		explicit unique(A && ... args) { static_assert(!is_abstract<T>::value, "Can't construct an abstract class"); }
 		
 		template<class U, useif<based_on<U, T>::value, !is_const<U>::value>>
-		unique(handle<U> && h) {
+		unique(handle<U> && h) throw() {
 			this->reset(h.detach());
 		}
 		
 		unique & operator =(const unique &) = delete;
 		
-		unique & operator =(unique && u) {
+		unique & operator =(unique && u) throw() {
 			this->reset(u.release());
 			return *this;
 		}
 		
 		template<class U, useif<is_base_of<T, U>::value, !is_const<U>::value>>
-		unique & operator =(unique<U> && u) {
+		unique & operator =(unique<U> && u) throw() {
 			this->reset(u.release());
 			return *this;
 		}
 		
 		template<class U, useif<is_base_of<T, U>::value, !is_const<U>::value>>
-		unique & operator =(handle<U> && h) {
+		unique & operator =(handle<U> && h) throw() {
 			this->reset(h.detach());
 			return *this;
 		}
 		
-		unique & operator =(T * ptr) {
+		unique & operator =(T * ptr) throw() {
 			this->reset(ptr);
 			return *this;
 		}

@@ -94,7 +94,7 @@ namespace asd
 #endif
 
 		driver::driver(const configuration & config) : config(config) {
-			*this << opengl::draw_mesh;
+			method(opengl::draw_mesh);
 		}
 		
 		window_context::window_context(opengl::driver & driver, window & w) : base(driver), ::asd::window_context(w) {
@@ -191,6 +191,8 @@ namespace asd
 #endif
 			
 			check_for_errors();
+
+			_driver.set_modifiers(*this);
 		}
 
 		void window_context::init_device() {
@@ -358,7 +360,7 @@ namespace asd
 		
 		void driver_context<opengl::driver>::draw() {
 			for(size_t i = 0; i < _list.size(); ++i) {
-				auto & entry = _list.get_by_offset<entry_type>(_list.offset(i));
+				auto & entry = _list.at(i);
 				_driver.call(*this, entry.first, entry.second);
 			}
 			

@@ -16,11 +16,10 @@ namespace asd
 {
 	namespace opengl
 	{
-		class shader_program : public opengl::modifier
+		struct shader_program : public opengl::modifier
 		{
 			deny_copy(shader_program);
 
-		public:
 			api(opengl)
 			shader_program(context & ctx, const shader_code::store & code);
 
@@ -35,9 +34,8 @@ namespace asd
 			}
 
 			api(opengl)
-			virtual void apply(context & ctx) const override;
+			void apply(context & ctx) const override;
 
-		private:
 			const vertex_layout & _layout;
 			uint id = 0;
 		};

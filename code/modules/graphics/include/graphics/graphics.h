@@ -53,10 +53,18 @@ namespace asd
 			virtual ~context() {}
 
 			virtual void draw() = 0;
+			virtual void flush() {
+				draw();
+			}
 
 			template <class T>
 			context & operator <<(const T & value) {
 				_list.push_back(entry_type{primitive_id<T>, &value});
+
+				if(_list.size() > 1000) {
+					draw();
+				}
+
 				return *this;
 			}
 
@@ -109,22 +117,22 @@ namespace asd
 			struct is_extension_method : false_type {};
 
 			template<class F, class Primitive>
-			struct is_extension_method<void (F::*)(context_type &, const Primitive &)> : true_type {};
+			struct is_extension_method<void (F::*)(context_type &, const Primitive &)> : is_base_of<primitive, Primitive> {};
 
 			template<class F, class Primitive>
-			struct is_extension_method<void (F::*)(context_type &, const Primitive &) const> : true_type {};
+			struct is_extension_method<void (F::*)(context_type &, const Primitive &) const> : is_base_of<primitive, Primitive> {};
 
 			template<class T>
 			struct is_modification : false_type {};
 
 			template<class F, class Modifier>
-			struct is_modification<unique<Modifier> (F::*)(context_type &)> : true_type {};
+			struct is_modification<unique<Modifier> (F::*)(context_type &)> : is_base_of<modifier<Gfx>, Modifier> {};
 
 			template<class F, class Modifier>
-			struct is_modification<unique<Modifier> (F::*)(context_type &) const> : true_type {};
+			struct is_modification<unique<Modifier> (F::*)(context_type &) const> : is_base_of<modifier<Gfx>, Modifier> {};
 
-			template <class Primitive>
-			driver & method(void(*method)(context_type &, const Primitive &)) {
+			template <class Primitive, useif<is_base_of<primitive, Primitive>::value>>
+			driver & register_method(void(*method)(context_type &, const Primitive &)) {
 				if(primitive_id<Primitive> >= _methods.size()) {
 					_methods.resize(primitive_id<Primitive> + 1);
 				}
@@ -137,12 +145,12 @@ namespace asd
 			}
 
 			template <class F, useif<is_extension_method<decltype(&F::operator())>::value>>
-			driver & method(F functor) {
-				return method(&functor, &F::operator());
+			driver & register_method(F functor) {
+				return register_method(&functor, &F::operator());
 			}
 
-			template <class F, class Primitive>
-			driver & method(F * functor, void (F::*method)(context_type &, const Primitive &)) {
+			template <class F, class Primitive, useif<is_base_of<primitive, Primitive>::value>>
+			driver & register_method(F * functor, void (F::*method)(context_type &, const Primitive &)) {
 				if(primitive_id<Primitive> >= _methods.size()) {
 					_methods.resize(primitive_id<Primitive> + 1);
 				}
@@ -154,8 +162,8 @@ namespace asd
 				return *this;
 			}
 
-			template <class G, class F, class Primitive>
-			driver & method(F * functor, void (F::*method)(context_type &, const Primitive &) const) {
+			template <class G, class F, class Primitive, useif<is_base_of<primitive, Primitive>::value>>
+			driver & register_method(F * functor, void (F::*method)(context_type &, const Primitive &) const) {
 				if(primitive_id<Primitive> >= _methods.size()) {
 					_methods.resize(primitive_id<Primitive> + 1);
 				}
@@ -167,27 +175,27 @@ namespace asd
 				return *this;
 			}
 
-			template<class T, class Modifier>
-			void modifier(unique<Modifier> (*generator)(context_type &)) {
+			template<class T, class Modifier, useif<is_base_of<modifier<Gfx>, Modifier>::value>>
+			void register_modifier(unique<Modifier> (*generator)(context_type &)) {
 				_modifiers.push_back([=](context_type & ctx) {
 					ctx.extend(modifier_id<T>, generator(ctx));
 				});
 			}
 
 			template<class T, class F, useif<is_modification<decltype(&F::operator())>::value>>
-			void modifier(F generator) {
-				modifier<T>(&generator, &F::operator());
+			void register_modifier(F generator) {
+				register_modifier<T>(&generator, &F::operator());
 			}
 
-			template <class T, class F, class Modifier>
-			void modifier(F * f, unique<Modifier> (F::*method)(context_type &)) {
+			template <class T, class F, class Modifier, useif<is_base_of<modifier<Gfx>, Modifier>::value>>
+			void register_modifier(F * f, unique<Modifier> (F::*method)(context_type &)) {
 				_modifiers.push_back([=](context_type & ctx) {
 					ctx.extend(modifier_id<T>, (f->*method)(ctx));
 				});
 			}
 
-			template <class T, class F, class Modifier>
-			void modifier(F * f, unique<Modifier> (F::*method)(context_type &) const) {
+			template <class T, class F, class Modifier, useif<is_base_of<modifier<Gfx>, Modifier>::value>>
+			void register_modifier(F * f, unique<Modifier> (F::*method)(context_type &) const) {
 				_modifiers.push_back([=](context_type & ctx) {
 					ctx.extend(modifier_id<T>, (f->*method)(ctx));
 				});

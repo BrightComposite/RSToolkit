@@ -22,6 +22,8 @@ namespace asd
 	
 	namespace opengl
 	{
+		class mesh_builder;
+
 		struct vertex_buffer
 		{
 			vertex_buffer(const vertex_layout & layout, const vertex_data & vd);
@@ -57,11 +59,13 @@ namespace asd
 			instanced_indexed
 		};
 		
-		class mesh : public gfx::primitive, public shareable<mesh>
+		struct mesh : public gfx::primitive, public shareable<mesh>
 		{
-		public:
 			mesh(const vertex_layout & layout) : _layout(layout) {}
-			virtual ~mesh() {}
+
+			virtual ~mesh() {
+				glDeleteVertexArrays(1, &id);
+			}
 			
 			const vertex_layout & layout() const {
 				return _layout;
@@ -69,7 +73,7 @@ namespace asd
 
 			virtual void draw(context &) const = 0;
 
-		protected:
+			uint id = 0;
 			const vertex_layout & _layout;
 		};
 		
@@ -78,12 +82,47 @@ namespace asd
 		}
 		
 		template <mesh_type type>
-		class generic_mesh {};
-		
+		struct generic_mesh {};
+
+		template <>
+		struct generic_mesh<mesh_type::plain> : public opengl::mesh
+		{
+			deny_copy(generic_mesh);
+
+			generic_mesh(mesh_builder & builder);
+
+			virtual ~generic_mesh() {}
+
+			virtual void draw(::asd::opengl::context &) const override;
+
+			uint attrCount = 0;
+			uint topology;
+			uint offset;
+			uint verticesCount;
+		};
+
+		template <>
+		struct generic_mesh<mesh_type::indexed> : public opengl::mesh
+		{
+			deny_copy(generic_mesh);
+
+			generic_mesh(mesh_builder & builder);
+
+			virtual ~generic_mesh() {}
+
+			virtual void draw(opengl::context &) const override;
+
+			uint attrCount = 0;
+			uint topology;
+			uint offset;
+			uint verticesCount;
+			uint indicesCount;
+		};
+
 		class mesh_builder
 		{
 			template <mesh_type type>
-			friend class generic_mesh;
+			friend struct generic_mesh;
 		
 		public:
 			api(opengl)
@@ -103,6 +142,10 @@ namespace asd
 			api(opengl)
 			handle<mesh> build();
 		
+			static inline handle<mesh> build(context & graphics, const vertex_layout & layout, const vertex_data & data, vertex_topology topology = vertex_topology::triangles) {
+				return mesh_builder(graphics, layout, data, topology).build();
+			}
+
 		protected:
 			context & _context;
 			const vertex_layout & _layout;

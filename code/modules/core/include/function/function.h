@@ -50,8 +50,10 @@
 #include <typeinfo>
 #include <memory>
 
+#include <boost/function.hpp>
+
 #ifdef _MSC_VER
-#define FUNC_NOEXCEPT
+#define FUNC_NOEXCEPT throw()
 #define FUNC_TEMPLATE_NOEXCEPT(FUNCTOR, ALLOCATOR)
 #define FUNC_CONSTEXPR const
 #else
@@ -81,10 +83,7 @@ namespace asd
 #endif
 	
 	template <typename>
-	struct force_function_heap_allocation
-		: std::false_type
-	{
-	};
+	struct force_function_heap_allocation : std::false_type {};
 	
 	template <typename>
 	class function;
@@ -93,6 +92,7 @@ namespace asd
 	{
 		struct manager_storage_type;
 		struct function_manager;
+
 		struct functor_padding
 		{
 		protected:

@@ -90,7 +90,7 @@ namespace asd
 			virtual ~driver_context();
 
 			api(opengl)
-			void draw();
+			virtual void draw() override;
 
 			template<class Modifier>
 			modifier_type * get() const {
@@ -98,7 +98,7 @@ namespace asd
 
 				if(i == _modifiers.end()) {
 #ifdef GFX_IGNORE_MISSING_MODIFIERS
-					return;
+					return nullptr;
 #else
 					throw Exception("Modifier not found: ", Modifier::key());
 #endif
@@ -138,6 +138,9 @@ namespace asd
 			virtual ~window_context();
 
 			api(opengl)
+			virtual void flush() override;
+
+			api(opengl)
 			virtual void prepare() override;
 		
 		protected:
@@ -166,8 +169,8 @@ namespace asd
 			}
 
 			template<class Shader>
-			driver & shader() {
-				modifier<Shader>([](opengl::context & ctx) {
+			driver & register_shader() {
+				register_modifier<Shader>([](opengl::context & ctx) {
 					return make::unique<opengl::shader_program>(ctx, opengl::shader_code::get(Shader::key()));
 				});
 

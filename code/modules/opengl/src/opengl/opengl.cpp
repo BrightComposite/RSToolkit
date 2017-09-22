@@ -94,7 +94,7 @@ namespace asd
 #endif
 
 		driver::driver(const configuration & config) : config(config) {
-			method(opengl::draw_mesh);
+			register_method(opengl::draw_mesh);
 		}
 		
 		window_context::window_context(opengl::driver & driver, window & w) : base(driver), ::asd::window_context(w) {
@@ -121,7 +121,21 @@ namespace asd
 
 #endif
 		}
-		
+
+		void window_context::flush() {
+			draw();
+
+#if BOOST_OS_WINDOWS
+
+			SwapBuffers(_window.device());
+
+#elif BOOST_OS_LINUX
+
+			glXSwapBuffers(_window.display(), _window.handle());
+
+#endif
+		}
+
 		void window_context::prepare() {
 #if BOOST_OS_WINDOWS
 
@@ -359,27 +373,12 @@ namespace asd
 		driver_context<opengl::driver>::~driver_context() {}
 		
 		void driver_context<opengl::driver>::draw() {
-			for(size_t i = 0; i < _list.size(); ++i) {
-				auto & entry = _list.at(i);
+			for(auto & entry : _list) {
 				_driver.call(*this, entry.first, entry.second);
 			}
 			
 			_list.clear();
 		}
-		
-		/*
-		void context::bind(const GLShaderProgram * program) {
-			if(_shaderProgram != program) {
-				_shaderProgram = program;
-				glUseProgram(program->id);
-			}
-		}
-		
-		void context::bind(const handle<Texture> & texture, uint index) {
-			glActiveTexture(GL_TEXTURE0 + index);
-			texture->apply();
-		}
-		*/
 		
 		void driver_context<opengl::driver>::check_for_errors() {
 			GLenum error = glGetError();

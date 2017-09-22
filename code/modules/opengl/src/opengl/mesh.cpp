@@ -8,101 +8,67 @@ namespace asd
 {
 	namespace opengl
 	{
-		template <>
-		class generic_mesh<mesh_type::plain> : public opengl::mesh
-		{
-			deny_copy(generic_mesh);
-		
-		public:
-			generic_mesh(mesh_builder & builder) : mesh(builder._layout), topology(builder._topology), offset(builder._offset), verticesCount(builder._verticesCount - builder._offset) {
-				glGenVertexArrays(1, &id);
-				glBindVertexArray(id);
-				
-				for(auto & b : builder._buffers) {
-					glBindBuffer(GL_ARRAY_BUFFER, b.handle);
-					float * pointer = 0;
-					
-					for(size_t i = 0; i < builder._layout.elements.size(); ++i) {
-						auto units = builder._layout.elements[i].units;
-						auto count = (units - 1) / 4 + 1;
-						
-						for(uint j = 0; j < count; ++j, ++attrCount) {
-							auto u = (j == count - 1) ? ((units - 1) % 4) + 1 : 4;
-							glEnableVertexAttribArray(attrCount);
-							glVertexAttribPointer(attrCount, u, GL_FLOAT, GL_FALSE, builder._layout.units * sizeof(float), pointer);
-							pointer += u;
-						}
+		generic_mesh<mesh_type::plain>::generic_mesh(mesh_builder & builder) : mesh(builder._layout), topology(builder._topology), offset(builder._offset), verticesCount(builder._verticesCount - builder._offset) {
+			glGenVertexArrays(1, &id);
+			glBindVertexArray(id);
+
+			for(auto & b : builder._buffers) {
+				glBindBuffer(GL_ARRAY_BUFFER, b.handle);
+				float * pointer = 0;
+
+				for(size_t i = 0; i < builder._layout.elements.size(); ++i) {
+					auto units = builder._layout.elements[i].units;
+					auto count = (units - 1) / 4 + 1;
+
+					for(uint j = 0; j < count; ++j, ++attrCount) {
+						auto u = (j == count - 1) ? ((units - 1) % 4) + 1 : 4;
+						glEnableVertexAttribArray(attrCount);
+						glVertexAttribPointer(attrCount, u, GL_FLOAT, GL_FALSE, builder._layout.units * sizeof(float), pointer);
+						pointer += u;
 					}
 				}
-				
-				glBindVertexArray(0);
 			}
-			
-			virtual ~generic_mesh() {
-				glDeleteVertexArrays(1, &id);
+
+			glBindVertexArray(0);
+		}
+
+		void generic_mesh<mesh_type::plain>::draw(::asd::opengl::context &) const {
+			glBindVertexArray(id);
+			glDrawArrays(topology, offset, verticesCount);
+			glBindVertexArray(0);
+		}
+
+		generic_mesh<mesh_type::indexed>::generic_mesh(mesh_builder & builder) : mesh(builder._layout), topology(builder._topology), offset(builder._offset), verticesCount(builder._verticesCount - builder._offset), indicesCount(builder._indicesCount - builder._offset) {
+			glGenVertexArrays(1, &id);
+			glBindVertexArray(id);
+
+			for(auto & b : builder._buffers) {
+				glBindBuffer(GL_ARRAY_BUFFER, b.handle);
+				float * pointer = 0;
+
+				for(size_t i = 0; i < builder._layout.elements.size(); ++i) {
+					auto units = builder._layout.elements[i].units;
+					auto count = (units - 1) / 4 + 1;
+
+					for(uint j = 0; j < count; ++j, ++attrCount) {
+						auto u = (j == count - 1) ? ((units - 1) % 4) + 1 : 4;
+						glEnableVertexAttribArray(attrCount);
+						glVertexAttribPointer(attrCount, u, GL_FLOAT, GL_FALSE, builder._layout.units * sizeof(float), pointer);
+						pointer += u;
+					}
+				}
 			}
-			
-			virtual void draw(::asd::opengl::context &) const override {
-				glBindVertexArray(id);
-				glDrawArrays(topology, offset, verticesCount);
-				glBindVertexArray(0);
-			}
-			
-			uint id = 0;
-			uint attrCount = 0;
-			uint topology;
-			uint offset;
-			uint verticesCount;
-		};
-		
+
+			glBindVertexArray(0);
+		}
+
+		void generic_mesh<mesh_type::indexed>::draw(opengl::context &) const {
+			glBindVertexArray(id);
+			glDrawElements(topology, indicesCount, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(static_cast<size_t>(offset)));
+			glBindVertexArray(0);
+		}
+
 		using plain_mesh = generic_mesh<mesh_type::plain>;
-		
-		template <>
-		class generic_mesh<mesh_type::indexed> : public opengl::mesh
-		{
-			deny_copy(generic_mesh);
-		
-		public:
-			generic_mesh(mesh_builder & builder) : mesh(builder._layout), topology(builder._topology), offset(builder._offset), verticesCount(builder._verticesCount - builder._offset), indicesCount(builder._indicesCount - builder._offset) {
-				glGenVertexArrays(1, &id);
-				glBindVertexArray(id);
-				
-				for(auto & b : builder._buffers) {
-					glBindBuffer(GL_ARRAY_BUFFER, b.handle);
-					float * pointer = 0;
-					
-					for(size_t i = 0; i < builder._layout.elements.size(); ++i) {
-						auto units = builder._layout.elements[i].units;
-						auto count = (units - 1) / 4 + 1;
-						
-						for(uint j = 0; j < count; ++j, ++attrCount) {
-							auto u = (j == count - 1) ? ((units - 1) % 4) + 1 : 4;
-							glEnableVertexAttribArray(attrCount);
-							glVertexAttribPointer(attrCount, u, GL_FLOAT, GL_FALSE, builder._layout.units * sizeof(float), pointer);
-							pointer += u;
-						}
-					}
-				}
-				
-				glBindVertexArray(0);
-			}
-			
-			virtual ~generic_mesh() {}
-			
-			virtual void draw(opengl::context &) const override {
-				glBindVertexArray(id);
-				glDrawElements(topology, indicesCount, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(static_cast<size_t>(offset)));
-				glBindVertexArray(0);
-			}
-			
-			uint id = 0;
-			uint attrCount = 0;
-			uint topology;
-			uint offset;
-			uint verticesCount;
-			uint indicesCount;
-		};
-		
 		using indexed_mesh = generic_mesh<mesh_type::indexed>;
 		/*
 		template <>

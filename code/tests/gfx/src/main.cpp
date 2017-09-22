@@ -14,6 +14,8 @@ namespace asd
 {
 	struct COLOR_SHADER
 	{
+		using tag = opengl::shader_program;
+
 		static auto key() { return "2d/color"; }
 	};
 
@@ -36,9 +38,9 @@ namespace asd
 	static entrance open([]() {
 		opengl::driver driver;
 
-		driver.method(draw_colored_mesh);
+		driver.register_method(draw_colored_mesh);
 
-		driver.shader<COLOR_SHADER>();
+		driver.register_shader<COLOR_SHADER>();
 
 		try {
 			window w("gfx:test", {50, 50, 400, 400});
@@ -54,8 +56,7 @@ namespace asd
 				 0.0f,  0.5f, 0.0f, 0.0f, 1.0f,
 			});
 
-			opengl::mesh_builder builder(context, layout, data);
-			auto mesh = builder.build();
+			auto mesh = opengl::mesh_builder::build(context, layout, data);
 			
 			colored_mesh e {context, *mesh};
 
@@ -70,13 +71,14 @@ namespace asd
 	});
 
 	int launch(window & w, opengl::context & context, const colored_mesh & e) {
-		
+
+		benchmark raw("draw triangle opengl");
 		benchmark queued("draw triangle queued");
 		benchmark immediate("draw triangle immediately");
 
+		while(true) {
 #if BOOST_OS_WINDOWS
 
-		while(true) {
 			static MSG msg = {0};
 
 			if(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
@@ -86,45 +88,15 @@ namespace asd
 				if(msg.message == WM_QUIT) {
 					return 0;
 				}
-			} else {
-				glClearColor(0.0, 0.0, 0.0, 1.0);
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-				double q = queued([&]() {
-					context << e;
-					context << e;
-					context << e;
-					context << e;
-					context << e;
-
-					context.draw();
-
-					SwapBuffers(w.device());
-				});
-
-				glClearColor(0.0, 0.0, 0.0, 1.0);
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-				double i = immediate([&]() {
-					draw_colored_mesh(context, e);
-					draw_colored_mesh(context, e);
-					draw_colored_mesh(context, e);
-					draw_colored_mesh(context, e);
-					draw_colored_mesh(context, e);
-
-					SwapBuffers(w.device());
-				});
-
-				std::cout << i / q << std::endl;
+				continue;
 			}
-		}
 
 #elif BOOST_OS_LINUX
 
-		XWindowAttributes gwa;
-		XEvent xev;
+			static XWindowAttributes gwa;
+			static XEvent xev;
 
-		while(true) {
 			if(XPending(w.display())) {
 				XNextEvent(w.display(), &xev);
 
@@ -147,42 +119,57 @@ namespace asd
 
 					default: {}
 				}
-			} else {
-				glClearColor(0.0, 0.0, 0.0, 1.0);
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-				
-				double q = queued([&]() {
-					context << e;
-					context << e;
-					context << e;
-					context << e;
-					context << e;
-					
-					context.draw();
-					
-					glXSwapBuffers(w.display(), w.handle());
-				});
-				
-				glClearColor(0.0, 0.0, 0.0, 1.0);
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-				
-				double i = immediate([&]() {
-					draw_colored_mesh(context, e);
-					draw_colored_mesh(context, e);
-					draw_colored_mesh(context, e);
-					draw_colored_mesh(context, e);
-					draw_colored_mesh(context, e);
-					
-					glXSwapBuffers(w.display(), w.handle());
-				});
-				
-				std::cout << i / q << " " << static_cast<int>(i) << "/" << static_cast<int>(q) << std::endl;
+
+				continue;
 			}
-		}
 
 #endif
-	}
+			
+			auto & glmesh = static_cast<const opengl::generic_mesh<opengl::mesh_type::plain> &>(e.mesh);
+			auto & glprogram = static_cast<const opengl::shader_program &>(e.shader_program);
 
+			glClearColor(0.0, 0.0, 0.0, 1.0);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			double r = raw([&]() {
+				glUseProgram(glprogram.id);
+
+				glBindVertexArray(glmesh.id);
+
+				for(int i = 0; i < 10'000; ++i) {
+					glDrawArrays(glmesh.topology, glmesh.offset, glmesh.verticesCount);
+				}
+
+				glBindVertexArray(0);
+
+				context.flush();
+			});
+
+			glClearColor(0.0, 0.0, 0.0, 1.0);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			double q = queued([&]() {
+				for(int i = 0; i < 10'000; ++i) {
+					context << e;
+				}
+
+				context.flush();
+			});
+
+			glClearColor(0.0, 0.0, 0.0, 1.0);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			double i = immediate([&]() {
+				for(int i = 0; i < 10'000; ++i) {
+					draw_colored_mesh(context, e);
+				}
+
+				context.flush();
+			});
+
+			std::cout << r / 1000'000 << "ms" << " " << i / 1000'000 << "ms" << " " << q / 1000'000 << "ms" << std::endl;
+		}
+	}
 }
 
 //---------------------------------------------------------------------------

@@ -22,9 +22,17 @@ namespace asd
 	{
 		morph_origin(gfx_primitive);
 	};
-	
-	create_morph_pool(immediate_gfx_test, gfx_primitive);
-	
+
+	struct primitive {};
+
+	struct basic_primitive_key { morph_origin(basic_primitive_key); };
+
+	template<class T>
+	struct primitive_key : basic_primitive_key { morph_type(primitive_key<T>); };
+
+	template<class T>
+	morph_id_t primitive_id = morph_id<primitive_key<T>>;
+
 	class gfx_context
 	{
 		using entry_type = pair<morph_id_t, gfx_primitive>;
@@ -120,6 +128,40 @@ namespace asd
 	};
 	
 	/**
+	 *	Drawer alternative
+	 */
+
+	struct Drawer {
+		virtual ~Drawer() {}
+	};
+
+	class IncDec : public Drawer
+	{
+	public:
+		function<void(int)> increment;
+		function<void(int)> decrement;
+	};
+
+	class VirtualIncDec : public Drawer
+	{
+	public:
+		virtual void increment(int) = 0;
+		virtual void decrement(int) = 0;
+	};
+
+	class drawer_context
+	{
+	public:
+		template<class Drawer>
+		Drawer * drawer() {
+			return static_cast<Drawer *>(request(primitive_id<Drawer>));
+		}
+
+	protected:
+		virtual Drawer * request(morph_id_t id) = 0;
+	};
+
+	/**
 	 * Tested classes
 	 */
 	
@@ -140,7 +182,28 @@ namespace asd
 			counter -= value;
 		}
 	};
-	
+
+	class my_context : public drawer_context, public Basic
+	{
+	public:
+		template<class Drawer, class Impl>
+		void register_drawer() {
+			if(primitive_id<Drawer> >= drawers.size()) {
+				drawers.resize(primitive_id<Drawer> + 1);
+			}
+
+			drawers[primitive_id<Drawer>] = make::unique<Impl>(*this);
+		}
+
+	protected:
+		virtual Drawer * request(morph_id_t id) override {
+			return id < drawers.size() ? drawers[id].get() : nullptr;
+		}
+
+	private:
+		array_list<unique<Drawer>> drawers;
+	};
+
 	class Gfx : public gfx_driver<Gfx>, public Basic {};
 	
 	/**
@@ -149,6 +212,8 @@ namespace asd
 	
 	struct Increment : gfx_primitive
 	{
+		morph_type(Increment);
+
 		Increment(int value) : value(value) {}
 		
 		int value;
@@ -156,14 +221,12 @@ namespace asd
 	
 	struct Decrement : gfx_primitive
 	{
+		morph_type(Decrement);
+
 		Decrement(int value) : value(value) {}
 		
 		int value;
 	};
-	
-	create_morph_type(immediate_gfx_test, Increment);
-	
-	create_morph_type(immediate_gfx_test, Decrement);
 	
 	/**
 	 * Declare extensions
@@ -176,7 +239,40 @@ namespace asd
 	void decrement(driver_context<Gfx> & obj, const Decrement & p) {
 		obj.driver.counter -= p.value;
 	}
-	
+
+	struct MyIncDec : IncDec
+	{
+		MyIncDec(my_context & ctx) : ctx(ctx) {
+			increment = std::bind(&MyIncDec::inc, this, std::placeholders::_1);
+			decrement = std::bind(&MyIncDec::dec, this, std::placeholders::_1);
+		}
+
+		void inc(int val) {
+			ctx.counter += val;
+		}
+
+		void dec(int val) {
+			ctx.counter -= val;
+		}
+
+		my_context & ctx;
+	};
+
+	struct MyVirtualIncDec : VirtualIncDec
+	{
+		MyVirtualIncDec(my_context & ctx) : ctx(ctx) {}
+
+		void increment(int val) override {
+			ctx.counter += val;
+		}
+
+		void decrement(int val) override {
+			ctx.counter -= val;
+		}
+
+		my_context & ctx;
+	};
+
 	/**
 	 * Benchmark entry point
 	 */
@@ -192,10 +288,16 @@ namespace asd
 		// create real implementations
 		auto ctx = driver.create_context();
 		unique<real_context> r = new real_context;
+		my_context dc;
+		dc.register_drawer<IncDec, MyIncDec>();
+		my_context vdc;
+		vdc.register_drawer<VirtualIncDec, MyVirtualIncDec>();
 		
 		// cast to basic classes
 		gfx_context & e = *ctx;
 		virtual_context & v = *r;
+		drawer_context & d = dc;
+		drawer_context & vd = vdc;
 		
 		benchmark("extensible gfx", TRIES_COUNT) << [&]() {
 			for(int i = 0; i < DRAW_CALLS; ++i) {
@@ -214,6 +316,47 @@ namespace asd
 		};
 		
 		std::cout << r->counter << std::endl;
+
+		benchmark("drawer gfx", TRIES_COUNT) << [&]() {
+			auto drawer = d.drawer<IncDec>();
+			
+			if (drawer) {
+				for(int i = 0; i < DRAW_CALLS; ++i) {
+					drawer->increment(29);
+					drawer->decrement(12);
+				}
+			}
+		};
+
+		std::cout << dc.counter << std::endl;
+
+		benchmark("virtual drawer gfx: request every call", TRIES_COUNT) << [&]() {
+			for(int i = 0; i < DRAW_CALLS; ++i) {
+				auto drawer = vd.drawer<VirtualIncDec>();
+
+				if (drawer) {
+					drawer->increment(29);
+					drawer->decrement(12);
+				}
+			}
+		};
+
+		std::cout << vdc.counter << std::endl;
+
+		vdc.counter = 0;
+
+		benchmark("virtual drawer gfx: request once", TRIES_COUNT) << [&]() {
+			auto drawer = vd.drawer<VirtualIncDec>();
+
+			if (drawer) {
+				for(int i = 0; i < DRAW_CALLS; ++i) {
+					drawer->increment(29);
+					drawer->decrement(12);
+				}
+			}
+		};
+
+		std::cout << vdc.counter << std::endl;
 	});
 }
 

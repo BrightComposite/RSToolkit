@@ -77,9 +77,6 @@ namespace asd
 		template <>
 		class driver_context<opengl::driver> : public context
 		{
-			using entry_type = pair<morph_id_t, primitive>;
-			using modifier_type = gfx::modifier<opengl::driver>;
-
 			friend gfx::driver<opengl::driver>;
 
 		public:
@@ -92,39 +89,18 @@ namespace asd
 			api(opengl)
 			virtual void draw() override;
 
-			template<class Modifier>
-			modifier_type * get() const {
-				auto i = _modifiers.find(gfx::modifier_id<Modifier>);
-
-				if(i == _modifiers.end()) {
-#ifdef GFX_IGNORE_MISSING_MODIFIERS
-					return nullptr;
-#else
-					throw Exception("Modifier not found: ", Modifier::key());
-#endif
-				}
-
-				return i->second.get();
-			}
-			
-			void extend(morph_id_t id, unique<modifier_type> && m) {
-				_modifiers.emplace(std::make_pair(id, forward<unique<modifier_type>>(m)));
-			}
-
 		protected:
 			api(opengl)
 			void check_for_errors();
 
 			opengl::driver & _driver;
 			GLContext _context;
-			map<morph_id_t, unique<modifier_type>> _modifiers;
 		};
 	}
 	
 	namespace opengl
 	{
 		using context = gfx::driver_context<driver>;
-		using modifier = gfx::modifier<driver>;
 		
 		class window_context : public context, public ::asd::window_context
 		{
@@ -166,15 +142,6 @@ namespace asd
 			
 			unique<window_context> create_context(window & w) {
 				return new window_context(*this, w);
-			}
-
-			template<class Shader>
-			driver & register_shader() {
-				register_modifier<Shader>([](opengl::context & ctx) {
-					return make::unique<opengl::shader_program>(ctx, opengl::shader_code::get(Shader::key()));
-				});
-
-				return *this;
 			}
 
 			configuration config;

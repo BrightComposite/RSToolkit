@@ -18,9 +18,7 @@ namespace asd
 			}
 		}
 
-		shader_program::shader_program(context & ctx, const shader_code::store & code) : _layout(code.layout) {
-			id = glCreateProgram();
-
+		shader_program::shader_program(context & ctx, const shader_code::store & code) : layout(code.layout), id(glCreateProgram()) {
 			GLint status = GL_FALSE;
 			int info_log_length = 0;
 
@@ -91,7 +89,7 @@ namespace asd
 			glUseProgram(0);
 		}
 
-		shader_program::shader_program(shader_program && program) throw() : _layout(program._layout), id(program.id) {
+		shader_program::shader_program(shader_program && program) throw() : layout(program.layout), id(program.id) {
 			program.id = 0;
 		}
 

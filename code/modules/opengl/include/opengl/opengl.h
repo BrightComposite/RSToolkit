@@ -63,7 +63,7 @@ namespace asd
 	namespace opengl
 	{
 		class driver;
-		class shader_program;
+		struct shader_program;
 		
 		namespace shader_code {
 			struct store;
@@ -86,9 +86,6 @@ namespace asd
 			api(opengl)
 			virtual ~driver_context();
 
-			api(opengl)
-			virtual void draw() override;
-
 		protected:
 			api(opengl)
 			void check_for_errors();
@@ -102,7 +99,7 @@ namespace asd
 	{
 		using context = gfx::driver_context<driver>;
 		
-		class window_context : public context, public ::asd::window_context
+		class window_context : public opengl::context, public ::asd::window_context
 		{
 			using base = opengl::context;
 		

@@ -2,8 +2,8 @@
 
 #pragma once
 
-#ifndef SHADER_CODE_H
-#define SHADER_CODE_H
+#ifndef OPENGL_SHADER_CODE_H
+#define OPENGL_SHADER_CODE_H
 
 //---------------------------------------------------------------------------
 

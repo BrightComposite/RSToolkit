@@ -94,7 +94,7 @@ namespace asd
 #endif
 
 		driver::driver(const configuration & config) : config(config) {
-			register_method(opengl::draw_mesh);
+			// register_method(opengl::draw_mesh);
 		}
 		
 		window_context::window_context(opengl::driver & driver, window & w) : base(driver), ::asd::window_context(w) {
@@ -123,8 +123,6 @@ namespace asd
 		}
 
 		void window_context::flush() {
-			draw();
-
 #if BOOST_OS_WINDOWS
 
 			SwapBuffers(_window.device());
@@ -206,7 +204,7 @@ namespace asd
 			
 			check_for_errors();
 
-			_driver.set_modifiers(*this);
+			// _driver.set_modifiers(*this);
 		}
 
 		void window_context::init_device() {
@@ -371,14 +369,6 @@ namespace asd
 		driver_context<opengl::driver>::driver_context(opengl::driver & d) : _driver(d) {}
 		
 		driver_context<opengl::driver>::~driver_context() {}
-		
-		void driver_context<opengl::driver>::draw() {
-			for(auto & entry : _list) {
-				_driver.call(*this, entry.first, entry.second);
-			}
-			
-			_list.clear();
-		}
 		
 		void driver_context<opengl::driver>::check_for_errors() {
 			GLenum error = glGetError();

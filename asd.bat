@@ -39,22 +39,22 @@ set type=%1
 set name=%2
 
 if "%type%" equ "module" (
-	set append_string="add_module(%name% modules)"
+	set append_string=add_module^(%name%^)
 	goto append_module
 )
 if "%type%" equ "test" (
-	set append_string="add_module(%name% tests)"
+	set append_string=add_module^(%name% tests^)
 	goto append_module
 )
 if "%type%" equ "project" (
-	set append_string="add_module(%name% projects)"
+	set append_string=add_module^(%name% projects^)
 	goto append_module
 )
 
 goto incorrect_usage
 
 :append_module
-echo "%append_string%" >> CMakeLists.txt
+echo %append_string% >> CMakeLists.txt
 goto end
 
 rem -------------------------------------

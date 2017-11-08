@@ -14,7 +14,7 @@ include(tools/shaders.cmake)
 
 module(STATIC)
 	dependencies(
-		graphics	0.*
+		graphics3d	0.*
 		window		0.*
 	)
 

@@ -2,27 +2,26 @@
 
 #pragma once
 
-#ifndef MESH_H
-#define MESH_H
+#ifndef OPENGL_MESH_H
+#define OPENGL_MESH_H
 
 //---------------------------------------------------------------------------
 
 #include <opengl/opengl.h>
 #include <opengl/vertex_layout.h>
+#include <graphics3d/vertex_data.h>
 
 //---------------------------------------------------------------------------
 
 namespace asd
 {
-	using vertex_data = array_list<float>;
-	
-	using vertex_indices = array_list<uint>;
-	
-	class instanced_mesh_data;
-	
 	namespace opengl
 	{
+		using gfx3d::vertex_data;
+		using gfx3d::vertex_indices;
+
 		class mesh_builder;
+		class instanced_mesh_data;
 
 		struct vertex_buffer
 		{
@@ -59,7 +58,7 @@ namespace asd
 			instanced_indexed
 		};
 		
-		struct mesh : public gfx::primitive, public shareable<mesh>
+		struct mesh : public shareable<mesh>
 		{
 			mesh(const vertex_layout & layout) : _layout(layout) {}
 

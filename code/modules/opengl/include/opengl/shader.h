@@ -2,8 +2,8 @@
 
 #pragma once
 
-#ifndef SHADER_H
-#define SHADER_H
+#ifndef OPENGL_SHADER_H
+#define OPENGL_SHADER_H
 
 //---------------------------------------------------------------------------
 
@@ -16,7 +16,7 @@ namespace asd
 {
 	namespace opengl
 	{
-		struct shader_program : public opengl::modifier
+		struct shader_program
 		{
 			deny_copy(shader_program);
 
@@ -29,14 +29,12 @@ namespace asd
 			api(opengl)
 			virtual ~shader_program();
 
-			const vertex_layout & layout() const {
-				return _layout;
-			}
-
 			api(opengl)
-			void apply(context & ctx) const override;
+			void apply(context & ctx) const;
 
-			const vertex_layout & _layout;
+			const vertex_layout & layout;
+
+		protected:
 			uint id = 0;
 		};
 		

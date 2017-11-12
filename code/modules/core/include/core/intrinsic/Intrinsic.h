@@ -388,13 +388,13 @@ namespace asd
 			return _mm_cvtsi128_si32(v);
 		}
 
-		static inline void __vectorcall fillsum(in_type a, type & out)
+		static inline void __vectorcall fill_sum(in_type a, type & out)
 		{
 			out = _mm_hadd_epi32(a, a);
 			out = _mm_hadd_epi32(out, out);
 		}
 
-		static inline type __vectorcall fillsum(in_type a)
+		static inline type __vectorcall fill_sum(in_type a)
 		{
 			type v = _mm_hadd_epi32(a, a);
 			return _mm_hadd_epi32(v, v);
@@ -842,13 +842,13 @@ namespace asd
 			return _mm_cvtss_f32(v);
 		}
 
-		static inline void __vectorcall fillsum(in_type a, type & out)
+		static inline void __vectorcall fill_sum(in_type a, type & out)
 		{
 			out = _mm_hadd_ps(a, a);
 			out = _mm_hadd_ps(out, out);
 		}
 
-		static inline type __vectorcall fillsum(in_type a)
+		static inline type __vectorcall fill_sum(in_type a)
 		{
 			type v = _mm_hadd_ps(a, a);
 			return _mm_hadd_ps(v, v);
@@ -1286,13 +1286,13 @@ namespace asd
 			return _mm_cvtsd_f64(_mm256_castpd256_pd128(v));
 		}
 
-		static inline void __vectorcall fillsum(const type & a, type & out)
+		static inline void __vectorcall fill_sum(const type & a, type & out)
 		{
 			out = _mm256_hadd_pd(shuffle<0, 1, 0, 1>(a), shuffle<2, 3, 2, 3>(a));
 			out = _mm256_hadd_pd(shuffle<0, 1, 0, 1>(out), shuffle<2, 3, 2, 3>(out));
 		}
 
-		static inline inner __vectorcall fillsum(const type & a)
+		static inline inner __vectorcall fill_sum(const type & a)
 		{
 			type out = _mm256_hadd_pd(shuffle<0, 1, 0, 1>(a), shuffle<2, 3, 2, 3>(a));
 			return _mm256_hadd_pd(shuffle<0, 1, 0, 1>(out), shuffle<2, 3, 2, 3>(out));
@@ -1497,12 +1497,12 @@ namespace asd
 
 		static inline void __vectorcall load(const inner & in, type & out)
 		{
-			out = in.v;
+			out = in;
 		}
 
 		static inline type __vectorcall load(const inner & in)
 		{
-			return in.v;
+			return in;
 		}
 
 		static inline void __vectorcall load(const byte & a, const byte & b, const byte & c, const byte & d, type & out)
@@ -1660,13 +1660,13 @@ namespace asd
 			return byte(a.x + a.y + a.z + a.w);
 		}
 
-		static inline void __vectorcall fillsum(const type & a, type & out)
+		static inline void __vectorcall fill_sum(const type & a, type & out)
 		{
 			byte b = a.x + a.y + a.z + a.w;
 			out = {b, b, b, b};
 		}
 
-		static inline inner __vectorcall fillsum(const type & a)
+		static inline inner __vectorcall fill_sum(const type & a)
 		{
 			byte b = a.x + a.y + a.z + a.w;
 			return __m32 {b, b, b, b};

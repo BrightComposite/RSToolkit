@@ -10,7 +10,7 @@
 #include <core/intrinsic/Intrinsic.h>
 #include <math/math.h>
 #include <core/String.h>
-#include <core/memory/allocator/aligned_alloc.h>
+#include <core/memory/aligned.h>
 
 //---------------------------------------------------------------------------
 
@@ -18,27 +18,27 @@ namespace asd
 {
 	namespace math
 	{
-		template<typename T>
+		template <typename T, bool>
 		struct vector;
 		
-		template<typename T, size_t Mask>
+		template <typename T, size_t Mask>
 		using VectorMaskAxis = IntrinsicMask<T, IntrinMax, Mask>;
 		
-		template<typename T, size_t Mask>
+		template <typename T, size_t Mask>
 		using VectorSignAxis = IntrinsicMask<T, IntrinSignmask, Mask>;
 		
-		template<int ... Sequence>
+		template <int ... Sequence>
 		struct SwizzleSequence {};
 		
-		template<typename T, class S, bool Assignable = S::assignable>
+		template <typename T, class S, bool Assignable = S::assignable>
 		struct SwizzleVector {};
 		
-		template<int X, int Y>
+		template <int X, int Y>
 		struct SwizzleSequence<X, Y>
 		{
 			static constexpr bool assignable = (X != Y);
 			
-			template<int Component>
+			template <int Component>
 			using get_component = std::integral_constant<int, (X == Component) ? 0 : (Y == Component) ? 1 : -1>;
 			
 			enum : int
@@ -68,12 +68,12 @@ namespace asd
 			};
 		};
 		
-		template<int X, int Y, int Z>
+		template <int X, int Y, int Z>
 		struct SwizzleSequence<X, Y, Z>
 		{
 			static constexpr bool assignable = ((X != Y) && (X != Z) && (Y != Z));
 			
-			template<int Component>
+			template <int Component>
 			using get_component = std::integral_constant<int, (X == Component) ? 0 : (Y == Component) ? 1 : (Z == Component) ? 2 : -1>;
 			
 			enum : int
@@ -103,12 +103,12 @@ namespace asd
 			};
 		};
 		
-		template<int X, int Y, int Z, int W>
+		template <int X, int Y, int Z, int W>
 		struct SwizzleSequence<X, Y, Z, W>
 		{
 			static constexpr bool assignable = ((X != Y) && (X != Z) && (X != W) && (Y != Z) && (Y != W) && (Z != W));
 			
-			template<int Component>
+			template <int Component>
 			using get_component = std::integral_constant<int, (X == Component) ? 0 : (Y == Component) ? 1 : (Z == Component) ? 2 : (W == Component) ? 3 : -1>;
 			
 			enum : int
@@ -138,14 +138,22 @@ namespace asd
 			};
 		};
 		
-		template<typename T, int ... Mask>
+		template <typename T, int ... Mask>
 		using Swizzle = SwizzleVector<T, SwizzleSequence<Mask...>>;
 		
+		template<typename T, bool Aligned>
+		struct vector_impl;
+		
 		template<typename T>
-		struct alignas(sizeof(T) * 4) vector : aligned_alloc
+		struct alignas(sizeof(T) * 4) vector_impl<T, false>
 		{
-			using IntrinType = intrin_t<T, 4>;
 			using Intrin = Intrinsic<T, 4>;
+			using IntrinType = intrin_t<T, 4>;
+			
+			member_cast(v, array<T, 4>);
+			
+			vector_impl(IntrinType intrin) : v(IntrinData<T, 4>::cast(intrin)) {}
+			vector_impl(T x, T y, T z, T w) : x(x), y(y), z(z), w(w) {}
 			
 			union
 			{
@@ -154,9 +162,8 @@ namespace asd
 					T x, y, z, w;
 				};
 				
-				IntrinType intrinsic;
-				
-				array<T, 4> v;
+				std::array<T, 4> v;
+				IntrinData<T, 4> data;
 				T elements[4];
 				
 				Swizzle<T, 0, 1, 2> xyz;
@@ -167,85 +174,168 @@ namespace asd
 				Swizzle<T, 2, 1, 0> zyx;
 			};
 			
+			operator IntrinType() const {
+				return Intrin::load(x, y, z, w);
+			}
+		};
+		
+		template<typename T>
+		struct alignas(sizeof(T) * 4) vector_impl<T, true>
+		{
+			using Intrin = Intrinsic<T, 4>;
+			using IntrinType = intrin_t<T, 4>;
+			
 			member_cast(v, array<T, 4>);
-			member_cast(intrinsic, IntrinType);
 			
-			vector() : intrinsic(identity) {}
+			vector_impl(IntrinType intrin) : intrinsic(intrin) {}
+			vector_impl(T x, T y, T z, T w) : intrinsic(Intrin::load(x, y, z, w)) {}
 			
-			vector(const IntrinType & v) : intrinsic(v) {}
+			union
+			{
+				struct
+				{
+					T x, y, z, w;
+				};
+				
+				std::array<T, 4> v;
+				IntrinData<T, 4> data;
+				T elements[4];
+				IntrinType intrinsic;
+				
+				Swizzle<T, 0, 1, 2> xyz;
+				Swizzle<T, 0, 2, 1> xzy;
+				Swizzle<T, 1, 2, 0> yzx;
+				Swizzle<T, 1, 0, 2> yxz;
+				Swizzle<T, 2, 0, 1> zxy;
+				Swizzle<T, 2, 1, 0> zyx;
+			};
 			
-			vector(const vector & v) : intrinsic(v) {}
+			operator IntrinType() const {
+				return intrinsic;
+			}
+		};
+		
+		template<class T, bool numeric = std::is_arithmetic<T>::value>
+		struct vector_constants {};
+		
+		template <typename T, bool Aligned = false>
+		struct alignas(sizeof(T) * 4) vector : vector_impl<T, Aligned>, aligned_alloc
+		{
+			using intrin_type = intrin_t<T, 4>;
+			using methods = Intrinsic<T, 4>;
+			using return_type = vector<T, Aligned>;
+			using impl_type = vector_impl<T, Aligned>;
+			using constants = vector_constants<T>;
 			
-			vector(const vector & v, T a) : intrinsic(v) { w = a; }
+			vector() : vector(constants::identity) {}
 			
-			vector(const vector & v, T a, T b) : intrinsic(v) {
-				z = a;
-				w = b;
+			vector(const intrin_type & v) : impl_type(v) {}
+			
+			template<bool A>
+			vector(const vector<T, A> & v) : impl_type(v) {}
+			
+			template<bool A>
+			vector(const vector<T, A> & v, T a) : impl_type(v) { this->w = a; }
+			
+			template<bool A>
+			vector(const vector<T, A> & v, T a, T b) : impl_type(v) {
+				this->z = a;
+				this->w = b;
 			}
 			
-			vector(T a, const vector & v) : intrinsic(Intrin::template shuffle<3, 0, 1, 2>(v)) { x = a; }
+			template<bool A>
+			vector(T a, const vector<T, A> & v) : impl_type(methods::template shuffle<3, 0, 1, 2>(v)) { this->x = a; }
 			
-			vector(T a, T b, const vector & v) : intrinsic(Intrin::template shuffle<2, 3, 0, 1>(v)) {
-				x = a;
-				y = b;
+			template<bool A>
+			vector(T a, T b, const vector<T, A> & v) : impl_type(methods::template shuffle<2, 3, 0, 1>(v)) {
+				this->x = a;
+				this->y = b;
 			}
 			
-			vector(T a, const vector & v, T b) : intrinsic(Intrin::template shuffle<3, 0, 1, 2>(v)) {
-				x = a;
-				w = b;
+			template<bool A>
+			vector(T a, const vector<T, A> & v, T b) : impl_type(methods::template shuffle<3, 0, 1, 2>(v)) {
+				this->x = a;
+				this->w = b;
 			}
 			
-			template<class U, useif<!is_same<T, U>::value>>
-			vector(const vector<U> & v) : intrinsic(intrin_cvt<IntrinType>(v.intrinsic)) {}
+			template <class U, bool A, useif<!is_same<T, U>::value>>
+			vector(const vector<U, A> & v) : impl_type(intrin_cvt<intrin_type>(v)) {}
 			
-			template<class U, useif<!is_same<T, U>::value>>
-			vector(const vector<U> & v, T a)      : intrinsic(intrin_cvt<IntrinType>(v.intrinsic)) { w = a; }
+			template <class U, bool A, useif<!is_same<T, U>::value>>
+			vector(const vector<U, A> & v, T a)      : impl_type(intrin_cvt<intrin_type>(v)) { this->w = a; }
 			
-			template<class U, useif<!is_same<T, U>::value>>
-			vector(const vector<U> & v, T a, T b) : intrinsic(intrin_cvt<IntrinType>(v.intrinsic)) {
-				z = a;
-				w = b;
+			template <class U, bool A, useif<!is_same<T, U>::value>>
+			vector(const vector<U, A> & v, T a, T b) : impl_type(intrin_cvt<intrin_type>(v)) {
+				this->z = a;
+				this->w = b;
 			}
 			
-			template<class U, useif<!is_same<T, U>::value>>
-			vector(T a, const vector<U> & v)      : intrinsic(intrin_cvt<IntrinType>(Intrin::template shuffle<3, 0, 1, 2>(v))) { x = a; }
+			template <class U, bool A, useif<!is_same<T, U>::value>>
+			vector(T a, const vector<U, A> & v)      : impl_type(intrin_cvt<intrin_type>(methods::template shuffle<3, 0, 1, 2>(v))) { this->x = a; }
 			
-			template<class U, useif<!is_same<T, U>::value>>
-			vector(T a, T b, const vector<U> & v) : intrinsic(intrin_cvt<IntrinType>(Intrin::template shuffle<2, 3, 0, 1>(v))) {
-				x = a;
-				y = b;
+			template <class U, bool A, useif<!is_same<T, U>::value>>
+			vector(T a, T b, const vector<U, A> & v) : impl_type(intrin_cvt<intrin_type>(methods::template shuffle<2, 3, 0, 1>(v))) {
+				this->x = a;
+				this->y = b;
 			}
 			
-			template<class U, useif<!is_same<T, U>::value>>
-			vector(T a, const vector<U> & v, T b) : intrinsic(intrin_cvt<IntrinType>(Intrin::template shuffle<3, 0, 1, 2>(v))) {
-				x = a;
-				w = b;
+			template <class U, bool A, useif<!is_same<T, U>::value>>
+			vector(T a, const vector<U, A> & v, T b) : impl_type(intrin_cvt<intrin_type>(methods::template shuffle<3, 0, 1, 2>(v))) {
+				this->x = a;
+				this->w = b;
 			}
 			
-			template<class U, useif<can_cast<U, vector>::value>>
-			vector(const U & v) {
+			template <class U, useif<can_cast<U, vector>::value>>
+			vector(const U & v) : vector(constants::identity) {
 				cast::to(*this, v);
 			}
 			
-			vector(const T * v) {
-				memory<T>::move(this->v, v);
-			}
+			vector(const T * v) : vector(methods::load(v)) {}
 			
-			vector(T value) : intrinsic(Intrin::fill(value)) {}
+			vector(T value) : impl_type({value, value, value, value}) {}
 			
-			vector(T x, T y, T z = 0, T w = 0) : intrinsic(Intrin::load(x, y, z, w)) {}
+			vector(T x, T y, T z = 0, T w = 0) : impl_type(x, y, z, w) {}
 			
-			vector & operator =(const vector & v) {
-				intrinsic = v;
+			template<bool A = Aligned, useif<A>>
+			vector & operator =(const vector & vec) {
+				this->intrinsic = vec.intrinsic;
 				return *this;
 			}
 			
-			vector & operator =(const IntrinType & v) {
-				intrinsic = v;
+			template<bool A = Aligned, skipif<A>>
+			vector & operator =(const vector & vec) {
+				this->v = vec.v;
 				return *this;
 			}
 			
-			template<class U, useif<can_cast<U, vector>::value>>
+			template<bool A = Aligned, useif<A>>
+			vector & operator =(const vector<T, !A> & vec) {
+				this->intrinsic = vec;
+				return *this;
+			}
+			
+			template<bool A = Aligned, skipif<A>>
+			vector & operator =(const vector<T, !A> & vec) {
+				this->x = vec.x;
+				this->y = vec.y;
+				this->z = vec.z;
+				this->w = vec.w;
+				return *this;
+			}
+			
+			template<bool A = Aligned, useif<A>>
+			vector & operator =(const intrin_type & intrin) {
+				this->intrinsic = intrin;
+				return *this;
+			}
+			
+			template<bool A = Aligned, skipif<A>>
+			vector & operator =(const intrin_type & intrin) {
+				this->data = intrin;
+				return *this;
+			}
+			
+			template <class U, useif<can_cast<U, vector>::value>>
 			vector & operator =(const U & v) {
 				cast::to(*this, v);
 				return *this;
@@ -257,470 +347,464 @@ namespace asd
 			}
 			
 			vector & set(T x, T y, T z, T w) {
-				intrinsic = Intrin::load(x, y, z, w);
+				this->x = x, this->y = y, this->z = z, this->w = w;
 				return *this;
 			}
 			
 			vector & fill(T value) {
-				intrinsic = Intrin::fill(value);
+				return *this = methods::fill(value);
+			}
+			
+			return_type operator +() const {
 				return *this;
 			}
 			
-			vector operator +() const {
-				return intrinsic;
-			}
-			
-			vector operator -() const {
-				return Intrin::negate(intrinsic);
+			return_type operator -() const {
+				return methods::negate(*this);
 			}
 			
 			vector & abs() {
-				intrinsic = Intrin::abs(intrinsic);
-				return *this;
+				return *this = methods::abs(*this);
 			}
 			
 			vector & round() {
-				intrinsic = Intrin::round(intrinsic);
-				return *this;
+				return *this = methods::round(*this);
 			}
 			
 			vector & floor() {
-				intrinsic = Intrin::floor(intrinsic);
-				return *this;
+				return *this = methods::floor(*this);
 			}
 			
 			vector & invert() {
-				intrinsic = Intrin::invert(intrinsic);
-				return *this;
+				return *this = methods::invert(*this);
 			}
 			
-			vector inverse() const {
-				return Intrin::invert(intrinsic);
+			return_type inverse() const {
+				return methods::invert(*this);
 			}
 			
-			void getRounded(vector & vec) const {
-				vec.intrinsic = Intrin::round(intrinsic);
+			void rounded(vector & vec) const {
+				vec = methods::round(*this);
 			}
 			
-			void getInverse(vector & vec) const {
-				vec.intrinsic = Intrin::invert(intrinsic);
+			void inversed(vector & vec) const {
+				vec = methods::invert(*this);
 			}
 			
 			vector & operator +=(const vector & v) {
-				intrinsic = Intrin::add(intrinsic, v);
-				return *this;
+				return *this = methods::add(*this, v);
 			}
 			
 			vector & operator -=(const vector & v) {
-				intrinsic = Intrin::sub(intrinsic, v);
-				return *this;
+				return *this = methods::sub(*this, v);
 			}
 			
 			vector & operator *=(const vector & v) {
-				intrinsic = Intrin::mul(intrinsic, v);
-				return *this;
+				return *this = methods::mul(*this, v);
 			}
 			
 			vector & operator /=(const vector & v) {
-				intrinsic = Intrin::div(intrinsic, v);
-				return *this;
+				return *this = methods::div(*this, v);
 			}
 			
 			vector & operator +=(T value) {
-				intrinsic = Intrin::add(intrinsic, Intrin::fill(value));
+				*this = methods::add(*this, methods::fill(value));
 				return *this;
 			}
 			
 			vector & operator -=(T value) {
-				intrinsic = Intrin::sub(intrinsic, Intrin::fill(value));
+				*this = methods::sub(*this, methods::fill(value));
 				return *this;
 			}
 			
 			vector & operator *=(T k) {
-				intrinsic = Intrin::mul(intrinsic, Intrin::fill(k));
+				*this = methods::mul(*this, methods::fill(k));
 				return *this;
 			}
 			
 			vector & operator /=(T k) {
-				if(k == 0) {
-					return *this = math::constants < vector < T >> ::infinity;
+				if (k == 0) {
+					return *this = math::constants<vector<T >>::infinity;
 				}
 				
-				intrinsic = Intrin::div(intrinsic, Intrin::fill(k));
+				*this = methods::div(*this, methods::fill(k));
 				return *this;
 			}
 			
-			vector operator &(const vector & v) const {
-				return Intrin::bit_and(intrinsic, v);
+			return_type operator &(const vector & v) const {
+				return methods::bit_and(*this, v);
 			}
 			
-			vector operator |(const vector & v) const {
-				return Intrin::bit_or(intrinsic, v);
+			return_type operator |(const vector & v) const {
+				return methods::bit_or(*this, v);
 			}
 			
-			vector operator ^(const vector & v) const {
-				return Intrin::bit_xor(intrinsic, v);
+			return_type operator ^(const vector & v) const {
+				return methods::bit_xor(*this, v);
 			}
 			
-			template<class U = T, useif<std::is_integral<U>::value>>
-			vector operator >>(const vector & v) const {
-				return Intrin::bit_shr(intrinsic, v);
+			template <class U = T, useif<std::is_integral<U>::value>>
+			return_type operator >>(const vector & v) const {
+				return methods::bit_shr(*this, v);
 			}
 			
-			template<class U = T, useif<std::is_integral<U>::value>>
-			vector operator <<(const vector & v) const {
-				return Intrin::bit_shl(intrinsic, v);
+			template <class U = T, useif<std::is_integral<U>::value>>
+			return_type operator <<(const vector & v) const {
+				return methods::bit_shl(*this, v);
 			}
 			
-			vector bit_and(const vector & v) const {
-				return Intrin::bit_and(intrinsic, v);
+			return_type bit_and(const vector & v) const {
+				return methods::bit_and(*this, v);
 			}
 			
-			vector bit_or(const vector & v) const {
-				return Intrin::bit_or(intrinsic, v);
+			return_type bit_or(const vector & v) const {
+				return methods::bit_or(*this, v);
 			}
 			
-			vector bit_xor(const vector & v) const {
-				return Intrin::bit_xor(intrinsic, v);
+			return_type bit_xor(const vector & v) const {
+				return methods::bit_xor(*this, v);
 			}
 			
-			template<class U = T, useif<std::is_integral<U>::value>>
-			vector shift(const vector & v) const {
-				return Intrin::bit_shr(intrinsic, v);
+			template <class U = T, useif<std::is_integral<U>::value>>
+			return_type shift(const vector & v) const {
+				return methods::bit_shr(*this, v);
 			}
 			
-			template<class U = T, useif<std::is_integral<U>::value>>
-			vector unshift(const vector & v) const {
-				return Intrin::bit_shl(intrinsic, v);
+			template <class U = T, useif<std::is_integral<U>::value>>
+			return_type unshift(const vector & v) const {
+				return methods::bit_shl(*this, v);
 			}
 			
-			template<int I, class U = T, useif<std::is_integral<U>::value>>
-			vector shift() const /* >> */
+			template <int I, class U = T, useif<std::is_integral<U>::value>>
+			return_type shift() const /* >> */
 			{
-				return Intrin::template bit_shr<I>(intrinsic);
+				return methods::template bit_shr<I>(*this);
 			}
 			
-			template<int I, class U = T, useif<std::is_integral<U>::value>>
-			vector unshift() const /* << */
+			template <int I, class U = T, useif<std::is_integral<U>::value>>
+			return_type unshift() const /* << */
 			{
-				return Intrin::template bit_shl<I>(intrinsic);
+				return methods::template bit_shl<I>(*this);
 			}
 			
-			vector dot(const vector & v) const {
-				return Intrin::fillsum(*this * v);
+			return_type dot(const vector & v) const {
+				return methods::fill_sum(*this * v);
 			}
 			
 			T dot1(const vector & v) const {
-				return Intrin::sum(*this * v);
+				return methods::sum(*this * v);
 			}
 			
-			vector cross(const vector & v) const {
+			return_type cross(const vector & v) const {
 				return
 					shuffle<1, 2, 0, 3>() * v.template shuffle<2, 0, 1, 3>() -
 						shuffle<2, 0, 1, 3>() * v.template shuffle<1, 2, 0, 3>();
 			}
 			
 			bool operator ==(const vector & v) const {
-				return Intrin::equal(intrinsic, v);
+				return methods::equal(*this, v);
 			}
 			
 			bool operator !=(const vector & v) const {
-				return Intrin::notequal(intrinsic, v);
+				return methods::notequal(*this, v);
 			}
 			
 			T & operator [](size_t index) {
-				return v[index];
+				return this->v[index];
 			}
 			
 			const T & operator [](size_t index) const {
-				return v[index];
+				return this->v[index];
 			}
 			
 			T & operator [](int index) {
-				return v[index];
+				return this->v[index];
 			}
 			
 			const T & operator [](int index) const {
-				return v[index];
+				return this->v[index];
 			}
 			
 			T magnitudeSq() const {
-				return dot1(intrinsic);
+				return dot1(*this);
 			}
 			
-			vector magnitudeSqVector() const {
-				return dot(intrinsic);
+			return_type magnitudeSqVector() const {
+				return dot(*this);
 			}
 			
 			T magnitude() const {
 				return std::sqrt(magnitudeSq());
 			}
 			
-			vector magnitudeVector() const {
-				return Intrin::sqrt(magnitudeSqVector());
+			return_type magnitudeVector() const {
+				return methods::sqrt(magnitudeSqVector());
 			}
 			
 			vector & normalize() & {
-				intrinsic = Intrin::div(intrinsic, magnitudeVector());
-				return *this;
+				return *this = methods::div(*this, magnitudeVector());
 			}
 			
 			vector && normalize() && {
-				intrinsic = Intrin::div(intrinsic, magnitudeVector());
-				return std::forward<vector>(*this);
+				return std::forward<vector>(*this = methods::div(*this, magnitudeVector()));
 			}
 			
-			vector normalized() const {
-				return Intrin::div(intrinsic, Intrin::fill(magnitude()));
+			return_type normalized() const {
+				return methods::div(*this, methods::fill(magnitude()));
 			}
 			
 			inline T max() const {
-				vector v = Intrin::abs(intrinsic);
+				return_type v = methods::abs(*this);
 				return std::max({v.x, v.y, v.z});
 			}
 			
-			inline vector abs() const {
-				return Intrin::abs(intrinsic);
+			inline return_type abs() const {
+				return methods::abs(*this);
 			}
 			
-			inline vector sqr() const {
-				return Intrin::sqr(intrinsic);
+			inline return_type sqr() const {
+				return methods::sqr(*this);
 			}
 			
 			inline T sum() const {
-				return Intrin::sum(intrinsic);
+				return methods::sum(*this);
 			}
 			
-			inline vector fillsum() const {
-				return Intrin::fillsum(intrinsic);
+			inline return_type fill_sum() const {
+				return methods::fill_sum(*this);
 			}
 			
-			inline T distanceToSq(const vector & p) const {
-				return Intrin::sum(Intrin::sqr(Intrin::sub(intrinsic, p)));
+			inline T square_distance_to(const vector & p) const {
+				return methods::sum(methods::sqr(methods::sub(*this, p)));
 			}
 			
-			inline auto distanceTo(const vector & p) const {
-				return std::sqrt(distanceToSq(p));
+			inline auto distance_to(const vector & p) const {
+				return std::sqrt(square_distance_to(p));
 			}
 			
-			inline T distanceToAxis(const vector & p, int axis) const {
-				return std::abs(v[axis] - p[axis]);
+			inline T distance_to_axis(const vector & p, int axis) const {
+				return std::abs(this->v[axis] - p[axis]);
 			}
 			
-			inline int getMainAxis() const {
-				return x >= y ? 0 : y >= z ? 1 : 2;
+			inline int get_main_axis() const {
+				return this->x >= this->y ? 0 : this->y >= this->z ? 1 : 2;
 			}
 			
-			template<byte X, byte Y, byte Z, byte W, useif<(X < 2 && Y < 2 && Z < 2 && W < 2)>>
-			vector mask() const // select some components (e.g. if X == 1 then result.x = v.x else result.x = 0)
+			template <byte X, byte Y, byte Z, byte W, useif<(X < 2 && Y < 2 && Z < 2 && W < 2)>>
+			return_type mask() const // select some components (e.g. if X == 1 then result.x = v.x else result.x = 0)
 			{
-				return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(X, Y, Z, W)>::get(), intrinsic);
+				return methods::bit_and(VectorMaskAxis<T, mk_mask4(X, Y, Z, W)>::get(), *this);
 			}
 			
-			template<uint Axis, useif<(Axis < 4)>>
-			vector maskAxis() const // set all components of a array_list to zero except of one
+			template <uint Axis, useif<(Axis < 4)>>
+			return_type mask_axis() const // set all components of a array_list to zero except of one
 			{
-				return Intrin::bit_and(VectorMaskAxis<T, bitmask<Axis>::value>::get(), intrinsic);
+				return methods::bit_and(VectorMaskAxis<T, bitmask<Axis>::value>::get(), *this);
 			}
 			
-			vector maskX() const {
-				return maskAxis<0>();
+			vector mask_x() const {
+				return mask_axis<0>();
 			}
 			
-			vector maskY() const {
-				return maskAxis<1>();
+			return_type mask_y() const {
+				return mask_axis<1>();
 			}
 			
-			vector maskZ() const {
-				return maskAxis<2>();
+			return_type mask_z() const {
+				return mask_axis<2>();
 			}
 			
-			vector maskW() const {
-				return maskAxis<3>();
+			return_type mask_w() const {
+				return mask_axis<3>();
 			}
 			
-			template<uint Axis, useif<(Axis < 4)>>
-			vector clearAxis() const // set a single component to zero
+			template <uint Axis, useif<(Axis < 4)>>
+			return_type clear_axis() const // set a single component to zero
 			{
-				return Intrin::bit_and(VectorMaskAxis<T, 0xF ^ bitmask<Axis>::value>::get(), intrinsic);
+				return methods::bit_and(VectorMaskAxis<T, 0xF ^ bitmask<Axis>::value>::get(), *this);
 			}
 			
-			vector clearX() const {
-				return clearAxis<0>();
+			return_type clear_x() const {
+				return clear_axis<0>();
 			}
 			
-			vector clearY() const {
-				return clearAxis<1>();
+			return_type clear_y() const {
+				return clear_axis<1>();
 			}
 			
-			vector clearZ() const {
-				return clearAxis<2>();
+			return_type clear_z() const {
+				return clear_axis<2>();
 			}
 			
-			vector clearW() const {
-				return clearAxis<3>();
+			return_type clear_w() const {
+				return clear_axis<3>();
 			}
 			
-			template<byte X, byte Y, byte Z, byte W, useif<(X < 2 && Y < 2 && Z < 2 && W < 2)>>
-			vector negate() const // negate some components (e.g. if X == 1 then result.x = -v.x else result.x = v.x)
+			template <byte X, byte Y, byte Z, byte W, useif<(X < 2 && Y < 2 && Z < 2 && W < 2)>>
+			return_type negate() const // negate some components (e.g. if X == 1 then result.x = -v.x else result.x = v.x)
 			{
-				return Intrin::bit_xor(VectorSignAxis<T, mk_mask4(X, Y, Z, W)>::get(), intrinsic);
+				return methods::bit_xor(VectorSignAxis<T, mk_mask4(X, Y, Z, W)>::get(), *this);
 			}
 			
-			template<uint Axis, useif<(Axis < 4)>>
-			vector negateAxis() const // negate one component
+			template <uint Axis, useif<(Axis < 4)>>
+			return_type negate_axis() const // negate one component
 			{
-				return Intrin::bit_xor(VectorSignAxis<T, bitmask<Axis>::value>::get(), intrinsic);
+				return methods::bit_xor(VectorSignAxis<T, bitmask<Axis>::value>::get(), *this);
 			}
 			
-			vector negateX() const {
-				return negateAxis<0>();
+			return_type negate_x() const {
+				return negate_axis<0>();
 			}
 			
-			vector negateY() const {
-				return negateAxis<1>();
+			return_type negate_y() const {
+				return negate_axis<1>();
 			}
 			
-			vector negateZ() const {
-				return negateAxis<2>();
+			return_type negate_z() const {
+				return negate_axis<2>();
 			}
 			
-			vector negateW() const {
-				return negateAxis<3>();
+			return_type negate_w() const {
+				return negate_axis<3>();
 			}
 			
-			template<uint Axis, useif<(Axis < 4)>>
-			vector spreadAxis() const // get a array_list filled with a single component of a src array_list
+			template <uint Axis, useif<(Axis < 4)>>
+			return_type spread_axis() const // get a array_list filled with a single component of a src array_list
 			{
 				return shuffle<Axis, Axis, Axis, Axis>();
 			}
 			
-			vector spreadX() const {
-				return spreadAxis<0>();
+			return_type spread_x() const {
+				return spread_axis<0>();
 			}
 			
-			vector spreadY() const {
-				return spreadAxis<1>();
+			return_type spread_y() const {
+				return spread_axis<1>();
 			}
 			
-			vector spreadZ() const {
-				return spreadAxis<2>();
+			return_type spread_z() const {
+				return spread_axis<2>();
 			}
 			
-			vector spreadW() const {
-				return spreadAxis<3>();
+			return_type spread_w() const {
+				return spread_axis<3>();
 			}
 			
-			template<uint Axis, useif<(Axis < 4)>>
-			vector & addAxis(const vector & vec) {
-				v += vec.maskAxis<Axis>();
+			template <uint Axis, useif<(Axis < 4)>>
+			vector & add_axis(const vector & vec) {
+				this->v[Axis] += vec.mask_axis<Axis>();
 				return *this;
 			}
 			
-			template<uint Axis, useif<(Axis < 4)>>
-			vector & subtractAxis(const vector & vec) {
-				v -= vec.maskAxis<Axis>();
+			template <uint Axis, useif<(Axis < 4)>>
+			vector & subtract_axis(const vector & vec) {
+				this->v[Axis] -= vec.mask_axis<Axis>();
 				return *this;
 			}
 			
-			vector & addAxis(const vector & vec, int Axis) {
-				v[Axis] += vec[Axis];
+			template <uint Axis, useif<(Axis < 4)>>
+			vector & add_axis(T val) {
+				this->v[Axis] += val;
 				return *this;
 			}
 			
-			vector & subtractAxis(const vector & vec, int Axis) {
-				v[Axis] -= vec[Axis];
+			template <uint Axis, useif<(Axis < 4)>>
+			vector & subtract_axis(T val) {
+				this->v[Axis] -= val;
 				return *this;
 			}
 			
-			vector & addAxis(T val, int Axis) {
-				v[Axis] += val;
+			vector & add_axis(const vector & vec, int Axis) {
+				this->v[Axis] += vec[Axis];
 				return *this;
 			}
 			
-			vector & subtractAxis(T val, int Axis) {
-				v[Axis] -= val;
+			vector & subtract_axis(const vector & vec, int Axis) {
+				this->v[Axis] -= vec[Axis];
 				return *this;
 			}
 			
-			template<uint Axis, useif<(Axis < 4)>>
-			vector & addAxis(T val) {
-				v[Axis] += val;
+			vector & add_axis(T val, int Axis) {
+				this->v[Axis] += val;
 				return *this;
 			}
 			
-			template<uint Axis, useif<(Axis < 4)>>
-			vector & subtractAxis(T val) {
-				v[Axis] -= val;
+			vector & subtract_axis(T val, int Axis) {
+				this->v[Axis] -= val;
 				return *this;
 			}
 			
-			vector clamp(T low, T high) {
+			return_type clamp(T low, T high) {
 				return clamp(vector(low), vector(high));
 			}
 			
-			vector clamp(const vector & low, const vector & high) const {
-				return Intrin::min(Intrin::max(intrinsic, low), high);
+			return_type clamp(const vector & low, const vector & high) const {
+				return methods::min(methods::max(*this, low), high);
 			}
 			
-			template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
-			vector shuffle() const {
-				return Intrin::template shuffle<A, B, C, D>(intrinsic);
+			template <byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
+			return_type shuffle() const {
+				return methods::template shuffle<A, B, C, D>(*this);
 			}
 			
-			template<byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
-			vector shuffle(const vector & v) const {
-				return Intrin::template shuffle2<A, B, C, D>(intrinsic, v);
+			template <byte A, byte B, byte C, byte D, useif<(A < 4 && B < 4 && C < 4 && D < 4)>>
+			return_type shuffle(const vector & v) const {
+				return methods::template shuffle2<A, B, C, D>(*this, v);
 			}
 			
-			template<byte A, byte B, byte C, byte D, useif<(A < 2 && B < 2 && C < 2 && D < 2)>>
-			vector blend(const vector & v) const {
-				return Intrin::template blend<A, B, C, D>(intrinsic, v);
+			template <byte A, byte B, byte C, byte D, useif<(A < 2 && B < 2 && C < 2 && D < 2)>>
+			return_type blend(const vector & v) const {
+				return methods::template blend<A, B, C, D>(*this, v);
 			}
 			
 			//---------------------------------------------------------------------------
 			
-			static vector minimum(const vector & v1, const vector & v2) {
-				return Intrin::min(v1, v2);
+			static return_type minimum(const vector & v1, const vector & v2) {
+				return methods::min(v1, v2);
 			}
 			
-			static vector maximum(const vector & v1, const vector & v2) {
-				return Intrin::max(v1, v2);
+			static return_type maximum(const vector & v1, const vector & v2) {
+				return methods::max(v1, v2);
 			}
 			
 			static int compare(const vector & v1, const vector & v2) {
-				return static_cast<int>(Intrin::sum(Intrin::sub(v1, v2)));
+				return static_cast<int>(methods::sum(methods::sub(v1, v2)));
 			}
 			
-			static api(math) const vector zero;            // [  0,  0,  0,  0 ]
-			static api(math) const vector one;            // [  1,  1,  1,  1 ]
-			static api(math) const vector two;            // [  2,  2,  2,  2 ]
-			static api(math) const vector oneXYZ;        // [  1,  1,  1,  0 ]
-			static api(math) const vector twoXYZ;        // [  2,  2,  2,  0 ]
-			static api(math) const vector minusOne;        // [ -1, -1, -1, -1 ]
-			static api(math) const vector half;            // [ .5, .5, .5, .5 ]
-			
-			static api(math) const vector positiveX;    // [  1,  0,  0,  0 ]
-			static api(math) const vector positiveY;    // [  0,  1,  0,  0 ]
-			static api(math) const vector positiveZ;    // [  0,  0,  1,  0 ]
-			static api(math) const vector positiveW;    // [  0,  0,  0,  1 ]
-			static api(math) const vector negativeX;    // [ -1,  0,  0,  0 ]
-			static api(math) const vector negativeY;    // [  0, -1,  0,  0 ]
-			static api(math) const vector negativeZ;    // [  0,  0, -1,  0 ]
-			static api(math) const vector negativeW;    // [  0,  0,  0, -1 ]
-			
-			static api(math) const vector & right;
-			static api(math) const vector & up;
-			static api(math) const vector & forward;
-			
-			static api(math) const vector & left;
-			static api(math) const vector & down;
-			static api(math) const vector & back;
-			
-			static api(math) const vector & identity;
 		};
 		
-		template<typename T, int ... Mask>
+		template<class T>
+		struct vector_constants<T, true>
+		{
+			static api(math) const vector<T> zero;         // [  0,  0,  0,  0 ]
+			static api(math) const vector<T> one;          // [  1,  1,  1,  1 ]
+			static api(math) const vector<T> two;          // [  2,  2,  2,  2 ]
+			static api(math) const vector<T> oneXYZ;       // [  1,  1,  1,  0 ]
+			static api(math) const vector<T> twoXYZ;       // [  2,  2,  2,  0 ]
+			static api(math) const vector<T> minusOne;     // [ -1, -1, -1, -1 ]
+			static api(math) const vector<T> half;         // [ .5, .5, .5, .5 ]
+			
+			static api(math) const vector<T> positiveX;    // [  1,  0,  0,  0 ]
+			static api(math) const vector<T> positiveY;    // [  0,  1,  0,  0 ]
+			static api(math) const vector<T> positiveZ;    // [  0,  0,  1,  0 ]
+			static api(math) const vector<T> positiveW;    // [  0,  0,  0,  1 ]
+			static api(math) const vector<T> negativeX;    // [ -1,  0,  0,  0 ]
+			static api(math) const vector<T> negativeY;    // [  0, -1,  0,  0 ]
+			static api(math) const vector<T> negativeZ;    // [  0,  0, -1,  0 ]
+			static api(math) const vector<T> negativeW;    // [  0,  0,  0, -1 ]
+			
+			static api(math) const vector<T> & right;
+			static api(math) const vector<T> & up;
+			static api(math) const vector<T> & forward;
+			
+			static api(math) const vector<T> & left;
+			static api(math) const vector<T> & down;
+			static api(math) const vector<T> & back;
+			
+			static api(math) const vector<T> & identity;
+		};
+		
+		template <typename T, int ... Mask>
 		struct SwizzleVector<T, SwizzleSequence<Mask...>, true>
 		{
 			using IntrinType = intrin_t<T, 4>;
@@ -728,45 +812,45 @@ namespace asd
 			using S = SwizzleSequence<Mask...>;
 			
 			SwizzleVector & operator =(const vector<T> & v) {
-				intrinsic = Intrin::template blend<S::BX, S::BY, S::BZ, S::BW>(intrinsic, v.template shuffle<S::AX, S::AY, S::AZ, S::AW>());
+				*this = Intrin::template blend<S::BX, S::BY, S::BZ, S::BW>(*this, v.template shuffle<S::AX, S::AY, S::AZ, S::AW>());
 				return *this;
 			}
 			
-			template<class U, useif<not_same_type<U, T>::value>>
+			template <class U, useif<not_same_type<U, T>::value>>
 			operator vector<U>() const {
-				return vector<T>(Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(intrinsic)));
+				return vector<T>(Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(*this)));
 			}
 			
 			operator vector<T>() const {
-				return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(intrinsic));
+				return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(*this));
 			}
 			
 			operator IntrinType() const {
-				return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(intrinsic));
+				return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(*this));
 			}
 		
 		protected:
 			IntrinType intrinsic;
 		};
 		
-		template<typename T, int ... Mask>
+		template <typename T, int ... Mask>
 		struct SwizzleVector<T, SwizzleSequence<Mask...>, false>
 		{
 			using IntrinType = intrin_t<T, 4>;
 			using Intrin = Intrinsic<T, 4>;
 			using S = SwizzleSequence<Mask...>;
 			
-			template<class U, useif<not_same_type<U, T>::value>>
+			template <class U, useif<not_same_type<U, T>::value>>
 			operator vector<U>() const {
-				return vector<T>(Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(intrinsic)));
+				return vector<T>(Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(*this)));
 			}
 			
 			operator vector<T>() const {
-				return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(intrinsic));
+				return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(*this));
 			}
 			
 			operator IntrinType() const {
-				return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(intrinsic));
+				return Intrin::bit_and(VectorMaskAxis<T, mk_mask4(S::MX, S::MX, S::MX, S::MX)>::get(), Intrin::template shuffle<S::SX, S::SY, S::SZ, S::SW>(*this));
 			}
 		
 		protected:
@@ -783,114 +867,113 @@ namespace asd
 		using intv = int_vector;
 		using floatv = float_vector;
 		
-		template<class T>
-		using aligned_vector = aligned<vector<T>>;
+		using bvec = vector<byte>;
+		using ivec = vector<int>;
+		using fvec = vector<float>;
 		
-		using bvec = aligned_vector<byte>;
-		using ivec = aligned_vector<int>;
-		using fvec = aligned_vector<float>;
+		using xmm_vec = vector<float, true>;
 
 #ifdef USE_AVX
 		using DoubleVector = vector<double>;
 		using doublev = DoubleVector;
-		using dvec = aligned_vector<double>;
+		using dvec = vector<double>;
 #endif
 
 //---------------------------------------------------------------------------
 		
-		template<class T>
-		inline vector<T> abs(const vector<T> & x) {
+		template <class T, bool A>
+		inline vector<T> abs(const vector<T, A> & x) {
 			using Intrin = Intrinsic<T, 4>;
 			
 			return Intrin::abs(x);
 		}
 		
-		template<class T>
-		inline vector<T> sqr(const vector<T> & x) {
+		template <class T, bool A>
+		inline vector<T> sqr(const vector<T, A> & x) {
 			using Intrin = Intrinsic<T, 4>;
 			
 			return Intrin::sqr(x);
 		}
 		
-		template<class T>
-		inline vector<T> sqrt(const vector<T> & x) {
+		template <class T, bool A>
+		inline vector<T> sqrt(const vector<T, A> & x) {
 			using Intrin = Intrinsic<T, 4>;
 			
 			return Intrin::sqrt(x);
 		}
 		
-		template<class T>
-		inline vector<T> mod(const vector<T> & x, const vector<T> & y) {
+		template <class T, bool A1, bool A2>
+		inline vector<T> mod(const vector<T, A1> & x, const vector<T, A2> & y) {
 			using Intrin = Intrinsic<T, 4>;
 			
 			return Intrin::mod(x, y);
 		}
 		
-		template<class T>
-		inline vector<T> avg(const vector<T> & x, const vector<T> & y) {
+		template <class T, bool A1, bool A2>
+		inline vector<T> avg(const vector<T, A1> & x, const vector<T, A2> & y) {
 			return vector<T>::half * (x + y);
 		}
 		
-		template<class T>
-		inline vector<T> clamp(const vector<T> & x, const vector<T> & low, const vector<T> & high) {
+		template <class T, bool A1, bool A2, bool A3>
+		inline vector<T> clamp(const vector<T, A1> & x, const vector<T, A2> & low, const vector<T, A3> & high) {
 			return x.clamp(low, high);
 		}
 		
-		template<class T>
-		inline vector<T> invert(const vector<T> & v) {
+		template <class T, bool A>
+		inline vector<T> invert(const vector<T, A> & v) {
 			using Intrin = Intrinsic<T, 4>;
 			
-			return Intrin::invert(v.intrinsic);
+			return Intrin::invert(v);
 		}
 		
-		template<class T>
-		inline vector<T> trunc(const vector<T> & v) {
+		template <class T, bool A>
+		inline vector<T> trunc(const vector<T, A> & v) {
 			using Intrin = Intrinsic<T, 4>;
 			
-			return Intrin::trunc(v.intrinsic);
+			return Intrin::trunc(v);
 		}
 		
-		template<class T>
-		inline vector<T> floor(const vector<T> & v) {
+		template <class T, bool A>
+		inline vector<T> floor(const vector<T, A> & v) {
 			using Intrin = Intrinsic<T, 4>;
 			
-			return Intrin::floor(v.intrinsic);
+			return Intrin::floor(v);
 		}
 		
-		template<class T>
-		inline vector<T> ceil(const vector<T> & v) {
+		template <class T, bool A>
+		inline vector<T> ceil(const vector<T, A> & v) {
 			using Intrin = Intrinsic<T, 4>;
 			
-			return Intrin::ceil(v.intrinsic);
+			return Intrin::ceil(v);
 		}
 		
-		template<class T>
-		inline vector<T> round(const vector<T> & v) {
+		template <class T, bool A>
+		inline vector<T, true> round(const vector<T, A> & v) {
 			using Intrin = Intrinsic<T, 4>;
 			
-			return Intrin::round(v.intrinsic);
+			return Intrin::round(v);
 		}
 		
-		template<class T, class Y>
+		template <class T, class Y>
 		inline vector<T> lerp(const vector<T> & a, const vector<T> & b, const Y & t) {
 			return a + (b - a) * static_cast<T>(t);
 		}
 		
-		template<class T>
+		template <class T>
 		inline vector<T> sin(const vector<T> & angle) {
 			vector<T> s;
 			sin(angle, s);
 			return s;
 		}
 		
-		template<class T>
+		template <class T>
 		inline vector<T> cos(const vector<T> & angle) {
 			vector<T> c;
 			cos(angle, c);
 			return c;
 		}
 		
-		template<class T>
+		template <class T>
 		inline void sin(const vector<T> & angle, vector<T> & s) {
 			using Intrin = Intrinsic<T, 4>;
 			
@@ -902,7 +985,7 @@ namespace asd
 			x = Intrin::sqr(s);
 			
 			s *=
-				vector<T>::one + x * (
+				vector_constants<T>::one + x * (
 					coefficients<vector<T>>::sin[0] + x * (
 						coefficients<vector<T>>::sin[1] + x * (
 							coefficients<vector<T>>::sin[2] + x * (
@@ -911,7 +994,7 @@ namespace asd
 								)))));
 		}
 		
-		template<class T>
+		template <class T>
 		inline void cos(const vector<T> & angle, vector<T> & c) {
 			using Intrin = Intrinsic<T, 4>;
 			
@@ -921,8 +1004,8 @@ namespace asd
 			
 			x = Intrin::sqr(Intrin::bit_or(Intrin::bit_and(comp, x), Intrin::bit_andnot(comp, Intrin::sub(Intrin::bit_or(constants<vector<T>>::pi, sign), x))));
 			
-			c = Intrin::bit_or(Intrin::bit_and(comp, vector<T>::one), Intrin::bit_andnot(comp, vector<T>::minusOne)) * (
-				vector<T>::one + x * (
+			c = Intrin::bit_or(Intrin::bit_and(comp, vector_constants<T>::one), Intrin::bit_andnot(comp, vector_constants<T>::minusOne)) * (
+				vector_constants<T>::one + x * (
 					coefficients<vector<T>>::cos[0] + x * (
 						coefficients<vector<T>>::cos[1] + x * (
 							coefficients<vector<T>>::cos[2] + x * (
@@ -931,8 +1014,8 @@ namespace asd
 								))))));
 		}
 		
-		template<class T>
-		inline void sincos(const vector<T> & angle, vector<T> & s, vector<T> & c) {
+		template <class T, bool A1, bool A2, bool A3>
+		inline void sincos(const vector<T, A1> & angle, vector<T, A2> & s, vector<T, A3> & c) {
 			using Intrin = Intrinsic<T, 4>;
 			
 			auto x = normalize_angle(angle);
@@ -943,7 +1026,7 @@ namespace asd
 			x = Intrin::sqr(s);
 			
 			s *=
-				vector<T>::one + x * (
+				vector_constants<T>::one + x * (
 					coefficients<vector<T>>::sin[0] + x * (
 						coefficients<vector<T>>::sin[1] + x * (
 							coefficients<vector<T>>::sin[2] + x * (
@@ -951,8 +1034,8 @@ namespace asd
 									coefficients<vector<T>>::sin[4]
 								)))));
 			
-			c = Intrin::bit_or(Intrin::bit_and(comp, vector<T>::one), Intrin::bit_andnot(comp, vector<T>::minusOne)) * (
-				vector<T>::one + x * (
+			c = Intrin::bit_or(Intrin::bit_and(comp, vector_constants<T>::one), Intrin::bit_andnot(comp, vector_constants<T>::minusOne)) * (
+				vector_constants<T>::one + x * (
 					coefficients<vector<T>>::cos[0] + x * (
 						coefficients<vector<T>>::cos[1] + x * (
 							coefficients<vector<T>>::cos[2] + x * (
@@ -961,8 +1044,14 @@ namespace asd
 								))))));
 		}
 		
+		// put an angle into [-pi; pi] range
+		template <class T, bool A>
+		inline vector<T, true> normalize_angle(const vector<T, A> & angle) {
+			return angle - round(angle * constants<vector<T>>::inv_pi2) * constants<vector<T>>::pi2;
+		}
+		
 		// returns [ sin(angle), cos(angle), -sin(angle), 0 ]
-		template<class T>
+		template <class T>
 		inline vector<T> trigon(T angle) {
 			return sin(vector<T>{angle, angle + constants<T>::half_pi, -angle, 0});
 		}
@@ -976,7 +1065,7 @@ namespace asd
 //---------------------------------------------------------------------------
 		
 		inline vector<float> vec() {
-			return vector<float>::zero;
+			return vector_constants<float>::zero;
 		}
 		
 		inline vector<float> vec(float x, float y, float z) {
@@ -1004,127 +1093,127 @@ namespace asd
 		}
 #endif
 		
-		template<typename T>
-		inline vector<T> operator +(const vector<T> & v1, const vector<T> & v2) {
+		template <typename T, bool A1, bool A2>
+		inline vector<T, true> operator +(const vector<T, A1> & v1, const vector<T, A2> & v2) {
 			return Intrinsic<T, 4>::add(v1, v2);
 		}
 		
-		template<typename T>
-		inline vector<T> operator -(const vector<T> & v1, const vector<T> & v2) {
+		template <typename T, bool A1, bool A2>
+		inline vector<T, true> operator -(const vector<T, A1> & v1, const vector<T, A2> & v2) {
 			return Intrinsic<T, 4>::sub(v1, v2);
 		}
 		
-		template<typename T>
-		inline vector<T> operator *(const vector<T> & v1, const vector<T> & v2) {
+		template <typename T, bool A1, bool A2>
+		inline vector<T, true> operator *(const vector<T, A1> & v1, const vector<T, A2> & v2) {
 			return Intrinsic<T, 4>::mul(v1, v2);
 		}
 		
-		template<typename T>
-		inline vector<T> operator /(const vector<T> & v1, const vector<T> & v2) {
+		template <typename T, bool A1, bool A2>
+		inline vector<T, true> operator /(const vector<T, A1> & v1, const vector<T, A2> & v2) {
 			return Intrinsic<T, 4>::div(v1, v2);
 		}
 		
-		template<typename T>
-		inline vector<T> operator +(const vector<T> & v1, const intrin_t<T, 4> & v2) {
+		template <typename T, bool A>
+		inline vector<T, true> operator +(const vector<T, A> & v1, const intrin_t<T, 4> & v2) {
 			return Intrinsic<T, 4>::add(v1, v2);
 		}
 		
-		template<typename T>
-		inline vector<T> operator -(const vector<T> & v1, const intrin_t<T, 4> & v2) {
+		template <typename T, bool A>
+		inline vector<T, true> operator -(const vector<T, A> & v1, const intrin_t<T, 4> & v2) {
 			return Intrinsic<T, 4>::sub(v1, v2);
 		}
 		
-		template<typename T>
-		inline vector<T> operator *(const vector<T> & v1, const intrin_t<T, 4> & v2) {
+		template <typename T, bool A>
+		inline vector<T, true> operator *(const vector<T, A> & v1, const intrin_t<T, 4> & v2) {
 			return Intrinsic<T, 4>::mul(v1, v2);
 		}
 		
-		template<typename T>
-		inline vector<T> operator /(const vector<T> & v1, const intrin_t<T, 4> & v2) {
+		template <typename T, bool A>
+		inline vector<T, true> operator /(const vector<T, A> & v1, const intrin_t<T, 4> & v2) {
 			return Intrinsic<T, 4>::div(v1, v2);
 		}
 		
-		template<typename T>
-		inline vector<T> operator +(const intrin_t<T, 4> & v1, const vector<T> & v2) {
+		template <typename T, bool A>
+		inline vector<T, true> operator +(const intrin_t<T, 4> & v1, const vector<T, A> & v2) {
 			return Intrinsic<T, 4>::add(v1, v2);
 		}
 		
-		template<typename T>
-		inline vector<T> operator -(const intrin_t<T, 4> & v1, const vector<T> & v2) {
+		template <typename T, bool A>
+		inline vector<T, true> operator -(const intrin_t<T, 4> & v1, const vector<T, A> & v2) {
 			return Intrinsic<T, 4>::sub(v1, v2);
 		}
 		
-		template<typename T>
-		inline vector<T> operator *(const intrin_t<T, 4> & v1, const vector<T> & v2) {
+		template <typename T, bool A>
+		inline vector<T, true> operator *(const intrin_t<T, 4> & v1, const vector<T, A> & v2) {
 			return Intrinsic<T, 4>::mul(v1, v2);
 		}
 		
-		template<typename T>
-		inline vector<T> operator /(const intrin_t<T, 4> & v1, const vector<T> & v2) {
+		template <typename T, bool A>
+		inline vector<T, true> operator /(const intrin_t<T, 4> & v1, const vector<T, A> & v2) {
 			return Intrinsic<T, 4>::div(v1, v2);
 		}
 		
-		template<typename T, typename U, useif<std::is_arithmetic<U>::value>>
-		inline vector<T> operator +(const vector<T> & vec, U a) {
+		template <typename T, bool A, typename U, useif<std::is_arithmetic<U>::value>>
+		inline vector<T, true> operator +(const vector<T, A> & vec, U a) {
 			return Intrinsic<T, 4>::add(vec, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 		}
 		
-		template<typename T, typename U, useif<std::is_arithmetic<U>::value>>
-		inline vector<T> operator -(const vector<T> & vec, U a) {
+		template <typename T, bool A, typename U, useif<std::is_arithmetic<U>::value>>
+		inline vector<T, true> operator -(const vector<T, A> & vec, U a) {
 			return Intrinsic<T, 4>::sub(vec, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 		}
 		
-		template<typename T, typename U, useif<std::is_arithmetic<U>::value>>
-		inline vector<T> operator *(const vector<T> & vec, U a) {
+		template <typename T, bool A, typename U, useif<std::is_arithmetic<U>::value>>
+		inline vector<T, true> operator *(const vector<T, A> & vec, U a) {
 			return Intrinsic<T, 4>::mul(vec, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 		}
 		
-		template<typename T, typename U, useif<std::is_arithmetic<U>::value>>
-		inline vector<T> operator /(const vector<T> & vec, U a) {
+		template <typename T, bool A, typename U, useif<std::is_arithmetic<U>::value>>
+		inline vector<T, true> operator /(const vector<T, A> & vec, U a) {
 			return Intrinsic<T, 4>::div(vec, Intrinsic<T, 4>::fill(static_cast<T>(a)));
 		}
 		
-		template<typename T, typename U, useif<std::is_arithmetic<U>::value>>
-		inline vector<T> operator *(U a, const vector<T> & vec) {
-			return Intrinsic<T, 4>::mul(Intrinsic<T, 4>::fill(static_cast<T>(a)), vec.intrinsic);
+		template <typename T, bool A, typename U, useif<std::is_arithmetic<U>::value>>
+		inline vector<T, true> operator *(U a, const vector<T, A> & vec) {
+			return Intrinsic<T, 4>::mul(Intrinsic<T, 4>::fill(static_cast<T>(a)), vec);
 		}
 		
-		template<typename T, typename U, useif<std::is_arithmetic<U>::value>>
-		inline vector<T> operator /(U a, const vector<T> & vec) {
-			return Intrinsic<T, 4>::div(Intrinsic<T, 4>::fill(static_cast<T>(a)), vec.intrinsic);
+		template <typename T, bool A, typename U, useif<std::is_arithmetic<U>::value>>
+		inline vector<T, true> operator /(U a, const vector<T, A> & vec) {
+			return Intrinsic<T, 4>::div(Intrinsic<T, 4>::fill(static_cast<T>(a)), vec);
 		}
 		
-		template<typename T>
-		inline T sum(const vector<T> & v) {
+		template <typename T, bool A>
+		inline T sum(const vector<T, A> & v) {
 			return v.sum();
 		}
 		
-		template<typename T>
-		inline T magnitude(const vector<T> & v) {
+		template <typename T, bool A>
+		inline T magnitude(const vector<T, A> & v) {
 			return v.magnitude();
 		}
 		
-		template<typename T>
-		inline T dot(const vector<T> & v1, const vector<T> & v2) {
+		template <typename T, bool A1, bool A2>
+		inline T dot(const vector<T, A1> & v1, const vector<T, A2> & v2) {
 			return v1.dot1(v2);
 		}
 		
-		template<typename T>
-		inline auto cross(const vector<T> & v1, const vector<T> & v2) {
+		template <typename T, bool A1, bool A2>
+		inline auto cross(const vector<T, A1> & v1, const vector<T, A2> & v2) {
 			return v1.cross(v2);
 		}
 		
-		template<typename T>
+		template <typename T>
 		inline auto mixedProduct(const vector<T> & a, const vector<T> & b, const vector<T> & c) {
 			return dot(a, cross(b, c));
 		}
 		
-		template<typename T>
+		template <typename T>
 		inline bool areCollinear(const vector<T> & a, const vector<T> & b, const vector<T> & c) {
 			return cross(b - a, c - a).magnitudeSq() < constants<T>::eps2;
 		}
 		
-		template<typename T>
+		template <typename T>
 		inline bool areComplanar(const vector<T> & a, const vector<T> & b, const vector<T> & c, const vector<T> & d) {
 			return abs(mixedProduct(b - a, c - a, d - a)) < constants<T>::eps3;
 		}
@@ -1141,12 +1230,12 @@ namespace asd
 	}
 #endif
 	
-	template<class T>
+	template <class T>
 	inline void print(String & s, const math::vector<T> & v) {
 		s << String::assemble("(", v.x, ", ", v.y, ", ", v.z, ", ", v.w, ")");
 	}
 	
-	template<class T>
+	template <class T>
 	inline void print(String & s, const aligned<math::vector<T>> & v) {
 		s << String::assemble("(", v->x, ", ", v->y, ", ", v->z, ", ", v->w, ")");
 	}

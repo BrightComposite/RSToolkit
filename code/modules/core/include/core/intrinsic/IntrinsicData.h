@@ -355,7 +355,6 @@ namespace asd
 		union
 		{
 			inner data;
-			type v;
 			
 			struct
 			{
@@ -363,11 +362,10 @@ namespace asd
 			};
 		};
 
-		member_cast(v, type);
 		member_cast(data, inner);
 
 		IntrinData() {}
-		IntrinData(const type & v) : v(v) {}
+		IntrinData(const type & v) : data(cast(v)) {}
 		IntrinData(const inner & data) : data(data) {}
 
 		void * operator new (size_t size)
@@ -377,7 +375,7 @@ namespace asd
 
 		IntrinData & operator = (const type & v)
 		{
-			this->v = v;
+			this->data = cast(v);
 			return *this;
 		}
 
@@ -399,6 +397,16 @@ namespace asd
 		const T & operator [] (int index) const
 		{
 			return data[index];
+		}
+		
+		operator type () const
+		{
+			return *reinterpret_cast<const type *>(&data);
+		}
+		
+		static inline const array<T, 4> & cast(const type & in)
+		{
+			return *reinterpret_cast<const array<T, 4> *>(&in);
 		}
 
 		template<int I, useif<(I < 4)>>

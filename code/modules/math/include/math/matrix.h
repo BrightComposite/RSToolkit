@@ -60,7 +60,7 @@ namespace asd
 			member_cast(data, array<Data, 4>);
 			member_cast(a, array<array<T, 4>, 4>);
 			
-			matrix() : x(vector<T>::positiveX), y(vector<T>::positiveY), z(vector<T>::positiveZ), w(vector<T>::positiveW) {}
+			matrix() : x(vector_constants<T>::positiveX), y(vector_constants<T>::positiveY), z(vector_constants<T>::positiveZ), w(vector_constants<T>::positiveW) {}
 			
 			matrix(const matrix & matrix) : x{matrix.x}, y{matrix.y}, z{matrix.z}, w{matrix.w} {}
 			
@@ -70,7 +70,7 @@ namespace asd
 			
 			matrix(const Row & x, const Row & y, const Row & z, const Row & w) : x{x}, y{y}, z{z}, w{w} {}
 			
-			matrix(const Row & x, const Row & y, const Row & z) : x{x}, y{y}, z{z}, w{vector<T>::positiveW} {}
+			matrix(const Row & x, const Row & y, const Row & z) : x{x}, y{y}, z{z}, w{vector_constants<T>::positiveW} {}
 			
 			matrix(const T(& m)[16]) :
 				x(m[0x0], m[0x1], m[0x2], m[0x3]),
@@ -107,10 +107,10 @@ namespace asd
 			}
 			
 			matrix & identity() {
-				x = vector<T>::positiveX;
-				y = vector<T>::positiveY;
-				z = vector<T>::positiveZ;
-				w = vector<T>::positiveW;
+				x = vector_constants<T>::positiveX;
+				y = vector_constants<T>::positiveY;
+				z = vector_constants<T>::positiveZ;
+				w = vector_constants<T>::positiveW;
 				
 				return *this;
 			}
@@ -118,10 +118,10 @@ namespace asd
 			matrix & identity(T a) {
 				vector<T> v(a);
 				
-				x = v.maskX();
-				y = v.maskY();
-				z = v.maskZ();
-				w = v.maskW();
+				x = v.mask_x();
+				y = v.mask_y();
+				z = v.mask_z();
+				w = v.mask_w();
 				
 				return *this;
 			}
@@ -274,11 +274,8 @@ namespace asd
 		using floatm = float_matrix;
 		using doublem = double_matrix;
 		
-		template<class T>
-		using aligned_matrix = aligned<matrix<T>>;
-		
-		using fmat = aligned_matrix<float>;
-		using dmat = aligned_matrix<double>;
+		using fmat = matrix<float>;
+		using dmat = matrix<double>;
 		
 		template<class T>
 		inline matrix<T> operator +(const matrix<T> & m1, const matrix<T> & m2) {
@@ -293,10 +290,10 @@ namespace asd
 		template<class T>
 		inline matrix<T> operator *(const matrix<T> & a, const matrix<T> & b) {
 			return {
-				a[0] * b[0].spreadX() + a[1] * b[0].spreadY() + a[2] * b[0].spreadZ() + a[3] * b[0].spreadW(),
-				a[0] * b[1].spreadX() + a[1] * b[1].spreadY() + a[2] * b[1].spreadZ() + a[3] * b[1].spreadW(),
-				a[0] * b[2].spreadX() + a[1] * b[2].spreadY() + a[2] * b[2].spreadZ() + a[3] * b[2].spreadW(),
-				a[0] * b[3].spreadX() + a[1] * b[3].spreadY() + a[2] * b[3].spreadZ() + a[3] * b[3].spreadW()
+				a[0] * b[0].spread_x() + a[1] * b[0].spread_y() + a[2] * b[0].spread_z() + a[3] * b[0].spread_w(),
+				a[0] * b[1].spread_x() + a[1] * b[1].spread_y() + a[2] * b[1].spread_z() + a[3] * b[1].spread_w(),
+				a[0] * b[2].spread_x() + a[1] * b[2].spread_y() + a[2] * b[2].spread_z() + a[3] * b[2].spread_w(),
+				a[0] * b[3].spread_x() + a[1] * b[3].spread_y() + a[2] * b[3].spread_z() + a[3] * b[3].spread_w()
 			};
 		}
 		
@@ -472,27 +469,27 @@ namespace asd
 		template<class T>
 		inline matrix<T> & matrix<T>::mirrorX() {
 			return apply({
-				vector<T>::negativeX,
-				vector<T>::positiveY,
-				vector<T>::positiveZ
+				vector_constants<T>::negativeX,
+				vector_constants<T>::positiveY,
+				vector_constants<T>::positiveZ
 			});
 		}
 		
 		template<class T>
 		inline matrix<T> & matrix<T>::mirrorY() {
 			return apply({
-				vector<T>::positiveX,
-				vector<T>::negativeY,
-				vector<T>::positiveZ
+				vector_constants<T>::positiveX,
+				vector_constants<T>::negativeY,
+				vector_constants<T>::positiveZ
 			});
 		}
 		
 		template<class T>
 		inline matrix<T> & matrix<T>::mirrorZ() {
 			return apply({
-				vector<T>::positiveX,
-				vector<T>::positiveY,
-				vector<T>::negativeZ
+				vector_constants<T>::positiveX,
+				vector_constants<T>::positiveY,
+				vector_constants<T>::negativeZ
 			});
 		}
 		
@@ -506,7 +503,7 @@ namespace asd
 			auto v = trigon(angle);
 			
 			return {
-				vector<T>::positiveX,        // 1,  0,  0
+				vector_constants<T>::positiveX,        // 1,  0,  0
 				v.template shuffle<3, 1, 2, 3>(),    // 0,  c, -s
 				v.template shuffle<3, 0, 1, 3>()        // 0,  s,  c
 			};
@@ -518,7 +515,7 @@ namespace asd
 			
 			return {
 				v.template shuffle<1, 3, 0, 3>(),    // c,  0,  s
-				vector<T>::positiveY,        // 0,  1,  0
+				vector_constants<T>::positiveY,        // 0,  1,  0
 				v.template shuffle<2, 3, 1, 3>()        //-s,  0,  c
 			};
 		}
@@ -530,7 +527,7 @@ namespace asd
 			return {
 				v.template shuffle<1, 2, 3, 3>(),    // c, -s,  0
 				v.template shuffle<0, 1, 3, 3>(),    // s,  c,  0
-				vector<T>::positiveZ
+				vector_constants<T>::positiveZ
 			};
 		}
 		
@@ -538,7 +535,7 @@ namespace asd
 		inline matrix<T> matrix<T>::rotation(const vector <T> & v, T angle) {
 			auto sc = trigon(angle);
 			auto cc = sc.template shuffle<1, 1, 1, 3>();
-			auto nc = (vector<T>::oneXYZ - cc) * v;
+			auto nc = (vector_constants<T>::oneXYZ - cc) * v;
 			auto ss = sc.template shuffle<0, 0, 0, 3>() * v;
 			
 			sc = nc.template shuffle<1, 0, 0, 3>() * v.template shuffle<2, 2, 1, 3>();
@@ -559,57 +556,57 @@ namespace asd
 		
 		template<class T>
 		inline matrix<T> matrix<T>::rotation(const vector <T> & euler) {
-			vector<T> sine, cosine;
+			vector<T, true> sine, cosine;
 			sincos(euler, sine, cosine);
 			
-			vector<T> x = sine.template shuffle<0, 0, 0, 0>(cosine).
-				template blend<0, 1, 1, 0>(vector<T>::positiveY);                                    // [ sx, 1, 0, cx ]
-			vector<T> y = sine.template shuffle<1, 1, 1, 1>(cosine).
-				template blend<0, 1, 1, 0>(vector<T>::positiveY);                                    // [ sy, 1, 0, cy ]
-			vector<T> z = sine.template shuffle<2, 2, 2, 2>(cosine).
-				template blend<0, 1, 1, 0>(vector<T>::positiveY).
+			auto x = sine.template shuffle<0, 0, 0, 0>(cosine).
+				template blend<0, 1, 1, 0>(vector_constants<T>::positiveY);                                    // [ sx, 1, 0, cx ]
+			auto y = sine.template shuffle<1, 1, 1, 1>(cosine).
+				template blend<0, 1, 1, 0>(vector_constants<T>::positiveY);                                    // [ sy, 1, 0, cy ]
+			auto z = sine.template shuffle<2, 2, 2, 2>(cosine).
+				template blend<0, 1, 1, 0>(vector_constants<T>::positiveY).
 				template shuffle<3, 0, 1, 2>();    // [ cz, sz, 1, 0 ]
 			
-			vector<T> yz = y.template shuffle<0, 0, 3, 2>().negateZ() * z;    // [ sy * cz, sy * sz, -cy, 0 ]
-			vector<T> mz = z.template shuffle<1, 0, 2, 3>().negateX();        // [ -sz, cz, 1, 0 ]
+			auto yz = y.template shuffle<0, 0, 3, 2>().negate_z() * z;    // [ sy * cz, sy * sz, -cy, 0 ]
+			auto mz = z.template shuffle<1, 0, 2, 3>().negate_x();        // [ -sz, cz, 1, 0 ]
 			
 			return {
 				y.template shuffle<3, 3, 0, 0>() * z,                        //  cy * cz,			   | cy * sz,				| sy,	  | 0
-				x.template shuffle<3, 3, 2, 2>() * mz + x.spreadX() * yz,    // -cx * sz + sx * sy * cz | cx * cz + sx * sy * sz |-sx * cy |	0
-				x.template shuffle<0, 0, 2, 2>() * mz - x.spreadW() * yz    // -sx * sz - cx * sy * cz | sx * cz - cx * sy * sz | cx * cy | 0
+				x.template shuffle<3, 3, 2, 2>() * mz + x.spread_x() * yz,    // -cx * sz + sx * sy * cz | cx * cz + sx * sy * sz |-sx * cy |	0
+				x.template shuffle<0, 0, 2, 2>() * mz - x.spread_w() * yz    // -sx * sz - cx * sy * cz | sx * cz - cx * sy * sz | cx * cy | 0
 			};
 		}
 		
 		template<class T>
 		inline matrix<T> matrix<T>::scaling(const vector <T> & s) {
 			return {
-				s.maskX(), s.maskY(), s.maskZ()
+				s.mask_x(), s.mask_y(), s.mask_z()
 			};
 		}
 		
 		template<class T>
 		inline matrix<T> matrix<T>::translation(const vector <T> & t) {
 			return {
-				vector<T>::positiveX.template blend<0, 0, 0, 1>(t.spreadX()),
-				vector<T>::positiveY.template blend<0, 0, 0, 1>(t.spreadY()),
-				vector<T>::positiveZ.template blend<0, 0, 0, 1>(t.spreadZ())
+				vector_constants<T>::positiveX.template blend<0, 0, 0, 1>(t.spread_x()),
+				vector_constants<T>::positiveY.template blend<0, 0, 0, 1>(t.spread_y()),
+				vector_constants<T>::positiveZ.template blend<0, 0, 0, 1>(t.spread_z())
 			};
 		}
 		
 		template<class T>
 		inline matrix<T> matrix<T>::ortho(T x0, T x1, T y0, T y1, T z0, T z1) {
-			const vector<T> max{x1, y1, z1, 1};
-			const vector<T> min{x0, y0, z0, 0};
+			const vector<T, true> max{x1, y1, z1, 1};
+			const vector<T, true> min{x0, y0, z0, 0};
 			
 			vector<T> d = (max - min).inverse();
 			const vector<T> t = -(max + min) * d;
-			d *= vector<T>::two;
+			d *= vector_constants<T>::two;
 			
 			return {
-				d.maskX().template blend<0, 0, 0, 1>(t.spreadX()),    // 2/w |  0  |  0  | -(x0+x1)/w
-				d.maskY().template blend<0, 0, 0, 1>(t.spreadY()),    //  0  | 2/h |  0  | -(y0+y1)/h
-				d.maskZ().template blend<0, 0, 0, 1>(t.spreadZ()),    //  0  |  0  | 2/l | -(z0+z1)/l
-				vector<T>::positiveW                                //  0  |  0  |  0  |    1
+				d.mask_x().template blend<0, 0, 0, 1>(t.spread_x()),    // 2/w |  0  |  0  | -(x0+x1)/w
+				d.mask_y().template blend<0, 0, 0, 1>(t.spread_y()),    //  0  | 2/h |  0  | -(y0+y1)/h
+				d.mask_z().template blend<0, 0, 0, 1>(t.spread_z()),    //  0  |  0  | 2/l | -(z0+z1)/l
+				vector_constants<T>::positiveW                                //  0  |  0  |  0  |    1
 			};
 		}
 		
@@ -620,13 +617,13 @@ namespace asd
 			
 			vector<T> d = (max - min).inverse();
 			const vector<T> t = -(max + min) * d;
-			d *= vector<T>::two;
+			d *= vector_constants<T>::two;
 			
 			return {
-				d.maskX(),                                            //    2/w    |     0     |     0    | 0
-				d.maskY(),                                            //     0     |    2/h    |     0    | 0
-				d.maskZ(),                                            //     0     |     0     |    2/l   | 0
-				t.template blend<0, 0, 0, 1>(vector<T>::positiveW)    //-(x0+x1)/w |-(y0+y1)/h |-(z0+z1)/l| 1
+				d.mask_x(),                                            //    2/w    |     0     |     0    | 0
+				d.mask_y(),                                            //     0     |    2/h    |     0    | 0
+				d.mask_z(),                                            //     0     |     0     |    2/l   | 0
+				t.template blend<0, 0, 0, 1>(vector_constants<T>::positiveW)    //-(x0+x1)/w |-(y0+y1)/h |-(z0+z1)/l| 1
 			};
 		}
 		
@@ -637,10 +634,10 @@ namespace asd
 			const vector<T> v = {f * aspect, f, z, -z0 * z};
 			
 			return {
-				v.maskX(),                        // f/a | 0 | 0 |  0
-				v.maskY(),                        //  0  | f | 0 |  0
+				v.mask_x(),                        // f/a | 0 | 0 |  0
+				v.mask_y(),                        //  0  | f | 0 |  0
 				v.template mask<0, 0, 1, 1>(),    //  0  | 0 | z |-z0*z
-				vector<T>::positiveZ            //  0  | 0 | 1 |  0
+				vector_constants<T>::positiveZ            //  0  | 0 | 1 |  0
 			};
 		}
 		
@@ -651,10 +648,10 @@ namespace asd
 			const vector<T> v = {f * aspect, f, z, -z0 * z};
 			
 			return {
-				v.maskX(),                                            // f*a | 0 |  0  | 0
-				v.maskY(),                                            //  0  | f |  0  | 0
-				v.template blend<1, 1, 0, 1>(vector<T>::positiveW),    //  0  | 0 |  z  | 1
-				v.spreadW().maskZ(),                                //  0  | 0 |-z0*z| 0
+				v.mask_x(),                                            // f*a | 0 |  0  | 0
+				v.mask_y(),                                            //  0  | f |  0  | 0
+				v.template blend<1, 1, 0, 1>(vector_constants<T>::positiveW),    //  0  | 0 |  z  | 1
+				v.spread_w().mask_z(),                                //  0  | 0 |-z0*z| 0
 			};
 		}
 		
@@ -664,10 +661,10 @@ namespace asd
 			const vector<T> v{1 / (x1 - x0), 1 / (y1 - y0), 1 / (z1 - z0), 0};
 			
 			return {
-				v.spreadX() * vector<T>{n, 0, x1 + x0, 0},
-				v.spreadY() * vector<T>{0, n, y1 + y0, 0},
-				v.spreadZ() * vector<T>{0, 0, z1 + z0, n * z0},
-				vector<T>::negativeZ
+				v.spread_x() * vector<T>{n, 0, x1 + x0, 0},
+				v.spread_y() * vector<T>{0, n, y1 + y0, 0},
+				v.spread_z() * vector<T>{0, 0, z1 + z0, n * z0},
+				vector_constants<T>::negativeZ
 			};
 		}
 		

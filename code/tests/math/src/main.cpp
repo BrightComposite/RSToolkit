@@ -8,6 +8,8 @@
 
 #include <iostream>
 
+#include <benchmark>
+
 //---------------------------------------------------------------------------
 
 namespace asd
@@ -44,16 +46,44 @@ namespace asd
 
 		handle<Obj>			obj(_);
 		handle<Direction>	dir(0, math::fquat(4.0f, 5.0f, 3.0f));
-		handle<Position>	pos(0, 0, math::floatv::right);
+		handle<Position>	pos(0, 0, math::vector_constants<float>::right);
 
 		for(int i = 0; i < 20; ++i) {
 			cout << pos->position << endl;
-			pos->position = dir->rotation->applyTo(pos->position);
+			pos->position = dir->rotation.applyTo(pos->position);
 		}
 	
-		obj->matrix = dir->rotation->toMatrix();
+		obj->matrix = dir->rotation.to_matrix();
 		cout << obj->matrix << endl;
-		cout << obj->matrix->transposition() << endl;
+		cout << obj->matrix.transposition() << endl;
+		
+		{
+			math::xmm_vec vec1(0, 1, 2, 3), vec2(0, 1, 2, 3);
+			
+			benchmark("simple multiplication") << [&]() {
+				repeat(i, 1000) {
+					vec2.x += vec1.x * 2;
+					vec2.y += vec1.y * 1;
+					vec2.z += vec1.z * 5;
+					vec2.w += vec1.w * 2;
+				}
+			};
+			
+			cout << vec2.x << " " << vec2.y << " " << vec2.z << " " << vec2.w << endl;
+		}
+		
+		{
+			math::xmm_vec vec1(0, 1, 2, 3), vec2(0, 1, 2, 3);
+			const math::xmm_vec vec3{2, 1, 5, 2};
+			
+			benchmark("vector multiplication") << [&]() {
+				repeat(i, 1000) {
+					vec2 += (vec1 * vec3);
+				}
+			};
+			
+			cout << vec2.x << " " << vec2.y << " " << vec2.z << " " << vec2.w << endl;
+		}
     });
 }
 

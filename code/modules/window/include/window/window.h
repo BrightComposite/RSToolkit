@@ -8,6 +8,7 @@
 //---------------------------------------------------------------------------
 
 #include <boost/predef.h>
+#include <observable/observable.hpp>
 #include <graphics/graphics.h>
 #include <math/rect.h>
 
@@ -25,65 +26,66 @@
 
 namespace asd
 {
-#if BOOST_OS_WINDOWS
-
-	using window_handle_t = HWND;
-
-#elif BOOST_OS_LINUX
-
-	using window_handle_t = ::Window;
-
-#endif
+	using namespace observable;
 	
 	class window;
+	
+	exception_class(WindowCreationException);
+
+#if BOOST_OS_WINDOWS
+	
+	using window_handle_t = HWND;
+
+	class window_context
+	{
+	public:
+		window_context(window & w) : _window(w) {}
+		
+		virtual ~window_context() {}
+		
+		virtual void prepare() = 0;
+	
+	protected:
+		window & _window;
+	};
+
+#define WS_SIMPLE (WS_POPUP | WS_CLIPCHILDREN | WS_MINIMIZEBOX)
+
+#elif BOOST_OS_LINUX
+	
+	using window_handle_t = ::Window;
 	
 	class window_context
 	{
 	public:
 		window_context(window & w) : _window(w) {}
+		
 		virtual ~window_context() {}
-
+		
 		virtual void prepare() = 0;
 
-#if BOOST_OS_LINUX
-
-		XVisualInfo * visualInfo() const
-		{
+		XVisualInfo * visualInfo() const {
 			return _visualInfo;
 		}
-
-#endif
 	
 	protected:
 		window & _window;
 
-#if BOOST_OS_LINUX
-
 		XVisualInfo * _visualInfo;
-
-#endif
 	};
-
-	exception_class(WindowCreationException);
-
-#if BOOST_OS_LINUX
-
+	
 	class OpenDisplayException : public WindowCreationException
 	{
 	public:
 		OpenDisplayException(const char * display_name) : WindowCreationException("Can't open X display ", display_name, "!") {}
 	};
-
+	
 #endif
-
-#if BOOST_OS_WINDOWS
-
-	#define WS_SIMPLE (WS_POPUP | WS_CLIPCHILDREN | WS_MINIMIZEBOX)
-
-#endif
-
+	
 	class window
 	{
+		OBSERVABLE_PROPERTIES(window)
+	
 	public:
 		/**
 		 * @brief
@@ -95,7 +97,7 @@ namespace asd
 		 *
 		 * @throws WindowCreationException|OpenDisplayException|GraphicsException
 		 */
-		api(window) 
+		api(window)
 		window(const string & caption, const math::int_rect & area, const char * displayName = nullptr);
 		
 		api(window)
@@ -105,113 +107,95 @@ namespace asd
 			return _handle;
 		}
 		
-		template<class Gfx>
+		template <class Gfx>
 		inline gfx::driver_context<Gfx> & bind(Gfx & driver);
-
+		
 		gfx::context & graphics() const {
 			BOOST_ASSERT_MSG(_context, "There is not graphic context bound!");
 			return *_context;
 		}
-
+		
+		api(window)
+		void show();
+		
+		api(window)
+		void hide();
+		
+		template <class F>
+		int loop(F iteration) {
+			while (true) {
+				auto result = process_events();
+				
+				if (result == 0) {
+					return 0;
+				}
+				
+				iteration();
+			}
+		}
+		
+		observable_property<math::int_point> position;
+		observable_property<math::int_size> size;
+		observable_property<math::int_rect> area;
+		
 #if BOOST_OS_WINDOWS
-
 		HDC device() const {
 			return _device;
 		}
-
-#elif BOOST_OS_LINUX
-
-		::Display * display() const {
-			return _display;
-		}
-
-#endif
-
-		api(window)
-		void show();
-
-		api(window)
-		void hide();
-
-#if BOOST_OS_WINDOWS
 
 		api(window)
 		static HWND create_handle(const math::int_rect & rect, const wstring & caption, const wstring & windowClass, WNDPROC wndProc);
 
 		api(window)
 		static HWND create_empty_handle();
+#elif BOOST_OS_LINUX
+		
+		::Display * display() const {
+			return _display;
+		}
 
 #endif
-
+	
 	private:
+		api(window)
+		int process_events();
+
+#if BOOST_OS_LINUX
+		api(window)
+		void init(XVisualInfo * visual_info);
+#endif
+		
 		window_handle_t _handle;
 		unique<gfx::context> _context;
 		math::int_rect _area;
-		
-#if BOOST_OS_WINDOWS
 
+#if BOOST_OS_WINDOWS
+		
 		HDC _device;
 
 #elif BOOST_OS_LINUX
-
+		
 		::Display * _display;
-
+		XWindowAttributes _attributes;
+		XEvent _event;
 #endif
 	};
-
-#if BOOST_OS_WINDOWS
-
-	template<class Gfx>
+	
+	template <class Gfx>
 	inline gfx::driver_context<Gfx> & window::bind(Gfx & driver) {
 		auto tmp = driver.create_context(*this);
 		auto ctx = tmp.get();
+		
 		_context = std::move(tmp);
 
-		ctx->prepare();
-		return *ctx;
-	}
-
-#elif BOOST_OS_LINUX
-
-	template<class Gfx>
-	inline gfx::driver_context<Gfx> & window::bind(Gfx & driver) {
-		auto screen = DefaultScreen(_display);
-		auto root = RootWindow(_display, screen);
-
-		auto tmp = driver.create_context(*this);
-		auto ctx = tmp.get();
-
-		_context = std::move(tmp);
-
-		auto * visualInfo = ctx->visualInfo();
-
-		{
-			XSetWindowAttributes winAttr;
-
-			winAttr.event_mask = ExposureMask | StructureNotifyMask | KeyPressMask;
-			winAttr.background_pixmap = 0;
-			winAttr.background_pixel = 0;
-			winAttr.border_pixel = 0;
-
-			winAttr.colormap = XCreateColormap(_display, root, visualInfo->visual, AllocNone);
-
-			unsigned int mask = CWBackPixmap | CWBorderPixel | CWColormap | CWEventMask;
-
-			_handle = XCreateWindow(_display, root, _area.left, _area.top, _area.width(), _area.height(), 0, visualInfo->depth, InputOutput, visualInfo->visual, mask, &winAttr);
-		}
-
-		if(!_handle) {
-			throw WindowCreationException("Cannot create X Window!");
-		}
-
-		XStoreName(_display, _handle, "ASD");
-
-		ctx->prepare();
-
-		return *ctx;
-	}
-
+#if BOOST_OS_LINUX
+		init(ctx->visualInfo());
 #endif
+		
+		ctx->prepare();
+		
+		return *ctx;
+	}
 }
 
 //---------------------------------------------------------------------------

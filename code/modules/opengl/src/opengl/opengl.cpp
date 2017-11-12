@@ -24,7 +24,7 @@ namespace asd
 		static inline void GLAPIENTRY glDebugCallbackFunc(uint source, uint type, uint id, uint severity, int length, const char * message, const void * userParam);
 
 #if BOOST_OS_WINDOWS
-
+		
 		static void set_pixel_format(HDC dc)
 		{
 			if(dc == nullptr)
@@ -52,91 +52,19 @@ namespace asd
 			}
 		}
 
-#elif BOOST_OS_LINUX
-
-		static GLXFBConfig chooseFBConfig(::Display * display, int screen) {
-			static const int v_attribs[] = {
-				GLX_X_RENDERABLE, True,
-				GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
-				GLX_RENDER_TYPE, GLX_RGBA_BIT,
-				GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
-				GLX_RED_SIZE, 8,
-				GLX_GREEN_SIZE, 8,
-				GLX_BLUE_SIZE, 8,
-				GLX_ALPHA_SIZE, 8,
-				GLX_DEPTH_SIZE, 24,
-				GLX_STENCIL_SIZE, 8,
-				GLX_DOUBLEBUFFER, True,
-				GLX_SAMPLE_BUFFERS, 1,
-				GLX_SAMPLES, 4,
-				0
-			};
-
-			int attribs[sizeof_array(v_attribs)];
-			memcpy(attribs, v_attribs, sizeof(v_attribs));
-
-			GLXFBConfig ret = 0;
-
-			int count = 0;
-			auto fbc = glXChooseFBConfig(display, screen, attribs, &count);
-
-			if(fbc) {
-				if(count >= 1) {
-					ret = fbc[0];
-				}
-
-				XFree(fbc);
-			}
-
-			return ret;
-		}
-
-#endif
-
-		driver::driver(const configuration & config) : config(config) {
-			// register_method(opengl::draw_mesh);
-		}
-		
-		window_context::window_context(opengl::driver & driver, window & w) : base(driver), ::asd::window_context(w) {
-			init_device();
-		}
-		
 		window_context::~window_context() {
-#if BOOST_OS_WINDOWS
-
 			wglMakeCurrent(nullptr, nullptr);
 
 			if(_context != nullptr) {
 				wglDeleteContext(_context);
 			}
-
-#elif BOOST_OS_LINUX
-
-			glXMakeCurrent(_window.display(), 0, 0);
-			
-			if(_context != nullptr) {
-				glXDestroyContext(_window.display(), _context);
-				_context = nullptr;
-			}
-
-#endif
 		}
-
+		
 		void window_context::flush() {
-#if BOOST_OS_WINDOWS
-
 			SwapBuffers(_window.device());
-
-#elif BOOST_OS_LINUX
-
-			glXSwapBuffers(_window.display(), _window.handle());
-
-#endif
 		}
-
+		
 		void window_context::prepare() {
-#if BOOST_OS_WINDOWS
-
 			set_pixel_format(_window.device());
 
 			int flags = _driver.config.flags;
@@ -165,18 +93,6 @@ namespace asd
 				throw ContextCreationException("Can't bind OpenGL render context!");
 			}
 
-#elif BOOST_OS_LINUX
-
-			if(glXMakeCurrent(_window.display(), _window.handle(), _context) == GL_FALSE) {
-				throw ContextCreationException("Can't bind OpenGL render context!");
-			}
-			
-			if(!glXIsDirect(_window.display(), glXGetCurrentContext())) {
-				std::cout << "Indirect GLX rendering context obtained" << std::endl;
-			}
-
-#endif
-			
 			check_for_errors();
 			
 			glDisable(GL_DEPTH_TEST);
@@ -185,12 +101,12 @@ namespace asd
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glEnable(GL_CULL_FACE);
 			glEnable(GL_SCISSOR_TEST);
-						
+			
 			glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 			//glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
 
 #ifdef GL_DEBUG
-
+			
 			glEnable(GL_DEBUG_OUTPUT);
 			glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 			
@@ -203,13 +119,11 @@ namespace asd
 #endif
 			
 			check_for_errors();
-
+			
 			// _driver.set_modifiers(*this);
 		}
 
 		void window_context::init_device() {
-#if BOOST_OS_WINDOWS
-
 			auto _wnd = window::create_empty_handle();
 			auto _device = ::GetDC(_wnd);
 
@@ -250,9 +164,100 @@ namespace asd
 			wglMakeCurrent(nullptr, nullptr);
 			wglDeleteContext(_tmpContext);
 			DestroyWindow(_wnd);
+		}
 
 #elif BOOST_OS_LINUX
+		
+		static GLXFBConfig chooseFBConfig(::Display * display, int screen) {
+			static const int v_attribs[] = {
+				GLX_X_RENDERABLE, True,
+				GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
+				GLX_RENDER_TYPE, GLX_RGBA_BIT,
+				GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
+				GLX_RED_SIZE, 8,
+				GLX_GREEN_SIZE, 8,
+				GLX_BLUE_SIZE, 8,
+				GLX_ALPHA_SIZE, 8,
+				GLX_DEPTH_SIZE, 24,
+				GLX_STENCIL_SIZE, 8,
+				GLX_DOUBLEBUFFER, True,
+				GLX_SAMPLE_BUFFERS, 1,
+				GLX_SAMPLES, 4,
+				0
+			};
+			
+			int attribs[sizeof_array(v_attribs)];
+			memcpy(attribs, v_attribs, sizeof(v_attribs));
+			
+			GLXFBConfig ret = 0;
+			
+			int count = 0;
+			auto fbc = glXChooseFBConfig(display, screen, attribs, &count);
+			
+			if (fbc) {
+				if (count >= 1) {
+					ret = fbc[0];
+				}
+				
+				XFree(fbc);
+			}
+			
+			return ret;
+		}
+		
+		window_context::~window_context() {
+			glXMakeCurrent(_window.display(), 0, 0);
+			
+			if (_context != nullptr) {
+				glXDestroyContext(_window.display(), _context);
+				_context = nullptr;
+			}
+		}
+		
+		void window_context::flush() {
+			glXSwapBuffers(_window.display(), _window.handle());
+		}
+		
+		void window_context::prepare() {
+			if (glXMakeCurrent(_window.display(), _window.handle(), _context) == GL_FALSE) {
+				throw ContextCreationException("Can't bind OpenGL render context!");
+			}
+			
+			if (!glXIsDirect(_window.display(), glXGetCurrentContext())) {
+				std::cout << "Indirect GLX rendering context obtained" << std::endl;
+			}
+			
+			check_for_errors();
+			
+			glDisable(GL_DEPTH_TEST);
+			glDepthFunc(GL_LESS);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glEnable(GL_CULL_FACE);
+			glEnable(GL_SCISSOR_TEST);
+			
+			glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+			//glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
 
+#ifdef GL_DEBUG
+			
+			glEnable(GL_DEBUG_OUTPUT);
+			glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+			
+			if(glDebugMessageCallback != nullptr) {
+				glDebugMessageCallback(glDebugCallbackFunc, nullptr);
+			} else {
+				std::cout << "glDebugMessageCallback is not supported" << std::endl;
+			}
+
+#endif
+			
+			check_for_errors();
+			
+			// _driver.set_modifiers(*this);
+		}
+		
+		void window_context::init_device() {
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
 			
@@ -273,7 +278,7 @@ namespace asd
 			
 			_visualInfo = glXChooseVisual(_window.display(), screen, att);
 			
-			if(!_visualInfo) {
+			if (!_visualInfo) {
 				throw ContextCreationException("Failed to get visual info!");
 			}
 			
@@ -293,25 +298,25 @@ namespace asd
 				
 				windowHandle = XCreateWindow(_window.display(), root, 0, 0, 100, 100, 0, _visualInfo->depth, InputOutput, _visualInfo->visual, mask, &winAttr);
 				
-				if(!windowHandle) {
+				if (!windowHandle) {
 					throw ContextCreationException("Cannot create X Window!");
 				}
 			}
 			
 			GLXContext _tmpContext = glXCreateContext(_window.display(), _visualInfo, 0, True);
 			
-			if(!_tmpContext) {
+			if (!_tmpContext) {
 				throw ContextCreationException("Could not allocate temporary OpenGL render context!");
 			}
 			
-			if(glXMakeCurrent(_window.display(), windowHandle, _tmpContext) == GL_FALSE) {
+			if (glXMakeCurrent(_window.display(), windowHandle, _tmpContext) == GL_FALSE) {
 				throw ContextCreationException("Can't bind temporary OpenGL render context!");
 			}
 			
 			glewExperimental = GL_TRUE;
 			GLenum error = glewInit();
 			
-			if(error > 0) {
+			if (error > 0) {
 				throw ContextCreationException("Can't initialize GLEW! ", (const char *) glewGetErrorString(error));
 			}
 			
@@ -320,14 +325,14 @@ namespace asd
 			
 			auto fbConfig = chooseFBConfig(_window.display(), screen);
 			
-			if(!fbConfig) {
+			if (!fbConfig) {
 				throw ContextCreationException("Failed to get GLXFBConfig!");
 			}
 			
 			XFree(_visualInfo);
 			_visualInfo = glXGetVisualFromFBConfig(_window.display(), fbConfig);
 			
-			if(!_visualInfo) {
+			if (!_visualInfo) {
 				throw ContextCreationException("Failed to get visual info!");
 			}
 			
@@ -336,7 +341,7 @@ namespace asd
 			int flags = _driver.config.flags;
 
 #ifdef GL_DEBUG
-
+			
 			flags |= GLX_CONTEXT_DEBUG_BIT_ARB;
 
 #endif
@@ -354,18 +359,30 @@ namespace asd
 			_context = glXCreateContextAttribsARB(_window.display(), fbConfig, 0, True, attributes);
 			XSync(_window.display(), False);
 			
-			if(!_context) {
+			if (!_context) {
 				throw ContextCreationException("Can't create OpenGL render context!");
 			}
-
+		}
 #endif
+		
+		driver::driver(const configuration & config) : config(config) {
+			// register_method(opengl::draw_mesh);
+		}
+		
+		window_context::window_context(opengl::driver & driver, window & w) : base(driver), ::asd::window_context(w) {
+			init_device();
+			
+			w.size.subscribe_and_call([](const math::int_size & size) {
+				glViewport(0, 0, size.x, size.y);
+				glScissor(0, 0, size.x, size.y);
+			});
 		}
 	}
+
+//---------------------------------------------------------------------------
 	
 	namespace gfx
 	{
-//---------------------------------------------------------------------------
-		
 		driver_context<opengl::driver>::driver_context(opengl::driver & d) : _driver(d) {}
 		
 		driver_context<opengl::driver>::~driver_context() {}
@@ -373,7 +390,7 @@ namespace asd
 		void driver_context<opengl::driver>::check_for_errors() {
 			GLenum error = glGetError();
 			
-			if(error != GL_NO_ERROR) {
+			if (error != GL_NO_ERROR) {
 				throw ContextCreationException("opengl error, code: ", String::hex(error));
 			}
 		}
@@ -439,7 +456,7 @@ namespace asd
 		static inline void GLAPIENTRY glDebugCallbackFunc(uint source, uint type, uint id, uint severity, int length, const char * message, const void * userParam) {
 			string sev, t, src;
 			
-			switch(severity) {
+			switch (severity) {
 				case GL_DEBUG_SEVERITY_LOW:
 					sev = "low";
 					break;
@@ -461,7 +478,7 @@ namespace asd
 					sev = String::hex(severity);
 			}
 			
-			switch(type) {
+			switch (type) {
 				case GL_DEBUG_TYPE_ERROR:
 					t = "error";
 					break;
@@ -502,7 +519,7 @@ namespace asd
 					t = String::assemble("unknown (", String::hex(type), ")");
 			}
 			
-			switch(source) {
+			switch (source) {
 				case GL_DEBUG_SOURCE_API:
 					src = "API";
 					break;
@@ -535,7 +552,7 @@ namespace asd
 				<< ", source: " << src << endl;
 			cout << message << endl << endl;
 			
-			if(severity == GL_DEBUG_SEVERITY_HIGH) {
+			if (severity == GL_DEBUG_SEVERITY_HIGH) {
 				throw Exception("GL error!");
 			}
 		}

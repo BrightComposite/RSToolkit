@@ -15,13 +15,13 @@ namespace asd
 {
 	namespace math
 	{
-		template<class T>
+		template <typename T, typename Implementation = Intrinsic<T, 4>, typename VectorStorage = DefaultVectorStorage <T, Implementation>>
 		struct alignas(sizeof(T) * 4) matrix : aligned_alloc
 		{
 			typedef intrin_data<T, 4> Data;
 			typedef intrin_data<T, 2> Pair;
-			typedef Intrinsic<T, 4> Intrin;
-			typedef vector <T> Row;
+			using vector_type = vector<T, Implementation, VectorStorage>;
+			using row_type = vector_type;
 			
 			union
 			{
@@ -43,20 +43,20 @@ namespace asd
 				
 				struct
 				{
-					Row x, y, z, w;
+					row_type x, y, z, w;
 				};
 				
 				array<T, 16> m;
 				array<array<T, 4>, 4> a;
 				
-				array<vector < T>, 4> v;
-				array<Row, 4> rows;
+				array<vector<T>, 4> v;
+				array<row_type, 4> rows;
 				array<Data, 4> data;
 				array<Pair, 8> pairs;
 			};
 			
 			member_cast(m, array<T, 16>);
-			member_cast(rows, array<Row, 4>);
+			member_cast(rows, array<row_type, 4>);
 			member_cast(data, array<Data, 4>);
 			member_cast(a, array<array<T, 4>, 4>);
 			
@@ -66,11 +66,11 @@ namespace asd
 			
 			matrix(matrix && matrix) : m{move(matrix.m)} {}
 			
-			matrix(const Row (& v)[4]) : x{v[0]}, y{v[1]}, z{v[2]}, w{v[3]} {}
+			matrix(const row_type (& v)[4]) : x{v[0]}, y{v[1]}, z{v[2]}, w{v[3]} {}
 			
-			matrix(const Row & x, const Row & y, const Row & z, const Row & w) : x{x}, y{y}, z{z}, w{w} {}
+			matrix(const row_type & x, const row_type & y, const row_type & z, const row_type & w) : x{x}, y{y}, z{z}, w{w} {}
 			
-			matrix(const Row & x, const Row & y, const Row & z) : x{x}, y{y}, z{z}, w{vector_constants<T>::positiveW} {}
+			matrix(const row_type & x, const row_type & y, const row_type & z) : x{x}, y{y}, z{z}, w{vector_constants<T>::positiveW} {}
 			
 			matrix(const T(& m)[16]) :
 				x(m[0x0], m[0x1], m[0x2], m[0x3]),
@@ -166,15 +166,15 @@ namespace asd
 				return *this;
 			}
 			
-			Row & operator [](int row) & {
+			row_type & operator [](int row) & {
 				return rows[row];
 			}
 			
-			const Row & operator [](int row) const & {
+			const row_type & operator [](int row) const & {
 				return rows[row];
 			}
 			
-			Row && operator [](int row) && {
+			row_type && operator [](int row) && {
 				return move(rows[row]);
 			}
 			
@@ -195,7 +195,7 @@ namespace asd
 			}
 			
 			inline T norm() const;
-			inline vector <T> determinant() const;
+			inline vector_type determinant() const;
 			
 			matrix & invert() & {
 				getInverse(*this);
@@ -232,41 +232,41 @@ namespace asd
 			inline void getInverse(matrix & mat) const;
 			inline void getTransposition(matrix & mat) const;
 			
-			inline vector <T> transformPoint(const vector <T> & b) const;
-			inline vector <T> transformDirection(const vector <T> & b) const;
+			inline vector_type transformPoint(const vector_type & b) const;
+			inline vector_type transformDirection(const vector_type & b) const;
 			
-			inline matrix & apply(const matrix<T> & m);
+			inline matrix & apply(const matrix & m);
 			
-			inline matrix & scale(const vector <T> & s);
+			inline matrix & scale(const vector_type & s);
 			inline matrix & scale(const T s);
 			
 			inline matrix & rotateX(T);
 			inline matrix & rotateY(T);
 			inline matrix & rotateZ(T);
-			inline matrix & rotate(const vector <T> & axis, T angle);
-			inline matrix & rotate(const vector <T> & rotation);
+			inline matrix & rotate(const vector_type & axis, T angle);
+			inline matrix & rotate(const vector_type & rotation);
 			
 			inline matrix & mirrorX();
 			inline matrix & mirrorY();
 			inline matrix & mirrorZ();
 			
-			inline matrix & translate(const vector <T> & v);
+			inline matrix & translate(const vector_type & v);
 			
 			static inline matrix rotationX(T angle);
 			static inline matrix rotationY(T angle);
 			static inline matrix rotationZ(T angle);
-			static inline matrix rotation(const vector <T> & v, T angle);
-			static inline matrix rotation(const vector <T> & r);
-			static inline matrix scaling(const vector <T> & s);
-			static inline matrix translation(const vector <T> & t);
+			static inline matrix rotation(const vector_type & v, T angle);
+			static inline matrix rotation(const vector_type & r);
+			static inline matrix scaling(const vector_type & s);
+			static inline matrix translation(const vector_type & t);
 			
 			static inline matrix ortho(T x0, T x1, T y0, T y1, T z0, T z1);
 			static inline matrix orthot(T x0, T x1, T y0, T y1, T z0, T z1);
 			static inline matrix perspective(T fov, T aspect, T z0, T z1);
 			static inline matrix perspectivet(T fov, T aspect, T z0, T z1);
 			static inline matrix frustum(T x0, T x1, T y0, T y1, T z0, T z1);
-			static inline matrix lookAt(const vector <T> & position, const vector <T> & center, const vector <T> & up);
-			static inline matrix lookTo(const vector <T> & position, const vector <T> & direction, const vector <T> & up);
+			static inline matrix lookAt(const vector_type & position, const vector_type & center, const vector_type & up);
+			static inline matrix lookTo(const vector_type & position, const vector_type & direction, const vector_type & up);
 		};
 		
 		using float_matrix = matrix<float>;
@@ -277,18 +277,18 @@ namespace asd
 		using fmat = matrix<float>;
 		using dmat = matrix<double>;
 		
-		template<class T>
-		inline matrix<T> operator +(const matrix<T> & m1, const matrix<T> & m2) {
-			return matrix<T>(m1) += m2;
+		template <class T, class I, class S>
+		inline matrix<T, I, S> operator +(const matrix<T, I, S> & m1, const matrix<T, I, S> & m2) {
+			return matrix<T, I, S>(m1) += m2;
 		}
 		
-		template<class T>
-		inline matrix<T> operator -(const matrix<T> & m1, const matrix<T> & m2) {
-			return matrix<T>(m1) -= m2;
+		template <class T, class I, class S>
+		inline matrix<T, I, S> operator -(const matrix<T, I, S> & m1, const matrix<T, I, S> & m2) {
+			return matrix<T, I, S>(m1) -= m2;
 		}
 		
-		template<class T>
-		inline matrix<T> operator *(const matrix<T> & a, const matrix<T> & b) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> operator *(const matrix<T, I, S> & a, const matrix<T, I, S> & b) {
 			return {
 				a[0] * b[0].spread_x() + a[1] * b[0].spread_y() + a[2] * b[0].spread_z() + a[3] * b[0].spread_w(),
 				a[0] * b[1].spread_x() + a[1] * b[1].spread_y() + a[2] * b[1].spread_z() + a[3] * b[1].spread_w(),
@@ -297,28 +297,28 @@ namespace asd
 			};
 		}
 		
-		template<class T>
-		inline matrix<T> operator *(const matrix<T> & m, T value) {
-			return matrix<T>(m) *= value;
+		template <class T, class I, class S>
+		inline matrix<T, I, S> operator *(const matrix<T, I, S> & m, T value) {
+			return matrix<T, I, S>(m) *= value;
 		}
 		
-		template<class T>
-		inline matrix<T> operator *(T value, const matrix<T> & m) {
-			return matrix<T>(m) *= value;
+		template <class T, class I, class S>
+		inline matrix<T, I, S> operator *(T value, const matrix<T, I, S> & m) {
+			return matrix<T, I, S>(m) *= value;
 		}
 		
-		template<class T>
-		inline vector <T> operator *(const matrix<T> & m, const vector <T> & vec) {
+		template <class T, class I, class S>
+		inline vector<T, I, S> operator *(const matrix<T, I, S> & m, const vector<T, I, S> & vec) {
 			return m.transformPoint(vec);
 		}
 		
-		template<class T>
-		inline T matrix<T>::norm() const {
+		template <class T, class I, class S>
+		inline T matrix<T, I, S>::norm() const {
 			return std::max({v[0].max(), v[1].max(), v[2].max(), v[3].max()});
 		}
 		
-		template<class T>
-		inline vector <T> matrix<T>::determinant() const {
+		template <class T, class I, class S>
+		inline vector<T, I, S> matrix<T, I, S>::determinant() const {
 			matrix tmp1, tmp2;
 			
 			tmp1[0] = rows[2].template shuffle<1, 0, 0, 0>();
@@ -339,8 +339,8 @@ namespace asd
 			return rows[0].template negate<0, 1, 0, 1>().dot(tmp1[0] * tmp2[2] - tmp1[1] * tmp2[3] + tmp1[2] * tmp2[1]);
 		}
 		
-		template<class T>
-		inline void matrix<T>::getInverse(matrix<T> & m) const {
+		template <class T, class I, class S>
+		inline void matrix<T, I, S>::getInverse(matrix<T, I, S> & m) const {
 			vector<T> r[4], temp;
 			
 			temp = v[0].template shuffle<0, 1, 0, 1>(v[1]);
@@ -393,8 +393,8 @@ namespace asd
 			m[3] *= det;
 		}
 		
-		template<class T>
-		inline void matrix<T>::getTransposition(matrix<T> & mat) const {
+		template <class T, class I, class S>
+		inline void matrix<T, I, S>::getTransposition(matrix<T, I, S> & mat) const {
 			auto v0 = rows[0].template shuffle<0, 1, 0, 1>(rows[1]);
 			auto v1 = rows[0].template shuffle<2, 3, 2, 3>(rows[1]);
 			auto v2 = rows[2].template shuffle<0, 1, 0, 1>(rows[3]);
@@ -408,8 +408,8 @@ namespace asd
 			mat[3] = tmp[1].template shuffle<1, 3, 1, 3>(tmp[3]);
 		}
 		
-		template<class T>
-		inline vector <T> matrix<T>::transformPoint(const vector <T> & v) const {
+		template <class T, class I, class S>
+		inline vector<T, I, S> matrix<T, I, S>::transformPoint(const vector<T, I, S> & v) const {
 			return {
 				sum(rows[0] * v) + m03,
 				sum(rows[1] * v) + m13,
@@ -417,8 +417,8 @@ namespace asd
 			};
 		}
 		
-		template<class T>
-		inline vector <T> matrix<T>::transformDirection(const vector <T> & v) const {
+		template <class T, class I, class S>
+		inline vector<T, I, S> matrix<T, I, S>::transformDirection(const vector<T, I, S> & v) const {
 			return {
 				sum(rows[0] * v),
 				sum(rows[1] * v),
@@ -426,48 +426,48 @@ namespace asd
 			};
 		}
 		
-		template<class T>
-		inline matrix<T> & matrix<T>::apply(const matrix<T> & m) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> & matrix<T, I, S>::apply(const matrix<T, I, S> & m) {
 			return *this *= m;
 		}
 		
-		template<class T>
-		inline matrix<T> & matrix<T>::scale(const vector <T> & s) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> & matrix<T, I, S>::scale(const vector<T, I, S> & s) {
 			return apply(scaling(s));
 		}
 		
-		template<class T>
-		inline matrix<T> & matrix<T>::scale(const T s) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> & matrix<T, I, S>::scale(const T s) {
 			return apply(scaling({s}));
 		}
 		
-		template<class T>
-		inline matrix<T> & matrix<T>::rotateX(T angle) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> & matrix<T, I, S>::rotateX(T angle) {
 			return apply(rotationX(angle));
 		}
 		
-		template<class T>
-		inline matrix<T> & matrix<T>::rotateY(T angle) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> & matrix<T, I, S>::rotateY(T angle) {
 			return apply(rotationY(angle));
 		}
 		
-		template<class T>
-		inline matrix<T> & matrix<T>::rotateZ(T angle) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> & matrix<T, I, S>::rotateZ(T angle) {
 			return apply(rotationZ(angle));
 		}
 		
-		template<class T>
-		inline matrix<T> & matrix<T>::rotate(const vector <T> & axis, T angle) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> & matrix<T, I, S>::rotate(const vector<T, I, S> & axis, T angle) {
 			return apply(rotation(axis, angle));
 		}
 		
-		template<class T>
-		inline matrix<T> & matrix<T>::rotate(const vector <T> & v) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> & matrix<T, I, S>::rotate(const vector<T, I, S> & v) {
 			return apply(rotation(v));
 		}
 		
-		template<class T>
-		inline matrix<T> & matrix<T>::mirrorX() {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> & matrix<T, I, S>::mirrorX() {
 			return apply({
 				vector_constants<T>::negativeX,
 				vector_constants<T>::positiveY,
@@ -475,8 +475,8 @@ namespace asd
 			});
 		}
 		
-		template<class T>
-		inline matrix<T> & matrix<T>::mirrorY() {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> & matrix<T, I, S>::mirrorY() {
 			return apply({
 				vector_constants<T>::positiveX,
 				vector_constants<T>::negativeY,
@@ -484,8 +484,8 @@ namespace asd
 			});
 		}
 		
-		template<class T>
-		inline matrix<T> & matrix<T>::mirrorZ() {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> & matrix<T, I, S>::mirrorZ() {
 			return apply({
 				vector_constants<T>::positiveX,
 				vector_constants<T>::positiveY,
@@ -493,13 +493,13 @@ namespace asd
 			});
 		}
 		
-		template<class T>
-		matrix<T> & matrix<T>::translate(const vector <T> & v) {
+		template <class T, class I, class S>
+		matrix<T, I, S> & matrix<T, I, S>::translate(const vector<T, I, S> & v) {
 			return apply(translation(v));
 		}
 		
-		template<class T>
-		inline matrix<T> matrix<T>::rotationX(T angle) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> matrix<T, I, S>::rotationX(T angle) {
 			auto v = trigon(angle);
 			
 			return {
@@ -509,8 +509,8 @@ namespace asd
 			};
 		}
 		
-		template<class T>
-		inline matrix<T> matrix<T>::rotationY(T angle) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> matrix<T, I, S>::rotationY(T angle) {
 			auto v = trigon(angle);
 			
 			return {
@@ -520,8 +520,8 @@ namespace asd
 			};
 		}
 		
-		template<class T>
-		inline matrix<T> matrix<T>::rotationZ(T angle) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> matrix<T, I, S>::rotationZ(T angle) {
 			auto v = trigon(angle);
 			
 			return {
@@ -531,8 +531,8 @@ namespace asd
 			};
 		}
 		
-		template<class T>
-		inline matrix<T> matrix<T>::rotation(const vector <T> & v, T angle) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> matrix<T, I, S>::rotation(const vector<T, I, S> & v, T angle) {
 			auto sc = trigon(angle);
 			auto cc = sc.template shuffle<1, 1, 1, 3>();
 			auto nc = (vector_constants<T>::oneXYZ - cc) * v;
@@ -554,10 +554,10 @@ namespace asd
 			};
 		}
 		
-		template<class T>
-		inline matrix<T> matrix<T>::rotation(const vector <T> & euler) {
-			vector<T, true> sine, cosine;
-			sincos(euler, sine, cosine);
+		template <class T, class I, class S>
+		inline matrix<T, I, S> matrix<T, I, S>::rotation(const vector<T, I, S> & euler) {
+			aligned_vec<T, I> sine, cosine;
+			sincos<T, I, S>(euler, sine, cosine);
 			
 			auto x = sine.template shuffle<0, 0, 0, 0>(cosine).
 				template blend<0, 1, 1, 0>(vector_constants<T>::positiveY);                                    // [ sx, 1, 0, cx ]
@@ -577,15 +577,15 @@ namespace asd
 			};
 		}
 		
-		template<class T>
-		inline matrix<T> matrix<T>::scaling(const vector <T> & s) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> matrix<T, I, S>::scaling(const vector<T, I, S> & s) {
 			return {
 				s.mask_x(), s.mask_y(), s.mask_z()
 			};
 		}
 		
-		template<class T>
-		inline matrix<T> matrix<T>::translation(const vector <T> & t) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> matrix<T, I, S>::translation(const vector<T, I, S> & t) {
 			return {
 				vector_constants<T>::positiveX.template blend<0, 0, 0, 1>(t.spread_x()),
 				vector_constants<T>::positiveY.template blend<0, 0, 0, 1>(t.spread_y()),
@@ -593,13 +593,13 @@ namespace asd
 			};
 		}
 		
-		template<class T>
-		inline matrix<T> matrix<T>::ortho(T x0, T x1, T y0, T y1, T z0, T z1) {
-			const vector<T, true> max{x1, y1, z1, 1};
-			const vector<T, true> min{x0, y0, z0, 0};
+		template <class T, class I, class S>
+		inline matrix<T, I, S> matrix<T, I, S>::ortho(T x0, T x1, T y0, T y1, T z0, T z1) {
+			const aligned_vec<T, I> max{x1, y1, z1, 1};
+			const aligned_vec<T, I> min{x0, y0, z0, 0};
 			
-			vector<T> d = (max - min).inverse();
-			const vector<T> t = -(max + min) * d;
+			auto d = (max - min).inverse();
+			const auto t = -(max + min) * d;
 			d *= vector_constants<T>::two;
 			
 			return {
@@ -610,13 +610,13 @@ namespace asd
 			};
 		}
 		
-		template<class T>
-		inline matrix<T> matrix<T>::orthot(T x0, T x1, T y0, T y1, T z0, T z1) {
-			const vector<T> max{x1, y1, z1, 1};
-			const vector<T> min{x0, y0, z0, 0};
+		template <class T, class I, class S>
+		inline matrix<T, I, S> matrix<T, I, S>::orthot(T x0, T x1, T y0, T y1, T z0, T z1) {
+			const aligned_vec<T, I> max{x1, y1, z1, 1};
+			const aligned_vec<T, I> min{x0, y0, z0, 0};
 			
-			vector<T> d = (max - min).inverse();
-			const vector<T> t = -(max + min) * d;
+			auto d = (max - min).inverse();
+			const auto t = -(max + min) * d;
 			d *= vector_constants<T>::two;
 			
 			return {
@@ -627,11 +627,11 @@ namespace asd
 			};
 		}
 		
-		template<class T>
-		inline matrix<T> matrix<T>::perspective(T fov, T aspect, T z0, T z1) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> matrix<T, I, S>::perspective(T fov, T aspect, T z0, T z1) {
 			const T f = 1 / std::tan(radians(fov) / 2);
 			const T z = z1 / (z1 - z0);
-			const vector<T> v = {f * aspect, f, z, -z0 * z};
+			const vector<T, I, S> v = {f * aspect, f, z, -z0 * z};
 			
 			return {
 				v.mask_x(),                        // f/a | 0 | 0 |  0
@@ -641,11 +641,11 @@ namespace asd
 			};
 		}
 		
-		template<class T>
-		inline matrix<T> matrix<T>::perspectivet(T fov, T aspect, T z0, T z1) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> matrix<T, I, S>::perspectivet(T fov, T aspect, T z0, T z1) {
 			const T f = 1 / std::tan(radians(fov) / 2);
 			const T z = z1 / (z1 - z0);
-			const vector<T> v = {f * aspect, f, z, -z0 * z};
+			const vector<T, I, S> v = {f * aspect, f, z, -z0 * z};
 			
 			return {
 				v.mask_x(),                                            // f*a | 0 |  0  | 0
@@ -655,10 +655,10 @@ namespace asd
 			};
 		}
 		
-		template<class T>
-		inline matrix<T> matrix<T>::frustum(T x0, T x1, T y0, T y1, T z0, T z1) {
+		template <class T, class I, class S>
+		inline matrix<T, I, S> matrix<T, I, S>::frustum(T x0, T x1, T y0, T y1, T z0, T z1) {
 			const T n = 2 * z1;
-			const vector<T> v{1 / (x1 - x0), 1 / (y1 - y0), 1 / (z1 - z0), 0};
+			const vector<T, I, S> v{1 / (x1 - x0), 1 / (y1 - y0), 1 / (z1 - z0), 0};
 			
 			return {
 				v.spread_x() * vector<T>{n, 0, x1 + x0, 0},
@@ -668,11 +668,11 @@ namespace asd
 			};
 		}
 		
-		template<class T>
-		inline matrix<T> matrix<T>::lookAt(const vector <T> & position, const vector <T> & center, const vector <T> & up) {
-			const vector<T> f = (center - position).normalize();
-			const vector<T> s = (up.cross(f)).normalize();
-			const vector<T> u = (f.cross(s)).normalize();
+		template <class T, class I, class S>
+		inline matrix<T, I, S> matrix<T, I, S>::lookAt(const vector<T, I, S> & position, const vector<T, I, S> & center, const vector<T, I, S> & up) {
+			auto f = (center - position).normalize();
+			auto s = (up.cross(f)).normalize();
+			auto u = (f.cross(s)).normalize();
 			
 			return {
 				s.template blend<0, 0, 0, 1>(-s.dot(position)),
@@ -681,11 +681,11 @@ namespace asd
 			};
 		}
 		
-		template<class T>
-		inline matrix<T> matrix<T>::lookTo(const vector <T> & position, const vector <T> & direction, const vector <T> & up) {
-			const vector<T> f = direction;
-			const vector<T> s = (up.cross(f)).normalize();
-			const vector<T> u = (f.cross(s)).normalize();
+		template <class T, class I, class S>
+		inline matrix<T, I, S> matrix<T, I, S>::lookTo(const vector<T, I, S> & position, const vector<T, I, S> & direction, const vector<T, I, S> & up) {
+			auto f = direction;
+			auto s = (up.cross(f)).normalize();
+			auto u = (f.cross(s)).normalize();
 			
 			return {
 				s.template blend<0, 0, 0, 1>(-s.dot(position)),
@@ -695,16 +695,14 @@ namespace asd
 		}
 	}
 	
-	template<class T>
-	inline void print(String & s, const math::matrix<T> & mat) {
-		s << String::assemble(
-			"(",
-			mat(0, 0), ", ", mat(0, 1), ", ", mat(0, 2), ", ", mat(0, 3), " | ",
-			mat(1, 0), ", ", mat(1, 1), ", ", mat(1, 2), ", ", mat(1, 3), " | ",
-			mat(2, 0), ", ", mat(2, 1), ", ", mat(2, 2), ", ", mat(2, 3), " | ",
-			mat(3, 0), ", ", mat(3, 1), ", ", mat(3, 2), ", ", mat(3, 3),
-			")"
-		);
+	template <class Ch, class Traits, class T, class I, class S>
+	inline std::basic_ostream<Ch, Traits> & operator << (std::basic_ostream<Ch, Traits> & out, const math::matrix<T, I, S> & mat) {
+		return out << "(" <<
+			mat(0, 0) << ", " << mat(0, 1) << ", " << mat(0, 2) << ", " << mat(0, 3) << " | " <<
+			mat(1, 0) << ", " << mat(1, 1) << ", " << mat(1, 2) << ", " << mat(1, 3) << " | " <<
+			mat(2, 0) << ", " << mat(2, 1) << ", " << mat(2, 2) << ", " << mat(2, 3) << " | " <<
+			mat(3, 0) << ", " << mat(3, 1) << ", " << mat(3, 2) << ", " << mat(3, 3) <<
+			")";
 	}
 }
 

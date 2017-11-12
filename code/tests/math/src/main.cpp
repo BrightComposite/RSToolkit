@@ -58,14 +58,14 @@ namespace asd
 		cout << obj->matrix.transposition() << endl;
 		
 		{
-			math::xmm_vec vec1(0, 1, 2, 3), vec2(0, 1, 2, 3);
+			auto vec1 = math::vec(0, 1, 2, 3), vec2 = math::vec(0, 1, 2, 3);
+			const auto vec3 = math::vec(2, 1, 5, 2);
 			
 			benchmark("simple multiplication") << [&]() {
 				repeat(i, 1000) {
-					vec2.x += vec1.x * 2;
-					vec2.y += vec1.y * 1;
-					vec2.z += vec1.z * 5;
-					vec2.w += vec1.w * 2;
+					vec2.x += vec1.x * vec3.x;
+					vec2.z += vec1.z * vec3.z;
+					vec2.y += vec1.y * vec3.y;
 				}
 			};
 			
@@ -73,17 +73,35 @@ namespace asd
 		}
 		
 		{
-			math::xmm_vec vec1(0, 1, 2, 3), vec2(0, 1, 2, 3);
-			const math::xmm_vec vec3{2, 1, 5, 2};
+			auto vec1 = math::vec(0, 1, 2, 3), vec2 = math::vec(0, 1, 2, 3);
+			const auto vec3 = math::vec(2, 1, 5, 2);
 			
 			benchmark("vector multiplication") << [&]() {
 				repeat(i, 1000) {
-					vec2 += (vec1 * vec3);
+					vec2 += vec1 * vec3;
 				}
 			};
 			
 			cout << vec2.x << " " << vec2.y << " " << vec2.z << " " << vec2.w << endl;
 		}
+		
+		{
+			using Intrin = Intrinsic<float, 4>;
+			using Data = IntrinData<float, 4>;
+			
+			auto vec1 = Intrin::load(0, 1, 2, 3), vec2 = Intrin::load(0, 1, 2, 3);
+			const auto vec3 = Intrin::load(2, 1, 5, 2);
+			
+			benchmark("intrinsic multiplication") << [&]() {
+				repeat(i, 1000) {
+					vec2 = Intrin::add(vec2, Intrin::mul(vec1, vec3));
+				}
+			};
+			
+			cout << Data::get<0>(vec2) << " " << Data::get<1>(vec2) << " " << Data::get<2>(vec2) << " " << Data::get<3>(vec2) << endl;
+		}
+		
+		return 0;
     });
 }
 

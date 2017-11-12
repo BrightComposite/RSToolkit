@@ -239,7 +239,7 @@ namespace asd
 				auto halfs = angles * vector_constants<T>::half;
 				
 				VectorType sine, cosine;
-				sincos(halfs, sine, cosine);
+				sincos<T, Intrinsic<T, 4>>(halfs, sine, cosine);
 				
 				auto p = sine.template shuffle<0, 0, 0, 0>(cosine);
 				auto y = sine.template shuffle<1, 1, 1, 1>(cosine);

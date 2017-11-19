@@ -17,7 +17,7 @@ namespace asd
 	class FreeTypeFont : public Font
 	{
 	public:
-		FreeTypeFont(const string & type, const handle<ByteData> & raw) : FreeTypeFont(raw)
+		FreeTypeFont(const string & type, const handle<byte_data> & raw) : FreeTypeFont(raw)
 		{
 			if(FT_New_Memory_Face(ft, raw->ptr, static_cast<FT_Long>(raw->size), 0, &face) != 0)
 				throw FontDecodingException("Can't read font of type \"", type, "\"");
@@ -29,7 +29,7 @@ namespace asd
 		}
 
 	protected:
-		FreeTypeFont(const handle<ByteData> & data) : data(data) {}
+		FreeTypeFont(const handle<byte_data> & data) : data(data) {}
 
 		virtual void loadSymbol(handle<Symbol> & symbol, graphics * graphics, int size, wchar_t character) const override
 		{
@@ -96,7 +96,7 @@ namespace asd
 			return _cache[graphics][size][character];
 		}
 
-		handle<ByteData> data;
+		handle<byte_data> data;
 		FT_Face face;
 		mutable dictionary<const graphics *, dictionary<int, Map<wchar_t, Symbol>>> _cache;
 	};
@@ -112,7 +112,7 @@ namespace asd
 		FT_Done_FreeType(ft);
 	}
 
-	void FreeTypeDecoder::decode(handle<Font> & output, const string & type, const handle<ByteData> & raw)
+	void FreeTypeDecoder::decode(handle<Font> & output, const string & type, const handle<byte_data> & raw)
 	{
 		output = make::handle<FreeTypeFont>(type, raw);
 	}

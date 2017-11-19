@@ -277,6 +277,9 @@ namespace asd
 		using fmat = matrix<float>;
 		using dmat = matrix<double>;
 		
+		template<class T, typename Implementation = Intrinsic<T, 4>>
+		using aligned_matrix = matrix<T, Implementation, AlignedVectorStorage<T, Implementation>>;
+		
 		template <class T, class I, class S>
 		inline matrix<T, I, S> operator +(const matrix<T, I, S> & m1, const matrix<T, I, S> & m2) {
 			return matrix<T, I, S>(m1) += m2;

@@ -6,7 +6,6 @@ cmake_minimum_required(VERSION 3.3)
 
 #--------------------------------------------------------
 
-include(${ASD_TOOLS}/git.cmake)
 include(CMakeParseArguments)
 
 #--------------------------------------------------------
@@ -17,18 +16,6 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";VENDOR_TOOL_GUARD;")
     function(vendor VENDOR_KEY)
 		set(ARGUMENTS ${ARGN})
 		
-		if(NOT "${ARGN}" STREQUAL "")
-			set(OPTIONS)
-			set(ONE_VALUE GIT)
-			set(MULTI_VALUE)
-			cmake_parse_arguments(VENDOR "${OPTIONS}" "${ONE_VALUE}" "${MULTI_VALUE}" ${ARGUMENTS})
-			
-			if(NOT "${VENDOR_GIT}" STREQUAL "" AND NOT EXISTS "${WORKSPACE_VENDOR_ROOT}/${VENDOR_KEY}")
-				git_clone("${VENDOR_GIT}" "${VENDOR_KEY}" "${WORKSPACE_VENDOR_ROOT}")
-				file(REMOVE_RECURSE "${WORKSPACE_VENDOR_ROOT}/${VENDOR_KEY}/.git")
-			endif()
-		endif()
-			
         if(EXISTS "${WORKSPACE_VENDOR_ROOT}/${VENDOR_KEY}")
 			set(VENDOR_DIR "${WORKSPACE_VENDOR_ROOT}/${VENDOR_KEY}")
 		elseif(EXISTS "${VENDOR_ROOT}/${VENDOR_KEY}")

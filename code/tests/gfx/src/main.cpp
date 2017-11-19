@@ -30,13 +30,12 @@ namespace asd
 			
 			std::cout << "Press ESC to exit" << std::endl;
 			
-			
 			w.show();
 			
 			launch(w, context);
-		} catch (const WindowCreationException & e) {
+		} catch (const window_creation_exception & e) {
 			std::cerr << "Window creation error: " << e.what() << std::endl;
-		} catch (const GraphicsException & e) {
+		} catch (const graphics_exception & e) {
 			std::cerr << "Error: " << e.what() << std::endl;
 		}
 	});

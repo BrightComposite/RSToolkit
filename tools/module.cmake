@@ -415,8 +415,8 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		
 		message("")
 		
-		if(NOT "${PROJECT_DIR}" STREQUAL "modules")
-			set(PROJECT_ID ${PROJECT_ID}_${PROJECT_DIR})
+		if("${PROJECT_DIR}" STREQUAL "tests")
+			set(PROJECT_ID ${PROJECT_ID}_test)
 		endif()
 		
 		set(PROJECT_NAME_OF_${PROJECT_ID} ${PROJECT_NAME} CACHE STRING "project name of ${PROJECT_ID} module")

@@ -30,7 +30,7 @@ namespace asd
 	
 	class window;
 	
-	exception_class(WindowCreationException);
+	exception_class(window_creation_exception);
 
 #if BOOST_OS_WINDOWS
 	
@@ -74,10 +74,10 @@ namespace asd
 		XVisualInfo * _visualInfo;
 	};
 	
-	class OpenDisplayException : public WindowCreationException
+	class open_display_exception : public window_creation_exception
 	{
 	public:
-		OpenDisplayException(const char * display_name) : WindowCreationException("Can't open X display ", display_name, "!") {}
+		open_display_exception(const char * display_name) : window_creation_exception("Can't open X display ", display_name, "!") {}
 	};
 	
 #endif

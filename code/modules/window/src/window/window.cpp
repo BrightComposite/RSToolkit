@@ -447,7 +447,7 @@ namespace asd
 		_display = XOpenDisplay(displayName);
 		
 		if (_display == nullptr) {
-			throw OpenDisplayException(displayName);
+			throw open_display_exception(displayName);
 		}
 		
 		this->area.subscribe([this](const math::int_rect & rect) {
@@ -496,7 +496,7 @@ namespace asd
 		}
 		
 		if (!_handle) {
-			throw WindowCreationException("Cannot create X Window!");
+			throw window_creation_exception("Cannot create X Window!");
 		}
 		
 		XStoreName(_display, _handle, "ASD");

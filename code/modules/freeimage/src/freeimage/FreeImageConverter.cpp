@@ -53,7 +53,7 @@ namespace asd
 		return f->second;
 	}
 
-	void FreeImageConverter::decode(image_data * output, const string & type, const ByteData * raw)
+	void FreeImageConverter::decode(image_data * output, const string & type, const byte_data * raw)
 	{
 		anyway a;
 		FREE_IMAGE_FORMAT internal_format = getFIFFormat(type);
@@ -85,7 +85,7 @@ namespace asd
 		FreeImage_ConvertToRawBits(output->ptr, bmp, output->width() * bpp, bpp * 8, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK, TRUE);
 	}
 
-	void FreeImageConverter::encode(OwnedByteData * output, const string & type, const image_data * input)
+	void FreeImageConverter::encode(owned_byte_data * output, const string & type, const image_data * input)
 	{
 		anyway a;
 		FREE_IMAGE_FORMAT internal_format = getFIFFormat(type);

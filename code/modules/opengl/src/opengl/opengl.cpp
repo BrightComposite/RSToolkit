@@ -28,7 +28,7 @@ namespace asd
 		static void set_pixel_format(HDC dc)
 		{
 			if(dc == nullptr)
-				throw ContextCreationException("Can't set pixel format, device context is null!");
+				throw context_creation_exception("Can't set pixel format, device context is null!");
 
 			PIXELFORMATDESCRIPTOR pfd;
 
@@ -48,7 +48,7 @@ namespace asd
 			wglChoosePixelFormatARB(dc, attribs, NULL, 1, &pixelFormat, (UINT*)&numFormats);
 
 			if(SetPixelFormat(dc, pixelFormat, &pfd) == FALSE) {
-				throw ContextCreationException("Can't set pixel format! Call to SetPixelFormat failed");
+				throw context_creation_exception("Can't set pixel format! Call to SetPixelFormat failed");
 			}
 		}
 
@@ -86,11 +86,11 @@ namespace asd
 			_context = wglCreateContextAttribsARB(_window.device(), nullptr, attribs);
 
 			if(!_context) {
-				throw ContextCreationException("Can't create OpenGL render context!");
+				throw context_creation_exception("Can't create OpenGL render context!");
 			}
 
 			if(wglMakeCurrent(_window.device(), _context) == GL_FALSE) {
-				throw ContextCreationException("Can't bind OpenGL render context!");
+				throw context_creation_exception("Can't bind OpenGL render context!");
 			}
 
 			check_for_errors();
@@ -141,24 +141,24 @@ namespace asd
 			int pixelFormat = ChoosePixelFormat(_device, &pfd);
 
 			if(pixelFormat == 0) {
-				throw ContextCreationException("Can't choose pixel format!");
+				throw context_creation_exception("Can't choose pixel format!");
 			}
 
 			if(SetPixelFormat(_device, pixelFormat, &pfd) == FALSE) {
-				throw ContextCreationException("Can't set pixel format! Call to SetPixelFormat failed");
+				throw context_creation_exception("Can't set pixel format! Call to SetPixelFormat failed");
 			}
 
 			auto _tmpContext = wglCreateContext(_device);
 
 			if(_tmpContext == nullptr || wglMakeCurrent(_device, _tmpContext) == GL_FALSE) {
-				throw ContextCreationException("Can't create initial OpenGL render context!");
+				throw context_creation_exception("Can't create initial OpenGL render context!");
 			}
 
 			glewExperimental = GL_TRUE;
 			GLenum error = glewInit();
 
 			if(error > 0) {
-				throw ContextCreationException("Can't initialize GLEW! ", (const char *)glewGetErrorString(error));
+				throw context_creation_exception("Can't initialize GLEW! ", (const char *)glewGetErrorString(error));
 			}
 
 			wglMakeCurrent(nullptr, nullptr);
@@ -220,7 +220,7 @@ namespace asd
 		
 		void window_context::prepare() {
 			if (glXMakeCurrent(_window.display(), _window.handle(), _context) == GL_FALSE) {
-				throw ContextCreationException("Can't bind OpenGL render context!");
+				throw context_creation_exception("Can't bind OpenGL render context!");
 			}
 			
 			if (!glXIsDirect(_window.display(), glXGetCurrentContext())) {
@@ -279,7 +279,7 @@ namespace asd
 			_visualInfo = glXChooseVisual(_window.display(), screen, att);
 			
 			if (!_visualInfo) {
-				throw ContextCreationException("Failed to get visual info!");
+				throw context_creation_exception("Failed to get visual info!");
 			}
 			
 			::Window windowHandle = 0;
@@ -299,25 +299,25 @@ namespace asd
 				windowHandle = XCreateWindow(_window.display(), root, 0, 0, 100, 100, 0, _visualInfo->depth, InputOutput, _visualInfo->visual, mask, &winAttr);
 				
 				if (!windowHandle) {
-					throw ContextCreationException("Cannot create X Window!");
+					throw context_creation_exception("Cannot create X Window!");
 				}
 			}
 			
 			GLXContext _tmpContext = glXCreateContext(_window.display(), _visualInfo, 0, True);
 			
 			if (!_tmpContext) {
-				throw ContextCreationException("Could not allocate temporary OpenGL render context!");
+				throw context_creation_exception("Could not allocate temporary OpenGL render context!");
 			}
 			
 			if (glXMakeCurrent(_window.display(), windowHandle, _tmpContext) == GL_FALSE) {
-				throw ContextCreationException("Can't bind temporary OpenGL render context!");
+				throw context_creation_exception("Can't bind temporary OpenGL render context!");
 			}
 			
 			glewExperimental = GL_TRUE;
 			GLenum error = glewInit();
 			
 			if (error > 0) {
-				throw ContextCreationException("Can't initialize GLEW! ", (const char *) glewGetErrorString(error));
+				throw context_creation_exception("Can't initialize GLEW! ", (const char *) glewGetErrorString(error));
 			}
 			
 			glXMakeCurrent(_window.display(), 0, 0);
@@ -326,14 +326,14 @@ namespace asd
 			auto fbConfig = chooseFBConfig(_window.display(), screen);
 			
 			if (!fbConfig) {
-				throw ContextCreationException("Failed to get GLXFBConfig!");
+				throw context_creation_exception("Failed to get GLXFBConfig!");
 			}
 			
 			XFree(_visualInfo);
 			_visualInfo = glXGetVisualFromFBConfig(_window.display(), fbConfig);
 			
 			if (!_visualInfo) {
-				throw ContextCreationException("Failed to get visual info!");
+				throw context_creation_exception("Failed to get visual info!");
 			}
 			
 			XDestroyWindow(_window.display(), windowHandle);
@@ -360,7 +360,7 @@ namespace asd
 			XSync(_window.display(), False);
 			
 			if (!_context) {
-				throw ContextCreationException("Can't create OpenGL render context!");
+				throw context_creation_exception("Can't create OpenGL render context!");
 			}
 		}
 #endif
@@ -391,7 +391,7 @@ namespace asd
 			GLenum error = glGetError();
 			
 			if (error != GL_NO_ERROR) {
-				throw ContextCreationException("opengl error, code: ", String::hex(error));
+				throw context_creation_exception("opengl error, code: ", String::hex(error));
 			}
 		}
 		

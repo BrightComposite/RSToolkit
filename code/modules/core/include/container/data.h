@@ -499,8 +499,8 @@ namespace asd
 		}
 	};
 
-	typedef data<byte> ByteData;
-	typedef owned_data<byte> OwnedByteData;
+	typedef data<byte> byte_data;
+	typedef owned_data<byte> owned_byte_data;
 }
 
 //---------------------------------------------------------------------------

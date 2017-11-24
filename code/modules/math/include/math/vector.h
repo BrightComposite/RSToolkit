@@ -324,7 +324,7 @@ namespace asd
 			
 			vector(const T * v) : vector(Implementation::load(v)) {}
 			
-			vector(T value) : base_type({value, value, value, value}) {}
+			vector(T value) : base_type(value, value, value, value) {}
 			
 			vector(T x, T y, T z = 0, T w = 0) : base_type(x, y, z, w) {}
 			

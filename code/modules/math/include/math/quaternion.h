@@ -38,13 +38,12 @@ namespace asd
 				array<T, 4> q;
 				T elements[4];
 				VectorType v;
-				IntrinType intrinsic;
 			};
 			
 			member_cast(q, array<T, 4>);
 			member_cast(data, Data);
 			
-			quaternion() : v(VectorType::positiveW) {}
+			quaternion() : v(vector_constants<T>::positiveW) {}
 			
 			quaternion(const quaternion & q) : v(q.v) {}
 			
@@ -119,7 +118,7 @@ namespace asd
 			}
 			
 			quaternion & negate() {
-				Intrin::negate(intrinsic);
+				Intrin::negate(v);
 				return *this;
 			}
 			
@@ -159,7 +158,7 @@ namespace asd
 			}
 			
 			VectorType apply_to(const VectorType & d) const {
-				const auto xyz = v.clearW();
+				const auto xyz = v.clear_w();
 				const auto t = 2 * cross(xyz, d);
 				return d + w * t + cross(xyz, t);
 			}
@@ -224,21 +223,21 @@ namespace asd
 			}
 			
 			quaternion & normalize() & {
-				v /= sqrt(v.sqr().fillsum());
+				v /= sqrt(v.sqr().fill_sum());
 				return *this;
 			}
 			
 			quaternion && normalize() && {
-				v /= sqrt(v.sqr().fillsum());
+				v /= sqrt(v.sqr().fill_sum());
 				return std::forward<quaternion>(*this);
 			}
 			
 			// pitch (x), yaw (y), roll (z), radians
 			static quaternion from_euler(const VectorType & angles) {
-				auto halfs = angles * VectorType::half;
+				auto halfs = angles * vector_constants<T>::half;
 				
 				VectorType sine, cosine;
-				sincos(halfs, sine, cosine);
+				sincos<T, Intrinsic<T, 4>>(halfs, sine, cosine);
 				
 				auto p = sine.template shuffle<0, 0, 0, 0>(cosine);
 				auto y = sine.template shuffle<1, 1, 1, 1>(cosine);
@@ -277,13 +276,13 @@ namespace asd
 				VectorType s = -v.sqr();
 				s = s.template shuffle<1, 2, 0, 3>() + s.template shuffle<2, 0, 1, 3>();
 				VectorType a = v.template shuffle<1, 2, 0, 3>() * v.template shuffle<2, 0, 1, 3>();
-				VectorType b = v * v.spreadW().template negate<1, 0, 0, 0>();
+				VectorType b = v * v.spread_w().template negate<1, 0, 0, 0>();
 				
 				return {
-					VectorType::positiveX + VectorType::twoXYZ * s.template blend<0, 1, 1, 0>((a + b.template negate<0, 0, 1, 0>()).template shuffle<2, 2, 1, 1>()),    // 1.0f - 2.0f * (y * y + z * z),	2.0f * (x * y - w * z),			2.0f * (x * z + w * y),			0.0f
-					VectorType::positiveY + VectorType::twoXYZ * s.template blend<1, 0, 1, 0>((a + b).template shuffle<2, 2, 0, 0>()),                                    // 2.0f * (x * y + w * z),			1.0f - 2.0f * (x * x + z * z),	2.0f * (y * z - w * x),			0.0f
-					VectorType::positiveZ + VectorType::twoXYZ * (a - b).template shuffle<1, 0, 2, 3>(s),                                                                // 2.0f * (x * z - w * y),			2.0f * (y * z + w * x),			1.0f - 2.0f * (x * x + y * y),	0.0f
-					VectorType::positiveW
+					vector_constants<T>::positiveX + vector_constants<T>::twoXYZ * s.template blend<0, 1, 1, 0>((a + b.template negate<0, 0, 1, 0>()).template shuffle<2, 2, 1, 1>()),    // 1.0f - 2.0f * (y * y + z * z),	2.0f * (x * y - w * z),			2.0f * (x * z + w * y),			0.0f
+					vector_constants<T>::positiveY + vector_constants<T>::twoXYZ * s.template blend<1, 0, 1, 0>((a + b).template shuffle<2, 2, 0, 0>()),                                    // 2.0f * (x * y + w * z),			1.0f - 2.0f * (x * x + z * z),	2.0f * (y * z - w * x),			0.0f
+					vector_constants<T>::positiveZ + vector_constants<T>::twoXYZ * (a - b).template shuffle<1, 0, 2, 3>(s),                                                                // 2.0f * (x * z - w * y),			2.0f * (y * z + w * x),			1.0f - 2.0f * (x * x + y * y),	0.0f
+					vector_constants<T>::positiveW
 				};
 			}
 			
@@ -291,12 +290,12 @@ namespace asd
 				VectorType s = -v.sqr();
 				s = s.template shuffle<1, 2, 0, 3>() + s.template shuffle<2, 0, 1, 3>();
 				VectorType a = v.template shuffle<1, 2, 0, 3>() * v.template shuffle<2, 0, 1, 3>();
-				VectorType b = v * v.spreadW().template negate<1, 0, 0, 0>();
+				VectorType b = v * v.spread_w().template negate<1, 0, 0, 0>();
 				
-				m[0] = VectorType::positiveX + VectorType::twoXYZ * s.template blend<0, 1, 1, 0>((a + b.template negate<0, 0, 1, 0>()).template shuffle<2, 2, 1, 1>()); // 1.0f - 2.0f * (y * y + z * z),	2.0f * (x * y - w * z),			2.0f * (x * z + w * y),			0.0f
-				m[1] = VectorType::positiveY + VectorType::twoXYZ * s.template blend<1, 0, 1, 0>((a + b).template shuffle<2, 2, 0, 0>());                                // 2.0f * (x * y + w * z),			1.0f - 2.0f * (x * x + z * z),	2.0f * (y * z - w * x),			0.0f
-				m[2] = VectorType::positiveZ + VectorType::twoXYZ * (a - b).template shuffle<1, 0, 2, 3>(s);                                                            // 2.0f * (x * z - w * y),			2.0f * (y * z + w * x),			1.0f - 2.0f * (x * x + y * y),	0.0f
-				m[3] = VectorType::positiveW;
+				m[0] = vector_constants<T>::positiveX + vector_constants<T>::twoXYZ * s.template blend<0, 1, 1, 0>((a + b.template negate<0, 0, 1, 0>()).template shuffle<2, 2, 1, 1>()); // 1.0f - 2.0f * (y * y + z * z),	2.0f * (x * y - w * z),			2.0f * (x * z + w * y),			0.0f
+				m[1] = vector_constants<T>::positiveY + vector_constants<T>::twoXYZ * s.template blend<1, 0, 1, 0>((a + b).template shuffle<2, 2, 0, 0>());                                // 2.0f * (x * y + w * z),			1.0f - 2.0f * (x * x + z * z),	2.0f * (y * z - w * x),			0.0f
+				m[2] = vector_constants<T>::positiveZ + vector_constants<T>::twoXYZ * (a - b).template shuffle<1, 0, 2, 3>(s);                                                            // 2.0f * (x * z - w * y),			2.0f * (y * z + w * x),			1.0f - 2.0f * (x * x + y * y),	0.0f
+				m[3] = vector_constants<T>::positiveW;
 			}
 			
 			static api(math) const quaternion identity;
@@ -307,11 +306,8 @@ namespace asd
 		using floatq = FloatQuaternion;
 		using doubleq = DoubleQuaternion;
 		
-		template<class T>
-		using AlignedQuaternion = aligned<quaternion<T>>;
-		
-		using fquat = AlignedQuaternion<float>;
-		using dquat = AlignedQuaternion<double>;
+		using fquat = quaternion<float>;
+		using dquat = quaternion<double>;
 		
 		template<class T>
 		quaternion<T> operator +(const quaternion<T> & q1, const quaternion<T> & q2) {
@@ -334,9 +330,9 @@ namespace asd
 			vector<T> v2 = q2.v;
 			
 			return {
-				v2.spreadW() * v1 +
-					v2.template shuffle<0, 1, 2, 0>() * v1.template shuffle<3, 3, 3, 0>().negateW() +
-					v2.template shuffle<1, 2, 0, 1>() * v1.template shuffle<2, 0, 1, 1>().negateW() -
+				v2.spread_w() * v1 +
+					v2.template shuffle<0, 1, 2, 0>() * v1.template shuffle<3, 3, 3, 0>().negate_w() +
+					v2.template shuffle<1, 2, 0, 1>() * v1.template shuffle<2, 0, 1, 1>().negate_w() -
 					v2.template shuffle<2, 0, 1, 2>() * v1.template shuffle<1, 2, 0, 2>()
 			};
 		}

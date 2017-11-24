@@ -30,8 +30,6 @@ namespace asd
 		morph_origin(BasicReceivers);
 	};
 
-	create_morph_pool(message, BasicReceivers);
-
 	using ReceiversSet = morph<BasicReceivers>;
 
 	member_checker(has_receivers, _rcvrs);

@@ -13,7 +13,7 @@
 #include "preprocessor.h"
 #include "flag.h"
 
-#if defined(__x86_64) || defined(_WIN64)
+#if defined(__x86_64) || defined(_WIN64) || defined(__LP64__)
 #define ARCH_X64
 #else
 #define ARCH_X86

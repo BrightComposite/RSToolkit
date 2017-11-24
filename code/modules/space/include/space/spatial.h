@@ -159,11 +159,11 @@ namespace asd
 			}
 			
 			virtual void move(const vector & offset) override {
-				_pos += _rot.applyTo(offset);
+				_pos += _rot.apply_to(offset);
 			}
 			
 			virtual void rotate(const quaternion & rot) override {
-				_rot.rotateBy(rot);
+				_rot.rotate_by(rot);
 			}
 		
 		protected:

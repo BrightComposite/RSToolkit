@@ -48,10 +48,10 @@ namespace asd
 
 		for(int i = 0; i < 20; ++i) {
 			cout << pos->position << endl;
-			pos->position = dir->rotation->applyTo(pos->position);
+			pos->position = dir->rotation->apply_to(pos->position);
 		}
 	
-		obj->matrix = dir->rotation->toMatrix();
+		obj->matrix = dir->rotation->to_matrix();
 		cout << obj->matrix << endl;
 		cout << obj->matrix->transposition() << endl;
     });

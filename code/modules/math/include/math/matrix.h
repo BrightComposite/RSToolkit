@@ -240,9 +240,9 @@ namespace asd
 			inline matrix & scale(const vector <T> & s);
 			inline matrix & scale(const T s);
 			
-			inline matrix & rotateX(T);
-			inline matrix & rotateY(T);
-			inline matrix & rotateZ(T);
+			inline matrix & rotate_x(T);
+			inline matrix & rotate_y(T);
+			inline matrix & rotate_z(T);
 			inline matrix & rotate(const vector <T> & axis, T angle);
 			inline matrix & rotate(const vector <T> & rotation);
 			
@@ -445,17 +445,17 @@ namespace asd
 		}
 		
 		template<class T>
-		inline matrix<T> & matrix<T>::rotateX(T angle) {
+		inline matrix<T> & matrix<T>::rotate_x(T angle) {
 			return apply(rotationX(angle));
 		}
 		
 		template<class T>
-		inline matrix<T> & matrix<T>::rotateY(T angle) {
+		inline matrix<T> & matrix<T>::rotate_y(T angle) {
 			return apply(rotationY(angle));
 		}
 		
 		template<class T>
-		inline matrix<T> & matrix<T>::rotateZ(T angle) {
+		inline matrix<T> & matrix<T>::rotate_z(T angle) {
 			return apply(rotationZ(angle));
 		}
 		

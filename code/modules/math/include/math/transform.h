@@ -35,7 +35,7 @@ namespace asd
 			
 			transform(const vector<T> & p) : _matrix(matrix<T>::translation(p)) {}
 			
-			transform(const quaternion<T> & r) { r.toMatrix(_matrix); }
+			transform(const quaternion<T> & r) { r.to_matrix(_matrix); }
 			
 			transform(const vector<T> & p, const quaternion<T> & r) : transform(r) {
 				(*_matrix)
@@ -51,7 +51,7 @@ namespace asd
 			transform(const vector<T> & p, const quaternion<T> & r, const vector<T> & s) {
 				(*_matrix)
 					.scale(s)
-					.apply(r.toMatrix())
+					.apply(r.to_matrix())
 					.translate(p);
 			}
 			
@@ -104,7 +104,7 @@ namespace asd
 				*_matrix *= t._matrix;
 			}
 			
-			void applyTo(transform & t) const {
+			void apply_to(transform & t) const {
 				*t._matrix *= _matrix;
 			}
 			
@@ -129,12 +129,12 @@ namespace asd
 			}
 			
 			transform & rotate(const quaternion<T> & q) & {
-				*_matrix *= q.toMatrix();
+				*_matrix *= q.to_matrix();
 				return *this;
 			}
 			
 			transform && rotate(const quaternion<T> & q) && {
-				*_matrix *= q.toMatrix();
+				*_matrix *= q.to_matrix();
 				return move(*this);
 			}
 			

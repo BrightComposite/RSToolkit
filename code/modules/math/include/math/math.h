@@ -277,6 +277,14 @@ namespace asd
 			return angle - round(angle * constants<T>::inv_pi2) * constants<T>::pi2;
 		}
 		
+		inline long double operator ""_r(long double radians) {
+			return radians;
+		}
+
+		inline long double operator ""_d(long double degrees) {
+			return radians(degrees);
+		}
+
 		enum class relative_pos
 		{
 			inside = 0x00,

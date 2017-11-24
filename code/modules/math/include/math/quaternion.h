@@ -54,11 +54,11 @@ namespace asd
 			quaternion(T x, T y, T z, T w) : v{x, y, z, w} {}
 			
 			quaternion(T pitch, T yaw, T roll) {
-				fromEuler({pitch, yaw, roll});
+				from_euler({pitch, yaw, roll});
 			}
 			
 			quaternion(const VectorType & from, const VectorType & to) {
-				fromVectors(from, to);
+				from_vectors(from, to);
 			}
 			
 			quaternion(const VectorType & v) : v{v} {}
@@ -71,7 +71,7 @@ namespace asd
 			}
 			
 			quaternion(const VectorType & axis, T angle) : quaternion(trigon(angle * 0.5f).template shuffle<0, 0, 0, 1>() * axis.template blend<0, 0, 0, 1>(VectorType::positiveW)) {}
-			//	[sx sy sz c]																							 [ s  s  s  c ]						 [ x  y  z  1 ]
+			//	            [sx sy sz c]															      [ s  s  s  c ]					  [ x  y  z  1 ]
 			
 			quaternion & operator =(const quaternion & q) {
 				v = q.v;
@@ -154,43 +154,41 @@ namespace asd
 				return *this;
 			}
 			
-			quaternion & rotateBy(const quaternion & q) {
+			quaternion & rotate_by(const quaternion & q) {
 				return *this = q * *this;
 			}
 			
-			VectorType applyTo(const VectorType & d) const {
+			VectorType apply_to(const VectorType & d) const {
 				const auto xyz = v.clearW();
 				const auto t = 2 * cross(xyz, d);
 				return d + w * t + cross(xyz, t);
-				
-				//return std::move((*this * quaternion(d) * inverse()).v);
 			}
 			
 			VectorType right() const {
-				return applyTo(VectorType::right);
+				return apply_to(VectorType::right);
 			}
 			
 			VectorType up() const {
-				return applyTo(VectorType::up);
+				return apply_to(VectorType::up);
 			}
 			
 			VectorType forward() const {
-				return applyTo(VectorType::forward);
+				return apply_to(VectorType::forward);
 			}
 			
 			quaternion & rotate(const VectorType & axis, T angle) {
-				return rotateBy({axis, angle});
+				return rotate_by({axis, angle});
 			}
 			
-			quaternion & rotateX(T angle) {
+			quaternion & rotate_x(T angle) {
 				return rotate(VectorType::positiveX, angle);
 			}
 			
-			quaternion & rotateY(T angle) {
+			quaternion & rotate_y(T angle) {
 				return rotate(VectorType::positiveY, angle);
 			}
 			
-			quaternion & rotateZ(T angle) {
+			quaternion & rotate_z(T angle) {
 				return rotate(VectorType::positiveZ, angle);
 			}
 			
@@ -235,8 +233,8 @@ namespace asd
 				return std::forward<quaternion>(*this);
 			}
 			
-			// pitch (x), yaw (y), roll (z)
-			quaternion & fromEuler(const VectorType & angles) {
+			// pitch (x), yaw (y), roll (z), radians
+			static quaternion from_euler(const VectorType & angles) {
 				auto halfs = angles * VectorType::half;
 				
 				VectorType sine, cosine;
@@ -246,38 +244,36 @@ namespace asd
 				auto y = sine.template shuffle<1, 1, 1, 1>(cosine);
 				auto r = sine.template shuffle<2, 2, 2, 2>(cosine);
 				
-				v =
+				return
 					p.template shuffle<0, 2, 2, 2>() * y.template shuffle<2, 0, 2, 2>() * r.template shuffle<2, 2, 0, 2>() +
 						p.template shuffle<2, 0, 0, 0>().
 							template negate<0, 1, 0, 1>() * y.template shuffle<0, 2, 0, 0>() * r.template shuffle<0, 0, 2, 0>();
-				
-				return *this;
 			}
 			
 			// 'from' and 'to' are unit vectors
-			quaternion & fromVectors(const VectorType & from, const VectorType & to) {
+			static quaternion from_vectors(const VectorType & from, const VectorType & to) {
 				auto d = from.dot(to);
 				
 				if(d.x >= 1.0f) { // 0 degrees, no rotation
-					return *this = identity;
+					return identity;
 				}
 				
-				if(d.x < (-1.0f + constants<T>::eps)) // 180 degrees, find any acceptable orthogonal vector to represent a rotation
-				{
+				if(d.x < (-1.0f + constants<T>::eps)) { // 180 degrees, find any acceptable orthogonal vector to represent a rotation
 					auto axis = cross(VectorType::positiveX, from);
 					
 					if(axis.magnitudeSq() < constants<T>::eps2) {
 						axis = cross(VectorType::positiveY, from);
 					}
 					
-					return *this = {axis.normalize(), constants<T>::pi};
+					return {axis.normalize(), constants<T>::pi};
 				}
 				
-				v = cross(from, to).template blend<0, 0, 0, 1>(VectorType::one + d); // orthogonal vector [x y z] and rotation angle [w]
-				return normalize();
+				auto v = cross(from, to).template blend<0, 0, 0, 1>(VectorType::one + d); // orthogonal vector [x y z] and rotation angle [w]
+
+				return quaternion(v).normalize();
 			}
 			
-			matrix <T> toMatrix() const {
+			matrix <T> to_matrix() const {
 				VectorType s = -v.sqr();
 				s = s.template shuffle<1, 2, 0, 3>() + s.template shuffle<2, 0, 1, 3>();
 				VectorType a = v.template shuffle<1, 2, 0, 3>() * v.template shuffle<2, 0, 1, 3>();
@@ -291,7 +287,7 @@ namespace asd
 				};
 			}
 			
-			void toMatrix(matrix <T> & m) const {
+			void to_matrix(matrix <T> & m) const {
 				VectorType s = -v.sqr();
 				s = s.template shuffle<1, 2, 0, 3>() + s.template shuffle<2, 0, 1, 3>();
 				VectorType a = v.template shuffle<1, 2, 0, 3>() * v.template shuffle<2, 0, 1, 3>();
@@ -343,6 +339,11 @@ namespace asd
 					v2.template shuffle<1, 2, 0, 1>() * v1.template shuffle<2, 0, 1, 1>().negateW() -
 					v2.template shuffle<2, 0, 1, 2>() * v1.template shuffle<1, 2, 0, 2>()
 			};
+		}
+
+		template<class T>
+		vector<T> operator *(const vector<T> & v, const quaternion<T> & q) {
+			return q.apply_to(v);
 		}
 	}
 }

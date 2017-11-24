@@ -4,7 +4,10 @@
 #include <opengl/opengl.h>
 #include <opengl/mesh.h>
 #include <opengl/shader.h>
+#include <math/vector.h>
+#include <math/quaternion.h>
 #include <iostream>
+#include <valarray>
 
 #include <benchmark>
 
@@ -20,6 +23,39 @@ namespace asd
 	};
 	
 	int launch(window & w, opengl::context & context);
+
+	struct mesh_data
+	{
+		std::valarray<math::floatv> vertices;
+		gfx3d::vertex_indices indices;
+	};
+
+	mesh_data generate_quad() {
+		return {{
+			-1.0f,  1.0f, 1.0f, 
+			-1.0f, -1.0f, 1.0f, 
+			 1.0f, -1.0f, 1.0f, 
+			 1.0f,  1.0f, 1.0f, 
+		}, {
+			 0, 1, 2, 2, 3, 0
+		}};
+	}
+
+	mesh_data generate_cube() {
+		return {{
+			-1.0f,  1.0f,  1.0f, 
+			-1.0f, -1.0f,  1.0f, 
+			 1.0f, -1.0f,  1.0f, 
+			 1.0f,  1.0f,  1.0f, 
+			-1.0f,  1.0f, -1.0f, 
+			-1.0f, -1.0f, -1.0f, 
+			 1.0f, -1.0f, -1.0f, 
+			 1.0f,  1.0f, -1.0f,
+		}, {
+			0, 1, 2, 2, 3, 0, // top
+
+		}};
+	}
 	
 	static entrance open([]() {
 		opengl::driver driver;
@@ -116,8 +152,6 @@ namespace asd
 				
 				context.flush();
 			});
-			
-			std::cout << r / 1000'000 << "ms" << " " << std::endl;
 		}
 	}
 }

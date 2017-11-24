@@ -88,7 +88,7 @@ namespace asd
 			}
 			
 			void rotate(const quaternion<T> & quat) const {
-				equation.xyz = quat.applyTo(equation.xyz);
+				equation.xyz = quat.apply_to(equation.xyz);
 			}
 			
 			plane_side classify(const vector<T> & p) const {

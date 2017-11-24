@@ -45,6 +45,6 @@ if(UNIX)
 	target_link_libraries(${PROJECT_NAME} PRIVATE ${X11_LIBRARIES})
 endif()
 
-vendor(observable)
+#vendor(observable)
 
 #--------------------------------------------------------

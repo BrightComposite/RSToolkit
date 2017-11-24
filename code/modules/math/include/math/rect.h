@@ -32,7 +32,7 @@ namespace asd
 					T left, top, right, bottom;
 				};
 				
-				T data[4];
+				array<T, 4> data;
 			};
 			
 			rect() :
@@ -99,11 +99,11 @@ namespace asd
 				return point<T>(left, top);
 			}
 			
-			point<T> minPos() const {
+			point<T> min_pos() const {
 				return point<T>(left, top);
 			}
 			
-			point<T> maxPos() const {
+			point<T> max_pos() const {
 				return point<T>(right, bottom);
 			}
 			
@@ -123,60 +123,60 @@ namespace asd
 				return math::size<T>(width(), height());
 			}
 			
-			void setWidth(T value) {
+			void set_width(T value) {
 				right = left + value;
 			}
 			
-			void setHeight(T value) {
+			void set_height(T value) {
 				bottom = top + value;
 			}
 			
-			void setPos(T left, T top) {
+			void set_pos(T left, T top) {
 				this->right += left - this->left;
 				this->bottom += top - this->top;
 				this->left = left;
 				this->top = top;
 			}
 			
-			void setPos(const point<T> & pos) {
+			void set_pos(const point<T> & pos) {
 				this->right += pos.x - this->left;
 				this->bottom += pos.y - this->top;
 				this->left = pos.x;
 				this->top = pos.y;
 			}
 			
-			void setEndPos(T right, T bottom) {
+			void set_max_pos(T right, T bottom) {
 				this->left += right - this->right;
 				this->top += bottom - this->bottom;
 				this->right = right;
 				this->bottom = bottom;
 			}
 			
-			void setEndPos(const point<T> & pos) {
+			void set_max_pos(const point<T> & pos) {
 				this->left += pos.x - this->right;
 				this->top += pos.y - this->bottom;
 				this->right = pos.x;
 				this->bottom = pos.y;
 			}
 			
-			void setSize(T width, T height) {
+			void set_size(T width, T height) {
 				right = left + width;
 				bottom = top + height;
 			}
 			
-			void setSize(const math::size<T> & s) {
+			void set_size(const math::size<T> & s) {
 				right = left + s.x;
 				bottom = top + s.y;
 			}
 			
-			void setPlacement(T left, T top, T width, T height) {
+			void set_placement(T left, T top, T width, T height) {
 				this->left = left;
 				this->top = top;
 				this->right = left + width;
 				this->bottom = top + height;
 			}
 			
-			void setPlacement(const point<T> & pos, const math::size<T> & s) {
+			void set_placement(const point<T> & pos, const math::size<T> & s) {
 				this->left = pos.x;
 				this->top = pos.y;
 				this->right = pos.x + s.x;
@@ -256,7 +256,7 @@ namespace asd
 			
 			template<typename U>
 			bool contains(const rect<U> & r) const {
-				return contains(r.minPos()) && contains(r.maxPos());
+				return contains(r.min_pos()) && contains(r.max_pos());
 			}
 			
 			template<typename U>
@@ -334,11 +334,11 @@ namespace asd
 			}
 			
 			rect & centralize() {
-				subtract(minPos() + size() / 2);
+				subtract(min_pos() + size() / static_cast<T>(2));
 				return *this;
 			}
 			
-			rect & setMinimum(T x, T y) {
+			rect & set_minimum(T x, T y) {
 				if(left < x) {
 					right += x - left;
 					left = x;
@@ -352,7 +352,7 @@ namespace asd
 				return *this;
 			}
 			
-			rect & setMaximum(T x, T y) {
+			rect & set_maximum(T x, T y) {
 				if(right > x) {
 					left -= right - x;
 					right = x;
@@ -367,13 +367,13 @@ namespace asd
 			}
 			
 			template<typename U>
-			rect & setMinimum(const point<U> & pt) {
-				return setMinimum(pt.x, pt.y);
+			rect & set_minimum(const point<U> & pt) {
+				return set_minimum(pt.x, pt.y);
 			}
 			
 			template<typename U>
-			rect & setMaximum(const point<U> & pt) {
-				return setMaximum(pt.x, pt.y);
+			rect & set_maximum(const point<U> & pt) {
+				return set_maximum(pt.x, pt.y);
 			}
 			
 			template<typename U>
@@ -474,7 +474,7 @@ namespace asd
 		}
 		
 		template<typename T>
-		T minSide(const rect<T> & r) {
+		T min_side(const rect<T> & r) {
 			T min = r[0];
 			
 			for(uint i = 0; i < 4; i++) {
@@ -487,15 +487,15 @@ namespace asd
 		}
 		
 		template<typename T>
-		rect<T> centeredRect(const point<T> & pos, const size<T> & size) {
-			const auto s = size / 2;
-			return {pos.x - s.x, pos.y - s.y, pos.x + s.x, pos.y + s.y};
+		rect<T> centered_rect(const point<T> & pos, const size<T> & s) {
+			const auto hs = s / static_cast<T>(2);
+			return {pos.x - hs.x, pos.y - hs.y, pos.x + hs.x, pos.y + hs.y};
 		}
 		
 		template<typename T>
-		rect<T> centeredSquare(const point<T> & pos, T size) {
-			const T s = size / 2;
-			return {pos.x - s, pos.y - s, pos.x + s, pos.y + s};
+		rect<T> centered_square(const point<T> & pos, T size) {
+			const T hs = size / 2;
+			return {pos.x - hs, pos.y - hs, pos.x + hs, pos.y + hs};
 		}
 		
 		typedef rect<byte> byte_rect;

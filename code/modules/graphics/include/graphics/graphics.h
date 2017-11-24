@@ -25,63 +25,65 @@ namespace asd
 	
 	namespace gfx
 	{
-		class extension {
-			morph_origin(extension)
+		class interface
+		{
+			morph_origin(interface)
 		};
 		
-		template <class T, useif<is_base_of<extension, T>::value>>
-		morph_id_t extension_id = morph_id<T>;
+		template <class T, useif<is_base_of<interface, T>::value>>
+		morph_id_t interface_id = morph_id<T>;
 		
 		class context
 		{
 		public:
 			virtual ~context() {}
-
+			
 			template <class T>
-			boost::optional<T> extension() const {
-				auto i = _extensions.find(extension_id<T>);
-				return i != _extensions.end() ? static_cast<T &>(*i.value()) : {};
+			boost::optional<T> interface() const {
+				auto i = _interfaces.find(interface_id<T>);
+				return i != _interfaces.end() ? static_cast<T &>(*i.value()) : boost::optional<T>{};
 			}
 			
 			virtual void flush() {}
-
+		
 		protected:
 			template <class Gfx>
-			friend class driver;
-
-			template<class T>
-			void register_extension(unique<gfx::extension> && p) {
-				_extensions.insert_or_assign(extension_id<T>, std::move(p));
+			friend
+			class driver;
+			
+			template <class T>
+			void register_interface(unique<gfx::interface> && p) {
+				_interfaces.insert_or_assign(interface_id<T>, std::move(p));
 			}
-
-			map<morph_id_t, unique<gfx::extension>> _extensions;
+			
+			map<morph_id_t, unique<gfx::interface>> _interfaces;
 		};
 		
 		template <class Gfx>
 		class driver_context : public context {};
-
+		
 		template <class Gfx>
 		class driver
 		{
 		public:
 			using context_type = driver_context<Gfx>;
-			using extender = function<unique<gfx::extension>(context_type &)>;
-
-			template<class Extension, class Implementation, class ... A, useif<
-				is_base_of<gfx::extension, Extension>::value,
-				is_base_of<Extension, Implementation>::value,
+			using extender = function<unique<gfx::interface>(context_type &)>;
+			
+			template <class Interface, class Implementation, class ... A, useif<
+				is_base_of<gfx::interface, Interface>::value,
+				is_base_of<Interface, Implementation>::value,
 				can_construct<Implementation, context_type &, A...>::value
 			>>
-			void register_extension(A && ... args) {
-				auto ext = [args {std::move(args)}...](context_type & ctx) {
-					return make::unique<Implementation>(ctx, forward<A>(args)...);
+			void register_interface(A && ... args) {
+				auto ext = [=](context_type & ctx) {
+					return make::unique<Implementation>(ctx, std::forward<A>(args)...);
 				};
-
-				for(auto & ctx : _contexts) {
-					ctx->register_extension<Extension>(ext(*ctx));
+				
+				for (auto & ctx : _contexts) {
+					ctx->register_interface<Interface>(ext(*ctx));
 				}
 			}
-
+		
 		private:
 			array_list<unique<context_type>> _contexts;
 			map<morph_id_t, extender> _extenders;
@@ -90,12 +92,19 @@ namespace asd
 	
 	using graphics = gfx::context;
 	
-	exception_class(GraphicsException);
-	exception_subclass(ContextCreationException, GraphicsException);
-
-	template<class T, useif<is_base_of<gfx::extension, T>::value>>
-	boost::optional<T> get(const gfx::context & ctx) {
-		return ctx.extension<T>();
+	exception_class(graphics_exception);
+	
+	exception_subclass(context_creation_exception, graphics_exception);
+	
+	exception_subclass(no_interface_found_exception, graphics_exception);
+	
+	template <class T, useif<is_base_of<gfx::interface, T>::value>>
+	T & get(const gfx::context & ctx) {
+		try {
+			return ctx.interface<T>().value();
+		} catch (const boost::bad_optional_access &) {
+			throw no_interface_found_exception();
+		}
 	}
 }
 

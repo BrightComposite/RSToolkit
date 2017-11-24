@@ -21,7 +21,7 @@ namespace asd
 		api(freetype) FreeTypeDecoder();
 		virtual api(freetype) ~FreeTypeDecoder();
 
-		virtual api(freetype) void decode(handle<Font> & output, const string & type, const handle<ByteData> & raw) override;
+		virtual api(freetype) void decode(handle<Font> & output, const string & type, const handle<byte_data> & raw) override;
 
 		static void initialize()
 		{

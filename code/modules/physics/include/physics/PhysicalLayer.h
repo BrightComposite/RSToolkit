@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <core/Object.h>
+#include <core/object.h>
 #include <container/array_list.h>
 
 #include <space/spatial.h>

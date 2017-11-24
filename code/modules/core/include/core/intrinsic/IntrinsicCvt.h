@@ -32,7 +32,7 @@ namespace asd
 	template<>
 	struct IntrinsicCvt<__m128i, __m128i>
 	{
-		static inline void perform(const __m128i & in, __m128i & out)
+		static inline void perform(__m128i in, __m128i & out)
 		{
 			out = in;
 		}
@@ -41,7 +41,7 @@ namespace asd
 	template<>
 	struct IntrinsicCvt<__m128i, __m128>
 	{
-		static inline void perform(const __m128i & in, __m128 & out)
+		static inline void perform(__m128i in, __m128 & out)
 		{
 			out = _mm_cvtepi32_ps(in);
 		}
@@ -50,7 +50,7 @@ namespace asd
 	template<>
 	struct IntrinsicCvt<__m128, __m128i>
 	{
-		static inline void perform(const __m128 & in, __m128i & out)
+		static inline void perform(__m128 in, __m128i & out)
 		{
 			out = _mm_cvtps_epi32(in);
 		}
@@ -59,7 +59,7 @@ namespace asd
 	template<>
 	struct IntrinsicCvt<__m128, __m128>
 	{
-		static inline void perform(const __m128 & in, __m128 & out)
+		static inline void perform(__m128 in, __m128 & out)
 		{
 			out = in;
 		}
@@ -77,7 +77,7 @@ namespace asd
 	template<>
 	struct IntrinsicCvt<__m128, __m128d[2]>
 	{
-		static inline void perform(const __m128 & in, __m128d (& out)[2])
+		static inline void perform(__m128 in, __m128d (& out)[2])
 		{
 			out[0] = _mm_cvtps_pd(in);
 			out[1] = _mm_cvtps_pd(_mm_shuffle_ps(in, in, mk_shuffle_4(2, 3, 0, 1)));
@@ -97,7 +97,7 @@ namespace asd
 	template<>
 	struct IntrinsicCvt<__m32, __m128>
 	{
-		static inline void perform(const __m32 & in, __m128 & out)
+		static inline void perform(__m32 in, __m128 & out)
 		{
 			out = _mm_set_ps(float(in.w), float(in.z), float(in.y), float(in.x));
 		}
@@ -106,7 +106,7 @@ namespace asd
 	template<>
 	struct IntrinsicCvt<__m128, __m32>
 	{
-		static inline void perform(const __m128 & in, __m32 & out)
+		static inline void perform(__m128 in, __m32 & out)
 		{
 			out.a[0] = byte(IntrinData<float, 4>::get<0>(in));
 			out.a[1] = byte(IntrinData<float, 4>::get<1>(in));

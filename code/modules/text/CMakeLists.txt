@@ -1,8 +1,8 @@
 #--------------------------------------------------------
-#	asd Input/Output facilities
+#	module text
 #--------------------------------------------------------
 
-project(io VERSION 0.1)
+project(text VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -10,18 +10,25 @@ include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-module(STATIC)
-	dependencies(meta	0.*)
+module(LIBRARY)
+	dependencies(
+		graphics	0.*
+		io			0.*
+	)
 
 	sources(modules)
-		domain(io)
+		domain(text)
+		
 		group(include Headers)
-		files(filesystem.h)
-		group(src sources)
-		files(filesystem.cpp)
+		files(
+			font.h
+		)
+
+		group(src Sources)
+		files(
+			font.cpp
+		)
 	endsources()
 endmodule()
-
-vendor(boost LIBRARIES system filesystem)
 
 #--------------------------------------------------------

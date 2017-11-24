@@ -21,8 +21,8 @@ namespace asd
 		api(freeimage) FreeImageConverter();
 		virtual api(freeimage) ~FreeImageConverter();
 
-		virtual api(freeimage) void decode(image_data * output, const string & type, const ByteData * raw) override;
-		virtual api(freeimage) void encode(OwnedByteData * output, const string & type, const image_data * image) override;
+		virtual api(freeimage) void decode(image_data * output, const string & type, const byte_data * raw) override;
+		virtual api(freeimage) void encode(owned_byte_data * output, const string & type, const image_data * image) override;
 
 		static void initialize()
 		{

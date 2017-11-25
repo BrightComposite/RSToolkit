@@ -22,6 +22,7 @@ namespace asd
 	using namespace std::chrono;
 	
 	using vector = math::vector<float>;
+	using aligned_vector = math::aligned_vec<float>;
 	
 	typedef high_resolution_clock hrc;
 	
@@ -44,7 +45,7 @@ namespace asd
 		last = hrc::now();
 		
 		repeat(i, COUNT) {
-			volatile aligned<vector> p;
+			volatile aligned_vector p;
 		}
 		
 		t = duration_cast<nanoseconds>(hrc::now() - last).count();
@@ -53,7 +54,7 @@ namespace asd
 	
 	void assign() {
 		vector * v1 = new vector, * v2 = new vector;
-		aligned<vector> p1, p2;
+		aligned_vector p1, p2;
 		
 		last = hrc::now();
 		
@@ -79,7 +80,7 @@ namespace asd
 	
 	void multiply() {
 		vector * v1 = new vector, * v2 = new vector;
-		aligned<vector> p1, p2;
+		aligned_vector p1, p2;
 		
 		last = hrc::now();
 		

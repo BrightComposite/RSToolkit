@@ -11,6 +11,7 @@
 
 #include <boost/filesystem/operations.hpp>
 #include <meta/macro.h>
+#include <container/data.h>
 #include <string>
 #include <fstream>
 

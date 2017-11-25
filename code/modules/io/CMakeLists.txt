@@ -11,7 +11,7 @@ include(${ASD_TOOLS}/module.cmake)
 #--------------------------------------------------------
 
 module(STATIC)
-	dependencies(meta	0.*)
+	dependencies(core	0.*)
 
 	sources(modules)
 		domain(io)

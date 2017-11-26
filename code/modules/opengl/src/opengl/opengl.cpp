@@ -276,9 +276,9 @@ namespace asd
 			auto screen = DefaultScreen(_window.display());
 			auto root = RootWindow(_window.display(), screen);
 			
-			_visualInfo = glXChooseVisual(_window.display(), screen, att);
+			_visual_info = glXChooseVisual(_window.display(), screen, att);
 			
-			if (!_visualInfo) {
+			if (!_visual_info) {
 				throw context_creation_exception("Failed to get visual info!");
 			}
 			
@@ -292,18 +292,18 @@ namespace asd
 				winAttr.background_pixel = 0;
 				winAttr.border_pixel = 0;
 				
-				winAttr.colormap = XCreateColormap(_window.display(), root, _visualInfo->visual, AllocNone);
+				winAttr.colormap = XCreateColormap(_window.display(), root, _visual_info->visual, AllocNone);
 				
 				unsigned int mask = CWBackPixmap | CWBorderPixel | CWColormap | CWEventMask;
 				
-				windowHandle = XCreateWindow(_window.display(), root, 0, 0, 100, 100, 0, _visualInfo->depth, InputOutput, _visualInfo->visual, mask, &winAttr);
+				windowHandle = XCreateWindow(_window.display(), root, 0, 0, 100, 100, 0, _visual_info->depth, InputOutput, _visual_info->visual, mask, &winAttr);
 				
 				if (!windowHandle) {
 					throw context_creation_exception("Cannot create X Window!");
 				}
 			}
 			
-			GLXContext _tmpContext = glXCreateContext(_window.display(), _visualInfo, 0, True);
+			GLXContext _tmpContext = glXCreateContext(_window.display(), _visual_info, 0, True);
 			
 			if (!_tmpContext) {
 				throw context_creation_exception("Could not allocate temporary OpenGL render context!");
@@ -329,10 +329,10 @@ namespace asd
 				throw context_creation_exception("Failed to get GLXFBConfig!");
 			}
 			
-			XFree(_visualInfo);
-			_visualInfo = glXGetVisualFromFBConfig(_window.display(), fbConfig);
+			XFree(_visual_info);
+			_visual_info = glXGetVisualFromFBConfig(_window.display(), fbConfig);
 			
-			if (!_visualInfo) {
+			if (!_visual_info) {
 				throw context_creation_exception("Failed to get visual info!");
 			}
 			

@@ -168,8 +168,8 @@ namespace asd
 
 #elif BOOST_OS_LINUX
 		
-		static GLXFBConfig chooseFBConfig(::Display * display, int screen) {
-			static const int v_attribs[] = {
+		static GLXFBConfig choose_fb_config(::Display * display, int screen) {
+			int attributes[] {
 				GLX_X_RENDERABLE, True,
 				GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
 				GLX_RENDER_TYPE, GLX_RGBA_BIT,
@@ -186,13 +186,10 @@ namespace asd
 				0
 			};
 			
-			int attribs[sizeof_array(v_attribs)];
-			memcpy(attribs, v_attribs, sizeof(v_attribs));
-			
 			GLXFBConfig ret = 0;
 			
 			int count = 0;
-			auto fbc = glXChooseFBConfig(display, screen, attribs, &count);
+			auto fbc = glXChooseFBConfig(display, screen, attributes, &count);
 			
 			if (fbc) {
 				if (count >= 1) {
@@ -323,7 +320,7 @@ namespace asd
 			glXMakeCurrent(_window.display(), 0, 0);
 			glXDestroyContext(_window.display(), _tmpContext);
 			
-			auto fbConfig = chooseFBConfig(_window.display(), screen);
+			auto fbConfig = choose_fb_config(_window.display(), screen);
 			
 			if (!fbConfig) {
 				throw context_creation_exception("Failed to get GLXFBConfig!");

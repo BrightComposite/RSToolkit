@@ -64,14 +64,13 @@ namespace asd
 		
 		virtual void prepare() = 0;
 
-		XVisualInfo * visualInfo() const {
-			return _visualInfo;
+		XVisualInfo * visual_info() const {
+			return _visual_info;
 		}
 	
 	protected:
 		window & _window;
-
-		XVisualInfo * _visualInfo;
+		XVisualInfo * _visual_info;
 	};
 	
 	class open_display_exception : public window_creation_exception
@@ -189,7 +188,7 @@ namespace asd
 		_context = std::move(tmp);
 
 #if BOOST_OS_LINUX
-		init(ctx->visualInfo());
+		init(ctx->visual_info());
 #endif
 		
 		ctx->prepare();

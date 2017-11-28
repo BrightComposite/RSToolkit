@@ -73,10 +73,11 @@ namespace asd
 		virtual ~ErrnoException() {}
 	};
 	
-#define exception_class(class_name) 																		\
+#define exception_class(class_name, text) 																	\
 	class class_name : public Exception 																	\
 	{ 																										\
 	public: 																								\
+		class_name() : Exception(text) {} 																	\
 		template<class H, class ... T> 																		\
 		class_name(H && head, T &&... tail) : Exception(std::forward<H>(head), std::forward<T>(tail)...) {} \
 		class_name(const class_name & except) : Exception(static_cast<const Exception &>(except)) {} 		\
@@ -85,10 +86,11 @@ namespace asd
 		virtual ~class_name() {} 																			\
 	};
 
-#define exception_subclass(name, base) 																	\
+#define exception_subclass(name, base, text) 															\
 	class name : public base 																			\
 	{ 																									\
 	public: 																							\
+		name() : base(text) {} 																			\
 		template<class H, class ... T> 																	\
 		name(H && head, T &&... tail) : base(std::forward<H>(head), std::forward<T>(tail)...) {} 		\
 		name(const name & except) : base(static_cast<const base &>(except)) {} 							\

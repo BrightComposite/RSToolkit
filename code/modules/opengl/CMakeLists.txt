@@ -34,10 +34,17 @@ module(STATIC)
 		group(src Sources)
 		files(
 			mesh.cpp
-			opengl.cpp
             shader.cpp
 			vertex_layout.cpp
 		)
+
+if (WIN32)
+	files(windows/opengl.cpp)
+elseif(UNIX)
+	files(linux/opengl.cpp)
+else()
+	message(FATAL_ERROR "OpenGL integration is not implemented for this platform yet")
+endif()
 
 		domain(opengl/shaders)
 

@@ -85,7 +85,7 @@ namespace asd
 		 * @param context
 		 * @return instance of font interface
 		 *
-		 * @throws no_interface_found_exception
+		 * @throws interface_not_found_exception
 		 */
 		static font_interface & interface(gfx::context & context) {
 			return asd::get<font_interface>(context);

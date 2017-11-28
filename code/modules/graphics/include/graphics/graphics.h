@@ -92,18 +92,16 @@ namespace asd
 	
 	using graphics = gfx::context;
 	
-	exception_class(graphics_exception);
-	
-	exception_subclass(context_creation_exception, graphics_exception);
-	
-	exception_subclass(no_interface_found_exception, graphics_exception);
+	exception_class(graphics_exception, "Graphics exception");
+	exception_subclass(context_creation_exception, graphics_exception, "Exception occurred while creating graphic context");
+	exception_subclass(interface_not_found_exception, graphics_exception, "Requested interface was not found at given context");
 	
 	template <class T, useif<is_base_of<gfx::interface, T>::value>>
 	T & get(const gfx::context & ctx) {
 		try {
 			return ctx.interface<T>().value();
 		} catch (const boost::bad_optional_access &) {
-			throw no_interface_found_exception();
+			throw interface_not_found_exception();
 		}
 	}
 }

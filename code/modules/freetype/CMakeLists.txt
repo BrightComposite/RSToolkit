@@ -11,7 +11,9 @@ include(${ASD_TOOLS}/module.cmake)
 #--------------------------------------------------------
 
 module(STATIC)
-	dependencies(graphics	0.*)
+	dependencies(
+		text		0.*
+	)
 	api(freetype)
 
 	sources(modules)

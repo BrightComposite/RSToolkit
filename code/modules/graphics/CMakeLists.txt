@@ -21,6 +21,7 @@ module(LIBRARY)
 
 		group(include Headers)
 		files(
+			color.h
 			graphics.h
 			)
 

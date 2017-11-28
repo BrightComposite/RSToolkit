@@ -24,10 +24,15 @@ module(LIBRARY)
 		)
 
 		group(src Sources)
-		files(
-			window.cpp
-		)
-	endsources()
+if (WIN32)
+	files(windows/window.cpp)
+elseif(UNIX)
+	files(linux/window.cpp)
+else()
+	message(FATAL_ERROR "window module is not implemented for this platform yet")
+endif()
+
+endsources()
 endmodule()
 
 

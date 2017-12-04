@@ -35,13 +35,16 @@ namespace asd
 		
 		class context
 		{
+			deny_copy(context);
+			
 		public:
+			context() {}
 			virtual ~context() {}
 			
 			template <class T>
-			boost::optional<T> interface() const {
+			boost::optional<T &> interface() const {
 				auto i = _interfaces.find(interface_id<T>);
-				return i != _interfaces.end() ? static_cast<T &>(*i.value()) : boost::optional<T>{};
+				return i != _interfaces.end() ? static_cast<T &>(*i.value()) : boost::optional<T &>{};
 			}
 			
 			virtual void flush() {}
@@ -65,9 +68,13 @@ namespace asd
 		template <class Gfx>
 		class driver
 		{
+			deny_copy(driver);
+		
 		public:
 			using context_type = driver_context<Gfx>;
 			using extender = function<unique<gfx::interface>(context_type &)>;
+			
+			driver() {}
 			
 			template <class Interface, class Implementation, class ... A, useif<
 				is_base_of<gfx::interface, Interface>::value,
@@ -98,11 +105,13 @@ namespace asd
 	
 	template <class T, useif<is_base_of<gfx::interface, T>::value>>
 	T & get(const gfx::context & ctx) {
-		try {
-			return ctx.interface<T>().value();
-		} catch (const boost::bad_optional_access &) {
-			throw interface_not_found_exception();
+		auto interface = ctx.interface<T>();
+		
+		if (interface) {
+			return interface.get();
 		}
+		
+		throw interface_not_found_exception();
 	}
 }
 

@@ -43,9 +43,15 @@ namespace asd
 	}
 
 	template<class F, class S, typename = decltype(declval<S>() | declval<F>()), typename = decltype(declval<S>() & ~declval<F>())>
-	constexpr auto select_flag(F flag, S & set, bool state) -> S &
+	constexpr auto toggle_flag(F flag, S & set, bool state) -> S &
 	{
 		return set = (state ? static_cast<S>(set | flag) : static_cast<S>(set & ~flag));
+	}
+	
+	template<class F, class S, typename = decltype(declval<S>() | declval<F>()), typename = decltype(declval<S>() & ~declval<F>())>
+	constexpr auto toggle_flag(F flag, S & set) -> S &
+	{
+		return set = static_cast<S>(set ^ flag);
 	}
 
 	template<class F, class S>
@@ -88,6 +94,21 @@ namespace asd
 		return static_cast<underlying_type_t<Enum>>(a) | b;											\
 	}																								\
 																									\
+	inline constexpr underlying_type_t<Enum> operator ^ (Enum a, Enum b)							\
+	{																								\
+		return static_cast<underlying_type_t<Enum>>(a) ^ static_cast<underlying_type_t<Enum>>(b);	\
+	}																								\
+																									\
+	inline constexpr underlying_type_t<Enum> operator ^ (underlying_type_t<Enum> a, Enum b)			\
+	{																								\
+		return a ^ static_cast<underlying_type_t<Enum>>(b);											\
+	}																								\
+																									\
+	inline constexpr underlying_type_t<Enum> operator ^ (Enum a, underlying_type_t<Enum> b)			\
+	{																								\
+		return static_cast<underlying_type_t<Enum>>(a) ^ b;											\
+	}																								\
+																									\
 	inline constexpr bool operator == (Enum a, underlying_type_t<Enum> b)							\
 	{																								\
 		return static_cast<underlying_type_t<Enum>>(a) == b;										\
@@ -112,6 +133,53 @@ namespace asd
 	{																								\
 		return ~static_cast<underlying_type_t<Enum>>(value);										\
 	}
+
+	template <class E>
+	struct flags
+	{
+		using value_type = underlying_type_t<E>;
+		
+		flags() : value(0) {}
+		flags(const flags & f) : value(f.value) {}
+		flags(E flag) : value(static_cast<value_type>(flag)) {}
+		
+		flags & operator = (const flags & f) {
+			value = f.value;
+			return * this;
+		}
+		
+		flags & operator = (E flag) {
+			value = static_cast<value_type>(flag);
+			return * this;
+		}
+		
+		bool check(E flag) const {
+			return check_flag(flag, value);
+		}
+		
+		auto set(E flag) {
+			return set_flag(flag, value);
+		}
+		
+		auto clear(E flag) {
+			return clear_flag(flag, value);
+		}
+		
+		auto toggle(E flag) {
+			return toggle_flag(flag, value);
+		}
+		
+		auto toggle(E flag, bool state) {
+			return toggle_flag(flag, value, state);
+		}
+		
+		operator value_type () const {
+			return value;
+		}
+		
+	private:
+		value_type value;
+	};
 }
 
 //---------------------------------------------------------------------------

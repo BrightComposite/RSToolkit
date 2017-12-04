@@ -1,8 +1,6 @@
 //---------------------------------------------------------------------------
 
 #include <window/window.h>
-#include <X11/Xlib.h>
-#include <math/rect.h>
 
 //---------------------------------------------------------------------------
 
@@ -30,14 +28,16 @@ namespace asd
 	}
 	
 	window::~window() {
-		if (_display != nullptr) {
-			if (_handle != 0) {
+		_context.reset();										// clear context first so it can free own resources correctly
+		
+		if (_display != nullptr) {								// if display was created successfully earlier
+			if (_handle != 0) {									// if window handle was created successfully earlier
 				XDestroyWindow(_display, _handle);
-				_handle = 0;
+				_handle = 0;									// clear handle
 			}
 			
 			XCloseDisplay(_display);
-			_display = nullptr;
+			_display = nullptr;									// clear display pointer
 		}
 	}
 	

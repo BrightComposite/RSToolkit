@@ -30,7 +30,7 @@ namespace asd
 	
 	class window;
 	
-	exception_class(window_creation_exception);
+	exception_class(window_creation_exception, "Can't create window");
 
 #if BOOST_OS_WINDOWS
 	
@@ -84,7 +84,8 @@ namespace asd
 	class window
 	{
 		OBSERVABLE_PROPERTIES(window)
-	
+		deny_copy(window);
+		
 	public:
 		/**
 		 * @brief
@@ -98,7 +99,6 @@ namespace asd
 		 */
 		api(window)
 		window(const string & caption, const math::int_rect & area, const char * displayName = nullptr);
-		
 		api(window)
 		virtual ~window();
 		

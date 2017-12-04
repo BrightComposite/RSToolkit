@@ -9,13 +9,8 @@
 
 #include <container/array_list.h>
 #include <morph/component.h>
-#include <morph/property.h>
-
-#include <message/subject.h>
-
-#include <graphics/ScreenCoord.h>
-
-#include "WidgetMessages.h"
+#include <math/rect.h>
+#include <math/point.h>
 
 #undef None
 
@@ -26,9 +21,7 @@ namespace asd
 	class widget;
 	class ui_space;
 	class widget_component;
-	class WidgetLayer;
 	class graphics;
-	class CustomLayer;
 
 	template<class T>
 	using is_widget = based_on<T, widget>;
@@ -161,10 +154,6 @@ namespace asd
 		api(ui) asd::graphics * graphics() const;
 
 		api(ui) widget * findAt(const math::int_point & pt);
-
-		inline widget * child(int idx) const;
-
-		inline Tree tree();
 
 		inline void setLeft(int value);
 		inline void setTop(int value);

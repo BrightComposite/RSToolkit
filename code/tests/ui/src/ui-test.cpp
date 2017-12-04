@@ -36,8 +36,10 @@ namespace asd
 		opengl::driver driver;
 
 		asd::window w("asd::ui test", {0, 0, 800, 600});
-		auto context = w.bind(driver);
-		//w.set_background(backgroundColor);
+		
+		{
+			auto & context = w.bind(driver);
+			//w.set_background(backgroundColor);
 //
 //		StandartUIPalette palette(window);
 //
@@ -50,8 +52,8 @@ namespace asd
 //		decorator.boundary({0.5f, 0.5f, 0.5f}, 1);
 //		decorator.apply(w);
 //
-		w.show();
-		w.centralize();
+			w.show();
+			// w.centralize();
 //
 //			onmessage(KeyUpMessage) {
 //				switch(msg->key) {
@@ -66,7 +68,7 @@ namespace asd
 //			};
 
 #ifdef WIN32
-		thread_loop::add(processWindowMessage);
+			thread_loop::add(processWindowMessage);
 #endif
 //
 //		thread_loop::add(make_method(w, mouseUpdate));
@@ -81,10 +83,11 @@ namespace asd
 //
 //			thread_loop::run();
 //		});
-
-		std::cout << "Run thread loop..." << std::endl;
-		
-		thread_loop::run();
+			
+			std::cout << "Run thread loop..." << std::endl;
+			
+			thread_loop::run();
+		}
 
 		return 0;
 	});

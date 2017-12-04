@@ -7,6 +7,7 @@
 
 #include <container/array_list.h>
 
+#include <graphics/color.h>
 #include <graphics/graphics.h>
 #include <window/window.h>
 

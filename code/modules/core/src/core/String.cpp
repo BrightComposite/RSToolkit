@@ -423,13 +423,11 @@ namespace asd
 	
 	template<class Char>
 	void print(std::basic_ostream<Char> & target, const object & obj) {
-		target << addr(&obj) << ' ';
+		target << addr(obj) << ' ';
 		
-		obj.get_class()->foreach(
-			[&target, &obj](const meta_class<> * cl) {
-				cl->add_info(target, obj);
-			}
-		);
+		obj.get_class()->foreach([&target, &obj](const meta_class<> * cl) {
+			cl->add_info(target, obj);
+		});
 		
 		target << '(' << obj.class_name() << ')';
 	}
@@ -536,7 +534,7 @@ namespace asd
 			if(!separateWords) {
 				const wchar_t * chptr = ptr + length - 1;
 				
-				while((iswalnum(*chptr) || *chptr == '_') && chptr > ptr) {
+				while((iswalnum(static_cast<std::wint_t>(*chptr)) || *chptr == '_') && chptr > ptr) {
 					chptr--;
 				}
 				

@@ -49,11 +49,13 @@ namespace asd
 		}
 		
 		window_context::~window_context() {
-			glXMakeCurrent(_window.display(), 0, 0);
-			
-			if (_context != nullptr) {
-				glXDestroyContext(_window.display(), _context);
-				_context = nullptr;
+			if (_window.display() != nullptr) { 							// if window display is not closed yet
+				glXMakeCurrent(_window.display(), 0, 0);
+				
+				if (_context != nullptr) {									// if rendering context was created successfully
+					glXDestroyContext(_window.display(), _context);
+					_context = nullptr;										// clear context pointer
+				}
 			}
 		}
 		

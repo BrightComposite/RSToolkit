@@ -1,8 +1,8 @@
 #--------------------------------------------------------
-#	asd UI Test
+#	module input
 #--------------------------------------------------------
 
-project(ui_test VERSION 0.1)
+project(input VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -10,27 +10,25 @@ include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-module(APPLICATION CONSOLE)
+module(INLINE)
 	dependencies(
-		application	0.*
-		text		0.*
-		window		0.*
+		core	0.*
 	)
 
-if(${USE_DIRECT3D} EQUAL 1)
-    dependencies(direct3d 	0.*)
-else()
-    dependencies(opengl 	0.*)
-endif()
+	sources(modules)
+		domain(input)
+		
+		group(include Headers)
+		files(
+			keyboard.h
+			mouse.h
+		)
 
-	sources(tests)
 		group(src Sources)
-		files(ui-test.cpp)
+		files(
+			# sources
+		)
 	endsources()
 endmodule()
-
-if(${WIN32})
-	vendor(vld)
-endif()
 
 #--------------------------------------------------------

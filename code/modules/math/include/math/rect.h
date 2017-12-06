@@ -18,10 +18,10 @@ namespace asd
 {
 	namespace math
 	{
-		template<typename T>
+		template <typename T>
 		subclass(size, point<T>);
 		
-		template<typename T>
+		template <typename T>
 		class rect
 		{
 		public:
@@ -41,38 +41,33 @@ namespace asd
 			rect(const rect & r) :
 				left(r.left), top(r.top), right(r.right), bottom(r.bottom) {}
 			
-			template<typename Tl, typename Tt, typename Tr, typename Tb, useif<
-				std::is_pod<Tl>::value && std::is_pod<Tt>::value && std::is_pod<Tr>::value && std::is_pod<Tb>::value
-			>
-			>
-			rect(Tl left, Tt top, Tr right, Tb bottom) :
-				left(static_cast<T>(left)), top(static_cast<T>(top)), right(static_cast<T>(right)), bottom(static_cast<T>(bottom)) {}
+			rect(T left, T top, T right, T bottom) :
+				left(left), top(top), right(right), bottom(bottom) {}
 			
-			template<typename Tw, typename Th, useif<std::is_pod<Tw>::value && std::is_pod<Th>::value>>
-			rect(Tw w, Th h) :
-				left(static_cast<T>(0)), top(static_cast<T>(0)), right(static_cast<T>(w)), bottom(static_cast<T>(h)) {}
+			rect(T w, T h) :
+				left(static_cast<T>(0)), top(static_cast<T>(0)), right(w), bottom(h) {}
 			
-			template<typename U, useif<not_same_type<T, U>::value>>
+			template <typename U, useif<not_same_type<T, U>::value>>
 			explicit rect(const rect<U> & r) :
 				left(static_cast<T>(r.left)), top(static_cast<T>(r.top)), right(static_cast<T>(r.right)), bottom(static_cast<T>(r.bottom)) {}
 			
-			template<typename U, typename V>
+			template <typename U, typename V>
 			rect(const point<U> & min, const point<V> & max) :
 				left(static_cast<T>(min.x)), top(static_cast<T>(min.y)), right(static_cast<T>(max.x)), bottom(static_cast<T>(max.y)) {}
 			
-			template<typename U, typename V>
+			template <typename U, typename V>
 			rect(const range<U> & h, const range<V> & v) :
 				left(static_cast<T>(h.min)), top(static_cast<T>(v.min)), right(static_cast<T>(h.max)), bottom(static_cast<T>(v.max)) {}
 			
-			template<typename U, typename V>
+			template <typename U, typename V>
 			rect(const point<U> & pos, const size<V> & sz) :
 				left(static_cast<T>(pos.x)), top(static_cast<T>(pos.y)), right(static_cast<T>(pos.x + sz.x)), bottom(static_cast<T>(pos.y + sz.y)) {}
 			
-			template<typename U>
+			template <typename U>
 			rect(const size<U> & sz) :
 				left(static_cast<T>(0)), top(static_cast<T>(0)), right(static_cast<T>(sz.x)), bottom(static_cast<T>(sz.y)) {}
 			
-			template<typename U, typename V, useif<std::is_pod<U>::value && std::is_pod<V>::value>>
+			template <typename U, typename V, useif<std::is_pod<U>::value, std::is_pod<V>::value>>
 			rect(const initializer_list<U> & pt, const initializer_list<V> & sz) :
 				left(static_cast<T>(pt.begin()[0])),
 				top(static_cast<T>(pt.begin()[1])),
@@ -190,7 +185,7 @@ namespace asd
 				this->bottom = bottom;
 			}
 			
-			template<typename U>
+			template <typename U>
 			void set(const rect<U> & r) {
 				left = r.left;
 				top = r.top;
@@ -198,73 +193,73 @@ namespace asd
 				bottom = r.bottom;
 			}
 			
-			template<typename U>
+			template <typename U>
 			void intersect(const rect<U> & r) {
-				if(r.left > left) {
+				if (r.left > left) {
 					left = r.left;
 				}
 				
-				if(r.top > top) {
+				if (r.top > top) {
 					top = r.top;
 				}
 				
-				if(r.right < right) {
+				if (r.right < right) {
 					right = r.right;
 				}
 				
-				if(r.bottom < bottom) {
+				if (r.bottom < bottom) {
 					bottom = r.bottom;
 				}
 				
-				if(width() < 0) {
+				if (width() < 0) {
 					right = left;
 				}
 				
-				if(height() < 0) {
+				if (height() < 0) {
 					bottom = top;
 				}
 			}
 			
-			template<typename U>
+			template <typename U>
 			void include(const rect<U> & r) {
-				if(r.left < left) {
+				if (r.left < left) {
 					left = r.left;
 				}
 				
-				if(r.top < top) {
+				if (r.top < top) {
 					top = r.top;
 				}
 				
-				if(r.right > right) {
+				if (r.right > right) {
 					right = r.right;
 				}
 				
-				if(r.bottom > bottom) {
+				if (r.bottom > bottom) {
 					bottom = r.bottom;
 				}
 			}
 			
-			template<typename U>
+			template <typename U>
 			int compare(const rect<U> & r) const {
 				return left == r.left && top == r.top && right == r.right && bottom == r.bottom ? 0 : icomp(center(), r.center());
 			}
 			
-			template<typename U>
+			template <typename U>
 			int compare(const point<U> & pt) const {
 				return contains(pt) ? 0 : icomp(center(), pt);
 			}
 			
-			template<typename U>
+			template <typename U>
 			bool contains(const rect<U> & r) const {
 				return contains(r.min_pos()) && contains(r.max_pos());
 			}
 			
-			template<typename U>
+			template <typename U>
 			bool contains(const point<U> & pt) const {
 				return between(pt.x, left, right) && between(pt.y, top, bottom);
 			}
 			
-			template<typename U>
+			template <typename U>
 			bool intersects(const rect<U> & r) const {
 				return (r.right >= left && r.left <= right) && (r.bottom >= top && r.top <= bottom);
 			}
@@ -301,7 +296,7 @@ namespace asd
 				bottom -= y;
 			}
 			
-			template<typename U>
+			template <typename U>
 			void add(const point<U> & pt) {
 				left += pt.x;
 				right += pt.x;
@@ -309,7 +304,7 @@ namespace asd
 				bottom += pt.y;
 			}
 			
-			template<typename U>
+			template <typename U>
 			void subtract(const point<U> & pt) {
 				left -= pt.x;
 				right -= pt.x;
@@ -322,7 +317,7 @@ namespace asd
 				return *this;
 			}
 			
-			template<typename U>
+			template <typename U>
 			rect & moveTo(const point<U> & pt) {
 				add(pt.x - left, pt.y - top);
 				return *this;
@@ -339,12 +334,12 @@ namespace asd
 			}
 			
 			rect & set_minimum(T x, T y) {
-				if(left < x) {
+				if (left < x) {
 					right += x - left;
 					left = x;
 				}
 				
-				if(top < y) {
+				if (top < y) {
 					bottom += y - top;
 					top = y;
 				}
@@ -353,12 +348,12 @@ namespace asd
 			}
 			
 			rect & set_maximum(T x, T y) {
-				if(right > x) {
+				if (right > x) {
 					left -= right - x;
 					right = x;
 				}
 				
-				if(bottom > y) {
+				if (bottom > y) {
 					top -= bottom - y;
 					bottom = y;
 				}
@@ -366,69 +361,69 @@ namespace asd
 				return *this;
 			}
 			
-			template<typename U>
+			template <typename U>
 			rect & set_minimum(const point<U> & pt) {
 				return set_minimum(pt.x, pt.y);
 			}
 			
-			template<typename U>
+			template <typename U>
 			rect & set_maximum(const point<U> & pt) {
 				return set_maximum(pt.x, pt.y);
 			}
 			
-			template<typename U>
+			template <typename U>
 			rect & operator =(const rect<U> & r) {
 				set(r);
 				return *this;
 			}
 			
-			template<typename U>
+			template <typename U>
 			rect & operator &=(const rect<U> & r) {
 				intersect(r);
 				return *this;
 			}
 			
-			template<typename U>
+			template <typename U>
 			rect & operator |=(const rect<U> & r) {
 				include(r);
 				return *this;
 			}
 			
-			template<typename U>
+			template <typename U>
 			bool operator ==(const rect<U> & r) const {
 				return compare(r) == 0;
 			}
 			
-			template<typename U>
+			template <typename U>
 			bool operator !=(const rect<U> & r) const {
 				return compare(r) != 0;
 			}
 			
-			template<typename U>
+			template <typename U>
 			bool operator >=(const rect<U> & r) const {
 				return compare(r) >= 0;
 			}
 			
-			template<typename U>
+			template <typename U>
 			bool operator <=(const rect<U> & r) const {
 				return compare(r) <= 0;
 			}
 			
-			template<typename U>
+			template <typename U>
 			bool operator >(const rect<U> & r) const {
 				return compare(r) > 0;
 			}
 			
-			template<typename U>
+			template <typename U>
 			bool operator <(const rect<U> & r) const {
 				return compare(r) < 0;
 			}
 			
-			T & operator [](int i) {
+			T & operator [] (int i) {
 				return data[i];
 			}
 			
-			const T & operator [](int i) const {
+			const T & operator [] (int i) const {
 				return data[i];
 			}
 			
@@ -440,45 +435,45 @@ namespace asd
 				return data;
 			}
 			
-			template<typename U>
+			template <typename U>
 			rect & operator +=(const point<U> & pt) {
 				add(pt);
 				return *this;
 			}
 			
-			template<typename U>
+			template <typename U>
 			rect & operator -=(const point<U> & pt) {
 				subtract(pt);
 				return *this;
 			}
 			
-			template<typename U>
+			template <typename U>
 			rect operator +(const point<U> & pt) const {
 				return rect(*this) += pt;
 			}
 			
-			template<typename U>
+			template <typename U>
 			rect operator -(const point<U> & pt) const {
 				return rect(*this) -= pt;
 			}
 		};
 		
-		template<typename T, typename U>
+		template <typename T, typename U>
 		rect<T> operator &(const rect<T> & r1, const rect<U> & r2) {
 			return rect<T>(r1) &= r2;
 		}
 		
-		template<typename T, typename U>
+		template <typename T, typename U>
 		rect<T> operator |(const rect<T> & r1, const rect<U> & r2) {
 			return rect<T>(r1) |= r2;
 		}
 		
-		template<typename T>
+		template <typename T>
 		T min_side(const rect<T> & r) {
 			T min = r[0];
 			
-			for(uint i = 0; i < 4; i++) {
-				if(r[i] < min) {
+			for (uint i = 0; i < 4; i++) {
+				if (r[i] < min) {
 					min = r[i];
 				}
 			}
@@ -486,13 +481,13 @@ namespace asd
 			return min;
 		}
 		
-		template<typename T>
+		template <typename T>
 		rect<T> centered_rect(const point<T> & pos, const size<T> & s) {
 			const auto hs = s / static_cast<T>(2);
 			return {pos.x - hs.x, pos.y - hs.y, pos.x + hs.x, pos.y + hs.y};
 		}
 		
-		template<typename T>
+		template <typename T>
 		rect<T> centered_square(const point<T> & pos, T size) {
 			const T hs = size / 2;
 			return {pos.x - hs, pos.y - hs, pos.x + hs, pos.y + hs};

@@ -12,6 +12,8 @@
 #include <graphics/graphics.h>
 #include <math/rect.h>
 
+#define observable_class OBSERVABLE_PROPERTIES
+
 #if BOOST_OS_WINDOWS
 #include <windows.h>
 #elif BOOST_OS_LINUX
@@ -83,7 +85,7 @@ namespace asd
 	
 	class window
 	{
-		OBSERVABLE_PROPERTIES(window)
+		observable_class(window);
 		deny_copy(window);
 		
 	public:
@@ -99,13 +101,25 @@ namespace asd
 		 */
 		api(window)
 		window(const string & caption, const math::int_rect & area, const char * displayName = nullptr);
+		
 		api(window)
 		virtual ~window();
 		
+		/**
+		 * @brief handle
+		 * @return native window handle
+		 */
 		window_handle_t handle() const {
 			return _handle;
 		}
 		
+		/**
+		 * @brief bind
+		 *  Set window graphics and return bound graphic context
+		 * @tparam Gfx
+		 * @param driver - graphic driver
+		 * @return bound graphic context
+		 */
 		template <class Gfx>
 		inline gfx::driver_context<Gfx> & bind(Gfx & driver);
 		
@@ -114,9 +128,17 @@ namespace asd
 			return *_context;
 		}
 		
+		/**
+		 * @brief show
+		 * 	Show the window on the screen
+		 */
 		api(window)
 		void show();
 		
+		/**
+		 * @brief hide
+		 * 	Remove window from the screen
+		 */
 		api(window)
 		void hide();
 		

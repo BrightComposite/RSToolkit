@@ -16,6 +16,13 @@ The **ASD** project is inspired by Boost but is meant to provide more high-level
 Libraries in **ASD** are as small and independent as possible. Each library has its own power. There is no need to use all the libraries, feel free to take only libraries which you need!
 
 ## Build system
-**ASD** is not only its libraries, it is the platform which helps your to manage your projects, their dependencies and resources
+**ASD** is not only its libraries, it is the platform which helps you to manage your projects, their dependencies and resources
 
 Build system is based on __*CMake*__, CMake scripts and some system-dependent scripts. These tools will help you to create new libraries, add sources and dependencies in very simple way. It is really something different.
+
+To make **ASD** project files use:
+
+```
+git clone https://gitlab.com/BrightComposite/asd
+asd make vs64
+```

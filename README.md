@@ -5,7 +5,7 @@ The **ASD** project is inspired by Boost but is meant to provide more high-level
 
 ## Features
 ### Meta-programming
-- Tight integration with the build system (dllimport/dllexport are managed authomatically with the `api(*module*)` macro, for example)
+- Tight integration with the build system (dllimport/dllexport are managed authomatically with the `api(module)` macro, for example)
 - Template function selection (*useif*, *skipif* and *selectif* conditions)
 - Integer type indices generation to create type-to-object mappings
 
@@ -13,6 +13,9 @@ The **ASD** project is inspired by Boost but is meant to provide more high-level
 - Generalized graphic context management and extensions (partially implemented OpenGL backend and FreeType font extension)
 - Mathematical objects and functions (matrices, vectors, geometrical objects; SIMD support)
 
-Libraries in ** ASD ** are as small and independent as possible. Each library has its own power. There is no need to use all the libraries, feel free to take only libraries which you need!
+Libraries in **ASD** are as small and independent as possible. Each library has its own power. There is no need to use all the libraries, feel free to take only libraries which you need!
 
-**ASD** uses __*CMake*__ to build the libraries. There are some additional cmake tools that will help you to create new libraries, add sources and manage dependencies in very simple way. It is really something different.
+## Build system
+**ASD** is not only its libraries, it is the platform which helps your to manage your projects, their dependencies and resources
+
+Build system is based on __*CMake*__, CMake scripts and some system-dependent scripts. These tools will help you to create new libraries, add sources and dependencies in very simple way. It is really something different.

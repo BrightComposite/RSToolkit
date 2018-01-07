@@ -24,17 +24,16 @@ module(LIBRARY)
 		)
 
 		group(src Sources)
-if (WIN32)
-	files(windows/window.cpp)
-elseif(UNIX)
-	files(linux/window.cpp)
-else()
-	message(FATAL_ERROR "window module is not implemented for this platform yet")
-endif()
 
-endsources()
+		if (WIN32)
+			files(windows/window.cpp)
+		elseif(UNIX)
+			files(linux/window.cpp)
+		else()
+			message(FATAL_ERROR "window module is not implemented for this platform yet")
+		endif()
+	endsources()
 endmodule()
-
 
 if(UNIX)
 	find_package(X11 REQUIRED)
@@ -50,6 +49,6 @@ if(UNIX)
 	target_link_libraries(${PROJECT_NAME} PRIVATE ${X11_LIBRARIES})
 endif()
 
-vendor(observable)
+vendor(rxcpp)
 
 #--------------------------------------------------------

@@ -173,19 +173,9 @@ namespace asd
 }
 
 /**
- *	Use it to implement declarations of class-members in the faster way
- */
-#define implement(x, ...) decltype(x) x##__VA_ARGS__;
-
-/**
  *	Use it to wrap template parameters and prevent incorrect preprocessing
  */
 #define macrowrap(...) __VA_ARGS__
-
-/**
- *	Short for-loop
- */
-#define repeat(var, times) for(remove_cv_t<decltype(times)> var = 0; var < times; ++var)
 
 #define inscope()
 

@@ -1,8 +1,8 @@
 #--------------------------------------------------------
-#	asd Meta
+#	window test facility
 #--------------------------------------------------------
 
-project(meta VERSION 0.1)
+project(window_test VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -10,28 +10,22 @@ include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-module(INLINE)
-	sources(modules)
-		domain(meta)
+module(APPLICATION)
+	dependencies(
+		application	0.*
+		window 0.*
+	)
 
-		group(include Headers)
+	sources(tests)
+		group(src Sources)
 		files(
-			adapt.h
-			bitmask.h
-			bool_types.h
-			cast.h
-			flag.h
-			inheritance.h
-			macro.h
-			meta.h
-			preprocessor.h
-            sfinae.h
-			types.h
-			useif.h
+			main.cpp
 		)
 	endsources()
 endmodule()
 
-vendor(boost COMPONENTS preprocessor)
+if(WIN32)
+	vendor(vld)
+endif()
 
 #--------------------------------------------------------

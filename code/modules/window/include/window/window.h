@@ -8,11 +8,9 @@
 //---------------------------------------------------------------------------
 
 #include <boost/predef.h>
-#include <observable/observable.hpp>
+#include <rxcpp/rx.hpp>
 #include <graphics/graphics.h>
 #include <math/rect.h>
-
-#define observable_class OBSERVABLE_PROPERTIES
 
 #if BOOST_OS_WINDOWS
 #include <windows.h>
@@ -28,9 +26,13 @@
 
 namespace asd
 {
-	using namespace observable;
-	
 	class window;
+
+	namespace rx {
+		using namespace rxcpp::subjects;
+		using namespace rxcpp::operators;
+		using rxcpp::observable;
+	}
 	
 	exception_class(window_creation_exception, "Can't create window");
 
@@ -82,12 +84,24 @@ namespace asd
 	};
 	
 #endif
+
+	class window_inputs
+	{
+	public:
+		api(window)
+		window_inputs(const rx::observable<math::int_rect> & area);
+
+		rx::observable<math::int_rect> area;
+		rx::observable<math::int_point> position;
+		rx::observable<math::int_size> size;
+	};
 	
 	class window
 	{
-		observable_class(window);
 		deny_copy(window);
-		
+
+		rx::subject<math::int_rect> _area_changed;
+
 	public:
 		/**
 		 * @brief
@@ -127,7 +141,19 @@ namespace asd
 			BOOST_ASSERT_MSG(_context, "There is not graphic context bound!");
 			return *_context;
 		}
+
+		const math::int_rect & area() const {
+			return _area;
+		}
+
+		math::int_point position() const {
+			return _area.pos();
+		}
 		
+		math::int_size size() const {
+			return _area.size();
+		}
+
 		/**
 		 * @brief show
 		 * 	Show the window on the screen
@@ -154,11 +180,9 @@ namespace asd
 				iteration();
 			}
 		}
-		
-		observable_property<math::int_point> position;
-		observable_property<math::int_size> size;
-		observable_property<math::int_rect> area;
-		
+
+		window_inputs inputs;
+
 #if BOOST_OS_WINDOWS
 		HDC device() const {
 			return _device;
@@ -185,7 +209,7 @@ namespace asd
 		api(window)
 		void init(XVisualInfo * visual_info);
 #endif
-		
+
 		window_handle_t _handle;
 		unique<gfx::context> _context;
 		math::int_rect _area;
@@ -193,6 +217,8 @@ namespace asd
 #if BOOST_OS_WINDOWS
 		
 		HDC _device;
+
+		friend LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 #elif BOOST_OS_LINUX
 		

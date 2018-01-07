@@ -48,7 +48,7 @@ namespace asd
 		resize_mode mode;
 	};
 	
-	class font_interface : public gfx::interface
+	class font_interface : public gfx::component
 	{
 		morph_type(font_interface)
 	
@@ -65,11 +65,11 @@ namespace asd
 	{
 	public:
 		font(gfx::context & context, const byte_data & data, const std::string & type, point_unit size) :
-			_interface(font::interface(context)),
+			_interface(font::component(context)),
 			_handle(_interface.create(data, type, size)) {}
 		
 		font(gfx::context & context, const byte_data & data, const std::string & type, pixel_unit size) :
-			_interface(font::interface(context)),
+			_interface(font::component(context)),
 			_handle(_interface.create(data, type, _interface.to_points(size))) {}
 		
 		template <class Unit>
@@ -104,14 +104,14 @@ namespace asd
 		
 		/**
 		 * @brief
-		 * 	Obtains font interface from context
+		 * 	Obtains font component from context
 		 *
 		 * @param context
-		 * @return instance of font interface
+		 * @return instance of font component
 		 *
-		 * @throws interface_not_found_exception
+		 * @throws component_not_found_exception
 		 */
-		static font_interface & interface(gfx::context & context) {
+		static font_interface & component(gfx::context & context) {
 			return asd::get<font_interface>(context);
 		}
 	

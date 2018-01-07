@@ -50,7 +50,7 @@
 #include <typeinfo>
 #include <memory>
 
-#include <boost/function.hpp>
+// #include <boost/function.hpp>
 
 #ifdef _MSC_VER
 #define FUNC_NOEXCEPT throw()

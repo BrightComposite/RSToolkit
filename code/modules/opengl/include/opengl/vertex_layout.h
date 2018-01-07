@@ -29,6 +29,11 @@ namespace asd
 		{
 			const char * name;
 			uint units;
+
+			template<class E>
+			static vertex_layout_element create() {
+				return { concat_t<typename E::name>::value, E::units };
+			}
 		};
 
 		struct vertex_layout
@@ -62,9 +67,10 @@ namespace asd
 					return concat_t<typename E::key...>::value;
 				}
 
-				api(opengl) static const vertex_layout & get() {
-					static const vertex_layout l {units, {{concat_t<typename E::name>::value, E::units}...}};
-					return l;
+				api(opengl)
+				static const vertex_layout & get() {
+					static const vertex_layout layout(units, { {vertex_layout_element::create<E>()...} });
+					return layout;
 				}
 			};
 
@@ -83,9 +89,11 @@ namespace asd
 
 			struct storage
 			{
-				api(opengl) storage();
+				api(opengl)
+				storage();
 
-				api(opengl) const vertex_layout & get(const std::string & key);
+				api(opengl)
+				const vertex_layout & get(const std::string & key);
 			};
 
 			inline const vertex_layout & get(const std::string & key) {

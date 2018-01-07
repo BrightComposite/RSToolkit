@@ -107,6 +107,7 @@ module(LIBRARY)
 endmodule()
 
 vendor(hopscotch-map)
+vendor(boost COMPONENTS align iterator predef)
 
 #[[if(${UNIX})
 	find_package(Threads REQUIRED)

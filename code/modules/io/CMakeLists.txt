@@ -22,6 +22,6 @@ module(STATIC)
 	endsources()
 endmodule()
 
-vendor(boost LIBRARIES system filesystem)
+vendor(boost COMPONENTS filesystem)
 
 #--------------------------------------------------------

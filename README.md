@@ -1,7 +1,7 @@
 # ASD
 **ASD** is the multi-functional platform for C++ development. The main goal of this project is to make development rapid and clear, to avoid unnecessary complexity while maintaining the effectiveness of applications in the end. It is intended to be cross-platform in the future (and supports Windows and Linux now). The focus is made on compile-time programming, so there are lots of templates can be found inside. We are trying to move the complexity from user space to library space in this way.
 
-The **ASD** project is inspired by Boost but is meant to provide more high-level components and tools to deal with graphics, user input, physics, scene management and so on. At this point, the development is at an early stage, so some of these components are slightly crude (or broken due to some big changes), and documentation is WIP. There are a lot of work to be done to make things work as intended, so any help will be __*VERY*__ appreciated.
+The **ASD** project is inspired by Boost but is meant to provide more high-level components and tools to deal with graphics, user input, physics, scene management and so on. At this point, the development is at an early stage, so some of these components are slightly crude (or broken due to some big changes), and documentation is WIP. There is a lot of work to be done to make things work as intended, so any help will be __*VERY*__ appreciated.
 
 ## Features
 ### Meta-programming

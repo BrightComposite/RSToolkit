@@ -12,7 +12,7 @@
 #include <morph/morph.h>
 #include <container/map.h>
 #include <container/array_list.h>
-#include <container/any_list.h>
+#include <boost/poly_collection/base_collection.hpp>
 #include <boost/optional.hpp>
 
 #include <core/Exception.h>
@@ -44,7 +44,7 @@ namespace asd
 			template <class T>
 			boost::optional<T &> component() const {
 				auto i = _components.find(component_id<T>);
-				return i != _components.end() ? static_cast<T &>(*i.value()) : boost::optional<T &>{};
+				return i != _components.end() ? static_cast<T &>(i.value()) : boost::optional<T &>{};
 			}
 			
 			virtual void flush() {}
@@ -54,12 +54,15 @@ namespace asd
 			friend
 			class driver;
 			
-			template <class T>
-			void register_component(unique<gfx::component> && p) {
-				_components.insert_or_assign(component_id<T>, std::move(p));
+			template <class T, class ... A>
+			void register_component(A && ... args) {
+				_components.try_emplace(
+                    component_id<T>,
+                    *this, std::forward<A>(args)...
+                );
 			}
 			
-			map<morph_id_t, unique<gfx::component>> _components;
+			map<morph_id_t, gfx::component> _components;
 		};
 		
 		template <class Gfx>
@@ -72,27 +75,29 @@ namespace asd
 		
 		public:
 			using context_type = driver_context<Gfx>;
-			using extender = function<unique<gfx::component>(context_type &)>;
+			using extender = function<void(context_type &)>;
 			
 			driver() {}
 			
-			template <class Interface, class Implementation, class ... A, useif<
-				is_base_of<gfx::component, Interface>::value,
-				is_base_of<Interface, Implementation>::value,
+			template <class Component, class Implementation, class ... A, useif<
+				is_base_of<gfx::component, Component>::value,
+				is_base_of<Component, Implementation>::value,
 				can_construct<Implementation, context_type &, A...>::value
 			>>
 			void register_component(A && ... args) {
 				auto ext = [=](context_type & ctx) {
-					return make::unique<Implementation>(ctx, std::forward<A>(args)...);
+                    ctx.register_component<Implementation>(std::forward<A>(args)...);
 				};
 				
 				for (auto & ctx : _contexts) {
-					ctx->register_component<Interface>(ext(*ctx));
+					ext(ctx);
 				}
+                
+                _extenders.emplace(morph_id<Component>, ext);
 			}
 		
-		private:
-			array_list<unique<context_type>> _contexts;
+		protected:
+			boost::base_collection<context_type> _contexts;
 			map<morph_id_t, extender> _extenders;
 		};
 	}

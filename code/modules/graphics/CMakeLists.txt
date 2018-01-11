@@ -32,4 +32,6 @@ module (INLINE)
 	endsources ()
 endmodule ()
 
+vendor(boost HEADERS poly_collection)
+
 #--------------------------------------------------------

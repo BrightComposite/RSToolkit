@@ -20,10 +20,10 @@ module(STATIC)
 		domain(freetype)
 
 		group(include Headers)
-		files(FreeTypeDecoder.h)
+		files(freetype_component.h)
 
 		group(src Sources)
-		files(FreeTypeDecoder.cpp)
+		files(freetype_component.cpp)
 	endsources()
 endmodule()
 

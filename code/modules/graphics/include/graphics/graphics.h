@@ -12,7 +12,7 @@
 #include <morph/morph.h>
 #include <container/map.h>
 #include <container/array_list.h>
-#include <container/any_list.h>
+#include <boost/poly_collection/base_collection.hpp>
 #include <boost/optional.hpp>
 
 #include <core/Exception.h>
@@ -25,13 +25,13 @@ namespace asd
 	
 	namespace gfx
 	{
-		class interface
+		class component
 		{
-			morph_origin(interface)
+			morph_origin(component)
 		};
 		
-		template <class T, useif<is_base_of<interface, T>::value>>
-		morph_id_t interface_id = morph_id<T>;
+		template <class T, useif<is_base_of<component, T>::value>>
+		morph_id_t component_id = morph_id<T>;
 		
 		class context
 		{
@@ -42,9 +42,9 @@ namespace asd
 			virtual ~context() {}
 			
 			template <class T>
-			boost::optional<T &> interface() const {
-				auto i = _interfaces.find(interface_id<T>);
-				return i != _interfaces.end() ? static_cast<T &>(*i.value()) : boost::optional<T &>{};
+			boost::optional<T &> component() const {
+				auto i = _components.find(component_id<T>);
+				return i != _components.end() ? static_cast<T &>(i.value()) : boost::optional<T &>{};
 			}
 			
 			virtual void flush() {}
@@ -54,12 +54,15 @@ namespace asd
 			friend
 			class driver;
 			
-			template <class T>
-			void register_interface(unique<gfx::interface> && p) {
-				_interfaces.insert_or_assign(interface_id<T>, std::move(p));
+			template <class T, class ... A>
+			void register_component(A && ... args) {
+				_components.try_emplace(
+                    component_id<T>,
+                    *this, std::forward<A>(args)...
+                );
 			}
 			
-			map<morph_id_t, unique<gfx::interface>> _interfaces;
+			map<morph_id_t, gfx::component> _components;
 		};
 		
 		template <class Gfx>
@@ -72,27 +75,29 @@ namespace asd
 		
 		public:
 			using context_type = driver_context<Gfx>;
-			using extender = function<unique<gfx::interface>(context_type &)>;
+			using extender = function<void(context_type &)>;
 			
 			driver() {}
 			
-			template <class Interface, class Implementation, class ... A, useif<
-				is_base_of<gfx::interface, Interface>::value,
-				is_base_of<Interface, Implementation>::value,
+			template <class Component, class Implementation, class ... A, useif<
+				is_base_of<gfx::component, Component>::value,
+				is_base_of<Component, Implementation>::value,
 				can_construct<Implementation, context_type &, A...>::value
 			>>
-			void register_interface(A && ... args) {
+			void register_component(A && ... args) {
 				auto ext = [=](context_type & ctx) {
-					return make::unique<Implementation>(ctx, std::forward<A>(args)...);
+                    ctx.register_component<Implementation>(std::forward<A>(args)...);
 				};
 				
 				for (auto & ctx : _contexts) {
-					ctx->register_interface<Interface>(ext(*ctx));
+					ext(ctx);
 				}
+                
+                _extenders.emplace(morph_id<Component>, ext);
 			}
 		
-		private:
-			array_list<unique<context_type>> _contexts;
+		protected:
+			boost::base_collection<context_type> _contexts;
 			map<morph_id_t, extender> _extenders;
 		};
 	}
@@ -101,17 +106,17 @@ namespace asd
 	
 	exception_class(graphics_exception, "Graphics exception");
 	exception_subclass(context_creation_exception, graphics_exception, "Exception occurred while creating graphic context");
-	exception_subclass(interface_not_found_exception, graphics_exception, "Requested interface was not found at given context");
+	exception_subclass(component_not_found_exception, graphics_exception, "Requested component was not found at given context");
 	
-	template <class T, useif<is_base_of<gfx::interface, T>::value>>
+	template <class T, useif<is_base_of<gfx::component, T>::value>>
 	T & get(const gfx::context & ctx) {
-		auto interface = ctx.interface<T>();
+		auto component = ctx.component<T>();
 		
-		if (interface) {
-			return interface.get();
+		if (component) {
+			return component.get();
 		}
 		
-		throw interface_not_found_exception();
+		throw component_not_found_exception();
 	}
 }
 

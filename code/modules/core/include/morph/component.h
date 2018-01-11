@@ -116,7 +116,7 @@ namespace asd
 		template<class T, useif<based_on<T, Origin>::value>>
 		void remove()
 		{
-			auto i = this->_map.find(morph_id(T));
+			auto i = this->_map.find(morph_id<T>);
 
 			if(i == this->_map.end())
 				return;

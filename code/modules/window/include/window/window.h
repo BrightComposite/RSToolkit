@@ -61,6 +61,9 @@ namespace asd
 	{
 	public:
 		window_context(window & w) : _window(w) {}
+        window_context(window_context && ctx) : _window(ctx._window), _visual_info(ctx._visual_info) {
+            ctx._visual_info = nullptr;
+        }
 		
 		virtual ~window_context() {}
 		
@@ -124,7 +127,7 @@ namespace asd
 		inline gfx::driver_context<Gfx> & bind(Gfx & driver);
 		
 		gfx::context & graphics() const {
-			BOOST_ASSERT_MSG(_context, "There is not graphic context bound!");
+			BOOST_ASSERT_MSG(_context != nullptr, "There is not graphic context bound!");
 			return *_context;
 		}
 		
@@ -160,6 +163,7 @@ namespace asd
 		observable_property<math::int_rect> area;
 		
 #if BOOST_OS_WINDOWS
+  
 		HDC device() const {
 			return _device;
 		}
@@ -169,6 +173,7 @@ namespace asd
 
 		api(window)
 		static HWND create_empty_handle();
+  
 #elif BOOST_OS_LINUX
 		
 		::Display * display() const {
@@ -187,7 +192,7 @@ namespace asd
 #endif
 		
 		window_handle_t _handle;
-		unique<gfx::context> _context;
+		boost::optional<gfx::context &> _context;
 		math::int_rect _area;
 
 #if BOOST_OS_WINDOWS
@@ -204,18 +209,16 @@ namespace asd
 	
 	template <class Gfx>
 	inline gfx::driver_context<Gfx> & window::bind(Gfx & driver) {
-		auto tmp = driver.create_context(*this);
-		auto ctx = tmp.get();
-		
-		_context = std::move(tmp);
+		auto & ctx = driver.create_context(*this);
+		_context = ctx;
 
 #if BOOST_OS_LINUX
-		init(ctx->visual_info());
+		init(ctx.visual_info());
 #endif
 		
-		ctx->prepare();
+		ctx.prepare();
 		
-		return *ctx;
+		return ctx;
 	}
 }
 

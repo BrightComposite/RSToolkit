@@ -48,6 +48,18 @@ namespace asd
 			return ret;
 		}
 		
+		window_context::window_context(opengl::driver & driver, window & w) : base(driver), ::asd::window_context(w) {
+			init_device();
+			
+			w.size.subscribe_and_call([](const math::int_size & size) {
+				glViewport(0, 0, size.x, size.y);
+				glScissor(0, 0, size.x, size.y);
+			});
+		}
+		
+		window_context::window_context(window_context && ctx) noexcept :
+			base(std::forward<window_context>(ctx)), ::asd::window_context(std::forward<window_context>(ctx)) {}
+		
 		window_context::~window_context() {
 			if (_window.display() != nullptr) { 							// if window display is not closed yet
 				glXMakeCurrent(_window.display(), 0, 0);
@@ -212,15 +224,6 @@ namespace asd
 		driver::driver(const configuration & config) : config(config) {
 			// register_method(opengl::draw_mesh);
 		}
-		
-		window_context::window_context(opengl::driver & driver, window & w) : base(driver), ::asd::window_context(w) {
-			init_device();
-			
-			w.size.subscribe_and_call([](const math::int_size & size) {
-				glViewport(0, 0, size.x, size.y);
-				glScissor(0, 0, size.x, size.y);
-			});
-		}
 	}
 
 //---------------------------------------------------------------------------
@@ -228,6 +231,9 @@ namespace asd
 	namespace gfx
 	{
 		driver_context<opengl::driver>::driver_context(opengl::driver & d) : _driver(d) {}
+		driver_context<opengl::driver>::driver_context(driver_context && ctx) : _driver(ctx._driver), _context(ctx._context) {
+			ctx._context = nullptr;
+		}
 		
 		driver_context<opengl::driver>::~driver_context() {}
 		

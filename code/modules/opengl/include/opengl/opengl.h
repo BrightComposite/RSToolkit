@@ -83,7 +83,10 @@ namespace asd
 		public:
 			api(opengl)
 			driver_context(opengl::driver & driver);
-
+            
+            api(opengl)
+            driver_context(driver_context && ctx);
+            
 			api(opengl)
 			virtual ~driver_context();
 
@@ -107,6 +110,9 @@ namespace asd
 		public:
 			api(opengl)
 			window_context(opengl::driver & driver, window & w);
+            
+            api(opengl)
+            window_context(window_context && ctx) noexcept;
 
 			api(opengl)
 			virtual ~window_context();
@@ -137,9 +143,9 @@ namespace asd
 
 			api(opengl)
 			driver(const configuration & config = {});
-			
-			unique<window_context> create_context(window & w) {
-				return new window_context(*this, w);
+            
+            opengl::window_context & create_context(window & w) {
+				return static_cast<opengl::window_context &>(*_contexts.emplace<opengl::window_context>(*this, w));
 			}
 
 			configuration config;

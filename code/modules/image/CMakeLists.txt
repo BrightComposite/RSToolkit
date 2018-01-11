@@ -1,8 +1,8 @@
 #--------------------------------------------------------
-#	asd Message
+#	module image
 #--------------------------------------------------------
 
-project(message VERSION 0.1)
+project(image VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -10,27 +10,23 @@ include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-module(STATIC)
-	dependencies(core	0.*)
+module(LIBRARY)
+	dependencies(
+		# core	0.*
+	)
 
 	sources(modules)
-		domain(message)
-
+		domain(image)
+		
 		group(include Headers)
 		files(
-			Channel.h
-			Channel.hpp
-			Connect.h
-			message.h
-			MessageClass.h
-			MessageClass.hpp
-			MessageConnector.h
-			MessageBroadcaster.h
-			subject.h
+			# headers
 		)
 
 		group(src Sources)
-		files(subject.cpp)
+		files(
+			# sources
+		)
 	endsources()
 endmodule()
 

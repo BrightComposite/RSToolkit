@@ -21,7 +21,7 @@ module(STATIC)
 			Channel.h
 			Channel.hpp
 			Connect.h
-			Message.h
+			message.h
 			MessageClass.h
 			MessageClass.hpp
 			MessageConnector.h

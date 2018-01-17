@@ -47,7 +47,7 @@ int main(int argc, char * argv[]) {
 	array_list<wstring> nargv;
 	array_list<wchar_t *> cargv;
 	
-	repeat(i, argc) {
+	for (int i = 0; i < argc; ++i) {
 		nargv.push_back(from_utf8(argv[i]));
 		cargv.push_back(&nargv.back()[0]);
 	}

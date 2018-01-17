@@ -6,25 +6,15 @@
 
 namespace asd
 {
-    window::window(const string & caption, const math::int_rect & area, const char * displayName) : _area(area) {
+    window::window(const string & caption, const math::int_rect & area, const char * displayName) :
+        events(_area_changed.get_observable()),
+        _area(area)
+    {
         _display = XOpenDisplay(displayName);
         
         if (_display == nullptr) {
             throw open_display_exception(displayName);
         }
-        
-        this->area.subscribe([this](const math::int_rect & rect) {      // add automatic reaction on area change
-            auto p = rect.pos();
-            auto s = rect.size();
-            
-            if (position.get() != p) {
-                position.set(p);
-            }
-            
-            if (size.get() != s) {
-                size.set(s);
-            }
-        });
     }
     
     window::~window() {
@@ -82,12 +72,8 @@ namespace asd
             switch (_event.type) {
                 case Expose: {
                     XGetWindowAttributes(_display, _handle, &_attributes);
-                    _area.set_placement(_attributes.x, _attributes.y, _attributes.width, _attributes.height);
-                    
-                    if (area.get() != _area) {
-                        area.set(_area);
-                    }
-                    
+                    _area.set_placement(_attributes.x, _attributes.y, _attributes.width, _attributes.height);;
+                    _area_changed.get_subscriber().on_next(_area);
                     break;
                 }
                 

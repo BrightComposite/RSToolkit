@@ -16,11 +16,11 @@ namespace asd
 	static entrance open([]() {
 		window w("gfx:test", { 50, 50, 400, 400 });
 
-		w.inputs.position.subscribe([](const auto & pos) {
+		w.events.position.subscribe([](const auto & pos) {
 			std::cout << "Position changed: " << pos << std::endl;
 		});
 
-		w.inputs.size.subscribe([](const auto & size) {
+		w.events.size.subscribe([](const auto & size) {
 			std::cout << "Size changed: " << size << std::endl;
 		});
 

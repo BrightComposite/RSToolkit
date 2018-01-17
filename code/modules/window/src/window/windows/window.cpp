@@ -395,14 +395,6 @@ namespace asd
 		return 0;
 	}
 
-	window_inputs::window_inputs(const rx::observable<math::int_rect> & area) :
-		area(area),
-		position(area.map([](const auto & r) { return r.pos(); }).distinct_until_changed()),
-		size(area.map([](const auto & r) { return r.size(); }).distinct_until_changed())
-	{
-
-	}
-
 	window::window(const string & caption, const math::int_rect & area, const char * displayName) :
 		inputs(_area_changed.get_observable()),
 		_area(area)

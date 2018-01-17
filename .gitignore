@@ -16,12 +16,13 @@
 !*.glsl
 !*.cmake
 !*.bat
+!asd
 !CMakeLists.txt
 !**/CMakeLists.txt
 !.gitignore
 !.gitattributes
 !README.md
-!templates/**/*
+!LICENSE
 !vendor/*.tar.gz
 !vendor/*.tar.gz.*
 *_OLD.*

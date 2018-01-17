@@ -51,10 +51,13 @@ namespace asd
 		window_context::window_context(opengl::driver & driver, window & w) : base(driver), ::asd::window_context(w) {
 			init_device();
 			
-			w.size.subscribe_and_call([](const math::int_size & size) {
+			auto update_size = [](const math::int_size & size) {
 				glViewport(0, 0, size.x, size.y);
 				glScissor(0, 0, size.x, size.y);
-			});
+			};
+			
+			w.events.size.subscribe(update_size);
+			update_size(w.size());
 		}
 		
 		window_context::window_context(window_context && ctx) noexcept :

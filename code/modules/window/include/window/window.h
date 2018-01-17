@@ -91,8 +91,11 @@ namespace asd
 	class window_inputs
 	{
 	public:
-		api(window)
-		window_inputs(const rx::observable<math::int_rect> & area);
+		window_inputs(const rx::observable<math::int_rect> & area) :
+			area(area),
+			position(area.map([](const auto & r) { return r.pos(); }).distinct_until_changed()),
+			size(area.map([](const auto & r) { return r.size(); }).distinct_until_changed())
+		{}
 
 		rx::observable<math::int_rect> area;
 		rx::observable<math::int_point> position;
@@ -141,7 +144,7 @@ namespace asd
 		inline gfx::driver_context<Gfx> & bind(Gfx & driver);
 		
 		gfx::context & graphics() const {
-			BOOST_ASSERT_MSG(_context != nullptr, "There is not graphic context bound!");
+			BOOST_ASSERT_MSG(_context != boost::none, "There is not graphic context bound!");
 			return *_context;
 		}
 
@@ -184,7 +187,7 @@ namespace asd
 			}
 		}
 
-		window_inputs inputs;
+		window_inputs events;
 
 #if BOOST_OS_WINDOWS
   

@@ -48,6 +48,12 @@ case ${command} in
 			project*)
 				append_string="add_module(${name} projects)"
 			;;
+			vendor*)
+				mkdir ./vendor/${name}
+				echo "" > ./vendor/${name}/setup.cmake
+				echo "Vendor library ${name} successfully added"
+				exit
+			;;
 			*)
 				incorrect_usage
 			;;

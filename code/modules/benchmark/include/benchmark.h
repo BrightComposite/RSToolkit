@@ -32,7 +32,7 @@ namespace asd
 			
 			time_point<high_resolution_clock> last;
 			
-			for (int i = 0; i < N; ++i) {`
+			for (int i = 0; i < N; ++i) {
 				last = high_resolution_clock::now();
 				func();
 				t += duration_cast<nanoseconds>(high_resolution_clock::now() - last).count();

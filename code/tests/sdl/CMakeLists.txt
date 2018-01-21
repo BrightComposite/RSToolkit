@@ -17,6 +17,12 @@ module(APPLICATION)
 	)
 
 	sources(tests)
+		group(include Headers)
+		files(
+			sdl/
+				components.h
+		)
+
 		group(src Sources)
 		files(
 			main.cpp

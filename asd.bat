@@ -50,6 +50,12 @@ if "%type%" equ "project" (
 	set append_string=add_module^(%name% projects^)
 	goto append_module
 )
+if "%type%" equ "vendor" (
+	mkdir ./vendor/%name%
+	echo "" > ./vendor/%name%/setup.cmake
+	echo "Vendor library %name% successfully added"
+	goto end
+)
 
 goto incorrect_usage
 
@@ -65,7 +71,7 @@ echo Incorrect usage!
 :usage
 echo Usage:
 echo ^* make - asd make ^<target^> ^[targets...^] - make project files for specified targets
-echo ^* add - asd add module^|test^|project ^<name^>
+echo ^* add - asd add module^|test^|project^|vendor ^<name^>
 
 rem -------------------------------------
 

@@ -39,4 +39,5 @@ endif()
 
 add_test(batch_gfx)
 add_test(immediate_gfx)
-add_test(window) 
+add_test(window)
+add_test(sdl)

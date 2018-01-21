@@ -29,8 +29,8 @@ namespace asd
 		STARTUPINFOW info;
 		GetStartupInfoW(&info);
 
-		inst.showCommand = check_flag(STARTF_USESHOWWINDOW, info.dwFlags) ? info.wShowWindow : SW_NORMAL;
-		inst.rootPath = getDir(getDir(application::getExecutionPath(inst.hInstance)));
+		inst._show_command = check_flag(STARTF_USESHOWWINDOW, info.dwFlags) ? info.wShowWindow : SW_NORMAL;
+		inst._root_path = getDir(getDir(application::getExecutionPath(inst.hInstance)));
 		load();
 	}
 
@@ -39,33 +39,33 @@ namespace asd
 		return inst.hInstance;
 	}
 #else
-	void application::main(int argc, wchar_t * argv[]) {
+	int application::main(int argc, wchar_t ** argv) {
 		auto & inst = instance();
 		
 		for(int i = 0; i < argc; ++i)
 			inst.args.push_back(wstring(argv[i]));
 		
-		inst.rootPath = getDir(getDir(argv[0]));
-		load();
+		inst._root_path = getDir(getDir(argv[0]));
+		return load();
 	}
 #endif
-	const wstring & application::getRootPath() {
+	const wstring & application::root_path() {
 		auto & inst = instance();
-		return inst.rootPath;
+		return inst._root_path;
 	}
 
-	const array_list<wstring> & application::startupArguments() {
+	const array_list<wstring> & application::arguments() {
 		auto & inst = instance();
 		return inst.args;
 	}
 
-	int application::getShowCommand() {
+	int application::show_command() {
 		auto & inst = instance();
-		return inst.showCommand;
+		return inst._show_command;
 	}
 
-	void application::load() {
-		instance().entrance();
+	int application::load() {
+		return instance().entrance();
 	}
 
 #ifdef WIN32

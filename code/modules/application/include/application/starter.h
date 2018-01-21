@@ -64,8 +64,7 @@ int wmain(int argc, wchar_t * argv[]) {
 	//ShowWindow(GetConsoleWindow(), SW_HIDE);
 #endif
 	
-	application::main(argc, argv);
-	return 0;
+	return application::main(argc, argv);
 }
 
 

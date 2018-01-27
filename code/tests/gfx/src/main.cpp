@@ -41,22 +41,6 @@ namespace asd
 		}};
 	}
 
-	mesh_data generate_cube() {
-		return {{
-			-1.0f,  1.0f,  1.0f, 
-			-1.0f, -1.0f,  1.0f, 
-			 1.0f, -1.0f,  1.0f, 
-			 1.0f,  1.0f,  1.0f, 
-			-1.0f,  1.0f, -1.0f, 
-			-1.0f, -1.0f, -1.0f, 
-			 1.0f, -1.0f, -1.0f, 
-			 1.0f,  1.0f, -1.0f,
-		}, {
-			0, 1, 2, 2, 3, 0, // top
-
-		}};
-	}
-	
 	static entrance open([]() {
 		opengl::driver driver;
 		

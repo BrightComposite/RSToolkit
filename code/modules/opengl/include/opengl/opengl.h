@@ -83,10 +83,7 @@ namespace asd
 		public:
 			api(opengl)
 			driver_context(opengl::driver & driver);
-            
-            api(opengl)
-            driver_context(driver_context && ctx);
-            
+   
 			api(opengl)
 			virtual ~driver_context();
 
@@ -95,7 +92,6 @@ namespace asd
 			void check_for_errors();
 
 			opengl::driver & _driver;
-			GLContext _context;
 		};
 	}
 	
@@ -125,6 +121,7 @@ namespace asd
 		
 		protected:
 			void init_device();
+			GLContext _context;
 		};
 		
 		class driver : public ::asd::gfx::driver<driver>

@@ -273,15 +273,17 @@ namespace asd
 			switch(_type) {
 				case mesh_type::plain:
 					return {make::handle<plain_mesh>(*this)};
+				
 				case mesh_type::indexed:
 					return {make::handle<indexed_mesh>(*this)};
+				
 					/*case 5:
 					return handle<instanced_mesh>(this);
 					case 7:
 					return handle<instanced_indexed_mesh>(this);*/
 
 				default:
-					throw Exception("Invalid builder state");
+					throw std::runtime_error("Invalid builder state");
 			}
 		}
 	}

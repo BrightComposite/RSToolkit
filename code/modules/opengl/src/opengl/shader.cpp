@@ -28,26 +28,26 @@ namespace asd
 				auto shader_id = glCreateShader(unit.type);
 				ids.push_back(shader_id);
 
-				glShaderSource(shader_id, 1, static_cast<const GLchar * const *>(&unit.code), NULL);
+				glShaderSource(shader_id, 1, reinterpret_cast<const GLchar * const *>(&unit.code), NULL);
 				glCompileShader(shader_id);
 
 				glGetShaderiv(shader_id, GL_COMPILE_STATUS, &status);
 
 				if(status == GL_FALSE) {
-#					ifdef GL_DEBUG
-						glGetShaderiv(id, GL_INFO_LOG_LENGTH, &info_log_length);
+#ifdef GL_DEBUG
+					glGetShaderiv(id, GL_INFO_LOG_LENGTH, &info_log_length);
 
-						if(info_log_length != 0) {
-							owned_data<char> buffer(info_log_length + 1);
+					if(info_log_length != 0) {
+						owned_data<char> buffer(static_cast<size_t>(info_log_length + 1));
 
-							glGetShaderInfoLog(id, info_log_length, nullptr, buffer.ptr);
-							buffer[info_log_length] = '\0';
+						glGetShaderInfoLog(id, info_log_length, nullptr, buffer.ptr);
+						buffer[info_log_length] = '\0';
 
-							std::cout << buffer.ptr << std::endl;
-						}
-#					endif
+						std::cout << buffer.ptr << std::endl;
+					}
+#endif
 
-					throw Exception("Can't compile GLSL shader!");
+					throw std::runtime_error("Can't compile GLSL shader!");
 				}
 
 				glAttachShader(id, shader_id);
@@ -56,7 +56,6 @@ namespace asd
 			uint k = 0;
 
 			for(auto & e : code.layout.elements) {
-				std::cout << e.name << std::endl;
 				glBindAttribLocation(id, k, e.name);
 				k += (e.units - 1) / 4 + 1;
 			}
@@ -66,20 +65,20 @@ namespace asd
 			glGetProgramiv(id, GL_LINK_STATUS, &status);
 
 			if(status == GL_FALSE) {
-#				ifdef GL_DEBUG
-					glGetProgramiv(id, GL_INFO_LOG_LENGTH, &info_log_length);
+#ifdef GL_DEBUG
+				glGetProgramiv(id, GL_INFO_LOG_LENGTH, &info_log_length);
 
-					if(info_log_length != 0) {
-						owned_data<char> buffer(info_log_length + 1);
+				if(info_log_length != 0) {
+					owned_data<char> buffer(static_cast<size_t>(info_log_length + 1));
 
-						glGetProgramInfoLog(id, info_log_length, nullptr, buffer.ptr);
-						buffer[info_log_length] = '\0';
+					glGetProgramInfoLog(id, info_log_length, nullptr, buffer.ptr);
+					buffer[info_log_length] = '\0';
 
-						std::cout << buffer.ptr << std::endl;
-					}
-#				endif
+					std::cout << buffer.ptr << std::endl;
+				}
+#endif
 
-				throw Exception("Can't compile GLSL shader!");
+				throw std::runtime_error("Can't compile GLSL shader!");
 			}
 
 			for(auto & shader_id : ids) {

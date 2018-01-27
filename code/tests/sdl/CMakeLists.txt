@@ -13,6 +13,7 @@ include(${ASD_TOOLS}/module.cmake)
 module(APPLICATION)
 	dependencies(
 		application	0.*
+		opengl 		0.*
 		sdlpp 		0.*
 	)
 

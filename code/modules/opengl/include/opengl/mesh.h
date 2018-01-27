@@ -135,8 +135,8 @@ namespace asd
 			mesh_builder & indices(const vertex_indices &);
 			api(opengl)
 			mesh_builder & offset(uint offset);
-			/*api(opengl)
-			mesh_builder * make_instanced(const vertex_layout *);*/
+//			api(opengl)
+//			mesh_builder * make_instanced(const vertex_layout *);
 			
 			api(opengl)
 			handle<mesh> build();

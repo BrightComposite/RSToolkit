@@ -170,26 +170,15 @@ namespace asd
 			space::rotation _rot;
 		};
 
-#ifdef USE_STUPID_JOKES
+#ifdef ENABLE_STUPID_JOKES
 		class object_oriented : public oriented {};
 #endif
 		
 		//---------------------------------------------------------------------------
 		
-		/// PLEASE PLEASE PLEASE
-
-#ifdef MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 4455)
-#endif
-		
-		inline constexpr scalar operator ""x(long double value) {
+		inline constexpr scalar operator ""_x(long double value) {
 			return scalar(value);
 		}
-
-#ifdef MSC_VER
-#pragma warning(push)
-#endif
 	}
 }
 

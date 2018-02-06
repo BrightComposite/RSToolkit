@@ -24,7 +24,7 @@ module(APPLICATION)
 endmodule()
 
 if(WIN32)
-	vendor(vld)
+	# vendor(vld)
 endif()
 
 #--------------------------------------------------------

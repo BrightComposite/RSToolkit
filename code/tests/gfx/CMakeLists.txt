@@ -26,7 +26,7 @@ module(APPLICATION CONSOLE)
 endmodule()
 
 if(${WIN32})
-	vendor(vld)
+	# vendor(vld)
 endif()
 
 #--------------------------------------------------------

@@ -27,7 +27,7 @@ endmodule()
 vendor(hopscotch-map)
 
 if(${WIN32})
-	vendor(vld)
+	# vendor(vld)
 endif()
 
 #--------------------------------------------------------

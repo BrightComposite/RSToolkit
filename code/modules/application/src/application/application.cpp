@@ -15,7 +15,7 @@ namespace asd
 	wstring getDir(const wstring & path);
 
 #ifdef WIN32
-	void application::main(int argc, wchar_t * argv[]) {
+	int application::main(int argc, wchar_t * argv[]) {
 		auto & inst = instance();
 
 		if(inst.hInstance != nullptr)
@@ -31,7 +31,7 @@ namespace asd
 
 		inst._show_command = check_flag(STARTF_USESHOWWINDOW, info.dwFlags) ? info.wShowWindow : SW_NORMAL;
 		inst._root_path = getDir(getDir(application::getExecutionPath(inst.hInstance)));
-		load();
+		return load();
 	}
 
 	HINSTANCE application::getWindowsInstance() {

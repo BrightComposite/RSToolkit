@@ -12,20 +12,20 @@ include(${ASD_TOOLS}/module.cmake)
 
 module(LIBRARY)
 	dependencies(
-		# core	0.*
+		opengl 		0.*
 	)
 
 	sources(modules)
 		domain(sdlpp)
-		
+
 		group(include Headers)
 		files(
-			# headers
+			sdlpp.h
 		)
 
 		group(src Sources)
 		files(
-			# sources
+			sdlpp.cpp
 		)
 	endsources()
 endmodule()

@@ -1,8 +1,8 @@
 #--------------------------------------------------------
-#	sdl test facility
+#	module opengl_window
 #--------------------------------------------------------
 
-project(sdl_test VERSION 0.1)
+project(opengl_window VERSION 0.1)
 
 #--------------------------------------------------------
 
@@ -10,27 +10,31 @@ include(${ASD_TOOLS}/module.cmake)
 
 #--------------------------------------------------------
 
-module(APPLICATION)
+module(LIBRARY)
 	dependencies(
-		application	0.*
-		sdlpp 		0.*
+		opengl 	0.*
+		window	0.*
 	)
 
-	sources(tests)
+	sources(modules)
+		domain(opengl_window)
+
 		group(include Headers)
 		files(
-			#
+			context.h
 		)
 
 		group(src Sources)
-		files(
-			main.cpp
-		)
+
+		if (WIN32)
+			files(windows/context.cpp)
+		elseif(UNIX)
+			files(linux/context.cpp)
+		else()
+			message(FATAL_ERROR "OpenGL integration is not implemented for this platform yet")
+		endif()
+
 	endsources()
 endmodule()
-
-if(WIN32)
-	# vendor(vld)
-endif()
 
 #--------------------------------------------------------

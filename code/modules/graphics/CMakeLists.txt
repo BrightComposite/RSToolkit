@@ -32,6 +32,6 @@ module (INLINE)
 	endsources ()
 endmodule ()
 
-vendor(boost HEADERS poly_collection)
+vendor(boost COMPONENTS poly_collection)
 
 #--------------------------------------------------------

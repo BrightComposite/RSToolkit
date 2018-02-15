@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
 #include <application/starter.h>
-#include <opengl/opengl.h>
+#include <opengl_window/context.h>
 #include <opengl/mesh.h>
 #include <opengl/shader.h>
 #include <math/vector.h>

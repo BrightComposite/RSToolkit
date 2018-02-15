@@ -12,9 +12,9 @@ include(${ASD_TOOLS}/module.cmake)
 
 module(APPLICATION CONSOLE)
 	dependencies(
-        application	0.*
-        benchmark 0.*
-		opengl 0.*
+        application		0.*
+        benchmark 		0.*
+		opengl_window 	0.*
 	)
 
 	sources(tests)

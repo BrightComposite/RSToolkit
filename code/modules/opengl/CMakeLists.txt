@@ -12,7 +12,7 @@ include(tools/shaders.cmake)
 
 #--------------------------------------------------------
 
-module(STATIC)
+module(LIBRARY)
 	dependencies(
 		graphics3d	0.*
 		window		0.*
@@ -29,6 +29,7 @@ module(STATIC)
 			opengl.h
             shader.h
 			vertex_layout.h
+			uniform_layout.h
 		)
 
 		group(src Sources)
@@ -36,6 +37,7 @@ module(STATIC)
 			mesh.cpp
             shader.cpp
 			vertex_layout.cpp
+			uniform_layout.cpp
 		)
 
 if (WIN32)

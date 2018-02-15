@@ -15,8 +15,6 @@
 
 //---------------------------------------------------------------------------
 
-#define GLEW_STATIC
-
 #if BOOST_OS_WINDOWS
 
 #include <GL/glew.h>
@@ -48,114 +46,79 @@
 
 namespace asd
 {
-	using std::thread;
+    using std::thread;
 
 #if BOOST_OS_WINDOWS
 
-	using DeviceContext = HDC;
-	using GLContext = HGLRC;
+    using DeviceContext = HDC;
+    using GLContext = HGLRC;
 
 #elif BOOST_OS_LINUX
 
-	using GLContext = ::GLXContext;
+    using GLContext = ::GLXContext;
 
 #endif
-	
-	namespace opengl
-	{
-		class driver;
-		struct shader_program;
-		
-		namespace shader_code {
-			struct store;
-			
-			store & get(const std::string & name);
-		}
-	}
-	
-	namespace gfx
-	{
-		template <>
-		class driver_context<opengl::driver> : public context
-		{
-			friend gfx::driver<opengl::driver>;
 
-		public:
-			api(opengl)
-			driver_context(opengl::driver & driver);
-   
-			api(opengl)
-			virtual ~driver_context();
+    namespace opengl
+    {
+        class driver;
+        struct shader_program;
+    }
 
-		protected:
-			api(opengl)
-			void check_for_errors();
+    namespace gfx
+    {
+        template <>
+        class driver_context<opengl::driver> : public context
+        {
+            friend gfx::driver<opengl::driver>;
 
-			opengl::driver & _driver;
-		};
-	}
-	
-	namespace opengl
-	{
-		using context = gfx::driver_context<driver>;
-		
-		class window_context : public opengl::context, public ::asd::window_context
-		{
-			using base = opengl::context;
-		
-		public:
-			api(opengl)
-			window_context(opengl::driver & driver, window & w);
-            
+        public:
             api(opengl)
-            window_context(window_context && ctx) noexcept;
+            driver_context(opengl::driver & driver);
 
-			api(opengl)
-			virtual ~window_context();
+            api(opengl)
+            virtual ~driver_context();
 
-			api(opengl)
-			virtual void flush() override;
+        protected:
+            api(opengl)
+            void check_for_errors();
 
-			api(opengl)
-			virtual void prepare() override;
-		
-		protected:
-			void init_device();
-			GLContext _context;
-		};
-		
-		class driver : public ::asd::gfx::driver<driver>
-		{
-		public:
-			struct configuration
-			{
-				configuration() {}
-				configuration(int major, int minor, int flags) : major(major), minor(minor), flags(flags) {}
-				configuration(const configuration & a) : configuration(a.major, a.minor, a.flags) {}
-				
-				int major = 3;
-				int minor = 3;
-				int flags = 0;
-			};
+            opengl::driver & _driver;
+        };
+    }
 
-			api(opengl)
-			driver(const configuration & config = {});
-            
-            opengl::window_context & create_context(window & w) {
-				return static_cast<opengl::window_context &>(*_contexts.emplace<opengl::window_context>(*this, w));
-			}
+    namespace opengl
+    {
+        using context = gfx::driver_context<driver>;
 
-			configuration config;
-		};
-	}
+        class driver : public ::asd::gfx::driver<driver>
+        {
+        public:
+            struct configuration
+            {
+                configuration() {}
+                configuration(int major, int minor, int flags) : major(major), minor(minor), flags(flags) {}
+                configuration(const configuration & a) : configuration(a.major, a.minor, a.flags) {}
+
+                int major = 3;
+                int minor = 3;
+                int flags = 0;
+            };
+
+            api(opengl)
+            driver(const configuration & config = {});
+
+            configuration config;
+        };
+    }
 
 //---------------------------------------------------------------------------
-	
-	inline int glGetInteger(uint param) {
-		int value;
-		glGetIntegerv(param, &value);
-		return value;
-	}
+
+    inline int glGetInteger(uint param) {
+        int value;
+        glGetIntegerv(param, &value);
+        return value;
+    }
 }
 
 //---------------------------------------------------------------------------

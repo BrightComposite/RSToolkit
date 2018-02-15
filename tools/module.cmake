@@ -83,6 +83,13 @@ link_directories(${OUTPUT_ROOT}/lib)
 link_directories(${OUTPUT_ROOT}/lib/debug)
 link_directories(${OUTPUT_ROOT}/lib/release)
 
+if (NOT EXISTS "${BINARY_OUTPUT}/release")
+	file(MAKE_DIRECTORY "${BINARY_OUTPUT}/release")
+endif()
+
+if (NOT EXISTS "${BINARY_OUTPUT}/debug")
+	file(MAKE_DIRECTORY "${BINARY_OUTPUT}/debug")
+endif()
 #--------------------------------------------------------
 
 set(MODULE_TYPES APPLICATION;SHARED;LIBRARY;STATIC;INLINE CACHE INTERNAL "Module types" FORCE)
@@ -299,7 +306,7 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 	function(add_test PATH)
 		add_module(${PATH} tests ${ARGV1})
 	endfunction()
-	
+
 	function(add_command PATH)
 		set(DIR "${PATH}")
 		set(ROOT "${ARGV1}")
@@ -417,13 +424,13 @@ if(NOT ";${GUARD_BLOCKS};" MATCHES ";MODULE_TOOL_GUARD;")
 		get_filename_component(PROJECT_ID ${PROJECT_SOURCE_DIR} NAME)
 		get_filename_component(PROJECT_DIR ${PROJECT_SOURCE_DIR} DIRECTORY)
 		get_filename_component(PROJECT_DIR "${PROJECT_DIR}" NAME)
-		
+
 		message("")
-		
+
 		if("${PROJECT_DIR}" STREQUAL "tests")
 			set(PROJECT_ID ${PROJECT_ID}_test)
 		endif()
-		
+
 		set(PROJECT_NAME_OF_${PROJECT_ID} ${PROJECT_NAME} CACHE STRING "project name of ${PROJECT_ID} module")
 		set(PROJECT_VERSION_OF_${PROJECT_ID} ${PROJECT_VERSION} CACHE STRING "project version of ${PROJECT_ID} module")
 

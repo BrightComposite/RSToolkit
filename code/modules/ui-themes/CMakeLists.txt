@@ -11,7 +11,7 @@ include(${ASD_TOOLS}/module.cmake)
 #--------------------------------------------------------
 
 module(STATIC)
-	dependencies(ui	0.*)
+	dependencies(gui	0.*)
 
 	sources(modules)
 		domain(ui/themes)

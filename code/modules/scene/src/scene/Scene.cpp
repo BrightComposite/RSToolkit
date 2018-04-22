@@ -1,188 +1,93 @@
 //---------------------------------------------------------------------------
 
-#include <scene/Scene.h>
-#include <scene/Camera.h>
+#include <scene/scene.h>
+#include <scene/camera.h>
 
 //---------------------------------------------------------------------------
 
 namespace asd
 {
-	implement_link(Drawable);
-	implement_link(SceneObject);
-	implement_link(Scene);
+    namespace scene
+    {
+        drawable::drawable(container & scene, bool transparent) : _transparent(transparent) {}
 
-	SceneObject::SceneObject(Scene * scene) : _scene(scene)
-	{
-		setclass(SceneObject);
-		scene->_objects.emplace_back(this);
-	}
+        container::container(gfx::context & gfx, flow::context & flow) : _gfx(gfx), _timer(flow, 100ms) {
+            _timer.bind(make_method(this, update));
+            _timer.start();
 
-	Drawable::Drawable(Scene * scene, bool transparent) : _transparent(transparent)
-	{
-		auto & list = _transparent ? scene->_transparent : scene->_opaque;
-		list.push_back(this);
-	}
+            auto & uniforms = *gfx.component<uniform::component>();
+            
+            _uniforms << uniforms.register_uniform("Color", { uniform::scheme::create<uniform::f32v4>("color") });
+            _uniforms << uniforms.register_uniform("Model", { uniform::scheme::create<uniform::f32m4>("model") });
+            _uniforms << uniforms.register_uniform("View", { uniform::scheme::create<uniform::f32m4>("view") });
+            _uniforms << uniforms.register_uniform("Projection", { uniform::scheme::create<uniform::f32m4>("projection") });
+        }
 
-	handle<Scene> Scene::construct(const handle<Scene> & scene)
-	{
-		if(scene->_widget->graphics() notkindof (Graphics3D))
-			throw Exception("Widget for the scene must support 3D graphics!");
+        container::container(container && scene) noexcept :
+            _gfx(scene._gfx),
+            _camera(std::move(scene._camera)),
+            _objects(std::move(scene._objects)),
+            _opaque(std::move(scene._opaque)),
+            _transparent(std::move(scene._transparent)),
+            _timer(std::move(scene._timer)),
+            _uniforms(std::move(scene._uniforms))
+        {}
 
-		return scene
-			->_widget
-			->components
-			->require<WidgetLayerComponent<SceneLayer>>()
-			->init(scene)
-			->scene();
-	}
+        container & container::operator = (container && scene) noexcept {
+            std::swap(_camera, scene._camera);
+            std::swap(_objects, scene._objects);
+            std::swap(_opaque, scene._opaque);
+            std::swap(_transparent, scene._transparent);
+            std::swap(_timer, scene._timer);
+            std::swap(_uniforms, scene._uniforms);
 
-	Scene::Scene(Widget * widget) : Scene()
-	{
-		_widget = widget;
-		connect(this, &Scene::onWidgetResize, *_widget);
+            return *this;
+        }
 
-		_firstTick = _lastTick = clock::now();
-		_ticks = 0;
-	}
+        container::~container() {}
 
-	Scene::~Scene()
-	{
-		for(auto & obj : reverse(_objects))
-			obj = nullptr;
-	}
+        gfx::context & container::graphics() const {
+            return _gfx;
+        }
 
-	Graphics3D & Scene::graphics() const
-	{
-		return *static_cast<Graphics3D *>(_widget->graphics());
-	}
+        const boost::optional<scene::camera &> & container::camera() const {
+            return _camera;
+        }
 
-	Widget & Scene::widget() const
-	{
-		return *_widget;
-	}
+        const math::uint_size & container::viewport() const {
+            return _viewport;
+        }
 
-	UISpace & Scene::space() const
-	{
-		return *_widget->space();
-	}
+        void container::set_camera(const boost::optional<scene::camera &> & camera) {
+            _camera = camera;
+        }
 
-	Viewport Scene::viewport() const
-	{
-		return _widget->viewport();
-	}
+        void container::set_viewport(const math::uint_size & viewport) {
+            _viewport = viewport;
+        }
 
-	Camera * Scene::camera() const
-	{
-		return _camera;
-	}
+        void container::draw(const math::int_rect & viewport) const {
+            for (auto & uniform : _uniforms) {
+                uniform.get().update();
+            }
 
-	void Scene::render() const
-	{
-		space().invalidate(_widget);
-		space().validate();
-	}
+            for (auto & drawable : _opaque) {
+                drawable.get().draw(viewport, 1.0f);
+            }
 
-	void Scene::setCamera(Camera * camera)
-	{
-		_camera = camera;
-	}
+            for (auto & drawable : _transparent) {
+                drawable.get().draw(viewport, 1.0f);
+            }
+        }
 
-	void Scene::attach(handle<SceneObject> obj)
-	{
-		auto & scene = obj->_scene;
+        matrix container::normal_matrix(const matrix & model) const {
+            return /*_camera != nullptr ? _camera->normal_matrix(model) : */model.inverse();
+        }
 
-		if(scene != nullptr)
-		{
-			scene->detach(obj);
-			scene = this;
-		}
-
-		_objects.push_back(obj);
-
-		if(obj kindof(Drawable))
-		{
-			auto * drawable = dynamic_cast<Drawable *>(static_cast<SceneObject *>(obj));
-			auto & list = drawable->transparent() ? _transparent : _opaque;
-			list.push_back(drawable);
-		}
-	}
-
-	void Scene::detach(SceneObject * obj)
-	{
-		if(obj->_scene != this)
-			return;
-
-		for(auto i = _objects.begin(); i != _objects.end(); ++i)
-		{
-			if(*i == obj)
-			{
-				_objects.erase(i);
-				break;
-			}
-		}
-
-		if(obj kindof(Drawable))
-		{
-			auto * drawable = dynamic_cast<Drawable *>(obj);
-			auto & list = drawable->transparent() ? _transparent : _opaque;
-
-			for(auto i = list.begin(); i != list.end(); ++i)
-			{
-				if(*i == drawable)
-				{
-					list.erase(i);
-					break;
-				}
-			}
-		}
-	}
-
-	void Scene::onWidgetResize(handle<WidgetResizeMessage> & msg, Widget & w)
-	{
-		if(_camera)
-			_camera->updateProjection();
-	}
-
-	void Scene::draw(Graphics3D & g, const IntRect & viewport) const
-	{
-		g.updateUniformBuffers();
-
-		for(auto & drawable : _opaque)
-		{
-			drawable->draw(g, viewport, 1.0f);
-		}
-
-		//auto dt = hold(g.depthTestState(), false);
-
-		for(auto & drawable : _transparent)
-			drawable->draw(g, viewport, 1.0f);
-	}
-
-	void Scene::setTickLength(milliseconds length)
-	{
-		_tickLength = length;
-		_firstTick = _lastTick - (_tickLength * _ticks);
-	}
-
-	matrix Scene::normalMatrix(const matrix & model) const
-	{
-		return /*_camera != nullptr ? _camera->normalMatrix(model) : */model.inverse();
-	}
-
-	void Scene::update()
-	{
-		if(clock::now() - _lastTick > _tickLength)
-		{
-			space().mouseUpdate();
-
-			_lastTick = clock::now();
-			ticks_t ticks = (_lastTick - _firstTick) / _tickLength;
-
-			for(; _ticks < ticks; ++_ticks)
-			{
-				for(auto & obj : _objects)
-					obj->update(_ticks);
-			}
-		}
-	}
-}
+        void container::update(ticks_t ticks) {
+            for (auto & obj : _objects) {
+                obj->update(ticks);
+            }
+        }
+    }
+ }

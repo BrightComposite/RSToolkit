@@ -5,9 +5,9 @@
 
 layout(std140) uniform Area
 {
-	vec2  pos;
-	vec2  size;
-	float depth;
+    vec2  pos;
+    vec2  size;
+    float depth;
 };
 
 in vec2 position;

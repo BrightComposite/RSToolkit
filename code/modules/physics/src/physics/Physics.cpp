@@ -12,11 +12,11 @@ namespace asd
 		auto p = object->position();
 		auto r = object->rotation();
 		trans.setOrigin({p.x, p.y, p.z});
-		trans.setRotation({r.x, r.y, r.z});
+		trans.set_rotation({r.x, r.y, r.z});
 	}
 	
 	void MotionState::setWorldTransform(const btTransform & trans) {
-		object->setRotation(trans.getRotation());
+		object->set_rotation(trans.getRotation());
 		object->setPosition(trans.getOrigin());
 	}
 	

@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.3)
 
 #--------------------------------------------------------
 
-include(tools/workspace.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/workspace.cmake)
 
 #--------------------------------------------------------
 
@@ -31,10 +31,11 @@ if("${BUILD_TARGET}" STREQUAL "OFF" OR "${BUILD_TARGET}" STREQUAL "")
 	message("  * clang       				- Clang")
 else()
 	message("- ASD is at ${ASD_ROOT}")
+	message("- Workspace is at ${WORKSPACE_ROOT}")
 	message("- Make specified targets...")
 	message("")
 
-	set(OPTIONS)
+	set(OPTIONS -DASD_ROOT=${ASD_ROOT} -DASD_TOOLS=${ASD_TOOLS})
 
 	foreach(cmd ${BUILD_TARGET})
 		if("${cmd}" STREQUAL "vs" OR "${cmd}" STREQUAL "vs32" OR "${cmd}" STREQUAL "vs86")
@@ -75,7 +76,7 @@ else()
 
 		color_message(YELLOW "== Making ${TARGET_NAME} version of ASD ==")
 
-		execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory "${ASD_ROOT}/build/${TARGET_SUFFIX}")
-		execute_process(COMMAND ${CMAKE_COMMAND} -G "${TARGET_GENERATOR}" -DMAKE_TARGET_KEY="${BUILD_TARGET}" -DMAKE_OPTIONS="${OPTIONS}" -DTARGET_SUFFIX=${TARGET_SUFFIX} ${OPTIONS} -B${ASD_ROOT}/build/${TARGET_SUFFIX} -H${ASD_ROOT})
+		execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory "${WORKSPACE_ROOT}/build/${TARGET_SUFFIX}")
+		execute_process(COMMAND ${CMAKE_COMMAND} -G "${TARGET_GENERATOR}" -DMAKE_TARGET_KEY="${BUILD_TARGET}" -DMAKE_OPTIONS="${OPTIONS}" -DTARGET_SUFFIX=${TARGET_SUFFIX} ${OPTIONS} -B${WORKSPACE_ROOT}/build/${TARGET_SUFFIX} -H${WORKSPACE_ROOT})
 	endforeach()
 endif()

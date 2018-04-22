@@ -30,7 +30,7 @@ namespace asd
 			virtual ~shader_program();
 
 			api(opengl)
-			void apply(context & ctx) const;
+			void apply() const;
 
 			const vertex_layout & layout;
 

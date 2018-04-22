@@ -79,10 +79,10 @@ namespace asd
             api(opengl)
             virtual ~driver_context();
 
-        protected:
             api(opengl)
             void check_for_errors();
 
+        protected:
             opengl::driver & _driver;
         };
     }
@@ -110,6 +110,9 @@ namespace asd
 
             configuration config;
         };
+
+        api(opengl)
+        void GLAPIENTRY glDebugCallbackFunc(uint source, uint type, uint id, uint severity, int length, const char * message, const void * userParam);
     }
 
 //---------------------------------------------------------------------------

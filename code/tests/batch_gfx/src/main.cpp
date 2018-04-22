@@ -13,7 +13,7 @@
 
 #include <container/map.h>
 #include <container/any_list.h>
-#include <morph/morph.hpp>
+#include <meta/class_id.hpp>
 #include <application/starter.h>
 
 #include <benchmark>
@@ -28,19 +28,19 @@ namespace asd
 	
 	struct gfx_primitive
 	{
-		morph_origin(gfx_primitive);
+		origin_class(gfx_primitive);
 	};
 	
 	create_morph_pool(batch_gfx_test, gfx_primitive);
 	
 	class gfx_context
 	{
-		using entry_type = pair<morph_id_t, gfx_primitive>;
+		using entry_type = pair<class_id_t, gfx_primitive>;
 	
 	public:
 		template <class T>
 		void operator <<(const T & value) {
-			_list.push_back(pair<morph_id_t, T>{morph_id<T>, value});
+			_list.push_back(pair<class_id_t, T>{class_id<T>, value});
 		}
 	
 	protected:
@@ -50,7 +50,7 @@ namespace asd
 	template <class Gfx>
 	class driver_context : public gfx_context
 	{
-		using entry_type = pair<morph_id_t, gfx_primitive>;
+		using entry_type = pair<class_id_t, gfx_primitive>;
 	
 	public:
 		driver_context(Gfx & device) : driver(device) {}
@@ -75,7 +75,7 @@ namespace asd
 		using method_type = function<void(context_type & ctx, const gfx_primitive & p)>;
 
 #ifdef GFX_METHODS_USE_MAP
-		using draw_methods = map<morph_id_t, method_type>;
+		using draw_methods = map<class_id_t, method_type>;
 #else
 		using draw_methods = array_list<method_type>;
 #endif
@@ -85,7 +85,7 @@ namespace asd
 			return new driver_context<Gfx>(static_cast<Gfx &>(*this));
 		}
 		
-		void call(context_type & context, morph_id_t type_id, const gfx_primitive & p) {
+		void call(context_type & context, class_id_t type_id, const gfx_primitive & p) {
 #ifdef GFX_METHODS_USE_MAP
 			auto it = _methods.find(type_id);
 			
@@ -103,15 +103,15 @@ namespace asd
 #endif
 		}
 		
-		template <class Primitive, useif<is_morph_of<gfx_primitive, Primitive>::value>>
+		template <class Primitive, useif<is_base_of<gfx_primitive, Primitive>::value>>
 		void extend(void(* method)(driver_context<Gfx> &, const Primitive &)) {
 #ifndef GFX_METHODS_USE_MAP
-			if(morph_id<Primitive> >= _methods.size()) {
-				_methods.resize(morph_id<Primitive> + 1);
+			if(class_id<Primitive> >= _methods.size()) {
+				_methods.resize(class_id<Primitive> + 1);
 			}
 #endif
 			
-			_methods[morph_id<Primitive>] = [=](driver_context<Gfx> & ctx, const gfx_primitive & p) {
+			_methods[class_id<Primitive>] = [=](driver_context<Gfx> & ctx, const gfx_primitive & p) {
 				method(ctx, static_cast<const Primitive &>(p));
 			};
 		}

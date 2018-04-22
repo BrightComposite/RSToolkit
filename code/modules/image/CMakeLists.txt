@@ -12,20 +12,20 @@ include(${ASD_TOOLS}/module.cmake)
 
 module(LIBRARY)
 	dependencies(
-		# core	0.*
+		graphics	0.*
 	)
 
 	sources(modules)
 		domain(image)
-		
+
 		group(include Headers)
 		files(
-			# headers
+			image.h
 		)
 
 		group(src Sources)
 		files(
-			# sources
+			image.cpp
 		)
 	endsources()
 endmodule()

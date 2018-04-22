@@ -2,8 +2,8 @@
 
 #pragma once
 
-#ifndef ${FILE_NAME}_H
-#define ${FILE_NAME}_H
+#ifndef ${PROJECT_NAME_UPPER}_${FILE_NAME}_H
+#define ${PROJECT_NAME_UPPER}_${FILE_NAME}_H
 
 //---------------------------------------------------------------------------
 
@@ -13,11 +13,14 @@
 
 namespace asd
 {
-	class ${filename}
+	namespace ${PROJECT_NAME_LOWER}
 	{
-	public:
-		
-	};
+		class ${filename}
+		{
+		public:
+
+		};
+	}
 }
 
 //---------------------------------------------------------------------------

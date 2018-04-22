@@ -8,6 +8,7 @@
 //---------------------------------------------------------------------------
 
 #ifdef _MSC_VER
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 
@@ -45,25 +46,34 @@ namespace asd
     
     public:
         #ifdef WIN32
-        static api(application) HINSTANCE getWindowsInstance();
+        api(application)
+        static HINSTANCE windows_instance();
         #endif
         
-        static api(application) const wstring & root_path();
-        static const array_list<wstring> api(application) & arguments();
+        api(application)
+        static const wstring & root_path();
+
+        api(application)
+        static const array_list<wstring> & arguments();
         
-        static api(application) int show_command();
+        api(application)
+        static int show_command();
     
     private:
-        static api(application) int main(int argc, wchar_t ** argv);
+        api(application)
+        static int main(int argc, wchar_t ** argv);
         
         application() {}
         
-        void api(application) pause();
-        
-        static api(application) int load();
+        api(application)
+        void pause();
+
+        api(application)
+        static int load();
 
 #ifdef WIN32
-        static api(application) wstring getExecutionPath(HINSTANCE hInstance);
+        api(application)
+        static wstring getExecutionPath(HINSTANCE hInstance);
 
         HINSTANCE hInstance = nullptr;
 #endif

@@ -13,6 +13,7 @@
 #include <math/rect.h>
 
 #if BOOST_OS_WINDOWS
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #elif BOOST_OS_LINUX
 
@@ -102,7 +103,7 @@ namespace asd
 
         rx::observable<math::int_rect> area;
         rx::observable<math::int_point> position;
-        rx::observable<math::int_size> size;
+        rx::observable<math::uint_size> size;
     };
 
     class window
@@ -163,7 +164,7 @@ namespace asd
             return _area.pos();
         }
 
-        math::int_size size() const {
+        math::uint_size size() const {
             return _area.size();
         }
 
@@ -182,7 +183,7 @@ namespace asd
         void hide();
 
         template <class F>
-        int loop(F iteration) {
+        int context(F iteration) {
             while (true) {
                 auto result = process_events();
 

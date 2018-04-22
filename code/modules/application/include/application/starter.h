@@ -7,6 +7,8 @@
 
 //---------------------------------------------------------------------------
 
+#undef main
+
 #include <application/application.h>
 
 #if defined(__MINGW32__)
@@ -63,7 +65,7 @@ int wmain(int argc, wchar_t * argv[]) {
 #ifdef WIN32
 	//ShowWindow(GetConsoleWindow(), SW_HIDE);
 #endif
-	
+
 	return application::main(argc, argv);
 }
 

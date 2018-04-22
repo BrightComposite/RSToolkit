@@ -7,202 +7,119 @@
 
 //---------------------------------------------------------------------------
 
-#include <ui/ui_space.h>
-#include <graphics/Graphics3D.h>
-#include <space/spatial.h>
-
 #include <chrono>
+
+#include "camera.h"
 
 //---------------------------------------------------------------------------
 
 namespace asd
 {
-	class SceneObject;
-	class Drawable;
-	class Scene;
+    namespace scene
+    {
+        using namespace std::chrono_literals;
 
-	class Camera;
+        class drawable;
+        class container;
 
-	using namespace std::chrono;
-	using namespace std::chrono_literals;
+        class component
+        {
+            origin_class(component);
 
-	using ticks_t = long long;
-	typedef std::chrono::high_resolution_clock clock;
-	typedef time_point<clock> time_marker;
+        public:
+            component(scene::object * object) : _object(object) {}
 
-	link_class(scene, SceneObject, Class<Object>);
-	link_class(scene, Drawable, Class<>);
-	link_class(scene, Scene, Class<Object>);
+            scene::object * object() {
+                return _object;
+            }
 
-	class SceneObject : public Object
-	{
-		friend class Scene;
+            const scene::object * object() const {
+                return _object;
+            }
 
-		deny_copy(SceneObject);
+        protected:
+            scene::object * _object;
+        };
 
-	public:
-		api(scene) SceneObject(Scene * scene);
-		virtual ~SceneObject() {}
+        class drawable
+        {
+            deny_copy(drawable);
 
-		Scene * scene() const
-		{
-			return _scene;
-		}
+        public:
+            api(scene)
+            drawable(container & scene, bool transparent = false);
+            virtual ~drawable() {}
 
-	protected:
-		virtual void update(ticks_t ticks) {}
+            bool transparent() const {
+                return _transparent;
+            }
 
-		Scene * _scene;
-	};
+            virtual void draw(const math::int_rect & viewport, float zoom) const = 0;
 
-	class SceneObjectComponent : public Shared
-	{
-		components_origin(SceneObjectComponent);
+        protected:
+            bool _transparent = false;
+        };
 
-	public:
-		SceneObjectComponent(SceneObject * object) : _object(object) {}
+        class container : private boost::noncopyable
+        {
+        public:
+            api(scene)
+            container(gfx::context & gfx, flow::context & flow);
 
-		SceneObject * object()
-		{
-			return _object;
-		}
+            api(scene)
+            container(container &&) noexcept;
 
-		const SceneObject * object() const
-		{
-			return _object;
-		}
+            api(scene)
+            virtual ~container();
 
-	protected:
-		SceneObject * _object;
-	};
+            container & operator = (container &&) noexcept;
 
-	create_components_from(scene, SceneObjectComponent);
+            api(scene)
+            gfx::context & graphics() const;
 
-	//using SceneObjectComponents = ComponentSet<SceneObjectComponent, Scene>;
+            api(scene)
+            const boost::optional<scene::camera &> & camera() const;
 
-	class Drawable
-	{
-		friend class Scene;
+            api(scene)
+            const math::uint_size & viewport() const;
 
-		deny_copy(Drawable);
+            api(scene)
+            void set_camera(const boost::optional<scene::camera &> & camera);
 
-	public:
-		api(scene) Drawable(Scene * scene, bool transparent = false);
-		virtual ~Drawable() {}
+            api(scene)
+            void set_viewport(const math::uint_size & viewport);
 
-		bool transparent() const
-		{
-			return _transparent;
-		}
+            template<class Obj, class ... A, useif<based_on<Obj, object>::value, can_construct<Obj, container &, A...>::value>>
+            Obj & append(A &&... args) {
+                return static_cast<Obj &>(**_objects.emplace(_objects.end(), make::unique<Obj>(*this, forward<A>(args)...)));
+            }
 
-		virtual void draw(Graphics3D & graphics, const IntRect & viewport, float zoom) const = 0;
+            api(scene)
+            matrix normal_matrix(const matrix & model) const;
 
-	protected:
-		bool _transparent = false;
-	};
+        protected:
+            api(scene)
+            virtual void draw(const math::int_rect & viewport) const;
 
-	class Scene : public Object, public Named, public Connector
-	{
-		friend class Drawable;
-		friend class SceneObject;
-		friend class Widget;
-		friend class SceneLayer;
+            api(scene)
+            virtual void update(ticks_t ticks);
 
-		deny_copy(Scene);
+            gfx::context & _gfx;
+            boost::optional<scene::camera &> _camera = boost::none;
+            math::uint_size _viewport;
 
-	public:
-		virtual api(scene) ~Scene();
+            array_list<unique<object>> _objects;
+            array_list<std::reference_wrapper<drawable>> _opaque;
+            array_list<std::reference_wrapper<drawable>> _transparent;
+            flow::tick_timer _timer;
+            array_list<std::reference_wrapper<uniform::object>> _uniforms;
+        };
 
-		virtual handle<Scene> clone(Widget * w) const
-		{
-			return handle<Scene, Scene>(w);
-		}
-
-		api(scene) Graphics3D & graphics() const;
-		api(scene) Widget     & widget()   const;
-		api(scene) UISpace    & space()    const;
-		api(scene) Camera     * camera()   const;
-		api(scene) Viewport     viewport() const;
-
-		api(scene) void setCamera(Camera * camera);
-
-		api(scene) void render() const;
-
-		template<class Obj, class ... A, useif<based_on<Obj, SceneObject>::value, can_construct<Obj, Scene *, A...>::value>>
-		handle<Obj> append(A &&... args)
-		{
-			return handle<Obj>(this, forward<A>(args)...);
-		}
-
-		api(scene) void attach(handle<SceneObject> obj);
-		api(scene) void detach(SceneObject * obj);
-
-		api(scene) void setTickLength(milliseconds length);
-		api(scene) void update();
-
-		api(scene) matrix normalMatrix(const matrix & model) const;
-
-		static handle<Scene> create(Widget * widget)
-		{
-			handle<Scene, Scene> h(widget);
-			Scene::construct(h);
-
-			return h;
-		}
-
-	protected:
-		friend_owned_handle(Scene, Scene);
-		static api(scene) handle<Scene> construct(const handle<Scene> & scene);
-
-		api(scene) Scene(Widget * widget);
-		Scene() { setclass(Scene); }
-
-		virtual api(scene) void draw(Graphics3D & graphics, const IntRect & viewport) const;
-		virtual api(scene) void onWidgetResize(handle<WidgetResizeMessage> & msg, Widget & w);
-
-		Camera * _camera = nullptr;
-		Widget * _widget = nullptr;
-		ArrayList<SceneObject> _objects;
-		array_list<Drawable *> _opaque;
-		array_list<Drawable *> _transparent;
-
-		milliseconds _tickLength = 5ms;
-		time_marker _lastTick;
-		time_marker _firstTick;
-
-		ticks_t _ticks = 0;
-	};
-
-	class SceneLayer : public WidgetLayer
-	{
-	public:
-		SceneLayer(const handle<Scene> & scene) : WidgetLayer(limits<int>::max()), _scene(scene) {}
-
-		virtual handle<WidgetLayer> clone(Widget * widget) const
-		{
-			return handle<SceneLayer>(_scene->clone(widget));
-		}
-
-		const handle<Scene> & scene() const
-		{
-			return _scene;
-		}
-
-	protected:
-		virtual void draw(Widget * w) override
-		{
-			_scene->draw(_scene->graphics(), scaleToSquare(w->absRegion()));
-		}
-
-		handle<Scene> _scene;
-	};
-
-	create_layer_component(scene, SceneLayer);
-
-	class SceneProvider
-	{
-		Dictionary<string, Scene> _scenes;
-	};
+        class provider
+        {
+            map<string, container> _scenes;
+        };
+    }
 }
 
 //---------------------------------------------------------------------------

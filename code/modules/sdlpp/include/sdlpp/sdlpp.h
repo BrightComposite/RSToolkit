@@ -7,6 +7,8 @@
 
 //---------------------------------------------------------------------------
 
+#define HAVE_M_PI
+
 #include <SDL.h>
 #include <opengl/opengl.h>
 #include <math/rect.h>
@@ -160,12 +162,32 @@ namespace asd
                 glEnable(GL_DEPTH_TEST);
                 glDepthFunc(GL_LESS);
 
+                //glEnable(GL_BLEND);
+                //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                //glEnable(GL_CULL_FACE);
+                //glEnable(GL_SCISSOR_TEST);
+
+                //glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+                //glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+
+#ifdef GL_DEBUG
+                glEnable(GL_DEBUG_OUTPUT);
+                glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+                if (glDebugMessageCallback != nullptr) {
+                    glDebugMessageCallback(opengl::glDebugCallbackFunc, nullptr);
+                }
+                else {
+                    std::cout << "glDebugMessageCallback is not supported" << std::endl;
+                }
+#endif
+
                 window.size_input().subscribe([=](const window_size & size) {
                     glViewport(0, 0, size.x, size.y);
                 });
             }
 
-            ~graphics() {
+            virtual ~graphics() {
                 if (!_context) {
                     SDL_GL_DeleteContext(_context);
                 }

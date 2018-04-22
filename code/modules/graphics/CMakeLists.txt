@@ -22,6 +22,7 @@ module (INLINE)
 		group (include Headers)
 		files (
 			color.h
+			coords.h
 			graphics.h
 		)
 

@@ -11,16 +11,16 @@ include(${ASD_TOOLS}/module.cmake)
 #--------------------------------------------------------
 
 module(STATIC)
-	dependencies(ui	0.*)
+	dependencies(input	0.*)
 
 	sources(modules)
 		domain(interaction)
 
 		group(include Headers)
-		files(MouseManipulator.h)
+		files(mouse_manipulator.h)
 
 		group(src Sources)
-		files(MouseManipulator.cpp)
+		files(mouse_manipulator.cpp)
 	endsources()
 endmodule()
 

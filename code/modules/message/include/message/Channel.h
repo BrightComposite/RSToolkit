@@ -7,7 +7,7 @@
 
 //---------------------------------------------------------------------------
 
-#include <morph/morph.h>
+#include <meta/class_id.h>
 
 #include "MessageConnector.h"
 
@@ -27,7 +27,7 @@ namespace asd
 
 	struct BasicReceivers : shareable<BasicReceivers>
 	{
-		morph_origin(BasicReceivers);
+		origin_class(BasicReceivers);
 	};
 
 	using ReceiversSet = morph<BasicReceivers>;

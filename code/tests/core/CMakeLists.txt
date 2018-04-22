@@ -13,7 +13,6 @@ include(${ASD_TOOLS}/module.cmake)
 module(APPLICATION CONSOLE)
 	dependencies(
 		application 0.*
-		message 	0.*
 	)
 
 	sources(tests)

@@ -23,7 +23,7 @@ namespace asd
 		std_map_t std_map;
 		
 		std::hash<size_t> hasher;
-		std::vector<pair<size_t, size_t>> keys;
+		asd::array_list<pair<size_t, size_t>> keys;
 		
 		for(size_t i = 0; i < KEYS_COUNT; ++i) {
 			keys.push_back({i, hasher(i)});

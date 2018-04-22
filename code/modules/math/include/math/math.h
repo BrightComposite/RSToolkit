@@ -145,31 +145,31 @@ namespace asd
 		}
 		
 		template<class T, selectif(0)<is_floating_point<T>::value>>
-		inline T floor(const T & v) {
+		inline T floor(T v) {
 			return std::floor(v);
 		}
 		
-		template<class T, selectif(1)<is_floating_point<T>::value>>
+		template<class T, selectif(1)<is_integral<T>::value>>
 		inline T floor(T x) {
 			return x;
 		}
 		
 		template<class T, selectif(0)<is_floating_point<T>::value>>
-		inline T ceil(const T & v) {
+		inline T ceil(T v) {
 			return std::ceil(v);
 		}
 		
-		template<class T, selectif(1)<is_floating_point<T>::value>>
+		template<class T, selectif(1)<is_integral<T>::value>>
 		inline T ceil(T x) {
 			return x;
 		}
 		
 		template<class T, selectif(0)<is_floating_point<T>::value>>
-		inline T round(const T & v) {
+		inline T round(T v) {
 			return std::round(v);
 		}
 		
-		template<class T, selectif(1)<is_floating_point<T>::value>>
+		template<class T, selectif(1)<is_integral<T>::value>>
 		inline T round(T x) {
 			return x;
 		}

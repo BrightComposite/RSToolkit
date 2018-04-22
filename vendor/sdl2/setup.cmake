@@ -18,38 +18,40 @@ if (WIN32)
 	set(LIBRARY "${OUTDIR}/lib/${MODULE_ARCH}/SDL2.lib")
 
 	if (NOT EXISTS "${LIBRARY}")
-		include(${ASD_TOOLS}/zip.cmake)
-
-		set(ARCHIVE "${CMAKE_CURRENT_LIST_DIR}/binaries.zip")
-
-		file(
-			DOWNLOAD
-			"https://libsdl.org/release/SDL2-devel-2.0.7-VC.zip"
-			"${ARCHIVE}"
-			STATUS status
-			LOG log
-			)
-
-		list(GET status 0 status_code)
-		list(GET status 1 status_string)
-
-		if(NOT status_code EQUAL 0)
-			message(FATAL_ERROR "Downloading SDL2 failed
-				status_code: ${status_code}
-				status_string: ${status_string}
-				log: ${log}
-				")
-		endif()
-
-		unzip("${ARCHIVE}" "${CMAKE_CURRENT_LIST_DIR}" RESULT_VARIABLE rv)
-
-		file(REMOVE "${ARCHIVE}")
-
-		if(NOT rv EQUAL 0)
-			message(FATAL_ERROR "Can't extract SDL2 binaries")
-		endif()
-
 		set(ROOT "${CMAKE_CURRENT_LIST_DIR}/SDL2-2.0.7")
+
+		if (NOT EXISTS "${ROOT}/include")
+			include(${ASD_TOOLS}/zip.cmake)
+
+			set(ARCHIVE "${CMAKE_CURRENT_LIST_DIR}/binaries.zip")
+
+			file(
+				DOWNLOAD
+				"https://libsdl.org/release/SDL2-devel-2.0.7-VC.zip"
+				"${ARCHIVE}"
+				STATUS status
+				LOG log
+				)
+
+			list(GET status 0 status_code)
+			list(GET status 1 status_string)
+
+			if(NOT status_code EQUAL 0)
+				message(FATAL_ERROR "Downloading SDL2 failed
+					status_code: ${status_code}
+					status_string: ${status_string}
+					log: ${log}
+					")
+			endif()
+
+			unzip("${ARCHIVE}" "${CMAKE_CURRENT_LIST_DIR}" RESULT_VARIABLE rv)
+
+			file(REMOVE "${ARCHIVE}")
+
+			if(NOT rv EQUAL 0)
+				message(FATAL_ERROR "Can't extract SDL2 binaries")
+			endif()
+		endif ()
 
 		file(COPY "${ROOT}/include" DESTINATION "${OUTDIR}/")
 		file(COPY "${ROOT}/lib" DESTINATION "${OUTDIR}/")

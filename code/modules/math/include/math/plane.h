@@ -27,7 +27,7 @@ namespace asd
 		class plane
 		{
 		public:
-			plane() : equation(vector<T>::positiveZ) {}
+			plane() : equation(vector<T>::positive_z) {}
 			
 			plane(const plane & plane) : equation(plane.equation) {}
 			

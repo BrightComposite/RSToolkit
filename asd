@@ -22,13 +22,15 @@ fi
 command=$1
 shift
 
+BASEDIR=$(dirname "$0")
+
 case ${command} in
     make*)
 		old=${IFS}
 		IFS=";"
 		args="$*"
 		IFS=${old}
-		exec cmake -D BUILD_TARGET=${args} -P ./tools/asd-make.cmake
+		exec cmake -DBUILD_TARGET=${args} -DWORKSPACE_DIR=$PWD -P $BASEDIR/tools/asd-make.cmake
     ;;
     add*)
 		if [[ $# -lt 2 ]] ; then

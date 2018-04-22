@@ -14,7 +14,7 @@
   * renamed to "hashbytes" and "hashbytes2" accordingly. "hashbig" was
   * removed because we live in the world of Intel and AMD which are using
   * little-endian byte ordering.
-  *	All other comments were written by the author and are edited to conform to
+  *	all other comments were written by the author and are edited to conform to
   * the Doxygen documentation formatting and the current state of this
   * useful set of functions.
   * That's all.

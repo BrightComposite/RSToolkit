@@ -7,109 +7,133 @@
 
 //---------------------------------------------------------------------------
 
-#include "Scene.h"
+#include "object.h"
 
 //---------------------------------------------------------------------------
 
 namespace asd
 {
-	enum class ProjectionMode
-	{
-		Ortho,
-		Perspective
-	};
+    namespace scene
+    {
+        class container;
 
-	class Camera : public Oriented, public SceneObject
-	{
-	public:
-		Camera(Scene * scene) : SceneObject(scene)
-		{
-			if(scene->camera() == nullptr)
-				scene->setCamera(this);
+        enum class projection
+        {
+            ortho,
+            perspective
+        };
 
-			updateProjection();
-		}
+        class camera : public space::oriented, public scene::object
+        {
+        public:
+            api(scene)
+            camera(scene::container & scene);
 
-		virtual api(scene) void setRotation(const quaternion & rot) override;
-		virtual api(scene) void rotate(const quaternion & rot) override;
-		virtual api(scene) void move(const vector & offset) override;
+            api(scene)
+            camera(scene::camera && camera) noexcept;
 
-		scalar pitch() const
-		{
-			return _angles[0];
-		}
+            api(scene)
+            camera & operator = (camera &&) noexcept;
 
-		scalar yaw() const
-		{
-			return _angles[1];
-		}
+            api(scene)
+            virtual void set_rotation(const quaternion & rot) override;
 
-		scalar roll() const
-		{
-			return _angles[2];
-		}
+            api(scene)
+            virtual void rotate(const quaternion & rot) override;
 
-		virtual api(scene) void setPitch(scalar value);
-		virtual api(scene) void setYaw(scalar value);
-		virtual api(scene) void setRoll(scalar value);
-		virtual api(scene) void setAngles(scalar pitch, scalar yaw, scalar roll);
+            api(scene)
+            virtual void move(const vector & offset) override;
 
-		virtual api(scene) void addPitch(scalar value);
-		virtual api(scene) void addYaw(scalar value);
-		virtual api(scene) void addRoll(scalar value);
-		virtual api(scene) void addAngles(scalar pitch, scalar yaw, scalar roll);
+            scalar pitch() const {
+                return _angles[0];
+            }
 
-		scalar viewRange() const
-		{
-			return _range;
-		}
+            scalar yaw() const {
+                return _angles[1];
+            }
 
-		scalar fieldOfView() const
-		{
-			return _fov;
-		}
+            scalar roll() const {
+                return _angles[2];
+            }
 
-		const matrix & projectionMatrix() const
-		{
-			return _projectionMatrix;
-		}
+            api(scene)
+            virtual void setPitch(scalar value);
 
-		const matrix & viewMatrix() const
-		{
-			return _viewMatrix;
-		}
+            api(scene)
+            virtual void setYaw(scalar value);
 
-		matrix normalMatrix(const matrix & model) const
-		{
-			return (_viewMatrix * model).invert();
-		}
+            api(scene)
+            virtual void setRoll(scalar value);
 
-		ProjectionMode projectionMode() const
-		{
-			return _projectionMode;
-		}
+            api(scene)
+            virtual void setAngles(scalar pitch, scalar yaw, scalar roll);
 
-		api(scene) void setProjectionMode(ProjectionMode mode);
+            api(scene)
+            virtual void addPitch(scalar value);
 
-		api(scene) void setViewRange(scalar range);
-		api(scene) void setFieldOfView(scalar fov);
+            api(scene)
+            virtual void addYaw(scalar value);
 
-		api(scene) void updateProjection();
-		api(scene) void updateView();
+            api(scene)
+            virtual void addRoll(scalar value);
 
-	protected:
-		api(scene) void updateNormalMatrix();
+            api(scene)
+            virtual void addAngles(scalar pitch, scalar yaw, scalar roll);
 
-		scalar _range = 0.01f;
-		scalar _fov = 90.0f;
-		Rotation _pitch;
-		Rotation _yaw;
-		Rotation _roll;
-		scalar3  _angles = {{0.0x, 0.0x, 0.0x}};
-		ProjectionMode _projectionMode = ProjectionMode::Ortho;
-		AlignedMatrix<scalar> _projectionMatrix;
-		AlignedMatrix<scalar> _viewMatrix;
-	};
+            scalar view_range() const {
+                return _range;
+            }
+
+            scalar field_of_view() const {
+                return _fov;
+            }
+
+            const matrix & projection_matrix() const {
+                return _projection_matrix;
+            }
+
+            const matrix & view_matrix() const {
+                return _view_matrix;
+            }
+
+            matrix normal_matrix(const matrix & model) const {
+                return (_view_matrix * model).invert();
+            }
+
+            scene::projection projection() const {
+                return _projection;
+            }
+
+            api(scene) void set_projection(scene::projection mode);
+
+            api(scene) void set_view_range(scalar range);
+            api(scene) void set_field_of_view(scalar fov);
+
+            api(scene) void update_projection();
+            api(scene) void update_view();
+
+        protected:
+            api(scene)
+            camera(scene::container & scene, uniform::component & uniforms);
+
+            api(scene) void update_normal_matrix();
+
+            scalar _range = 0.01f;
+            scalar _fov = 90.0f;
+
+            space::rotation _pitch;
+            space::rotation _yaw;
+            space::rotation _roll;
+
+            scalar3  _angles = { { 0.0_x, 0.0_x, 0.0_x } };
+            scene::projection _projection = projection::ortho;
+            space::matrix _projection_matrix;
+            space::matrix _view_matrix;
+
+            uniform::block _projection_data;
+            uniform::block _view_data;
+        };
+    }
 }
 
 //---------------------------------------------------------------------------

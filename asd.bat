@@ -22,7 +22,7 @@ set list=%1
 shift /1
 
 if x%1 equ x (
-	call cmake -D BUILD_TARGET=%list% -P ./tools/asd-make.cmake
+	call cmake -DBUILD_TARGET=%list% -DWORKSPACE_DIR=%cd% -P %~dp0/tools/asd-make.cmake
 	goto end
 )
 

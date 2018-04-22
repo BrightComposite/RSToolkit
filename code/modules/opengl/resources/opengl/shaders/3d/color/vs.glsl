@@ -5,17 +5,17 @@
 
 layout(std140) uniform Model
 {
-	mat4 model;
+    mat4 model;
 };
 
 layout(std140) uniform View
 {
-	mat4 view;
+    mat4 view;
 };
 
 layout(std140) uniform Projection
 {
-	mat4 projection;
+    mat4 projection;
 };
 
 in vec3 position;

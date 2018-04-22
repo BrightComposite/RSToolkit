@@ -33,20 +33,20 @@ namespace asd
 	public:
 		static void run()
 		{
-			auto & loop = instance();
+			auto & context = instance();
 
-			if(loop.active)
+			if(context.active)
 				throw Exception("thread_loop is already running!");
 
-			loop.active = true;
+			context.active = true;
 
 			while(true)
 			{
-				auto & list = loop.iterations;
+				auto & list = context.iterations;
 
 				if(list.empty())
 				{
-					loop.active = false;
+					context.active = false;
 					return;
 				}
 
@@ -60,21 +60,21 @@ namespace asd
 							it = list.erase(it);
 							
 							if(it == list.end()) {
-								loop.active = false;
+								context.active = false;
 								return;
 							}
 							
 							break;
 						
 						case 2:
-							loop.active = false;
+							context.active = false;
 							return;
 						
 						default:
 							break;
 					}
 
-					if(!loop.active)
+					if(!context.active)
 						return;
 				}
 			}

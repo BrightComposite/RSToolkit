@@ -17,11 +17,12 @@ module(STATIC)
 
 	sources(modules)
 		domain(graphics3d)
-		
+
 		group(include Headers)
 		files(
 			vertex_data.h
 			vertex_layout.h
+			uniform.h
 		)
 
 		group(src Sources)

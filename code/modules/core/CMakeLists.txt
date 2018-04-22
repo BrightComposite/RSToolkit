@@ -81,28 +81,15 @@ module(LIBRARY)
 			stack.h
 			static_map.h
 			)
-		
+
 		domain(function)
-		
+
 		group(include Headers)
 		files(
-			anyway.h
 			function.h
 			method.h
 			methods_table.h
 		)
-
-		domain(morph)
-
-		group(include Headers)
-		files(
-			component.h
-			component.hpp
-			morph.h
-			morph.hpp
-			property.h
-			property.hpp
-			)
 	endsources()
 endmodule()
 
@@ -111,12 +98,12 @@ vendor(boost COMPONENTS align iterator predef)
 
 #[[if(${UNIX})
 	find_package(Threads REQUIRED)
-	
+
 	if(THREADS_HAVE_PTHREAD_ARG)
 		set_property(TARGET ${PROJECT_NAME} PROPERTY COMPILE_OPTIONS "-pthread")
 		set_property(TARGET ${PROJECT_NAME} PROPERTY INTERFACE_COMPILE_OPTIONS "-pthread")
 	endif()
-	
+
 	if(CMAKE_THREAD_LIBS_INIT)
 		target_link_libraries(${PROJECT_NAME} "${CMAKE_THREAD_LIBS_INIT}")
 	endif()

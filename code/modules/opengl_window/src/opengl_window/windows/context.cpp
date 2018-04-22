@@ -6,8 +6,6 @@
 
 namespace asd
 {
-	static inline void GLAPIENTRY glDebugCallbackFunc(uint source, uint type, uint id, uint severity, int length, const char * message, const void * userParam);
-
 	static void set_pixel_format(HDC dc)
 	{
 		if(dc == nullptr) {
@@ -78,7 +76,7 @@ namespace asd
 
 		check_for_errors();
 
-		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -94,7 +92,7 @@ namespace asd
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
 		if(glDebugMessageCallback != nullptr) {
-			glDebugMessageCallback(glDebugCallbackFunc, nullptr);
+			glDebugMessageCallback(opengl::glDebugCallbackFunc, nullptr);
 		} else {
 			std::cout << "glDebugMessageCallback is not supported" << std::endl;
 		}
@@ -152,117 +150,13 @@ namespace asd
 	window_context<opengl::driver>::window_context(opengl::driver & driver, window & w) : base(driver), basic_window_context(w) {
 		init_device();
 
-		auto update_size = [](const math::int_size & size) {
+		auto update_size = [](const math::uint_size & size) {
 			glViewport(0, 0, size.x, size.y);
 			glScissor(0, 0, size.x, size.y);
 		};
 
 		w.inputs.size.subscribe(update_size);
 		update_size(w.size());
-	}
-
-	static inline void GLAPIENTRY glDebugCallbackFunc(uint source, uint type, uint id, uint severity, int length, const char * message, const void * userParam) {
-		string sev, t, src;
-
-		switch (severity) {
-			case GL_DEBUG_SEVERITY_LOW:
-				sev = "low";
-				break;
-
-			case GL_DEBUG_SEVERITY_MEDIUM:
-				sev = "medium";
-				break;
-
-			case GL_DEBUG_SEVERITY_HIGH:
-				sev = "high";
-				break;
-
-			case GL_DEBUG_SEVERITY_NOTIFICATION:
-				return;
-				//sev = "notification";
-				//break;
-
-			default:
-				sev = String::hex(severity);
-		}
-
-		switch (type) {
-			case GL_DEBUG_TYPE_ERROR:
-				t = "error";
-				break;
-
-			case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-				t = "deprecated behavior";
-				break;
-
-			case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-				t = "undefined behavior";
-				break;
-
-			case GL_DEBUG_TYPE_PORTABILITY:
-				t = "portability";
-				break;
-
-			case GL_DEBUG_TYPE_PERFORMANCE:
-				t = "performance";
-				break;
-
-			case GL_DEBUG_TYPE_OTHER:
-				t = "other";
-				break;
-
-			case GL_DEBUG_TYPE_MARKER:
-				t = "marker";
-				break;
-
-			case GL_DEBUG_TYPE_PUSH_GROUP:
-				t = "push group";
-				break;
-
-			case GL_DEBUG_TYPE_POP_GROUP:
-				t = "pop group";
-				break;
-
-			default:
-				t = String::assemble("unknown (", String::hex(type), ")");
-		}
-
-		switch (source) {
-			case GL_DEBUG_SOURCE_API:
-				src = "API";
-				break;
-
-			case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-				src = "window system";
-				break;
-
-			case GL_DEBUG_SOURCE_SHADER_COMPILER:
-				src = "shader compiler";
-				break;
-
-			case GL_DEBUG_SOURCE_THIRD_PARTY:
-				src = "3rd party";
-				break;
-
-			case GL_DEBUG_SOURCE_APPLICATION:
-				src = "application";
-				break;
-
-			default:
-				src = String::assemble("unknown (", String::hex(source), ")");
-		}
-
-		using namespace std;
-
-		cout << "--------------------------------" << endl;
-		cout << "OpenGL debug:" << endl;
-		cout << "\tgroup: " << t << ", severity: " << sev << ", id: " << hex << showbase << id << dec
-			<< ", source: " << src << endl;
-		cout << message << endl << endl;
-
-		if (severity == GL_DEBUG_SEVERITY_HIGH) {
-			throw Exception("GL error!");
-		}
 	}
 }
 

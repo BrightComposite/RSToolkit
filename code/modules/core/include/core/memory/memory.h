@@ -43,275 +43,287 @@
 #define _memset(type, ptr, value, size) ::memset(ptr, value, size * sizeof(type));
 
 #if defined(WIN32)
-	#define _malloc_size(ptr) _msize(ptr)
+    #define _malloc_size(ptr) _msize(ptr)
 #else
-	#define _malloc_size(ptr) malloc_size(ptr)
+    #define _malloc_size(ptr) malloc_size(ptr)
 #endif
 
 //---------------------------------------------------------------------------
 
-	/**
-	 *	@brief
-	 *	This class is just a memory helper, you can use standart functions instead of this
-	 *	but Memory<wchar_t>::move() will always be more comfortable... :)
-	 */
+    /**
+     *	@brief
+     *	This class is just a memory helper, you can use standart functions instead of this
+     *	but Memory<wchar_t>::move() will always be more comfortable... :)
+     */
 
 namespace asd
 {
-	using boost::alignment::aligned_allocator;
-	using boost::alignment::aligned_free;
-	
-	inline auto aligned_alloc(size_t alignment, size_t size) {
-		return boost::alignment::aligned_alloc(alignment, size);
-	}
+    using boost::alignment::aligned_allocator;
+    using boost::alignment::aligned_free;
+    
+    inline auto aligned_alloc(size_t alignment, size_t size) {
+        return boost::alignment::aligned_alloc(alignment, size);
+    }
 
 #ifdef WIN32
-	inline void * aligned_realloc(void * ptr, size_t alignment, size_t size)
-	{
-		return ::_aligned_realloc(ptr, size, alignment);
-	}
-#else
-	inline void * aligned_realloc(void * ptr, size_t alignment, size_t size)
-	{
-		void * n = aligned_alloc(alignment, size);
-		memcpy(n, ptr, size);
-		aligned_free(ptr);
-		return n;
-	}
-#endif
-	
-	using std::nothrow_t;
-	using std::unique_ptr;
-
-	template<typename T = byte, size_t alignment = 0>
-	class memory
+    inline void * aligned_realloc(void * ptr, size_t alignment, size_t size)
     {
-	public:
-		static inline T * allocate(size_t size)
-		{
-			return _malloc_aligned(T, size, alignment);
-		}
+        return ::_aligned_realloc(ptr, size, alignment);
+    }
+#else
+    inline void * aligned_realloc(void * ptr, size_t alignment, size_t size)
+    {
+        void * n = aligned_alloc(alignment, size);
+        memcpy(n, ptr, size);
+        aligned_free(ptr);
+        return n;
+    }
+#endif
+    
+    using std::nothrow_t;
+    using std::unique_ptr;
 
-		static inline void free(const T * ptr)
-		{
-			_free_aligned(const_cast<T *>(ptr));
-		}
+    template<typename T = byte, size_t alignment = 0>
+    class memory
+    {
+    public:
+        static inline T * allocate(size_t size)
+        {
+            return _malloc_aligned(T, size, alignment);
+        }
 
-		static inline T * reallocate(T * ptr, size_t size)
-		{
-			if(ptr == nullptr)
-				return allocate(size);
+        static inline void free(const T * ptr)
+        {
+            _free_aligned(const_cast<T *>(ptr));
+        }
 
-			return _realloc_aligned(T, ptr, size, alignment);
-		}
+        static inline T * reallocate(T * ptr, size_t size)
+        {
+            if(ptr == nullptr)
+                return allocate(size);
 
-		static inline void move(T * to, const T * from, size_t size)
-		{
-			_memmove(T, to, from, size);
-		}
+            return _realloc_aligned(T, ptr, size, alignment);
+        }
 
-		template<size_t N>
-		static inline void move(T * to, const T(&from)[N])
-		{
-			move(to, from, N);
-		}
+        static inline void move(T * to, const T * from, size_t size)
+        {
+            _memmove(T, to, from, size);
+        }
 
-		template<size_t N>
-		static inline void move(T * to, const array<T, N> & from)
-		{
-			move(to, from.data(), N);
-		}
+        template<size_t N>
+        static inline void move(T * to, const T(&from)[N])
+        {
+            move(to, from, N);
+        }
 
-		template<size_t N>
-		static inline void move(array<T, N> & to, const T * from)
-		{
-			move(to.data(), from, N);
-		}
+        template<size_t N>
+        static inline void move(T * to, const array<T, N> & from)
+        {
+            move(to, from.data(), N);
+        }
 
-		template<size_t N>
-		static inline void move(array<T, N> & to, const T(&from)[N])
-		{
-			move(to.data(), from, N);
-		}
+        template<size_t N>
+        static inline void move(array<T, N> & to, const T * from)
+        {
+            move(to.data(), from, N);
+        }
 
-		template<size_t N>
-		static inline void move(array<T, N> & to, const array<T, N> & from)
-		{
-			move(to.data(), from.data(), N);
-		}
+        template<size_t N>
+        static inline void move(array<T, N> & to, const T(&from)[N])
+        {
+            move(to.data(), from, N);
+        }
 
-		static inline T * copy(const T * src, size_t size)
-		{
-			T * buffer = allocate(size);
-			_memcopy(T, buffer, src, size);
+        template<size_t N>
+        static inline void move(array<T, N> & to, const array<T, N> & from)
+        {
+            move(to.data(), from.data(), N);
+        }
 
-			return buffer;
-		}
+        static inline T * copy(const T * src, size_t size)
+        {
+            T * buffer = allocate(size);
+            _memcopy(T, buffer, src, size);
 
-		static inline void fill(T * ptr, byte value, size_t size)
-		{
-			_memset(T, ptr, value, size);
-		}
+            return buffer;
+        }
+
+        static inline void fill(T * ptr, byte value, size_t size)
+        {
+            _memset(T, ptr, value, size);
+        }
     };
 
-	template<typename T>
-	class memory<T>
-	{
-	public:
-		static inline T * allocate(size_t size)
-		{
-			return _malloc(T, size);
-		}
+    template<typename T>
+    class memory<T>
+    {
+    public:
+        static inline T * allocate(size_t size)
+        {
+            return _malloc(T, size);
+        }
 
-		static inline void free(const T * ptr)
-		{
-			_free(const_cast<T *>(ptr));
-		}
+        static inline void free(const T * ptr)
+        {
+            _free(const_cast<T *>(ptr));
+        }
 
-		static inline T * reallocate(T * ptr, size_t size)
-		{
-			if(ptr == nullptr)
-				return allocate(size);
+        static inline T * reallocate(T * ptr, size_t size)
+        {
+            if(ptr == nullptr)
+                return allocate(size);
 
-			return _realloc(T, ptr, size);
-		}
+            return _realloc(T, ptr, size);
+        }
 
-		static inline void move(T * to, const T * from, size_t size)
-		{
-			_memmove(T, to, from, size);
-		}
+        static inline void move(T * to, const T * from, size_t size)
+        {
+            _memmove(T, to, from, size);
+        }
 
-		template<size_t N>
-		static inline void move(T * to, const T(&from)[N])
-		{
-			move(to, from, N);
-		}
+        template<size_t N>
+        static inline void move(T * to, const T(&from)[N])
+        {
+            move(to, from, N);
+        }
 
-		template<size_t N>
-		static inline void move(T * to, const array<T, N> & from)
-		{
-			move(to, from.data(), N);
-		}
+        template<size_t N>
+        static inline void move(T * to, const array<T, N> & from)
+        {
+            move(to, from.data(), N);
+        }
 
-		template<size_t N>
-		static inline void move(array<T, N> & to, const T * from)
-		{
-			move(to.data(), from, N);
-		}
+        template<size_t N>
+        static inline void move(array<T, N> & to, const T * from)
+        {
+            move(to.data(), from, N);
+        }
 
-		template<size_t N>
-		static inline void move(array<T, N> & to, const T(&from)[N])
-		{
-			move(to.data(), from, N);
-		}
+        template<size_t N>
+        static inline void move(array<T, N> & to, const T(&from)[N])
+        {
+            move(to.data(), from, N);
+        }
 
-		template<size_t N>
-		static inline void move(array<T, N> & to, const array<T, N> & from)
-		{
-			move(to.data(), from.data(), N);
-		}
+        template<size_t N>
+        static inline void move(array<T, N> & to, const array<T, N> & from)
+        {
+            move(to.data(), from.data(), N);
+        }
 
-		static inline T * copy(const T * src, size_t size)
-		{
-			T * buffer = allocate(size);
-			_memcopy(T, buffer, src, size);
+        static inline T * copy(const T * src, size_t size)
+        {
+            T * buffer = allocate(size);
+            _memcopy(T, buffer, src, size);
 
-			return buffer;
-		}
+            return buffer;
+        }
 
-		static inline void fill(T * ptr, byte value, size_t size)
-		{
-			_memset(T, ptr, value, size);
-		}
-	};
+        static inline void fill(T * ptr, byte value, size_t size)
+        {
+            _memset(T, ptr, value, size);
+        }
+    };
 
-	template<size_t alignment>
-	class memory<void, alignment>
-	{
-	public:
-		static inline void * allocate(size_t size)
-		{
-			return aligned_alloc(alignment, size);
-		}
+    template<size_t alignment>
+    class memory<void, alignment>
+    {
+    public:
+        static inline void * allocate(size_t size)
+        {
+            return aligned_alloc(alignment, size);
+        }
 
-		static inline void free(const void * ptr)
-		{
-			aligned_free(const_cast<void *>(ptr));
-		}
+        static inline void free(const void * ptr)
+        {
+            aligned_free(const_cast<void *>(ptr));
+        }
 
-		static inline void * reallocate(void * ptr, size_t size)
-		{
-			return aligned_realloc(ptr, size, alignment);
-		}
+        static inline void * reallocate(void * ptr, size_t size)
+        {
+            return aligned_realloc(ptr, size, alignment);
+        }
 
-		static inline void move(void * to, const void * from, size_t size)
-		{
-			::memmove(to, from, size);
-		}
+        static inline void move(void * to, const void * from, size_t size)
+        {
+            ::memmove(to, from, size);
+        }
 
-		template<class T, size_t N>
-		static inline void move(void * to, const T(&from)[N])
-		{
-			move(to, from, N * sizeof(T));
-		}
+        template<class T, size_t N>
+        static inline void move(void * to, const T(&from)[N])
+        {
+            move(to, from, N * sizeof(T));
+        }
 
-		static inline void * copy(const void * src, size_t size)
-		{
-			void * buffer = allocate(size);
-			move(buffer, src, size);
+        static inline void * copy(const void * src, size_t size)
+        {
+            void * buffer = allocate(size);
+            move(buffer, src, size);
 
-			return buffer;
-		}
+            return buffer;
+        }
 
-		static inline void fill(void * ptr, byte value, size_t size)
-		{
-			::memset(ptr, value, size);
-		}
-	};
+        static inline void fill(void * ptr, byte value, size_t size)
+        {
+            ::memset(ptr, value, size);
+        }
+    };
 
-	template<>
-	class memory<void>
-	{
-	public:
-		static inline void * allocate(size_t size)
-		{
-			return ::malloc(size);
-		}
+    template<>
+    class memory<void>
+    {
+    public:
+        static inline void * allocate(size_t size)
+        {
+            return ::malloc(size);
+        }
 
-		static inline void free(const void * ptr)
-		{
-			::free(const_cast<void *>(ptr));
-		}
+        static inline void free(const void * ptr)
+        {
+            ::free(const_cast<void *>(ptr));
+        }
 
-		static inline void * reallocate(void * ptr, size_t size)
-		{
-			return ::realloc(ptr, size);
-		}
+        static inline void * reallocate(void * ptr, size_t size)
+        {
+            return ::realloc(ptr, size);
+        }
 
-		static inline void move(void * to, const void * from, size_t size)
-		{
-			::memmove(to, from, size);
-		}
+        static inline void move(void * to, const void * from, size_t size)
+        {
+            ::memmove(to, from, size);
+        }
 
-		template<class T, size_t N>
-		static inline void move(void * to, const T(&from)[N])
-		{
-			move(to, from, N * sizeof(T));
-		}
+        template<class T>
+        static inline void move(void * to, const T &from)
+        {
+            move(to, &from, sizeof(T));
+        }
 
-		static inline void * copy(const void * src, size_t size)
-		{
-			void * buffer = allocate(size);
-			move(buffer, src, size);
+        template<class T, size_t N>
+        static inline void move(void * to, const T(&from)[N])
+        {
+            move(to, from, N * sizeof(T));
+        }
 
-			return buffer;
-		}
+        template<class T, size_t N>
+        static inline void move(void * to, const std::array<T, N> & from)
+        {
+            move(to, from.data(), N * sizeof(T));
+        }
 
-		static inline void fill(void * ptr, byte value, size_t size)
-		{
-			::memset(ptr, value, size);
-		}
-	};
+        static inline void * copy(const void * src, size_t size)
+        {
+            void * buffer = allocate(size);
+            move(buffer, src, size);
+
+            return buffer;
+        }
+
+        static inline void fill(void * ptr, byte value, size_t size)
+        {
+            ::memset(ptr, value, size);
+        }
+    };
 }
 
 //---------------------------------------------------------------------------

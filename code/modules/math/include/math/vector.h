@@ -783,19 +783,19 @@ namespace asd
 			static api(math) const vector<T> zero;         // [  0,  0,  0,  0 ]
 			static api(math) const vector<T> one;          // [  1,  1,  1,  1 ]
 			static api(math) const vector<T> two;          // [  2,  2,  2,  2 ]
-			static api(math) const vector<T> oneXYZ;       // [  1,  1,  1,  0 ]
-			static api(math) const vector<T> twoXYZ;       // [  2,  2,  2,  0 ]
-			static api(math) const vector<T> minusOne;     // [ -1, -1, -1, -1 ]
+			static api(math) const vector<T> one_xyz;       // [  1,  1,  1,  0 ]
+			static api(math) const vector<T> two_xyz;       // [  2,  2,  2,  0 ]
+			static api(math) const vector<T> minus_one;     // [ -1, -1, -1, -1 ]
 			static api(math) const vector<T> half;         // [ .5, .5, .5, .5 ]
 			
-			static api(math) const vector<T> positiveX;    // [  1,  0,  0,  0 ]
-			static api(math) const vector<T> positiveY;    // [  0,  1,  0,  0 ]
-			static api(math) const vector<T> positiveZ;    // [  0,  0,  1,  0 ]
-			static api(math) const vector<T> positiveW;    // [  0,  0,  0,  1 ]
-			static api(math) const vector<T> negativeX;    // [ -1,  0,  0,  0 ]
-			static api(math) const vector<T> negativeY;    // [  0, -1,  0,  0 ]
-			static api(math) const vector<T> negativeZ;    // [  0,  0, -1,  0 ]
-			static api(math) const vector<T> negativeW;    // [  0,  0,  0, -1 ]
+			static api(math) const vector<T> positive_x;    // [  1,  0,  0,  0 ]
+			static api(math) const vector<T> positive_y;    // [  0,  1,  0,  0 ]
+			static api(math) const vector<T> positive_z;    // [  0,  0,  1,  0 ]
+			static api(math) const vector<T> positive_w;    // [  0,  0,  0,  1 ]
+			static api(math) const vector<T> negative_x;    // [ -1,  0,  0,  0 ]
+			static api(math) const vector<T> negative_y;    // [  0, -1,  0,  0 ]
+			static api(math) const vector<T> negative_z;    // [  0,  0, -1,  0 ]
+			static api(math) const vector<T> negative_w;    // [  0,  0,  0, -1 ]
 			
 			static api(math) const vector<T> & right;
 			static api(math) const vector<T> & up;
@@ -991,7 +991,7 @@ namespace asd
 			
 			x = Intrin::sqr(Intrin::bit_or(Intrin::bit_and(comp, x), Intrin::bit_andnot(comp, Intrin::sub(Intrin::bit_or(constants<vector<T>>::pi, sign), x))));
 			
-			c = Intrin::bit_or(Intrin::bit_and(comp, vector_constants<T>::one), Intrin::bit_andnot(comp, vector_constants<T>::minusOne)) * (
+			c = Intrin::bit_or(Intrin::bit_and(comp, vector_constants<T>::one), Intrin::bit_andnot(comp, vector_constants<T>::minus_one)) * (
 				vector_constants<T>::one + x * (
 					coefficients<vector<T>>::cos[0] + x * (
 						coefficients<vector<T>>::cos[1] + x * (
@@ -1021,7 +1021,7 @@ namespace asd
 									coefficients<vector<T>>::sin[4]
 								)))));
 			
-			c = Intrin::bit_or(Intrin::bit_and(comp, vector_constants<T>::one), Intrin::bit_andnot(comp, vector_constants<T>::minusOne)) * (
+			c = Intrin::bit_or(Intrin::bit_and(comp, vector_constants<T>::one), Intrin::bit_andnot(comp, vector_constants<T>::minus_one)) * (
 				vector_constants<T>::one + x * (
 					coefficients<vector<T>>::cos[0] + x * (
 						coefficients<vector<T>>::cos[1] + x * (

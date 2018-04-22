@@ -55,7 +55,7 @@ namespace asd
             
         private:
             gfx::context & _ctx;
-            std::vector<font_entry> _entries;
+            asd::array_list<font_entry> _entries;
         };
     }
 }

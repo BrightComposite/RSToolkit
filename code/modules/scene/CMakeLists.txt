@@ -12,8 +12,9 @@ include(${ASD_TOOLS}/module.cmake)
 
 module(STATIC)
 	dependencies(
-		ui		0.*
-		space	0.*
+		graphics3d	0.*
+		flow        0.*
+		space		0.*
 	)
 
 	sources(modules)
@@ -21,16 +22,17 @@ module(STATIC)
 
 		group(include Headers)
 		files(
-			Camera.h
-			DeferredShadingScene.h
-			Scene.h
+			camera.h
+			deferred_shading_scene.h
+			object.h
+			scene.h
 		)
 
 		group(src Sources)
 		files(
-			Camera.cpp
-			DeferredShadingScene.cpp
-			Scene.cpp
+			camera.cpp
+			deferred_shading_scene.cpp
+			scene.cpp
 			)
 	endsources()
 endmodule()

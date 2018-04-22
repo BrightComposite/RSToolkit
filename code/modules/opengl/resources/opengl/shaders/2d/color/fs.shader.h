@@ -10,16 +10,16 @@ static const char * const shader_code_2d_color_fs = R"SHADER(
  */
 #version 330 core
 
-in Vertex 
+layout(std140) uniform Color
 {
-	vec4 color;
-} vtx;
+    vec4 color;
+};
 
 out vec4 fscolor;
 
 void main(void)
 {
-	fscolor = vtx.color;
+    fscolor = color;
 }
 
 )SHADER";

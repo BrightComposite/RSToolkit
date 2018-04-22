@@ -84,84 +84,84 @@ namespace asd
 		template
 		struct matrix<float>;
 		
-		template<> const float_vector  vector_constants<float>::positiveX = {1, 0, 0, 0};
-		template<> const float_vector  vector_constants<float>::positiveY = {0, 1, 0, 0};
-		template<> const float_vector  vector_constants<float>::positiveZ = {0, 0, 1, 0};
-		template<> const float_vector  vector_constants<float>::positiveW = {0, 0, 0, 1};
-		template<> const float_vector  vector_constants<float>::negativeX = {-1, 0, 0, 0};
-		template<> const float_vector  vector_constants<float>::negativeY = {0, -1, 0, 0};
-		template<> const float_vector  vector_constants<float>::negativeZ = {0, 0, -1, 0};
-		template<> const float_vector  vector_constants<float>::negativeW = {0, 0, 0, -1};
+		template<> const float_vector  vector_constants<float>::positive_x = {1, 0, 0, 0};
+		template<> const float_vector  vector_constants<float>::positive_y = {0, 1, 0, 0};
+		template<> const float_vector  vector_constants<float>::positive_z = {0, 0, 1, 0};
+		template<> const float_vector  vector_constants<float>::positive_w = {0, 0, 0, 1};
+		template<> const float_vector  vector_constants<float>::negative_x = {-1, 0, 0, 0};
+		template<> const float_vector  vector_constants<float>::negative_y = {0, -1, 0, 0};
+		template<> const float_vector  vector_constants<float>::negative_z = {0, 0, -1, 0};
+		template<> const float_vector  vector_constants<float>::negative_w = {0, 0, 0, -1};
 		
-		template<> const float_vector & vector_constants<float>::right = positiveX;
-		template<> const float_vector & vector_constants<float>::up = positiveY;
-		template<> const float_vector & vector_constants<float>::forward = positiveZ;
+		template<> const float_vector & vector_constants<float>::right = positive_x;
+		template<> const float_vector & vector_constants<float>::up = positive_y;
+		template<> const float_vector & vector_constants<float>::forward = positive_z;
 		
-		template<> const float_vector & vector_constants<float>::left = negativeX;
-		template<> const float_vector & vector_constants<float>::down = negativeY;
-		template<> const float_vector & vector_constants<float>::back = negativeZ;
+		template<> const float_vector & vector_constants<float>::left = negative_x;
+		template<> const float_vector & vector_constants<float>::down = negative_y;
+		template<> const float_vector & vector_constants<float>::back = negative_z;
 		
 		template<> const float_vector & vector_constants<float>::identity = zero;
 		
 		template<> const float_vector  vector_constants<float>::zero = {0, 0, 0, 0};
 		template<> const float_vector  vector_constants<float>::one = {1, 1, 1, 1};
 		template<> const float_vector  vector_constants<float>::two = {2, 2, 2, 2};
-		template<> const float_vector  vector_constants<float>::oneXYZ = {1, 1, 1, 0};
-		template<> const float_vector  vector_constants<float>::twoXYZ = {2, 2, 2, 0};
-		template<> const float_vector  vector_constants<float>::minusOne = {-1, -1, -1, -1};
+		template<> const float_vector  vector_constants<float>::one_xyz = {1, 1, 1, 0};
+		template<> const float_vector  vector_constants<float>::two_xyz = {2, 2, 2, 0};
+		template<> const float_vector  vector_constants<float>::minus_one = {-1, -1, -1, -1};
 		
 		template<> const float_vector  vector_constants<float>::half = {.5f, .5f, .5f, .5f};
 		
 		template
 		struct constants<vector<float>>;
 		
-		template<> const int_vector  vector_constants<int>::positiveX = {1, 0, 0, 0};
-		template<> const int_vector  vector_constants<int>::positiveY = {0, 1, 0, 0};
-		template<> const int_vector  vector_constants<int>::positiveZ = {0, 0, 1, 0};
-		template<> const int_vector  vector_constants<int>::positiveW = {0, 0, 0, 1};
-		template<> const int_vector  vector_constants<int>::negativeX = {-1, 0, 0, 0};
-		template<> const int_vector  vector_constants<int>::negativeY = {0, -1, 0, 0};
-		template<> const int_vector  vector_constants<int>::negativeZ = {0, 0, -1, 0};
-		template<> const int_vector  vector_constants<int>::negativeW = {0, 0, 0, -1};
+		template<> const int_vector  vector_constants<int>::positive_x = {1, 0, 0, 0};
+		template<> const int_vector  vector_constants<int>::positive_y = {0, 1, 0, 0};
+		template<> const int_vector  vector_constants<int>::positive_z = {0, 0, 1, 0};
+		template<> const int_vector  vector_constants<int>::positive_w = {0, 0, 0, 1};
+		template<> const int_vector  vector_constants<int>::negative_x = {-1, 0, 0, 0};
+		template<> const int_vector  vector_constants<int>::negative_y = {0, -1, 0, 0};
+		template<> const int_vector  vector_constants<int>::negative_z = {0, 0, -1, 0};
+		template<> const int_vector  vector_constants<int>::negative_w = {0, 0, 0, -1};
 		
-		template<> const int_vector & vector_constants<int>::right = positiveX;
-		template<> const int_vector & vector_constants<int>::up = positiveY;
-		template<> const int_vector & vector_constants<int>::forward = positiveZ;
+		template<> const int_vector & vector_constants<int>::right = positive_x;
+		template<> const int_vector & vector_constants<int>::up = positive_y;
+		template<> const int_vector & vector_constants<int>::forward = positive_z;
 		
-		template<> const int_vector & vector_constants<int>::left = negativeX;
-		template<> const int_vector & vector_constants<int>::down = negativeY;
-		template<> const int_vector & vector_constants<int>::back = negativeZ;
+		template<> const int_vector & vector_constants<int>::left = negative_x;
+		template<> const int_vector & vector_constants<int>::down = negative_y;
+		template<> const int_vector & vector_constants<int>::back = negative_z;
 		
 		template<> const int_vector & vector_constants<int>::identity = zero;
 		
 		template<> const int_vector  vector_constants<int>::zero = {0, 0, 0, 0};
 		template<> const int_vector  vector_constants<int>::one = {1, 1, 1, 1};
 		template<> const int_vector  vector_constants<int>::two = {2, 2, 2, 2};
-		template<> const int_vector  vector_constants<int>::oneXYZ = {1, 1, 1, 0};
-		template<> const int_vector  vector_constants<int>::twoXYZ = {2, 2, 2, 0};
-		template<> const int_vector  vector_constants<int>::minusOne = {-1, -1, -1, -1};
+		template<> const int_vector  vector_constants<int>::one_xyz = {1, 1, 1, 0};
+		template<> const int_vector  vector_constants<int>::two_xyz = {2, 2, 2, 0};
+		template<> const int_vector  vector_constants<int>::minus_one = {-1, -1, -1, -1};
 
 #ifdef USE_AVX
 		template struct vector<double>;
 		template struct matrix<double>;
 		template struct Matrix2x2<double>;
 	
-		template<> const DoubleVector vector<double>::positiveX = { 1,  0,  0,  0 };
-		template<> const DoubleVector vector<double>::positiveY = { 0,  1,  0,  0 };
-		template<> const DoubleVector vector<double>::positiveZ = { 0,  0,  1,  0 };
-		template<> const DoubleVector vector<double>::positiveW = { 0,  0,  0,  1 };
-		template<> const DoubleVector vector<double>::negativeX = {-1,  0,  0,  0 };
-		template<> const DoubleVector vector<double>::negativeY = { 0, -1,  0,  0 };
-		template<> const DoubleVector vector<double>::negativeZ = { 0,  0, -1,  0 };
-		template<> const DoubleVector vector<double>::negativeW = { 0,  0,  0, -1 };
+		template<> const DoubleVector vector<double>::positive_x = { 1,  0,  0,  0 };
+		template<> const DoubleVector vector<double>::positive_y = { 0,  1,  0,  0 };
+		template<> const DoubleVector vector<double>::positive_z = { 0,  0,  1,  0 };
+		template<> const DoubleVector vector<double>::positive_w = { 0,  0,  0,  1 };
+		template<> const DoubleVector vector<double>::negative_x = {-1,  0,  0,  0 };
+		template<> const DoubleVector vector<double>::negative_y = { 0, -1,  0,  0 };
+		template<> const DoubleVector vector<double>::negative_z = { 0,  0, -1,  0 };
+		template<> const DoubleVector vector<double>::negative_w = { 0,  0,  0, -1 };
 	
-		template<> const DoubleVector & vector<double>::right   = positiveX;
-		template<> const DoubleVector & vector<double>::up      = positiveY;
-		template<> const DoubleVector & vector<double>::forward = positiveZ;
+		template<> const DoubleVector & vector<double>::right   = positive_x;
+		template<> const DoubleVector & vector<double>::up      = positive_y;
+		template<> const DoubleVector & vector<double>::forward = positive_z;
 	
-		template<> const DoubleVector & vector<double>::left    = negativeX;
-		template<> const DoubleVector & vector<double>::down    = negativeY;
-		template<> const DoubleVector & vector<double>::back    = negativeZ;
+		template<> const DoubleVector & vector<double>::left    = negative_x;
+		template<> const DoubleVector & vector<double>::down    = negative_y;
+		template<> const DoubleVector & vector<double>::back    = negative_z;
 	
 	
 		template<> const DoubleVector & vector<double>::identity= zero;
@@ -169,9 +169,9 @@ namespace asd
 		template<> const DoubleVector vector<double>::zero	    = { 0,  0,  0,  0 };
 		template<> const DoubleVector vector<double>::one		= { 1,  1,  1,  1 };
 		template<> const DoubleVector vector<double>::two		= { 2,  2,  2,  2 };
-		template<> const DoubleVector vector<double>::oneXYZ	= { 1,  1,  1,  0 };
-		template<> const DoubleVector vector<double>::twoXYZ	= { 2,  2,  2,  0 };
-		template<> const DoubleVector vector<double>::minusOne  = {-1, -1, -1, -1 };
+		template<> const DoubleVector vector<double>::one_xyz	= { 1,  1,  1,  0 };
+		template<> const DoubleVector vector<double>::two_xyz	= { 2,  2,  2,  0 };
+		template<> const DoubleVector vector<double>::minus_one  = {-1, -1, -1, -1 };
 	
 		template<> const DoubleVector vector<double>::half	    = {.5, .5, .5, .5 };
 	

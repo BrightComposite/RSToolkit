@@ -25,7 +25,7 @@ namespace asd
 		});
 
 		w.show();
-		return w.loop([] {});
+		return w.context([] {});
 	});
 }
 

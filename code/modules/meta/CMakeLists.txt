@@ -20,6 +20,8 @@ module(INLINE)
 			bitmask.h
 			bool_types.h
 			cast.h
+			class_id.h
+			class_id.hpp
 			flag.h
 			inheritance.h
 			macro.h

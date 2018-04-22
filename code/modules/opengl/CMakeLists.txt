@@ -28,16 +28,16 @@ module(LIBRARY)
 			mesh.h
 			opengl.h
             shader.h
+			uniform.h
 			vertex_layout.h
-			uniform_layout.h
 		)
 
 		group(src Sources)
 		files(
 			mesh.cpp
             shader.cpp
+			uniform.cpp
 			vertex_layout.cpp
-			uniform_layout.cpp
 		)
 
 if (WIN32)
@@ -89,5 +89,6 @@ endif()
 endmodule()
 
 vendor(opengl)
+vendor(boost COMPONENTS pool)
 
 #--------------------------------------------------------

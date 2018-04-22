@@ -75,7 +75,7 @@ namespace asd
 			};
 
 			using p2		= generator<position2>;
-			using p3		= generator<position2>;
+			using p3		= generator<position3>;
 			using p2c3		= generator<position2, color3>;
 			using p3c3		= generator<position3, color3>;
 			using p2c4		= generator<position2, color4>;

@@ -266,50 +266,50 @@ namespace asd
 			}
 
 			case WM_LBUTTONDOWN: {
-			send<MouseDownMessage>(w, MouseButton::Left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
+			send<MouseDownMessage>(w, MouseButton::left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 			break;
 			}
 
 			case WM_MBUTTONDOWN: {
-			send<MouseDownMessage>(w, MouseButton::Middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
+			send<MouseDownMessage>(w, MouseButton::middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 			break;
 			}
 
 			case WM_RBUTTONDOWN: {
-			send<MouseDownMessage>(w, MouseButton::Right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
+			send<MouseDownMessage>(w, MouseButton::right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 			break;
 			}
 
 			case WM_LBUTTONUP: {
-			w._mouseState.unpress(MouseButton::Left);
-			send<MouseUpMessage>(w, MouseButton::Left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
+			w._mouseState.unpress(MouseButton::left);
+			send<MouseUpMessage>(w, MouseButton::left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 			break;
 			}
 
 			case WM_MBUTTONUP: {
-			w._mouseState.unpress(MouseButton::Middle);
-			send<MouseUpMessage>(w, MouseButton::Middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
+			w._mouseState.unpress(MouseButton::middle);
+			send<MouseUpMessage>(w, MouseButton::middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 			break;
 			}
 
 			case WM_RBUTTONUP: {
-			w._mouseState.unpress(MouseButton::Right);
-			send<MouseUpMessage>(w, MouseButton::Right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
+			w._mouseState.unpress(MouseButton::right);
+			send<MouseUpMessage>(w, MouseButton::right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 			break;
 			}
 
 			case WM_LBUTTONDBLCLK: {
-			send<MouseDblClickMessage>(root, MouseButton::Left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
+			send<MouseDblClickMessage>(root, MouseButton::left, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 			break;
 			}
 
 			case WM_MBUTTONDBLCLK: {
-			send<MouseDblClickMessage>(root, MouseButton::Middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
+			send<MouseDblClickMessage>(root, MouseButton::middle, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 			break;
 			}
 
 			case WM_RBUTTONDBLCLK: {
-			send<MouseDblClickMessage>(root, MouseButton::Right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
+			send<MouseDblClickMessage>(root, MouseButton::right, (int)LOWORD(lParam), (int)HIWORD(lParam), (int)wParam);
 			break;
 			}
 

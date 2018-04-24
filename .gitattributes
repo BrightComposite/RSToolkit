@@ -1,2 +1,2 @@
 *.inc linguist-language=C++
-
+*.shader.h linguist-language=C++

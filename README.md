@@ -32,7 +32,7 @@ Windows (MSVC 2015, x64)
 asd.bat make vs2015-64
 ```
 
-Linux:
+Linux (Code Blocks):
 ```
 ./asd make code-blocks
 ```
@@ -45,3 +45,5 @@ Qt Creator
 Call `./asd make` to see all options
 
 Look at tools/asd-make.cmake, there is an extension point
+
+*Notice that CMakeLists.txt can be used as is (for example, as a CLion project)*

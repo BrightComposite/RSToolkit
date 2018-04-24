@@ -7,7 +7,7 @@ The **ASD** project is inspired by Boost but is meant to provide more high-level
 ### Meta-programming
 - Tight integration with the build system (dllimport/dllexport are managed authomatically with the `api(module)` macro, for example)
 - Template function selection (*useif*, *skipif* and *selectif* conditions)
-- Integer type indices generation to create type-to-object mappings
+- Integer type indices generation to create type-to-object mappings (see the gfx :: context components from the `graphics` module)
 
 ### Common
 - Generalized graphic context management and extensions (partially implemented OpenGL backend and FreeType font extension)
@@ -22,7 +22,25 @@ Build system is based on __*CMake*__, CMake scripts and some system-dependent sc
 
 To make **ASD** project files use:
 
+Windows (MSVC 2017, x64):
 ```
-git clone https://gitlab.com/BrightComposite/asd
-asd make vs64
+asd.bat make vs64
 ```
+
+Windows (MSVC 2015, x64)
+```
+asd.bat make vs2015-64
+```
+
+Linux:
+```
+./asd make code-blocks
+```
+
+Qt Creator
+```
+./asd make qt
+```
+
+Call `./asd make` to see all options
+Look at tools/asd-make.cmake, there is an extension point
